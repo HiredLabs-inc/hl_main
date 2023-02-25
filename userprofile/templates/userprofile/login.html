@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block content%}
+<div class="container">
+  <h2>Log in</h2>
+  {% if user.is_authenticated %}
+  <p>You are already logged in.</p>
+  {% else %}
+  <form action="" method="POST">
+    {% csrf_token %}
+      {% for field in form %}
+        <p>
+          {{ field.label }}:
+          <br>
+          {{ field }}
+        </p>
+      {% endfor %}
+    <button type="submit">Login</button>
+  </form>
+  {% endif %}
+</div>
+
+{% endblock%}
