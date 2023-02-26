@@ -138,3 +138,4 @@ uploads/
 *.pdf
 output/
 
+static_files/
