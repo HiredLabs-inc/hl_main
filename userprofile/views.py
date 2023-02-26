@@ -1,7 +1,5 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from django.conf import settings
-from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 
@@ -21,6 +19,10 @@ from .models import Profile
 # MOVE TO userprofile app
 def home(request):
     return render(request, 'home.html')
+
+
+def about(request):
+    return render(request, 'about.html')
 
 
 def register(request):
