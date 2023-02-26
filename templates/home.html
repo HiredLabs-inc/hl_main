@@ -3,29 +3,32 @@
 {% get_static_prefix as STATIC_PREFIX %}
 
 {% block head %}
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Hired Labs</title>
-    <link rel="icon" type="image/png" href="{{ STATIC_PREFIX }}assets/favicon.ico">
-    <link rel="stylesheet" type="text/css" href="{{ STATIC_PREFIX }}assets/owl.carousel.css"/>
-    <link rel="stylesheet" type="text/css" href="{{ STATIC_PREFIX }}assets/owl.theme.default.css"/>
-    <link rel="stylesheet/less" type="text/css" href="{{ STATIC_PREFIX }}assets/styles.less"/>
-    <link rel="stylesheet" href="{{ STATIC_PREFIX }}assets/animate.min.css"/>
-    <link href="{{ STATIC_PREFIX }}assets/css2.css" rel="stylesheet">
+        <title>Hired Labs</title>
+        <link rel="icon" type="image/png" href="{{ STATIC_PREFIX }}assets/favicon.ico">
+        <link rel="stylesheet" type="text/css" href="{{ STATIC_PREFIX }}assets/owl.carousel.css"/>
+        <link rel="stylesheet" type="text/css" href="{{ STATIC_PREFIX }}assets/owl.theme.default.css"/>
+        <link rel="stylesheet/less" type="text/css" href="{{ STATIC_PREFIX }}assets/styles.less"/>
+        <link rel="stylesheet" href="{{ STATIC_PREFIX }}assets/animate.min.css"/>
+        <link href="{{ STATIC_PREFIX }}assets/css2.css" rel="stylesheet">
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"
-            integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.6.10/lottie.min.js"
-            integrity="sha256-/56Y/jYu6730zlN8iulnNWn2IcVa4wK/ogwk7n9p2JY=" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/less.js/3.9.0/less.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"
-            integrity="sha256-KM512VNnjElC30ehFwehXjx1YCHPiQkOPmqnrWtpccM=" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/clamp-js@0.7.0/clamp.js"></script>
-    <script src="{{ STATIC_PREFIX }}assets/scripts.js" type="text/javascript"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"
+                integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.6.10/lottie.min.js"
+                integrity="sha256-/56Y/jYu6730zlN8iulnNWn2IcVa4wK/ogwk7n9p2JY=" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/less.js/3.9.0/less.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"
+                integrity="sha256-KM512VNnjElC30ehFwehXjx1YCHPiQkOPmqnrWtpccM=" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/clamp-js@0.7.0/clamp.js"></script>
+        <script src="{{ STATIC_PREFIX }}assets/scripts.js" type="text/javascript"></script>
+    </head>
 {% endblock %}
 
 {% block body %}
+    <body>
     <div id="preLoader">
         <div id="preloaderIcon"></div>
     </div>
@@ -457,11 +460,14 @@
     </div>
 
     <div id="InputLoader"></div>
+    </body>
 {% endblock %}
 
 {% block footer %}
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js"
-            integrity="sha256-pTxD+DSzIwmwhOqTFN+DB+nHjO4iAsbgfyFq5K5bcE0=" crossorigin="anonymous"></script>
+    <footer>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js"
+                integrity="sha256-pTxD+DSzIwmwhOqTFN+DB+nHjO4iAsbgfyFq5K5bcE0=" crossorigin="anonymous"></script>
+    </footer>
 {% endblock %}
 
 {% block javascript %}
