@@ -1,5 +1,472 @@
 {% extends 'base.html' %}
+{% load static %}
+{% get_static_prefix as STATIC_PREFIX %}
 
-{% block content %}
-<p>You are here.</p>
+{% block head %}
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Hired Labs</title>
+    <link rel="icon" type="image/png" href="{{ STATIC_PREFIX }}assets/favicon.ico">
+    <link rel="stylesheet" type="text/css" href="{{ STATIC_PREFIX }}assets/owl.carousel.css"/>
+    <link rel="stylesheet" type="text/css" href="{{ STATIC_PREFIX }}assets/owl.theme.default.css"/>
+    <link rel="stylesheet/less" type="text/css" href="{{ STATIC_PREFIX }}assets/styles.less"/>
+    <link rel="stylesheet" href="{{ STATIC_PREFIX }}assets/animate.min.css"/>
+    <link href="{{ STATIC_PREFIX }}assets/css2.css" rel="stylesheet">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"
+            integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.6.10/lottie.min.js"
+            integrity="sha256-/56Y/jYu6730zlN8iulnNWn2IcVa4wK/ogwk7n9p2JY=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/less.js/3.9.0/less.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"
+            integrity="sha256-KM512VNnjElC30ehFwehXjx1YCHPiQkOPmqnrWtpccM=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/clamp-js@0.7.0/clamp.js"></script>
+    <script src="{{ STATIC_PREFIX }}assets/scripts.js" type="text/javascript"></script>
+{% endblock %}
+
+{% block body %}
+    <div id="preLoader">
+        <div id="preloaderIcon"></div>
+    </div>
+    <div class="header">
+        <a class="logoText"> <span><img src="{{ STATIC_PREFIX }}assets/logo.png" width="150" height="30"/></span> </a>
+
+        <ul class="nav">
+            <div id="navUnderline"></div>
+            <li class="PAGE01Link">Home</li>
+            <li class="PAGE02Link">About</li>
+            <li class="PAGE03Link">Process</li>
+            <li class="PAGE04Link">Contact</li>
+        </ul>
+    </div>
+    <div class="mobileHeader">
+        <label for="menuToggle">
+        </label>
+        <input type="checkbox" id="menuToggle" name="menuToggle"/>
+        <ul class="nav">
+            <li class="PAGE01Link">Home</li>
+            <li class="PAGE02Link">About</li>
+            <li class="PAGE03Link">Process</li>
+            <li class="PAGE04Link">Contact</li>
+        </ul>
+    </div>
+    <div class="section" id="PAGE01">
+        <div class="bottomLeftDots"></div>
+        <div id="pageBreak1" class="scrollBreak"></div>
+        <div class="heroWrapper section">
+            <div id="pg1_Lottie_Squiggle"></div>
+
+            <div class="titleColumn">
+                <h1 style="color: #f7941d;" class="heroTitle">Hiredlabs</h1>
+                <h4 style="color: #0e1f33;" class="heroSubTitle">- Lorem ipsum dolor sit amet consectetur adipisicing
+                    elit.
+                    Dolore, dicta. -</h4>
+            </div>
+        </div>
+        <object id="pg1_mountainLeft" class="pg1_mountainLeft" type="image/svg+xml"
+                data="{{ STATIC_PREFIX }}assets/PAGE01/pg1_mountainLeft/pg1_mountainLeft.svg"></object>
+        <object class="pg1_sun" type="image/svg+xml"
+                data="{{ STATIC_PREFIX }}assets/PAGE01/pg1_sun/pg1_sun.svg"></object>
+    </div>
+    <div id="pg1_Lottie_SquiggleBottom"></div>
+    <div class="section" id="PAGE02">
+
+        <div class="mobileWrapper">
+            <object id="pg1_mountainRightBack" class="pg1_mountainRightBack" type="image/svg+xml"
+                    data="{{ STATIC_PREFIX }}assets/PAGE01/pg1_mountainRightBack/pg1_mountainRightBack.svg"></object>
+
+            <div style="color:	#ffffff;" class="clip-svg">
+
+                <div class="pg2StepsSection">
+                    <div id="pageBreak2" class="scrollBreak"></div>
+                    <div class="pg2IdeaHeader">
+                        <h2 style="color: #fff;">Give us some basic information<br>
+                            by filling out the form below.
+                        </h2>
+                        <p style="flex: auto;font-weight:500">Meet with us for a quick 30-45 min. call, during which, we
+                            will get to know you better. We'll have a very relaxed conversation about your background,
+                            expereience, and what you're looking for in your next role.We update your resume for you,
+                            and
+                            conduct a preliminary search of best-fit open roles according to the intake interview.</p>
+                        <div class="pg2_steps">
+                            <div class="column titleStepCol">
+                                <object class="pg2_titleStep" type="image/svg+xml"
+                                        data="{{ STATIC_PREFIX }}assets/PAGE02/pg2_titleStep1Solo.svg"></object>
+                                <p style="font-weight:500;color: #fff;flex: auto;"><b>Your current resume, if you have
+                                    one.
+                                    If not, that's okay.</b></p>
+                            </div>
+                            <div class="column titleStepCol">
+                                <object class="pg2_titleStep" type="image/svg+xml"
+                                        data="{{ STATIC_PREFIX }}assets/PAGE02/pg2_titleStep2Solo.svg"></object>
+                                <p style="font-weight:500;color: #fff;flex: auto;"><b>A handful of job posts (2-3), in
+                                    which
+                                    you are interested.</b></p>
+                            </div>
+                            <div class="column titleStepCol">
+                                <object class="pg2_titleStep" type="image/svg+xml"
+                                        data="{{ STATIC_PREFIX }}assets/PAGE02/pg2_titleStep3Solo.svg"></object>
+                                <p style="font-weight:500;color: #fff;flex: auto;"><b>Information about your service
+                                    (branch, rank, mos)</b></p>
+                            </div>
+
+
+                        </div>
+                    </div>
+                </div>
+
+                <video playsinline muted loop id="myVideo">
+                    <source src="{{ STATIC_PREFIX }}assets/PAGE02/pg2_bgFootage.mp4" type="video/mp4">
+                </video>
+
+                <svg id="clipDesktopSVG" viewbox="0 0 2125.3 2278.4" width="100%" height="2700">
+                    <defs>
+                        <clippath id="videoClipDesktop" clippathunits="objectBoundingBox">
+                            <path d="M1,0.069 c-0.033,-0.015,-0.042,-0.017,-0.085,-0.03 c-0.057,-0.017,-0.108,-0.029,-0.113,-0.03 c-0.008,-0.002,-0.053,-0.011,-0.061,-0.005 c-0.007,0.005,-0.001,0.02,0.028,0.051 s0.063,0.056,0.037,0.069 c-0.026,0.013,-0.123,0.027,-0.257,0.038 S0,0.228,0,0.228 v0.775 h1 V0.069"/>
+                        </clippath>
+                    </defs>
+                </svg>
+                <svg id="clipMobileSVG" viewbox="0 0 720.9 1702.8">
+                    <defs>
+                        <clippath id="videoClipMobile" clippathunits="objectBoundingBox">
+                            <path d="M1,0.025 c-0.038,-0.004,-0.075,-0.009,-0.08,-0.01 c-0.025,-0.002,-0.167,-0.017,-0.191,-0.009 c-0.02,0.006,0.002,0.029,0.089,0.071 s0.182,0.073,0.106,0.09 c-0.076,0.017,-0.352,0.037,-0.746,0.051 c-0.052,0.002,-0.1,0.003,-0.177,0.006 v0.779 l1,0 V0.025"/>
+                        </clippath>
+                    </defs>
+                </svg>
+
+            </div>
+        </div>
+        <div id="pg3_Lottie_SquiggleTop"></div>
+    </div>
+    <div class="section" id="PAGE03">
+        <div id="pageBreak3" class="scrollBreak">
+        </div>
+
+        <div id="styleColumn" class="column styleLabelColumn">
+            <div>
+                <h2 style="color: #0e1f33;">Learn</h2>
+                <h2 style="color: #0e1f33;">More</h2>
+                <div class="divider"></div>
+            </div>
+
+            <div class="column titleStepCol">
+                <object class="pg2_titleStep"></object>
+
+            </div>
+
+            <div>
+                <a href="https://forms.gle/7raq6XJqCrZD6bhF7" target="_blank">
+                    <button style="border: 2px solid #f25353;
+
+              box-sizing: border-box;
+              display: inline-block;
+              width: 100%;
+              text-align: center;
+              font-size: calc(19px + (18 - 12) * ((100vw - 300px) / (1600 - 300)));
+              font-weight: bold;
+              color: #f7941d;
+              border-radius: 30px;
+              background-color:#525e6c;
+              padding: 10px 3px;
+              cursor: pointer;
+              float: left;
+              border: 3px solid #0e1f33;
+              transition-duration: 0.25s;
+              flex: 1;">Beta Trials Intake Form
+                    </button>
+                </a>
+            </div>
+            <br>
+        </div>
+        <div id="serviceColumns" class="section owl-carousel owl-theme">
+            <div class="column serviceCards"
+                 style="background: linear-gradient(
+                         #f7941d,
+                         #525e6c,
+                         #0e1f33)
+                         no-repeat border-box,
+                         linear-gradient(
+                         #2c75ff00,
+                         #2c75ffff)
+                         no-repeat border-box,
+                         url({{ STATIC_PREFIX }}assets/PAGE03/MenuCard1/pg3card1bg.jpg) 60% 0 / 200% auto no-repeat;">
+
+                <div class="indexNumber">01</div>
+                <div class="contentRow">
+                    <h3>How it Works</h3>
+                    <h4>Intake Call</h4>
+                    <p>Meet with us for a quick 30-45 min. call, during which,we will get to know you better. We'll have
+                        a
+                        very relaxed conversation about your background, expereience, and what you're looking for in
+                        your
+                        next role</p>
+                    <div class="serviceCardExplainMore">
+                        <div class="serviceCardExplainBackGround" style="background: linear-gradient(
+                                #a1a6e2d4,
+                                #2c6be399,
+                                #3c7ec1)
+                                no-repeat border-box,
+                                linear-gradient(
+                                #2c75ff00,
+                                #2c75ffff)
+                                no-repeat border-box,
+                                url({{ STATIC_PREFIX }}assets/PAGE03/MenuCard1/pg3card1bg.jpg) 60% 0 / 200% auto no-repeat;">
+                        </div>
+                    </div>
+                    </p>
+                </div>
+
+
+            </div>
+            <div class="column serviceCards" style="background: linear-gradient(
+                    #f7941d,
+                    #525e6c,
+                    #0e1f33)
+                    no-repeat border-box,
+                    linear-gradient(
+                    #2c75ff00,
+                    #2c75ffff)
+                    no-repeat border-box,
+                    url({{ STATIC_PREFIX }}assets/PAGE03/MenuCard2/pg3card2bg.jpg) 60% 0 / 200% auto no-repeat;">
+
+                <div class="indexNumber">02</div>
+                <div class="contentRow">
+                    <h3>Resume Updates & Job Search</h3><br>
+
+                    <p>We update your resume for you, and conduct a preliminary search of best-fit open roles according
+                        to
+                        the intake interview. At the end of this step, you'll have a professionally updated resume, and
+                        a
+                        list of open jobs, for which you are a strong candidate.</p>
+                    <div class="serviceCardExplainMore">
+                        <div class="serviceCardExplainBackGround" style="background: linear-gradient(
+                                #a1a6e2d4,
+                                #2c6be399,
+                                #3c7ec1)
+                                no-repeat border-box,
+                                linear-gradient(
+                                #2c75ff00,
+                                #2c75ffff)
+                                no-repeat border-box,
+                                url({{ STATIC_PREFIX }}assets/PAGE03/MenuCard2/pg3card2bg.jpg) 60% 0 / 200% auto no-repeat;">
+
+                        </div>
+
+
+                    </div>
+                    </p>
+                </div>
+
+
+            </div>
+            <div class="column serviceCards" style="background: linear-gradient(
+                    #f7941d,
+                    #525e6c,
+                    #0e1f33)
+                    no-repeat border-box,
+                    linear-gradient(
+                    #2c75ff00,
+                    #2c75ffff)
+                    no-repeat border-box,
+                    url({{ STATIC_PREFIX }}assets/PAGE03/MenuCard3/pg3card3bg.jpg) 60% 0 / 200% auto no-repeat;">
+
+                <div class="indexNumber">03</div>
+                <div class="contentRow">
+                    <h3>Application</h3><br>
+
+                    <p>Using the updated resume and list of job posts provided, you apply to the jobs. We don't
+                        currently
+                        provide cover letters, so if any of the applications requires one, you'll need to write one for
+                        that
+                        application.
+                    </p>
+                    <div class="serviceCardExplainMore">
+                        <div class="serviceCardExplainBackGround" style="background: linear-gradient(
+                                #a1a6e2d4,
+                                #2c6be399,
+                                #3c7ec1)
+                                no-repeat border-box,
+                                linear-gradient(
+                                #2c75ff00,
+                                #2c75ffff)
+                                no-repeat border-box,
+                                url({{ STATIC_PREFIX }}assets/PAGE03/MenuCard3/pg3card3bg.jpg) 60% 0 / 200% auto no-repeat;">
+                        </div>
+
+
+                    </div>
+                    </p>
+                </div>
+
+
+            </div>
+            <div class="column serviceCards" style="background: linear-gradient(
+                    #f7941d,
+                    #525e6c,
+                    #0e1f33)
+                    no-repeat border-box,
+                    linear-gradient(
+                    #2c75ff00,
+                    #2c75ffff)
+                    no-repeat border-box,
+                    url({{ STATIC_PREFIX }}assets/PAGE03/MenuCard4/pg3card4bg.jpg) 60% 0 / 200% auto no-repeat;">
+
+                <div class="indexNumber">04</div>
+                <div id="contentRow" class="contentRow">
+                    <h3>Record Results</h3><br>
+
+                    <p>We will provide a simply spreadsheet to track applications and their outcome. The goal is to get
+                        called back for an initial interview.
+                    </p>
+                    <div class="serviceCardExplainMore">
+                        <div class="serviceCardExplainBackGround" style="background: linear-gradient(
+                                #a1a6e2d4,
+                                #2c6be399,
+                                #3c7ec1)
+                                no-repeat border-box,
+                                linear-gradient(
+                                #2c75ff00,
+                                #2c75ffff)
+                                no-repeat border-box,
+                                url({{ STATIC_PREFIX }}assets/PAGE03/MenuCard4/pg3card4bg.jpg) 60% 0 / 200% auto no-repeat;"></div>
+
+
+                    </div>
+                    </p>
+                </div>
+
+
+            </div>
+            <div class="column serviceCards" style="background: linear-gradient(
+                    #f7941d,
+                    #525e6c,
+                    #0e1f33)
+                    no-repeat border-box,
+                    linear-gradient(
+                    #2c75ff00,
+                    #2c75ffff)
+                    no-repeat border-box,
+                    url({{ STATIC_PREFIX }}assets/PAGE03/MenuCard5/pg3card5bg.jpg) 60% 0 / 200% auto no-repeat;">
+
+                <div class="indexNumber">05</div>
+                <div class="contentRow">
+                    <h3>Conclusion</h3><br>
+
+                    <p>Step 5 above is the last phase of our Beta Trials, but our involvement doesn't stop there. As
+                        part of
+                        our high-touch placement services, we also offer interview prep, salary negotiation advice, and
+                        more!
+                    </p>
+                    <div class="serviceCardExplainMore">
+                        <div class="serviceCardExplainBackGround" style="background: linear-gradient(
+                                #a1a6e2d4,
+                                #2c6be399,
+                                #3c7ec1)
+                                no-repeat border-box,
+                                linear-gradient(
+                                #2c75ff00,
+                                #2c75ffff)
+                                no-repeat border-box,
+                                url({{ STATIC_PREFIX }}assets/PAGE03/MenuCard5/pg3card5bg.jpg) 60% 0 / 200% auto no-repeat;"></div>
+
+
+                    </div>
+                    </p>
+                </div>
+
+
+            </div>
+
+        </div>
+    </div>
+    <div id="pg3_Lottie_SquiggleBottom"></div>
+    <div class="section" id="PAGE04">
+        <div class="column">
+            <div class="section scrollBreak">
+
+                <div class="column formColumn">
+
+                    <form id="pg4_contactForm" action="https://formspree.io/f/mzbqzpbz" method="POST">
+
+                        <label>
+                            <div class="formErrors" id="formFirstName_error">* Please enter your first name.</div>
+                            First Name
+                            <input id="formFirstName" type="text" name="first_name"/>
+                        </label>
+
+                        <label>
+                            <div class="formErrors" id="formLastName_error">* Please enter your Surname.</div>
+                            Surname
+                            <input id="formLastName" type="text" name="last_name"/>
+                        </label>
+                        <label>
+                            <div class="formErrors" id="formEmail_error">* Please enter your email.</div>
+                            Email
+                            <input id="formEmail" type="email" name="email"/>
+                        </label>
+                        <label>
+                            <div class="formErrors" id="formPhone_error">* Please enter your phone number.</div>
+                            Phone (optional)
+                            <input id="formPhone" type="tel" name="phone"/>
+                        </label>
+                        <label>
+                            <div class="formErrors" id="subject_error">* Please enter a subject.</div>
+                            Subject
+                            <input id="formSubject" type="text" name="subject"/>
+                        </label>
+
+                        <label class="pg4_message">
+                            <div class="formErrors" id="formMessage_error">* Please enter a message.</div>
+                            Message
+                            <textarea id="formMessage" name="message"></textarea>
+                        </label>
+                        <div class="bottomRow">
+
+                            <div>
+                                <object style="color: #0e1f33;" class="contactIcon" type="image/svg+xml"
+                                        data="{{ STATIC_PREFIX }}assets/PAGE04/pg4_contactMail.svg"></object>
+                                info@hiredlabs.org<br>
+                            </div>
+                            <input id="submitForm" value="send" type="submit"/>
+                        </div>
+
+                        <p id="my-form-status"></p>
+                    </form>
+                </div>
+                <div class="column outroColumn">
+                    <div>
+                        <h2>
+
+                            </span> Contact Us</h2>
+                        <p>Please send us an email with any questions or feedback.</p>
+                    </div>
+                    <object class="pg4_sun" type="image/svg+xml"
+                            data="{{ STATIC_PREFIX }}assets/PAGE01/pg1_sun/pg1_sun.svg"></object>
+                </div>
+                <div id="pageBreak4"></div>
+            </div>
+        </div>
+        <object class="pg4_miniSun" type="image/svg+xml"
+                data="{{ STATIC_PREFIX }}assets/PAGE01/pg1_sun/pg1_sun.svg"></object>
+        <object id="pg4_mountainFront" class="pg4_mountainFront" type="image/svg+xml"
+                data="{{ STATIC_PREFIX }}assets/PAGE04/pg4_mountainFront.svg"></object>
+        <object class="pg4_mountainBack" type="image/svg+xml"
+                data="{{ STATIC_PREFIX }}assets/PAGE04/pg4_mountainBack.svg"></object>
+
+    </div>
+
+    <div id="InputLoader"></div>
+{% endblock %}
+
+{% block footer %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js"
+            integrity="sha256-pTxD+DSzIwmwhOqTFN+DB+nHjO4iAsbgfyFq5K5bcE0=" crossorigin="anonymous"></script>
+{% endblock %}
+
+{% block javascript %}
+    <script>
+        document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
+        document.body.scrollTop = 0; // For Safari
+    </script>
 {% endblock %}
