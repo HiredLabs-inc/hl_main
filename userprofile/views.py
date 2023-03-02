@@ -1,10 +1,9 @@
-from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
 from django.urls import reverse
 
 from .forms import UserRegistrationForm, CompleteProfileForm, UserPasswordChangeForm, PasswordResetForm
-
 # Import any models needed for views. Note: all views accessing db should require login
 from .models import Profile
 
@@ -41,8 +40,11 @@ def register(request):
 
 
 # All views below require login
+@login_required
+def staff(request):
+    return render(request, 'staff_home.html')
 
-# MOVE TO userprofile app
+
 @login_required
 def profile_view(request):
     user_profile = Profile.objects.all() \

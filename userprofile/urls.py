@@ -21,5 +21,4 @@ urlpatterns = [
     path('profile/view/', views.profile_view, name='profile_view'),
     path('profile/complete/', views.complete_profile, name='complete_profile'),
     path('profile/update/', views.update_profile, name='update_profile'),
-    # path('about/', views.about, name='about'),
 ]

@@ -1,26 +1,26 @@
-{% extends 'base.html' %}
+{% extends 'staff.html' %}
 
-{% block content%}
-  <h2>New User Registration</h2>
+{% block content %}
+    <h2>New User Registration</h2>
 
-  <hr>
-  <form action="" method="POST">
-    {% csrf_token %}
-    {% for field in form %}
-      <div>
-        <p>
-          {{ field.label }}: <br> {{ field }}
-        </p>
+    <hr>
+    <form action="" method="POST">
+        {% csrf_token %}
+        {% for field in form %}
+            <div>
+                <p>
+                    {{ field.label }}: <br> {{ field }}
+                </p>
 
-        {% for error in field.errors %}
-          <<small style="color: red">{{ error }}</small>
+                {% for error in field.errors %}
+                    <<small style="color: red">{{ error }}</small>
+                {% endfor %}
+            </div>
         {% endfor %}
-      </div>
-    {% endfor %}
 
-    <button type="submit">Submit</button>
-    <button type="reset">Reset</button>
-    <a href="{% url 'home' %}">Cancel</a>
+        <button type="submit">Submit</button>
+        <button type="reset">Reset</button>
+        <a href="{% url 'home' %}">Cancel</a>
 
-  </form>
-{% endblock%}
+    </form>
+{% endblock %}

@@ -42,6 +42,11 @@
             <li class="PAGE03Link">Process</li>
             <li><a style="text-decoration: none" href="{% url 'about' %}">About Us</a></li>
             <li class="PAGE04Link">Contact</li>
+            {% if user.is_authenticated %}
+                <li><a style="text-decoration: none" href="{% url 'staff' %}">Staff Only</a></li>
+            {% else %}
+                <li><a style="text-decoration: none" href="{% url 'userprofile:login' %}">Sign In</a></li>
+            {% endif %}
         </ul>
     </div>
     <div class="mobileHeader">
@@ -54,6 +59,11 @@
             <li class="PAGE03Link">Process</li>
             <li><a style="text-decoration: none" href="{% url 'about' %}">About Us</a></li>
             <li class="PAGE04Link">Contact</li>
+            {% if user.is_authenticated %}
+                <li><a style="text-decoration: none" href="{% url 'staff' %}">Staff Only</a></li>
+            {% else %}
+                <li><a style="text-decoration: none" href="{% url 'userprofile:login' %}">Sign In</a></li>
+            {% endif %}
         </ul>
     </div>
     <div class="section" id="PAGE01">

@@ -10,9 +10,9 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 import os
+from pathlib import Path
 
 from environ import Env
-from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -165,7 +165,7 @@ RESUME_OUT_PATH = os.path.join(BASE_DIR, 'resume_parser/static/output/')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 DEFAULT_FROM_EMAIL = 'jantonstock@gmail.com'
-LOGIN_REDIRECT_URL = 'home'
+LOGIN_REDIRECT_URL = 'staff'
 LOGIN_URL = 'login'
 
 # Comment out the lines below for dev, uncomment them in prod
