@@ -84,10 +84,10 @@ WSGI_APPLICATION = 'hl_main.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'HiredLabs',
+        'NAME': 'janton42$HiredLabs',
         'USER': env('DB_USER'),
         'PASSWORD': env('DB_PASSWORD'),
-        'HOST': 'localhost',
+        'HOST': 'janton42.mysql.pythonanywhere-services.com',
     }
 }
 
@@ -165,7 +165,7 @@ RESUME_OUT_PATH = os.path.join(BASE_DIR, 'resume_parser/static/output/')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 DEFAULT_FROM_EMAIL = 'jantonstock@gmail.com'
-LOGIN_REDIRECT_URL = 'home'
+LOGIN_REDIRECT_URL = 'staff'
 LOGIN_URL = 'login'
 
 # Comment out the lines below for dev, uncomment them in prod
