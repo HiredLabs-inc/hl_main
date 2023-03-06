@@ -47,22 +47,9 @@
                             </a>
                             <ul class="dropdown-menu">
                                 <li><a class="dropdown-item" href="{% url 'home' %}">Public Site</a></li>
-                                <li><a class="dropdown-item" href="#">Stuff You Can Access</a></li>
-                                {#                              {% if perms.tasktron %}#}
-                                {#                                  <li><a class="dropdown-item" href="{% url 'tasktron:view_tasks' %}">Tasktron</a></li>#}
-                                {#                              {% endif %}#}
-                                {#                              {% if perms.informedvoter %}#}
-                                {#                                  <li><a class="dropdown-item" href="{% url 'informedvoter:index' %}">Informed Voter</a></li>#}
-                                {#                              {% endif %}#}
-                                {#                              {% if perms.resume_parser %}#}
-                                {#                                  <li><a class="dropdown-item" href="{% url 'resume_parser:index' %}">Resume Parser</a></li>#}
-                                {#                              {% endif %}#}
-                                {#                              {% if perms.rates %}#}
-                                {#                                  <li><a class="dropdown-item" href="{% url 'rates:index' %}">Rate Recommender</a></li>#}
-                                {#                              {% endif %}#}
-                                {#                              {% if user.is_superuser %}#}
-                                {#                                  <li><a class="dropdown-item" href="{% url 'admin:index' %}">Admin Panel</a></li>#}
-                                {#                              {% endif %}#}
+                                {% if perms.cold_apply %}
+                                    <li><a class="dropdown-item" href="{% url 'cold_apply:index' %}">Cold Apply</a></li>
+                                {% endif %}
                             </ul>
                         </li>
                         <li class="nav-item dropdown">
@@ -71,6 +58,9 @@
                             </a>
                             <ul class="dropdown-menu">
                                 <li><a class="dropdown-item" href="{% url 'userprofile:logout' %}">Logout</a></li>
+                                {% if user.is_superuser %}
+                                    <li><a class="dropdown-item" href="{% url 'admin:index' %}">Admin Panel</a></li>
+                                {% endif %}
                                 {#                <li><a href="{% url 'userprofile:profile_view' %}">View Profile</a></li>#}
                                 {#                  <li><a href="{% url 'userprofile:password_change' %}">Change Password</a></li>#}
                             </ul>

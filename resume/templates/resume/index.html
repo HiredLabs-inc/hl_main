@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+{% load static %}
+{% get_static_prefix as STATIC_PREFIX %}
+
+{% block header %}
+<!-- <span id="right-fill"></span> -->
+<header>
+{#  <img class="heading-img" src="{{ STATIC_PREFIX }}images/central_park.png">#}
+  <div class="centered-content">
+   <h1>Jeff Stock</h1>
+  </div>
+</header>
+
+{% endblock %}
+
+{% block overview %}
+<div id="overview">
+  {% if overview %}
+  <p>
+    {% for summary in overview %}
+      {{ summary.text }}
+    {% endfor %}
+  </p>
+  {% else %}
+    <p>Nothing Here</p>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block work %}
+
+  <div id="work">
+    <h3 style="background: url(/static/images/section_heading_2.jpg) no-repeat fixed; background-size: cover;">Work Experience</h3>
+    {% if orgs %}
+      {% for org in orgs %}
+        {% if org.org_type == 'Work' %}
+        <div class="container">
+          <h4><a href="{{ org.website }}">{{ org.name }}</a></h4>
+          {%if work %}
+            {% for job in work %}
+              {% if job.org.name == org.name %}
+                <h5>{{ job.position }}</h5>
+                <h6>
+                  {{ job.start_date }} - {{ job.end_date }}
+                </h6>
+                {% if bullets %}
+                  <ul>
+                  {% for bullet in bullets %}
+                    {% if bullet.experience == job %}
+                        <li>{{ bullet.text }}</li>
+                    {% endif %}
+                  {% endfor %}
+                  </ul>
+                {% endif %}
+              {% endif %}
+            {% endfor %}
+          {% endif %}
+        </div>
+        {% endif %}
+      {% endfor %}
+    {% else %}
+      <p>No Organizations found - get a job, ya HUMP!</p>
+    {% endif %}
+  </div>
+
+{% endblock %}
+
+{% block education %}
+  {% if edu %}
+    <div id="edu">
+      <h3>Education</h3>
+        <ul>
+        {% for ed in edu %}
+          <li>{{ ed.degree.abbr }}: {{ ed.concentration }} <a href="{{ ed.org.website }}">{{ ed.org }}</a></li>
+        {% endfor %}
+        </ul>
+    </div>
+  {% endif %}
+{% endblock %}
+
+{% block certs %}
+
+<div id="certs">
+  {% if certs %}
+    <h3>Courses & Certifications</h3>
+    <ul>
+      {% for cert in certs%}
+          <br>
+        <li><strong>{{ cert.title }}:</strong><br>{{ cert.description }}<br><br><strong>Issuing Organization:</strong> <a href="{{ cert.org.website }}">{{ cert.org }}</a></li>
+
+      {% endfor %}
+    </ul>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block projects %}
+<div id="projects">
+  {% if projects %}
+    <h3>Projects </h3>
+    <ul>
+      {% for project in projects%}
+        <li><strong>{{ project.title }}:</strong><br>{{ project.description }}<br><br><strong>Organization:</strong> <a href="{{ project.org.website }}">{{ project.org }}</a><br><br></li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block activities%}
+  <div id="activities">
+    {% if activities %}
+      <h3>Activities</h3>
+      <ul>
+        {% for activity in activities%}
+          <li><strong>{{ activity.title }}:</strong><br>{{ activity.description }}<br><br><strong>Organization:</strong> <a href="{{ activity.org.website }}">{{ activity.org }}</a><br><br></li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  </div>
+{% endblock %}
+
+{% block languages %}
+<div id="languages">
+  <h3>Languages</h3>
+  <h4>Human</h4>
+
+  <ul>
+    {% for hlang in hlangs %}
+      <li>{{ hlang.title }}: {{ hlang.level }}</li>
+    {% endfor %}
+  </ul>
+  <h4>Computer</h4>
+  <ul>
+    {% for clang in clangs %}
+      <li>{{ clang.title }}: {{ clang.level }}</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}
+
+{% block skills %}
+<div id="skills">
+  <h3>Other Skills, Frameworks and Abilities</h3>
+
+  <ul>
+    {% for framework in frameworks %}
+      <li>{{ framework.title }}: {{ framework.level }}</li>
+    {% endfor %}
+    {% for ability in ablities %}
+      <li>{{ ability.title}}: {{ ability.level }}</li>
+    {% endfor %}
+    {% for technology in technologies %}
+      <li>{{ technology.title }}: {{ technology.level }}</li>
+    {% endfor %}
+    {% for skill in skills%}
+      <li>{{ skill.title }}: {{ skill.level }}</li>
+    {% endfor %}
+</ul>
+</div>
+{% endblock %}

@@ -8,7 +8,17 @@
     <br>
     <p>Here are the tools you have access to:</p>
     <br>
-    <p>Nothing here.</p>
+    <ul>
+        {% if perms.cold_apply %}
+            <li><a class="dropdown-item" href="{% url 'cold_apply:index' %}">Cold Apply</a></li>
+        {% else %}
+            <p>You have access to nothing.</p>
+            <br>
+            <br>
+            <p>If you think this is an error, please contact your administrator.</p>
+        {% endif %}
+
+    </ul>
 {% endblock %}
 {% block header %}
 {% endblock %}

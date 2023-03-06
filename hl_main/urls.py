@@ -24,5 +24,6 @@ urlpatterns = [
     path('about/', userprofile_views.about, name='about'),
     path('staff/', userprofile_views.staff, name='staff'),
     path('userprofile/', include('userprofile.urls')),
+    path('cold_apply/', include('cold_apply.urls')),
 
 ]
