@@ -61,8 +61,10 @@ class Job(models.Model):
         ('Closed', 'Closed'),
     ]
     REASONS = [
+        ('In Progress', 'In Progress'),
         ('Employer Closed', 'Employer Closed'),
         ('Candidate Rejected', 'Candidate Rejected'),
+        ('Cycle Complete', 'Cycle Complete'),
     ]
     company = models.ForeignKey(Organization, on_delete=models.CASCADE)
     participant = models.ForeignKey(Participant, on_delete=models.CASCADE)
@@ -91,7 +93,7 @@ class Application(models.Model):
         ('Withdrawn', 'Withdrawn'),
     ]
     participant = models.ForeignKey(Participant, on_delete=models.CASCADE)
-    job = models.ForeignKey(Job, on_delete=models.CASCADE)
+    job = models.ForeignKey(Job, on_delete=models.SET_NULL, null=True)
     status = models.CharField(max_length=20, choices=STATUSES, default='Submitted')
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='application_created_by', null=True)
