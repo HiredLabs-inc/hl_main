@@ -1,18 +1,74 @@
 {% extends 'staff.html' %}
 
-{% block title %}Participant List{% endblock %}
+{% block title %}
+    <h1>Participant Pipeline</h1>
+    <p>Below is Hired Labs' "Cold Apply" process. Participants start at the top (phase 1), and advance to appropriate
+        phasess down the page. Each phase has a brief explanation of the general activities it includes.</p>
+{% endblock %}
 
 {% block content %}
-
+    <h2>Phase 1</h2>
+    <p>Initial contact made, and interest shown from the participant. Intake call not scheduled.</p>
     <ul>
         {% for participant in object_list %}
+            {% if participant.current_phase == 'PHASE_1' %}
+                <li><a href="{% url 'cold_apply:participant_detail' participant.id %}"> {{ participant.name }}</a></li>
+            {% endif %}
+        {% empty %}
+            <li>No participants</li>
 
-            <li><a href="{% url 'cold_apply:participant_detail' participant.id %}"> {{ participant.name }}</a></li>
+        {% endfor %}
+    </ul>
+    <h2>Phase 2</h2>
+    <p>Initial job search and resume creation IN PROGRESS after intake call. End product not shared with
+        participant.</p>
+    <ul>
+        {% for participant in object_list %}
+            {% if participant.current_phase == 'PHASE_2' %}
+                <li><a href="{% url 'cold_apply:participant_detail' participant.id %}"> {{ participant.name }}</a></li>
+            {% endif %}
         {% empty %}
             <li>No participants</li>
 
         {% endfor %}
     </ul>
 
+    <h2>Phase 3</h2>
+    <p>End product of Phase 2 shared with participant. Applications and feedback on resume and job post list is IN
+        PROGRESS.</p>
+    <ul>
+        {% for participant in object_list %}
+            {% if participant.current_phase == 'PHASE_3' %}
+                <li><a href="{% url 'cold_apply:participant_detail' participant.id %}"> {{ participant.name }}</a></li>
+            {% endif %}
+        {% empty %}
+            <li>No participants</li>
 
+        {% endfor %}
+    </ul>
+
+    <h2>Phase 4</h2>
+    <p>Iterative process to refine job search results and/or resume(s) is IN PROGRESS.</p>
+    <ul>
+        {% for participant in object_list %}
+            {% if participant.current_phase == 'PHASE_4' %}
+                <li><a href="{% url 'cold_apply:participant_detail' participant.id %}"> {{ participant.name }}</a></li>
+            {% endif %}
+        {% empty %}
+            <li>No participants</li>
+
+        {% endfor %}
+    </ul>
+    <h2>Phase 5</h2>
+    <p>Nurture relationship. Participants are not active, but have STARTED at least one phase.</p>
+    <ul>
+        {% for participant in object_list %}
+            {% if participant.current_phase == 'PHASE_5' %}
+                <li><a href="{% url 'cold_apply:participant_detail' participant.id %}"> {{ participant.name }}</a></li>
+            {% endif %}
+        {% empty %}
+            <li>No participants</li>
+
+        {% endfor %}
+    </ul>
 {% endblock %}
