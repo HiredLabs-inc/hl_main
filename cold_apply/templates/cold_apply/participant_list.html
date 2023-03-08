@@ -7,7 +7,7 @@
     <ul>
         {% for participant in object_list %}
 
-            <li><a> {{ participant.name }}</a></li>
+            <li><a href="{% url 'cold_apply:participant_detail' participant.id %}"> {{ participant.name }}</a></li>
         {% empty %}
             <li>No participants</li>
 

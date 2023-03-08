@@ -50,7 +50,7 @@
                                     <li><a class="dropdown-item" href="{% url 'cold_apply:index' %}">Cold Apply</a></li>
                                 {% endif %}
                                 <li><a class="dropdown-item" href="{% url 'home' %}">View Public Site</a></li>
-                                {% if user.is_superuser %}
+                                {% if user.is_staff %}
                                     <li><a class="dropdown-item" href="{% url 'admin:index' %}">Admin Panel</a></li>
                                 {% endif %}
                             </ul>

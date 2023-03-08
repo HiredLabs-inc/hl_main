@@ -1,0 +1,31 @@
+{% extends 'staff.html' %}
+
+{% block content %}
+    <h1>{{ object.name }}</h1>
+    <p>Email: {{ object.email }}</p>
+    <p>Phone: {{ object.phone }}</p>
+    <br>
+    <br>
+    <p>Veteran Status:
+        {% if object.veteran %}
+            Veteran
+        {% else %}
+            Not a Veteran
+        {% endif %}
+    </p>
+    <br>
+    <br>
+    <p>Current Cold Apply Process Phase: {{ object.current_phase }}</p>
+    {#    TODO: link to uploaded resumes#}
+    <br>
+    <br>
+    <br>
+    <br>
+    <p>Participant added:</p>
+    <p>{{ object.created_at }} by {{ object.created_by }}</p>
+    <p>Participant last updated date:</p>
+    <p>{{ object.updated_at }} by {{ object.updated_by }}</p>
+
+    {#    <button type="button" href="{% url 'staff:participant_update' object.id %}" class="btn btn-primary">Edit</button>#}
+    <a href="{% url 'cold_apply:index' %}" class="btn btn-primary">Back</a>
+{% endblock %}
