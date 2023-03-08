@@ -46,9 +46,12 @@
                                role="button" aria-haspopup="true" aria-expanded="false">Toolbox
                             </a>
                             <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="{% url 'home' %}">Public Site</a></li>
                                 {% if perms.cold_apply %}
                                     <li><a class="dropdown-item" href="{% url 'cold_apply:index' %}">Cold Apply</a></li>
+                                {% endif %}
+                                <li><a class="dropdown-item" href="{% url 'home' %}">View Public Site</a></li>
+                                {% if user.is_superuser %}
+                                    <li><a class="dropdown-item" href="{% url 'admin:index' %}">Admin Panel</a></li>
                                 {% endif %}
                             </ul>
                         </li>
@@ -58,9 +61,6 @@
                             </a>
                             <ul class="dropdown-menu">
                                 <li><a class="dropdown-item" href="{% url 'userprofile:logout' %}">Logout</a></li>
-                                {% if user.is_superuser %}
-                                    <li><a class="dropdown-item" href="{% url 'admin:index' %}">Admin Panel</a></li>
-                                {% endif %}
                                 {#                <li><a href="{% url 'userprofile:profile_view' %}">View Profile</a></li>#}
                                 {#                  <li><a href="{% url 'userprofile:password_change' %}">Change Password</a></li>#}
                             </ul>
