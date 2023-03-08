@@ -18,7 +18,7 @@ class Participant(models.Model):
     name = models.CharField(max_length=100)
     email = models.EmailField()
     phone = models.CharField(max_length=20, blank=True, null=True)
-    uploaded_resume = models.FileField(upload_to='resumes/', blank=True, null=True)
+    uploaded_resume = models.FileField(upload_to='./cold_apply/static/uploads', blank=True, null=True)
     veteran = models.BooleanField(default=False)
     active = models.BooleanField(default=True)
     current_phase = models.CharField(max_length=20, choices=PHASES, default='PHASE_1')
@@ -66,9 +66,9 @@ class Job(models.Model):
         ('Candidate Rejected', 'Candidate Rejected'),
         ('Cycle Complete', 'Cycle Complete'),
     ]
-    company = models.ForeignKey(Organization, on_delete=models.CASCADE)
-    participant = models.ForeignKey(Participant, on_delete=models.CASCADE)
-    title = models.ForeignKey(Position, on_delete=models.CASCADE)
+    company = models.ForeignKey(Organization, on_delete=models.SET_NULL, null=True)
+    participant = models.ForeignKey(Participant, on_delete=models.SET_NULL, null=True)
+    title = models.ForeignKey(Position, on_delete=models.SET_NULL, null=True)
     description = models.TextField()
     status = models.CharField(max_length=20, choices=STATUSES, default='Open')
     status_reason = models.CharField(max_length=20, choices=REASONS, blank=True, null=True)
@@ -92,7 +92,6 @@ class Application(models.Model):
         ('Rejected', 'Rejected'),
         ('Withdrawn', 'Withdrawn'),
     ]
-    participant = models.ForeignKey(Participant, on_delete=models.CASCADE)
     job = models.ForeignKey(Job, on_delete=models.SET_NULL, null=True)
     status = models.CharField(max_length=20, choices=STATUSES, default='Submitted')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -101,7 +100,9 @@ class Application(models.Model):
     updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='application_updated_by', null=True)
 
     def __str__(self):
-        return f'{self.participant}: {self.job}, {self.status}'
+        return f'{self.job.participant}: {self.job}, {self.status}'
 
     class Meta:
         verbose_name_plural = 'Applications'
+
+# TODO: Add a model for the resume. Tailoring will be done by setting FK to resume.Position
