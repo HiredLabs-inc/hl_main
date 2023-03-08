@@ -1,8 +1,11 @@
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render, redirect
 from django.urls import reverse
+from django.views.generic import ListView
 
 from .forms import ParticipantForm, InteractionForm
+from .models import Participant
 
 
 @login_required
@@ -43,3 +46,25 @@ def create_Interaction(request):
         form = InteractionForm()
     context = {'form': form}
     return render(request, 'cold_apply/create_interaction.html', context)
+
+
+# View participants using generic ListView
+class ParticipantListView(LoginRequiredMixin, ListView):
+    model = Participant
+    template_name = 'cold_apply/participant_list.html'
+    context_object_name = 'participants'
+    paginate_by = 10
+
+    def get_queryset(self):
+        return Participant.objects.all().order_by('name')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form'] = ParticipantForm()
+        return context
+
+# View participant details using generic DetailView
+
+# View interactions using generic ListView
+
+# View interaction details using generic DetailView

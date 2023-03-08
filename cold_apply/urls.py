@@ -1,8 +1,9 @@
 from django.urls import path
 
-from . import views
+from .views import ParticipantListView
 
 app_name = 'cold_apply'
 urlpatterns = [
-    path('', views.index, name='index'),
+    path('', ParticipantListView.as_view(), name='index'),
+
 ]

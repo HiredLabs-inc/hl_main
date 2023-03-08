@@ -1,0 +1,18 @@
+{% extends 'staff.html' %}
+
+{% block title %}Participant List{% endblock %}
+
+{% block content %}
+
+    <ul>
+        {% for participant in object_list %}
+
+            <li><a> {{ participant.name }}</a></li>
+        {% empty %}
+            <li>No participants</li>
+
+        {% endfor %}
+    </ul>
+
+
+{% endblock %}
