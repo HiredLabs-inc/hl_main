@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.views.generic import ListView, DetailView
 
 from .forms import ParticipantForm, InteractionForm
-from .models import Participant, Job
+from .models import Participant, Job, Phase
 
 
 @login_required
@@ -49,14 +49,13 @@ def create_Interaction(request):
     return render(request, 'cold_apply/create_interaction.html', context)
 
 
-class ParticipantListView(LoginRequiredMixin, ListView):
-    model = Participant
+class PhaseListView(LoginRequiredMixin, ListView):
+    model = Phase
     template_name = 'cold_apply/participant_list.html'
-    context_object_name = 'participants'
-    paginate_by = 10
+    context_object_name = 'phases'
 
     def get_queryset(self):
-        return Participant.objects.all().order_by('name')
+        return Phase.objects.all().order_by('order')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

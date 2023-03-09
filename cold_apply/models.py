@@ -112,6 +112,7 @@ class Phase(models.Model):
     end = models.CharField(max_length=200)
     result = models.CharField(max_length=200)
     active = models.BooleanField(default=True)
+    order = models.IntegerField(default=0)
 
     def __str__(self):
         return self.title
@@ -122,9 +123,15 @@ class Phase(models.Model):
 
 # TODO: Model for steps
 class Step(models.Model):
+    OWNER_CHOICES = [
+        ('Participant', 'Participant'),
+        ('Hired Labs', 'Hired Labs'),
+    ]
     title = models.CharField(max_length=200)
     description = models.TextField()
     phase = models.ForeignKey(Phase, on_delete=models.CASCADE)
+    order = models.IntegerField(default=0)
+    owner = models.CharField(max_length=20, choices=OWNER_CHOICES, default='Hired Labs')
 
     def __str__(self):
         return self.title
