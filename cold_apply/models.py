@@ -23,7 +23,7 @@ class Participant(models.Model):
     updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='updated_by', null=True)
 
     def __str__(self):
-        return self.name
+        return f'{self.name}: {self.email}'
 
     class Meta:
         verbose_name_plural = 'Participants'
@@ -134,7 +134,7 @@ class Step(models.Model):
     owner = models.CharField(max_length=20, choices=OWNER_CHOICES, default='Hired Labs')
 
     def __str__(self):
-        return self.title
+        return f'{self.title}: {self.phase.title}'
 
     class Meta:
         verbose_name_plural = 'Steps'

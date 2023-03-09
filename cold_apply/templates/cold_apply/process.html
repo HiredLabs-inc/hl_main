@@ -11,69 +11,69 @@
 {% endblock %}
 
 {% block content %}
-
-
     <h2 class="sub-header">Active Participants</h2>
-    {# Phase 1 #}
     {% for phase in phases %}
         {% if phase.active %}
-            <div class="row">
-                <h3 class="sub-header">{{ phase.title }}</h3>
-                <p>{{ phase.description }}</p>
-                <div class="table-responsive">
-                    <table class="table-hover">
-                        <tr>
-                            <th>Start</th>
-                            <th>Steps</th>
-                            <th>End</th>
-                            <th>Result</th>
-                        </tr>
-                        <tr>
-                            <td>{{ phase.start }}</td>
-                            <td>
-                                <ul>
-                                    {% for step in phase.step_set.values %}
-                                        <li>{{ step.title }}</li>
-                                    {% endfor %}
-                                </ul>
-                            </td>
-                            <td>{{ phase.end }}</td>
-                            <td>{{ phase.result }}</td>
-                        </tr>
-                    </table>
+            <h4 class="sub-header">{{ phase.title }}</h4>
+            <table class="table table-stribed">
+                <thead>
+                <tr>
+                    <th>Start</th>
+                    <th>Steps</th>
+                    <th>End</th>
+                    <th>Result</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>{{ phase.start }}</td>
+                    <td>
+                        <ul>
+                            {% for step in phase.step_set.values %}
+                                <li>{{ step.title }}</li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                    <td>{{ phase.end }}</td>
+                    <td>{{ phase.result }}</td>
+                </tr>
+                </tbody>
+            </table>
 
-                </div>
-            </div>
         {% endif %}
     {% endfor %}
+    <br>
+    <br>
+    <br>
     <h2 class="sub-header">Inactive Participants</h2>
     {% for phase in phases %}
         {% if not phase.active %}
-            <div class="row">
-                <h3 class="sub-header">{{ phase.title }}</h3>
-                <div class="table-responsive"
-                <table class="table-hover">
-                    <tr>
-                        <th>Start</th>
-                        <th>Steps</th>
-                        <th>End</th>
-                        <th>Result</th>
-                    </tr>
-                    <tr>
-                        <td>{{ phase.start }}</td>
-                        <td>
-                            <ul>
-                                {% for step in phase.step_set.values %}
-                                    <li>{{ step.title }}</li>
-                                {% endfor %}
-                            </ul>
-                        </td>
-                        <td>{{ phase.end }}</td>
-                        <td>{{ phase.result }}</td>
-                    </tr>
-                </table>
-                </table>
-            </div>
+            <h4 class="sub-header">{{ phase.title }}</h4>
+            <table class="table table-stribed">
+                <thead>
+                <tr>
+                    <th>Start</th>
+                    <th>Steps</th>
+                    <th>End</th>
+                    <th>Result</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>{{ phase.start }}</td>
+                    <td>
+                        <ul>
+                            {% for step in phase.step_set.values %}
+                                <li>{{ step.title }}</li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                    <td>{{ phase.end }}</td>
+                    <td>{{ phase.result }}</td>
+                </tr>
+                </tbody>
+            </table>
+
         {% endif %}
     {% endfor %}
 

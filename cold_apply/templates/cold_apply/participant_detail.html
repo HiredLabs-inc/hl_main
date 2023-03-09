@@ -13,7 +13,8 @@
         <p class="text-danger">Do Not Contact</p>
     {% endif %}
     <p>Email: {{ object.email }} | Phone: {{ object.phone }}</p>
-    <p>Current Phase: {{ object.current_phase }}</p>
+    <p>Current Phase: {{ object.current_step.phase.title }}</p>
+    <p>Current Step: {{ object.current_step.title }}</p>
     <p>Uploaded Resume: {{ object.uploaded_resume_title }}
         {#        <a href="{{ MEDIA_URL }}{{ object.uploaded_resume }}">#}
         {#            {{ object.uploaded_resume_title }}#}

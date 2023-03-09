@@ -3,7 +3,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.utils import timezone
-from django.views.generic import ListView, DetailView
+from django.views.generic import ListView, DetailView, CreateView
 
 from .forms import ParticipantForm, InteractionForm
 from .models import Participant, Job, Phase
@@ -83,7 +83,7 @@ class ParticipantListView(LoginRequiredMixin, ListView):
 
 class ParticipantDetailView(LoginRequiredMixin, DetailView):
     model = Participant
-    template_name = 'cold_apply/participant_list.html'
+    template_name = 'cold_apply/participant_detail.html'
     context_object_name = 'participants'
     paginate_by = 10
 
@@ -108,10 +108,32 @@ class JobDetailView(LoginRequiredMixin, DetailView):
 
         return context
 
+
 # TODO Create Job using generic CreateView
 
 # TODO Create Participant using generic CreateView
 
+class ParticipantCreateView(LoginRequiredMixin, CreateView):
+    model = Participant
+    template_name = 'cold_apply/participant_create.html'
+    fields = ['name', 'email', 'phone', 'veteran', 'uploaded_resume', 'uploaded_resume_title', 'current_step',
+              'created_by', 'updated_by']
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['now'] = timezone.now()
+
+        return context
+
+    def form_valid(self, form):
+        if form.is_valid():
+            participant = form.save(commit=False)
+            participant.user = self.request.user
+            participant.save()
+            return redirect(reverse('cold_apply:index'))
+        else:
+            print(form.errors)
+        return super().form_valid(form)
 # TODO Create Interaction using generic CreateView
 
 # TODO View interactions using generic ListView
