@@ -108,7 +108,11 @@
             {% if user.is_authenticated %}
                 <p class="text-muted">Logged in as
                     {% if user.is_superuser %}
-                        </s>uperuser
+                        superuser
+                    {% elif user.is_admin %}
+                        admin user
+                    {% elif user.is_staff %}
+                        staff user
                     {% endif %}
                     {{ user.username }}</p>
             {% endif %}
