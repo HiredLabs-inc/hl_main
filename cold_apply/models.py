@@ -8,13 +8,6 @@ from resume.models import Organization, Overview, Position, Degree, Concentratio
 # Create your models here.
 
 class Participant(models.Model):
-    PHASES = [
-        ('PHASE_1', 'PHASE_1'),
-        ('PHASE_2', 'PHASE_2'),
-        ('PHASE_3', 'PHASE_3'),
-        ('PHASE_4', 'PHASE_4'),
-        ('PHASE_5', 'PHASE_5'),
-    ]
     name = models.CharField(max_length=100)
     email = models.EmailField()
     phone = models.CharField(max_length=20, blank=True, null=True)
@@ -23,7 +16,7 @@ class Participant(models.Model):
     uploaded_resume_title = models.CharField(max_length=100, blank=True, null=True)
     veteran = models.BooleanField(default=False)
     active = models.BooleanField(default=True)
-    current_phase = models.CharField(max_length=20, choices=PHASES, default='PHASE_1')
+    current_step = models.ForeignKey('Step', on_delete=models.SET_NULL, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='created_by', null=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -108,4 +101,33 @@ class Application(models.Model):
     class Meta:
         verbose_name_plural = 'Applications'
 
+
 # TODO: Add a model for the resume. Tailoring will be done by setting FK to resume.Position
+
+# TODO: Model for phases
+
+class Phase(models.Model):
+    title = models.CharField(max_length=200)
+    start = models.CharField(max_length=200)
+    end = models.CharField(max_length=200)
+    result = models.CharField(max_length=200)
+    active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name_plural = 'Phases'
+
+
+# TODO: Model for steps
+class Step(models.Model):
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    phase = models.ForeignKey(Phase, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name_plural = 'Steps'
