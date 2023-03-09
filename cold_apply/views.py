@@ -129,7 +129,7 @@ class JobCreateView(LoginRequiredMixin, CreateView):
             job.created_by = self.request.user
             job.updated_by = self.request.user
             job.save()
-            return redirect(reverse('cold_apply:index'))
+            return redirect(reverse('cold_apply:confirm_add_job'))
         else:
             print(form.errors)
         return super().form_valid(form)
