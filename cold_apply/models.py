@@ -18,7 +18,8 @@ class Participant(models.Model):
     name = models.CharField(max_length=100)
     email = models.EmailField()
     phone = models.CharField(max_length=20, blank=True, null=True)
-    uploaded_resume = models.FileField(upload_to='./cold_apply/static/uploads', blank=True, null=True)
+    uploaded_resume = models.FileField(upload_to='./cold_apply/static/uploads/', blank=True, null=True)
+    uploaded_resume_title = models.CharField(max_length=100, blank=True, null=True)
     veteran = models.BooleanField(default=False)
     active = models.BooleanField(default=True)
     current_phase = models.CharField(max_length=20, choices=PHASES, default='PHASE_1')
@@ -72,13 +73,14 @@ class Job(models.Model):
     description = models.TextField()
     status = models.CharField(max_length=20, choices=STATUSES, default='Open')
     status_reason = models.CharField(max_length=20, choices=REASONS, blank=True, null=True)
+    application_link = models.URLField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='job_created_by', null=True)
     updated_at = models.DateTimeField(auto_now=True)
     updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='job_updated_by', null=True)
 
     def __str__(self):
-        return f'{self.company}: {self.title}, {self.status}'
+        return f'{self.company}: {self.title}, {self.status}: {self.participant.name}'
 
     class Meta:
         verbose_name_plural = 'Jobs'

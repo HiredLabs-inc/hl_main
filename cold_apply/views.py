@@ -2,10 +2,11 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render, redirect
 from django.urls import reverse
+from django.utils import timezone
 from django.views.generic import ListView, DetailView
 
 from .forms import ParticipantForm, InteractionForm
-from .models import Participant
+from .models import Participant, Job
 
 
 @login_required
@@ -59,10 +60,12 @@ class ParticipantListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
+        context['now'] = timezone.now()
+
         return context
 
 
-# TODO: View participant details using generic DetailView
 class ParticipantDetailView(LoginRequiredMixin, DetailView):
     model = Participant
     template_name = 'cold_apply/participant_detail.html'
@@ -71,7 +74,30 @@ class ParticipantDetailView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context['jobs'] = Job.objects.filter(participant=self.object)
+        context['now'] = timezone.now()
+
         return context
+
+
+# TODO View Job details using generic DetailView
+class JobDetailView(LoginRequiredMixin, DetailView):
+    model = Job
+    template_name = 'cold_apply/job_detail.html'
+    context_object_name = 'jobs'
+    paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['now'] = timezone.now()
+
+        return context
+
+# TODO Create Job using generic CreateView
+
+# TODO Create Participant using generic CreateView
+
+# TODO Create Interaction using generic CreateView
 
 # TODO View interactions using generic ListView
 
