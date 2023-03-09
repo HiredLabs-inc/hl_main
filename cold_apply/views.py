@@ -227,7 +227,6 @@ class TitleCreateView(LoginRequiredMixin, CreateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['pk'] = self.kwargs['pk']
         context['now'] = timezone.now()
 
         return context
@@ -236,7 +235,7 @@ class TitleCreateView(LoginRequiredMixin, CreateView):
         if form.is_valid():
             title = form.save(commit=False)
             title.save()
-            return redirect(reverse('cold_apply:index'))
+            return redirect(reverse('cold_apply:confirm_add_title'))
         else:
             print(form.errors)
         return super().form_valid(form)
