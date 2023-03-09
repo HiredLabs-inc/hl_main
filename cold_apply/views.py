@@ -51,7 +51,7 @@ def create_Interaction(request):
 
 class PhaseListView(LoginRequiredMixin, ListView):
     model = Phase
-    template_name = 'cold_apply/participant_list.html'
+    template_name = 'cold_apply/process.html'
     context_object_name = 'phases'
 
     def get_queryset(self):
@@ -59,7 +59,23 @@ class PhaseListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context['now'] = timezone.now()
 
+        return context
+
+
+class ParticipantListView(LoginRequiredMixin, ListView):
+    model = Phase
+    template_name = 'cold_apply/participant_list.html'
+    context_object_name = 'phases'
+    paginate_by = 10
+
+    def get_queryset(self):
+        return Phase.objects.all().order_by('order')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['participants'] = Participant.objects.all()
         context['now'] = timezone.now()
 
         return context
@@ -67,7 +83,7 @@ class PhaseListView(LoginRequiredMixin, ListView):
 
 class ParticipantDetailView(LoginRequiredMixin, DetailView):
     model = Participant
-    template_name = 'cold_apply/participant_detail.html'
+    template_name = 'cold_apply/participant_list.html'
     context_object_name = 'participants'
     paginate_by = 10
 

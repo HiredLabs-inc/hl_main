@@ -4,41 +4,44 @@
 
 {% block title %}
     <h1>Participant Pipeline</h1>
-    <p>Below is Hired Labs' "Cold Apply" process. Participants start at the top (phase 1), and advance to appropriate
-        phases down the page. Each phase has a brief explanation of the general activities it includes.</p>
+    <p>Below is the current list of participants in our Cold Apply process. For details on the process, please see the
+        <a href="{% url 'cold_apply:process' %}">process overview</a>.</p>
+    {#    <a class="btn btn-primary" href="{% url 'cold_apply:participant_create' %}">Add New Participant</a>#}
     <p class="text-muted">Data retrieved on {{ now|date }} at {{ now|time }} {{ TIME_ZONE }}</p>
 {% endblock %}
 
 {% block content %}
-
-
     <h2 class="sub-header">Active Participants</h2>
-    {# Phase 1 #}
     {% for phase in phases %}
         {% if phase.active %}
             <div class="row">
-                <h3 class="sub-header">{{ phase.title }}</h3>
-                <p>{{ phase.description }}</p>
+                <h4 class="sub-header">{{ phase.title }}</h4>
                 <div class="table-responsive">
-                    <table class="table-hover">
+                    {% if not phase.participants %}
+                        <p class="text-danger">No participants in this phase.</p>
+                    {% else %}
+                        <table class="table-hover">
                         <tr>
-                            <th>Start</th>
-                            <th>Steps</th>
-                            <th>End</th>
-                            <th>Result</th>
+                            <th>Name</th>
+                            <th>Step</th>
+                            <th>Updated at</th>
+                            <th>Updated by</th>
                         </tr>
-                        <tr>
-                            <td>{{ phase.start }}</td>
-                            <td>
-                                <ul>
-                                    {% for step in phase.step_set.values %}
-                                        <li>{{ step.title }}</li>
-                                    {% endfor %}
-                                </ul>
-                            </td>
-                            <td>{{ phase.end }}</td>
-                            <td>{{ phase.result }}</td>
-                        </tr>
+
+                        {% for participant in phase.participants %}
+                            {% if participant.current_step.phase == phase %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'cold_apply:participant_detail' participant.id %}"{{ participant.name }}
+                                    </td>
+                                    <td>{{ participant.current_step.title }}</td>
+                                    <td>{{ participant.updated_at }}</td>
+                                    <td>{{ participantupdated_by }}</td>
+                                </tr>
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+
                     </table>
 
                 </div>
@@ -49,27 +52,31 @@
     {% for phase in phases %}
         {% if not phase.active %}
             <div class="row">
-                <h3 class="sub-header">{{ phase.title }}</h3>
-                <table class="table-hover">
-                    <tr>
-                        <th>Start</th>
-                        <th>Steps</th>
-                        <th>End</th>
-                        <th>Result</th>
-                    </tr>
-                    <tr>
-                        <td>{{ phase.start }}</td>
-                        <td>
-                            <ul>
-                                {% for step in phase.step_set.values %}
-                                    <li>{{ step.title }}</li>
-                                {% endfor %}
-                            </ul>
-                        </td>
-                        <td>{{ phase.end }}</td>
-                        <td>{{ phase.result }}</td>
-                    </tr>
-                </table>
+                <h4 class="sub-header">{{ phase.title }}</h4>
+                <div class="table-responsive">
+                    {% if not phase.participants %}
+                        <p class="text-info">No participants in this phase.</p>
+                    {% else %}
+                        <table class="table-hover">
+                            <tr>
+                                <th>Name</th>
+                                <th>Step</th>
+                                <th>Updated at</th>
+                                <th>Updated by</th>
+                            </tr>
+                            {% for participant in phase.participants %}
+                                {% if participant.current_step.phase == phase %}
+                                    <tr>
+                                        <td>{{ participant.name }}</td>
+                                        <td>{{ participant.current_step.title }}</td>
+                                        <td>{{ participant.updated_at }}</td>
+                                        <td>{{ participantupdated_by }}</td>
+                                    </tr>
+                                {% endif %}
+                            {% endfor %}
+                        </table>
+                    {% endif %}
+                </div>
             </div>
         {% endif %}
     {% endfor %}

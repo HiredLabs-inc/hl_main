@@ -1,0 +1,80 @@
+{% extends 'staff.html' %}
+{% load tz %}
+{% get_current_timezone as TIME_ZONE %}
+
+{% block title %}
+    <h1>Process Overview</h1>
+    <p>Below is Hired Labs' "Cold Apply" process. Participants start at the top (phase 1), and advance to appropriate
+        phases down the page. Each phase has a brief explanation of the general activities it includes.</p>
+    <a class="btn btn-primary" href="{% url 'cold_apply:index' %}">Back to Pipeline</a>
+    <p class="text-muted">Data retrieved on {{ now|date }} at {{ now|time }} {{ TIME_ZONE }}</p>
+{% endblock %}
+
+{% block content %}
+
+
+    <h2 class="sub-header">Active Participants</h2>
+    {# Phase 1 #}
+    {% for phase in phases %}
+        {% if phase.active %}
+            <div class="row">
+                <h3 class="sub-header">{{ phase.title }}</h3>
+                <p>{{ phase.description }}</p>
+                <div class="table-responsive">
+                    <table class="table-hover">
+                        <tr>
+                            <th>Start</th>
+                            <th>Steps</th>
+                            <th>End</th>
+                            <th>Result</th>
+                        </tr>
+                        <tr>
+                            <td>{{ phase.start }}</td>
+                            <td>
+                                <ul>
+                                    {% for step in phase.step_set.values %}
+                                        <li>{{ step.title }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </td>
+                            <td>{{ phase.end }}</td>
+                            <td>{{ phase.result }}</td>
+                        </tr>
+                    </table>
+
+                </div>
+            </div>
+        {% endif %}
+    {% endfor %}
+    <h2 class="sub-header">Inactive Participants</h2>
+    {% for phase in phases %}
+        {% if not phase.active %}
+            <div class="row">
+                <h3 class="sub-header">{{ phase.title }}</h3>
+                <div class="table-responsive"
+                <table class="table-hover">
+                    <tr>
+                        <th>Start</th>
+                        <th>Steps</th>
+                        <th>End</th>
+                        <th>Result</th>
+                    </tr>
+                    <tr>
+                        <td>{{ phase.start }}</td>
+                        <td>
+                            <ul>
+                                {% for step in phase.step_set.values %}
+                                    <li>{{ step.title }}</li>
+                                {% endfor %}
+                            </ul>
+                        </td>
+                        <td>{{ phase.end }}</td>
+                        <td>{{ phase.result }}</td>
+                    </tr>
+                </table>
+                </table>
+            </div>
+        {% endif %}
+    {% endfor %}
+
+{% endblock %}
