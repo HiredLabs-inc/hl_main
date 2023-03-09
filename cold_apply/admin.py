@@ -23,9 +23,9 @@ class InteractionAdmin(admin.ModelAdmin):
 
 
 class JobAdmin(admin.ModelAdmin):
-    list_display = ('title', 'status', 'created_at', 'updated_at')
-    list_filter = ('title', 'status', 'created_at', 'updated_at')
-    search_fields = ('title', 'status', 'created_at', 'updated_at')
+    list_display = ('title', 'company', 'status', 'created_at', 'participant')
+    list_filter = ('title', 'company', 'status', 'created_at', 'participant')
+    search_fields = ('title', 'company', 'status', 'created_at', 'participant')
 
 
 class PhaseAdmin(admin.ModelAdmin):

@@ -3,8 +3,9 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.utils import timezone
-from django.views.generic import ListView, DetailView, CreateView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView
 
+from resume.models import Organization, Position
 from .forms import ParticipantForm, InteractionForm
 from .models import Participant, Job, Phase
 
@@ -95,7 +96,6 @@ class ParticipantDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
-# TODO View Job details using generic DetailView
 class JobDetailView(LoginRequiredMixin, DetailView):
     model = Job
     template_name = 'cold_apply/job_detail.html'
@@ -109,15 +109,36 @@ class JobDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
-# TODO Create Job using generic CreateView
+class JobCreateView(LoginRequiredMixin, CreateView):
+    model = Job
+    template_name = 'cold_apply/job_create.html'
+    fields = ['title', 'company', 'application_link', 'description', 'status']
 
-# TODO Create Participant using generic CreateView
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['pk'] = self.kwargs['pk']
+        context['now'] = timezone.now()
+
+        return context
+
+    def form_valid(self, form):
+        if form.is_valid():
+            job = form.save(commit=False)
+            job.status_reason = 'In Progress'
+            job.participant = Participant.objects.get(id=self.kwargs['pk'])
+            job.created_by = self.request.user
+            job.updated_by = self.request.user
+            job.save()
+            return redirect(reverse('cold_apply:index'))
+        else:
+            print(form.errors)
+        return super().form_valid(form)
+
 
 class ParticipantCreateView(LoginRequiredMixin, CreateView):
     model = Participant
     template_name = 'cold_apply/participant_create.html'
-    fields = ['name', 'email', 'phone', 'veteran', 'uploaded_resume', 'uploaded_resume_title', 'current_step',
-              'created_by', 'updated_by']
+    fields = ['name', 'email', 'phone', 'veteran', 'uploaded_resume', 'uploaded_resume_title', 'current_step']
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -128,14 +149,85 @@ class ParticipantCreateView(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         if form.is_valid():
             participant = form.save(commit=False)
-            participant.user = self.request.user
+            participant.created_by = self.request.user
+            participant.updated_by = self.request.user
             participant.save()
             return redirect(reverse('cold_apply:index'))
         else:
             print(form.errors)
         return super().form_valid(form)
+
+
+class ParticipantUpdateView(LoginRequiredMixin, UpdateView):
+    model = Participant
+    template_name = 'cold_apply/participant_update.html'
+    fields = ['name', 'email', 'phone', 'veteran', 'uploaded_resume', 'uploaded_resume_title', 'current_step']
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['now'] = timezone.now()
+
+        return context
+
+    def form_valid(self, form):
+        if form.is_valid():
+            participant = form.save(commit=False)
+            participant.updated_by = self.request.user
+            participant.save()
+            return redirect(reverse('cold_apply:index'))
+        else:
+            print(form.errors)
+        return super().form_valid(form)
+
+
 # TODO Create Interaction using generic CreateView
 
 # TODO View interactions using generic ListView
 
 # TODO View interaction details using generic DetailView
+
+class OrganizationCreateView(LoginRequiredMixin, CreateView):
+    model = Organization
+    template_name = 'cold_apply/company_add.html'
+    fields = ['name', 'website', 'org_type']
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['pk'] = self.kwargs['pk']
+        context['now'] = timezone.now()
+
+        return context
+
+    def form_valid(self, form):
+        if form.is_valid():
+            organization = form.save(commit=False)
+            organization.created_by = self.request.user
+            organization.updated_by = self.request.user
+            organization.save()
+
+            return redirect(reverse('cold_apply:index'))
+        else:
+            print(form.errors)
+        return super().form_valid(form)
+
+
+class TitleCreateView(LoginRequiredMixin, CreateView):
+    model = Position
+    template_name = 'cold_apply/title_create.html'
+    fields = ['title']
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['pk'] = self.kwargs['pk']
+        context['now'] = timezone.now()
+
+        return context
+
+    def form_valid(self, form):
+        if form.is_valid():
+            title = form.save(commit=False)
+            title.save()
+            return redirect(reverse('cold_apply:index'))
+        else:
+            print(form.errors)
+        return super().form_valid(form)
