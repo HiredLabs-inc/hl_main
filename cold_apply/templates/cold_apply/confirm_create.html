@@ -1,0 +1,21 @@
+{% extends 'staff.html' %}
+
+
+{% block content %}
+    <h2>Success</h2>
+    <p>
+        If you created this item from another creation page (e.g. creating a new company while creating a new job),
+        you'll need to refresh that page to see your new item.
+    </p>
+    <br>
+    <p>This page will self-destruct in 10 seconds, but feel free to close it whenever you want (or if it fails to close
+        itself).</p>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        setTimeout(function () {
+            window.close();
+        }, 10_000);
+    </script>
+{% endblock %}

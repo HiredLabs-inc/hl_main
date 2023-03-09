@@ -3,7 +3,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.utils import timezone
-from django.views.generic import ListView, DetailView, CreateView, UpdateView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, TemplateView
 
 from resume.models import Organization, Position
 from .forms import ParticipantForm, InteractionForm
@@ -161,7 +161,7 @@ class ParticipantCreateView(LoginRequiredMixin, CreateView):
 class ParticipantUpdateView(LoginRequiredMixin, UpdateView):
     model = Participant
     template_name = 'cold_apply/participant_update.html'
-    fields = ['name', 'email', 'phone', 'veteran', 'uploaded_resume', 'uploaded_resume_title', 'current_step']
+    fields = ['name', 'email', 'phone', 'veteran', 'active', 'uploaded_resume', 'uploaded_resume_title', 'current_step']
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -193,7 +193,6 @@ class OrganizationCreateView(LoginRequiredMixin, CreateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['pk'] = self.kwargs['pk']
         context['now'] = timezone.now()
 
         return context
@@ -205,10 +204,20 @@ class OrganizationCreateView(LoginRequiredMixin, CreateView):
             organization.updated_by = self.request.user
             organization.save()
 
-            return redirect(reverse('cold_apply:index'))
+            return redirect(reverse('cold_apply:confirm_add_company'))
         else:
             print(form.errors)
         return super().form_valid(form)
+
+
+class ConfirmCreateView(LoginRequiredMixin, TemplateView):  # TODO: Add details about what was created to context
+    template_name = 'cold_apply/confirm_create.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['now'] = timezone.now()
+
+        return context
 
 
 class TitleCreateView(LoginRequiredMixin, CreateView):
