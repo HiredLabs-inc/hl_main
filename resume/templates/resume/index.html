@@ -12,8 +12,8 @@
     <!-- <span id="right-fill"></span> -->
     <header>
         <div class="centered-content">
-            {% for person in participant %}
-                <h1>{{ person.name }}</h1>
+            {% for job in target %}
+                <h1>{{ job.whose.name }}</h1>
             {% endfor %}
         </div>
     </header>
