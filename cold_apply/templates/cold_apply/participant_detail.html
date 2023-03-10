@@ -1,20 +1,42 @@
 {% extends 'staff.html' %}
 
 {% block content %}
-    <h1>{{ object.name }}</h1>
-    <h3>
-        {% if object.veteran %}
-            Veteran
+    {# TODO: Refactor into a table #}
+    <div class="row">
+        <h3>{{ object.name }}</h3>
+        {% if object.dnc %}
+            <p class="text-danger">Do Not Contact</p>
         {% else %}
-            Not a Veteran
+            <p class="text-success">Contactable</p>
         {% endif %}
-    </h3>
-    {% if object.dnc %}
-        <p class="text-danger">Do Not Contact</p>
-    {% endif %}
-    <p>Email: {{ object.email }} | Phone: {{ object.phone }}</p>
-    <p>Current Phase: {{ object.current_step.phase.title }}</p>
-    <p>Current Step: {{ object.current_step.title }}</p>
+        <h5 class="sub-header">
+            {% if object.veteran %}
+                Veteran
+            {% else %}
+                Not a Veteran
+            {% endif %}
+        </h5>
+
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>Current Phase</th>
+                <th>Current Step</th>
+                <th>Phone</th>
+                <th>Email</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>{{ object.current_step.phase.title }}</td>
+                <td>{{ object.current_step.title }}</td>
+                <td>{{ object.phone }}</td>
+                <td>{{ object.email }}</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <br>
     <p>Uploaded Resume: {{ object.uploaded_resume_title }}
         {#        <a href="{{ MEDIA_URL }}{{ object.uploaded_resume }}">#}
         {#            {{ object.uploaded_resume_title }}#}
@@ -22,12 +44,67 @@
     </p>
     <br>
     <br>
-    <p>Jobs found:</p>
-    <ul>
-        {% for job in jobs %}
-            <li><a href="{% url 'cold_apply:job_detail' job.id %}">{{ job.title }}</a> at {{ job.company }}</li>
-        {% endfor %}
-    </ul>
+    <div class="row">
+        <h4>Jobs</h4>
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>Total Jobs Found</th>
+                <th>Open Jobs</th>
+                <th>Participant Rejected Jobs</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>{{ jobs.count }}</td>
+                <td>{{ jobs|length }}</td>
+                <td>{{ jobs|length }}</td>
+        </table>
+        <br>
+        <br>
+        <h5 class="sub-header">Open Jobs</h5>
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>Title</th>
+                <th>Company</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for job in jobs %}
+                {% if job.status == 'Open' %}
+                    <tr>
+                        <td><a href="{% url 'cold_apply:job_detail' job.id %}">{{ job.title }}</a></td>
+                        <td>{{ job.company }}</td>
+                    </tr>
+                {% endif %}
+            {% endfor %}
+            </tbody>
+        </table>
+        <br>
+        <br>
+        <h5 class="sub-header">Closed Jobs</h5>
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>Title</th>
+                <th>Company</th>
+                <th>Closed Reason</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for job in jobs %}
+                {% if job.status == 'Closed' %}
+                    <tr>
+                        <td><a href="{% url 'cold_apply:job_detail' job.id %}">{{ job.title }}</a></td>
+                        <td>{{ job.company }}</td>
+                        <td>{{ job.status_reason }}</td>
+                    </tr>
+                {% endif %}
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
     <br>
     <br>
     <div class="row">

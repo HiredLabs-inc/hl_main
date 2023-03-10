@@ -170,7 +170,8 @@ class ParticipantCreateView(LoginRequiredMixin, CreateView):
 class ParticipantUpdateView(LoginRequiredMixin, UpdateView):
     model = Participant
     template_name = 'cold_apply/participant_update.html'
-    fields = ['name', 'email', 'phone', 'veteran', 'active', 'uploaded_resume', 'uploaded_resume_title', 'current_step']
+    fields = ['name', 'email', 'phone', 'veteran', 'active', 'dnc', 'uploaded_resume', 'uploaded_resume_title',
+              'current_step']
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -249,6 +250,28 @@ class TitleCreateView(LoginRequiredMixin, CreateView):
             position.whose = Participant.objects.get(id=self.kwargs['pk'])
             position.save()
             return redirect(reverse('cold_apply:confirm_add_title'))
+        else:
+            print(form.errors)
+        return super().form_valid(form)
+
+
+class JobUpdateView(LoginRequiredMixin, UpdateView):
+    model = Job
+    template_name = 'cold_apply/job_update.html'
+    fields = ['title', 'company', 'application_link', 'description', 'status', 'status_reason']
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['now'] = timezone.now()
+
+        return context
+
+    def form_valid(self, form):
+        if form.is_valid():
+            job = form.save(commit=False)
+            job.updated_by = self.request.user
+            job.save()
+            return redirect(reverse('cold_apply:confirm_update_job'))
         else:
             print(form.errors)
         return super().form_valid(form)

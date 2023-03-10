@@ -81,7 +81,7 @@
         <h3>Actions</h3>
         <div class="col">
             <a class="btn btn-primary" href="{% url 'resume:index' object.title.id %}" target="_blank">Tailor Resume</a>
-            <a class="btn btn-primary" href="">Edit Job</a>
+            <a class="btn btn-primary" href="{% url 'cold_apply:update_job' object.id %}" target="_blank">Edit Job</a>
         </div>
     </div>
     <div class="row">
