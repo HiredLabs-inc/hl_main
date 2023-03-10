@@ -3,15 +3,18 @@
 {% get_static_prefix as STATIC_PREFIX %}
 {# TODO: High priority update filtering to reflect participant information #}
 {% block content %}
-
+    {% for title in target %}
+        <p>Target Job: {{ title.title }}</p>
+    {% endfor %}
 
 {% endblock %}
 {% block header %}
     <!-- <span id="right-fill"></span> -->
     <header>
-        {#  <img class="heading-img" src="{{ STATIC_PREFIX }}images/central_park.png">#}
         <div class="centered-content">
-            <h1>Name</h1>
+            {% for person in participant %}
+                <h1>{{ person.name }}</h1>
+            {% endfor %}
         </div>
     </header>
 

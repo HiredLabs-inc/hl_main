@@ -1,5 +1,6 @@
 from django.shortcuts import render
 
+from cold_apply.models import Participant
 from .models import *
 
 
@@ -19,6 +20,8 @@ def index(request, pk):
     abilities = LanguageFATS.objects.all().filter(lang_type='Ability')
     technologies = LanguageFATS.objects.all().filter(lang_type='Technology')
     skills = LanguageFATS.objects.all().filter(lang_type='Skill')
+    target = Position.objects.all().filter(id=pk).values()
+    participant = Participant.objects.all().filter(id=target[0]['whose_id'])
 
     context = {
         'overview': overview,
@@ -34,6 +37,8 @@ def index(request, pk):
         'frameworks': frameworks,
         'abilities': abilities,
         'technologies': technologies,
-        'skills': skills
+        'skills': skills,
+        'target': target,
+        'participant': participant,
     }
     return render(request, 'resume/index.html', context)
