@@ -92,7 +92,6 @@ class ParticipantDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['jobs'] = Job.objects.filter(participant=self.object)
-        # TODO: Add keyword analysis results, if they exist
         context['now'] = timezone.now()
 
         return context
@@ -253,15 +252,3 @@ class TitleCreateView(LoginRequiredMixin, CreateView):
         else:
             print(form.errors)
         return super().form_valid(form)
-
-
-# TODO: Create a view for keyword analysis
-@login_required
-def keyword_analysis(request, pk):
-    job = Job.objects.get(id=pk)
-    context = {}
-    if KeywordAnalysis.objects.filter(job=job).exists():
-        keywords = KeywordAnalysis.objects.get(job=job).values()
-        context['keywords'] = keywords
-
-        return render(request, 'cold_apply/.html', context)
