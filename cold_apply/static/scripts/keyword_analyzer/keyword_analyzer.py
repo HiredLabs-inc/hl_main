@@ -32,7 +32,7 @@ class Analyzer:
         # Remove stopwords
         words = [word for word in tokens if word not in self.stopwords]
         # return cleaned data as a list of words
-        return words
+        return 'words'
 
     def find_keywords(self):
         # TODO: Replace placeholders with real NLP shit (2)

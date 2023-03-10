@@ -3,7 +3,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.utils import timezone
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, TemplateView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, TemplateView, DeleteView
 
 from resume.models import Organization, Position
 from .forms import ParticipantForm, InteractionForm
@@ -275,3 +275,17 @@ class JobUpdateView(LoginRequiredMixin, UpdateView):
         else:
             print(form.errors)
         return super().form_valid(form)
+
+
+class KeywordDeleteView(LoginRequiredMixin, DeleteView):
+    model = KeywordAnalysis
+    template_name = 'cold_apply/confirm_delete.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['now'] = timezone.now()
+
+        return context
+
+    def get_success_url(self):
+        return reverse('cold_apply:job_detail', kwargs={'pk': self.object.job.id})
