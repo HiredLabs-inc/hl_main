@@ -15,7 +15,7 @@
     {% for phase in phases %}
         {% if phase.active %}
             <h4 class="sub-header">{{ phase.title }}</h4>
-            <table class="table table-stribed">
+            <table class="table table-striped">
                 <thead>
                 <tr>
                     <th>Name</th>
@@ -49,7 +49,8 @@
     {% for phase in phases %}
         {% if not phase.active %}
             <h4 class="sub-header">{{ phase.title }}</h4>
-            <table class="table table-stribed">
+
+            <table class="table table-striped">
                 <thead>
                 <tr>
                     <th>Name</th>

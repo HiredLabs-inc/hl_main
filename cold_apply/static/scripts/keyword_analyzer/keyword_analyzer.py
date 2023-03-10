@@ -20,7 +20,8 @@ class Analyzer:
 
         self.stopwords = [
             'the', 'a', 'an', 'and', 'or', 'but', 'if', 'then', 'else', 'when', 'at', 'from', 'by', 'on', 'off', 'for',
-            'in', 'out', 'over', 'to', 'into', 'with'
+            'in', 'out', 'over', 'to', 'into', 'with', 'of', 'about', 'above', 'across', 'after', 'against', 'along',
+            'amid',
         ]
 
     def parse(self):
