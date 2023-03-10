@@ -1,12 +1,12 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render
 
 from .models import *
 
 
 # Create your views here.
-def index(request):
-    overview = Overview.objects.all().filter(title='Program Manager').values()
-    orgs = Organization.objects.all().order_by('-chronological_order')
+def index(request, pk):
+    overview = Overview.objects.all().filter(title=pk).values()
+    orgs = Organization.objects.all()
     work = Experience.objects.all().order_by('-start_date')
     bullets = Bullet.objects.all()
     edu = Education.objects.all()

@@ -238,14 +238,17 @@ class TitleCreateView(LoginRequiredMixin, CreateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context['pk'] = self.kwargs['pk']
+        context['participant'] = Participant.objects.get(id=self.kwargs['pk'])
         context['now'] = timezone.now()
 
         return context
 
     def form_valid(self, form):
         if form.is_valid():
-            title = form.save(commit=False)
-            title.save()
+            position = form.save(commit=False)
+            position.whose = Participant.objects.get(id=self.kwargs['pk'])
+            position.save()
             return redirect(reverse('cold_apply:confirm_add_title'))
         else:
             print(form.errors)

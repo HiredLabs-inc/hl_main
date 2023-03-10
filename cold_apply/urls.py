@@ -15,6 +15,6 @@ urlpatterns = [
     path('participants/<int:pk>/update/', ParticipantUpdateView.as_view(), name='update_participant'),
     path('add_company/', OrganizationCreateView.as_view(), name='create_company'),
     path('companies/confirm_add/', ConfirmCreateView.as_view(), name='confirm_add_company'),
-    path('titles/add_title/', TitleCreateView.as_view(), name='create_title'),
+    path('titles/<int:pk>/add_title/', TitleCreateView.as_view(), name='create_title'),
     path('titles/confirm_add/', ConfirmCreateView.as_view(), name='confirm_add_title'),
 ]

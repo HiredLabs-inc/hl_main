@@ -25,9 +25,10 @@ class Organization(models.Model):
 
 class Position(models.Model):
     title = models.CharField(max_length=50)
+    whose = models.ForeignKey('cold_apply.Participant', on_delete=models.CASCADE, default=None, null=True)
 
     def __str__(self):
-        return self.title
+        return f'{self.title}'
 
 
 class Degree(models.Model):

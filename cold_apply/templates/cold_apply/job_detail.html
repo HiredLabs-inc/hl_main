@@ -80,7 +80,7 @@
     <div class="row">
         <h3>Actions</h3>
         <div class="col">
-            <a class="btn btn-primary" href="">Tailor Resume</a>
+            <a class="btn btn-primary" href="{% url 'resume:index' object.title.id %}" target="_blank">Tailor Resume</a>
             <a class="btn btn-primary" href="">Edit Job</a>
         </div>
     </div>

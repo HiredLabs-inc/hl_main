@@ -1,6 +1,7 @@
 {% extends 'staff.html' %}
 
 {% block content %}
+    <p>Make new title for {{ participant.name }}</p>
     <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
