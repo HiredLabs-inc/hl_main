@@ -104,8 +104,6 @@ class Application(models.Model):
 
 # TODO: Add a model for the resume. Tailoring will be done by setting FK to resume.Position
 
-# TODO: Model for phases
-
 class Phase(models.Model):
     title = models.CharField(max_length=200)
     start = models.CharField(max_length=200)
@@ -121,7 +119,6 @@ class Phase(models.Model):
         verbose_name_plural = 'Phases'
 
 
-# TODO: Model for steps
 class Step(models.Model):
     OWNER_CHOICES = [
         ('Participant', 'Participant'),
@@ -138,3 +135,16 @@ class Step(models.Model):
 
     class Meta:
         verbose_name_plural = 'Steps'
+
+
+class KeywordAnalysis(models.Model):
+    job = models.ForeignKey(Job, on_delete=models.CASCADE)
+    unigram = models.CharField(max_length=200)
+    bigram = models.CharField(max_length=200)
+    trigram = models.CharField(max_length=200)
+
+    def __str__(self):
+        return f'{self.job}'
+
+    class Meta:
+        verbose_name_plural = 'Keyword Analyses'

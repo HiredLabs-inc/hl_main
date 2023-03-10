@@ -7,7 +7,8 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, T
 
 from resume.models import Organization, Position
 from .forms import ParticipantForm, InteractionForm
-from .models import Participant, Job, Phase
+from .models import Participant, Job, Phase, KeywordAnalysis
+from .static.scripts.keyword_analyzer.keyword_analyzer import analyze, hook_after_analysis
 
 
 @login_required
@@ -91,6 +92,7 @@ class ParticipantDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['jobs'] = Job.objects.filter(participant=self.object)
+        # TODO: Add keyword analysis results, if they exist
         context['now'] = timezone.now()
 
         return context
@@ -104,6 +106,14 @@ class JobDetailView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        if KeywordAnalysis.objects.filter(job=self.object).exists():
+            context['keywords'] = KeywordAnalysis.objects.filter(job=self.object)
+        else:
+            jd = self.object.description
+            analysis = analyze(jd)
+            hook_after_analysis(analysis, self.object.id)
+            context['keywords'] = KeywordAnalysis.objects.filter(job=self.object)
+
         context['now'] = timezone.now()
 
         return context
@@ -210,7 +220,8 @@ class OrganizationCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class ConfirmCreateView(LoginRequiredMixin, TemplateView):  # TODO: Add details about what was created to context
+# TODO: Add details about what was created to context
+class ConfirmCreateView(LoginRequiredMixin, TemplateView):
     template_name = 'cold_apply/confirm_create.html'
 
     def get_context_data(self, **kwargs):
@@ -239,3 +250,15 @@ class TitleCreateView(LoginRequiredMixin, CreateView):
         else:
             print(form.errors)
         return super().form_valid(form)
+
+
+# TODO: Create a view for keyword analysis
+@login_required
+def keyword_analysis(request, pk):
+    job = Job.objects.get(id=pk)
+    context = {}
+    if KeywordAnalysis.objects.filter(job=job).exists():
+        keywords = KeywordAnalysis.objects.get(job=job).values()
+        context['keywords'] = keywords
+
+        return render(request, 'cold_apply/.html', context)

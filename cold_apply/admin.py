@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 # Register your models here.
-from .models import Participant, Interaction, Job, Phase, Step
+from .models import Participant, Interaction, Job, Phase, Step, KeywordAnalysis
 
 
 class ParticipantAdmin(admin.ModelAdmin):
@@ -40,6 +40,13 @@ class StepAdmin(admin.ModelAdmin):
     search_fields = ('title', 'description', 'order', 'phase')
 
 
+class KeywordAnalysisAdmin(admin.ModelAdmin):
+    list_display = ('job', 'unigram', 'bigram', 'trigram')
+    list_filter = ('job', 'unigram', 'bigram', 'trigram')
+    search_fields = ('job', 'unigram', 'bigram', 'trigram')
+
+
+admin.site.register(KeywordAnalysis, KeywordAnalysisAdmin)
 admin.site.register(Phase, PhaseAdmin)
 admin.site.register(Step, StepAdmin)
 admin.site.register(Participant, ParticipantAdmin)
