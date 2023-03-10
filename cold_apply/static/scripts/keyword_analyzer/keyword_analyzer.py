@@ -69,9 +69,9 @@ def analyze(job_description: str):
     analyzer.find_keywords()
     # turn class attributes into a json object
     data = {
-        'unigram': analyzer.unigrams,
-        'bigram': analyzer.bigrams,
-        'trigram': analyzer.trigrams
+        'unigram': analyzer.unigrams[:20],
+        'bigram': analyzer.bigrams[:20],
+        'trigram': analyzer.trigrams[:20]
     }
     main_df = pd.DataFrame.from_dict(data)
     return main_df.to_json(orient='index')

@@ -50,25 +50,25 @@
                 <tbody>
                 <tr>
                     <td>
-                        <ul>
+                        <ol>
                             {% for keyword in keywords %}
                                 <li>{{ keyword.unigram }}</li>
                             {% endfor %}
-                        </ul>
+                        </ol>
                     </td>
                     <td>
-                        <ul>
+                        <ol>
                             {% for keyword in keywords %}
                                 <li>{{ keyword.bigram }}</li>
                             {% endfor %}
-                        </ul>
+                        </ol>
                     </td>
                     <td>
-                        <ul>
+                        <ol>
                             {% for keyword in keywords %}
                                 <li>{{ keyword.trigram }}</li>
                             {% endfor %}
-                        </ul>
+                        </ol>
                     </td>
                 </tr>
                 </tbody>
