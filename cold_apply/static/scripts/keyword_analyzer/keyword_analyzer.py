@@ -6,6 +6,7 @@
 import json
 import string
 
+import nltk
 import pandas as pd
 from django.core import serializers
 
@@ -17,12 +18,48 @@ class Analyzer:
         self.unigrams = list()
         self.bigrams = list()
         self.trigrams = list()
-
+        self.eng_stop_words = nltk.corpus.stopwords.words('english')
         self.stopwords = [
-            'the', 'a', 'an', 'and', 'or', 'but', 'if', 'then', 'else', 'when', 'at', 'from', 'by', 'on', 'off', 'for',
-            'in', 'out', 'over', 'to', 'into', 'with', 'of', 'about', 'above', 'across', 'after', 'against', 'along',
-            'amid',
+            'experience',
+            'etc',
+            'role',
+            'candidate',
+            'greenlight',
+            'preferred',
+            'qualifications',
+            'weekly',
+            'daily',
+            'monthly',
+            'quarterly',
+            'key',
+            'work',
+            'dollar',
+            'uber',
+            'next',
+            'com',
+            'jan',
+            'dec',
+            'jun',
+            '17',
+            '15',
+            'playstation',
+            'new',
+            'nextdoor',
+            'across',
+            'strong',
+            'skills',
+            'bosp',
+            'stanford',
+            'responsibilities',
+            'within',
+            'vpue',
+            'job'
+
         ]
+
+    def get_stops(self):
+        for w in self.eng_stop_words:
+            self.stopwords.append(w)
 
     def parse(self):
         # Remove punctuation
