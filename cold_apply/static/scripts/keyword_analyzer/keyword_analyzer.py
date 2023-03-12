@@ -9,6 +9,7 @@ import string
 import nltk
 import pandas as pd
 from django.core import serializers
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 
 class Analyzer:
@@ -56,6 +57,7 @@ class Analyzer:
             'job'
 
         ]
+        self.cleaned_words = self.parse()
 
     def get_stops(self):
         for w in self.eng_stop_words:
@@ -71,45 +73,43 @@ class Analyzer:
         # return cleaned data as a list of words
         return words
 
-    def find_keywords(self):
+    def find_keywords(self, lower_bound, upper_bound):
         # TODO: Replace placeholders with real NLP shit (2)
-        main_df = pd.DataFrame()
-        # PLACEHOLDERS
-        cleaned_words = self.parse()
-        for word in cleaned_words:
-            # Unigram placeholder
-            if len(self.unigrams) < 20 and word not in self.unigrams:
-                self.unigrams.append(word)
-            # Bigram placeholder
-            if cleaned_words.index(word) < len(cleaned_words) - 1:
-                bigram = word + ' ' + cleaned_words[cleaned_words.index(word) + 1]
-            else:
-                bigram = f'{word} {word}'
+        """
+            takes a string, boundaries (upper and lower) for
+            the ngram_range parameter of TfidfVectorizer
+            returns list of the top 20 most important ngrams
+            lower_bound = integer representing the lower bound of ngram_range
+            upper_bound = integer representing the upper bound of ngram_range
+            filepath_list = list of filepaths to job post text files
 
-            if len(self.bigrams) < 20 and bigram not in self.bigrams:
-                self.bigrams.append(bigram)
-            # Trigram placeholder
-            if cleaned_words.index(word) < len(cleaned_words) - 2:
-                trigram = word + ' ' + cleaned_words[cleaned_words.index(word) + 1] + ' ' + cleaned_words[
-                    cleaned_words.index(word) + 2]
-            else:
-                trigram = f'{word} {word} {word}'
+            """
+        vectorizer = TfidfVectorizer(input='content', ngram_range=(lower_bound, upper_bound), stop_words=self.stopwords)
+        X_tfidf = vectorizer.fit_transform([self.input_text])
+        feature_names = vectorizer.get_feature_names_out()
+        X_tfidf_df = pd.DataFrame(X_tfidf.toarray())
+        X_tfidf_df.columns = feature_names
+        X_tfidf_df.sort_values(by=X_tfidf_df.index[0], axis=1, inplace=True, ascending=False)
+        top_twenty = X_tfidf_df.iloc[:, :20].columns.tolist()
 
-            if len(self.trigrams) < 20 and trigram not in self.trigrams:
-                self.trigrams.append(trigram)
+        return top_twenty
 
 
 # Initialize analyzer
 def analyze(job_description: str):
     # Instantiate analyzer with job description text
     analyzer = Analyzer(job_description)
+    # Update stopword list with Enlgish from NLTK + custom stopwords
+    analyzer.get_stops()
     # Parse job description and set class uni-, bi- and trigram attributes
-    analyzer.find_keywords()
+    analyzer.unigrams = analyzer.find_keywords(1, 1)
+    analyzer.bigrams = analyzer.find_keywords(2, 2)
+    analyzer.trigrams = analyzer.find_keywords(3, 3)
     # turn class attributes into a json object
     data = {
-        'unigram': analyzer.unigrams[:20],
-        'bigram': analyzer.bigrams[:20],
-        'trigram': analyzer.trigrams[:20]
+        'unigram': analyzer.unigrams,
+        'bigram': analyzer.bigrams,
+        'trigram': analyzer.trigrams,
     }
     main_df = pd.DataFrame.from_dict(data)
     return main_df.to_json(orient='index')
