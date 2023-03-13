@@ -112,7 +112,7 @@
                     {% endif %}
                     {{ user.username }}</p>
             {% endif %}
-            <p class="text-muted"></p>
+            <p class="text-muted"><a href="{% url 'releases:submit_feedback' %}" target="_blank">Got Feedback?</a></p>
         </div>
     </footer>
 {% endblock %}

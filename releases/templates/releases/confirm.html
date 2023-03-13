@@ -1,0 +1,16 @@
+{% extends 'staff.html' %}
+
+
+{% block content %}
+    <h2>Success</h2>
+    <p>Thank you for your submission! We have recorded your input.</p>
+    <p>This tab will close automatically in a few seconds, or you can close it whenever you like.</p>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        setTimeout(function () {
+            window.close();
+        }, 10_000);
+    </script>
+{% endblock %}

@@ -116,3 +116,4 @@ def password_reset(request):
             form.save()
             return redirect(reverse('userprofile:password_reset_done'))
     return render(request, 'userprofile/password_reset.html')
+

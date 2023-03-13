@@ -2,7 +2,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils import timezone
-from django.views.generic import ListView, DetailView, CreateView
+from django.views.generic import ListView, DetailView, CreateView, TemplateView
 
 from .models import Release, App, Note, Feedback
 
@@ -67,7 +67,7 @@ class ReleaseCreateView(LoginRequiredMixin, CreateView):
             release = form.save(commit=False)
             release.author = self.request.user
             release.save()
-            return redirect(reverse('releases:index'))
+            return redirect(reverse('releases:confirm_release_create'))
         else:
             print(form.errors)
         return super().form_valid(form)
@@ -87,7 +87,7 @@ class NoteCreateView(LoginRequiredMixin, CreateView):
         if form.is_valid():
             release = form.save(commit=False)
             release.save()
-            return redirect(reverse('releases:index'))
+            return redirect(reverse('releases:confirm_note_create'))
         else:
             print(form.errors)
         return super().form_valid(form)
@@ -96,7 +96,7 @@ class NoteCreateView(LoginRequiredMixin, CreateView):
 class FeedbackCreateView(LoginRequiredMixin, CreateView):
     model = Feedback
     template_name = 'releases/create_update.html'
-    fields = ['feedback']
+    fields = ['app', 'text']
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -105,9 +105,20 @@ class FeedbackCreateView(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         if form.is_valid():
-            release = form.save(commit=False)
-            release.save()
-            return redirect(reverse('releases:index'))
+            feedback = form.save(commit=False)
+            feedback.user = self.request.user
+            feedback.save()
+            return redirect(reverse('releases:confirm_submit_feedback'))
         else:
             print(form.errors)
         return super().form_valid(form)
+
+
+class ConfirmCreateView(LoginRequiredMixin, TemplateView):
+    template_name = 'releases/confirm.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['now'] = timezone.now()
+
+        return context
