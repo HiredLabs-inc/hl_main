@@ -12,6 +12,8 @@ class App(models.Model):
 
 # Create your models here.
 class Release(models.Model):
+    title = models.CharField(max_length=50)
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
     app = models.ForeignKey(App, on_delete=models.CASCADE)
     major = models.IntegerField()
     minor = models.IntegerField()
@@ -21,7 +23,7 @@ class Release(models.Model):
     class Meta:
         unique_together = ('app', 'major', 'minor', 'patch')
         ordering = ['-major', '-minor', '-patch']
-        
+
     def __str__(self):
         return f'{self.major}.{self.minor}.{self.patch}'
 

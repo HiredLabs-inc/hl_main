@@ -1,0 +1,10 @@
+{% extends 'staff.html' %}
+
+{% block content %}
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <input class="btn btn-primary" type="submit" value="Save">
+    </form>
+    <a class="btn btn-primary" href="{% url 'releases:index' %}">Cancel</a>
+{% endblock %}
