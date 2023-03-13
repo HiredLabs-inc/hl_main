@@ -81,8 +81,8 @@
         <h3>Actions</h3>
         <div class="col">
             {# TODO: Make keyword refresh button functional#}
-            {# <a class="btn btn-primary" href="{% url 'cold_apply:confirm_keyword_refresh' object.keywordanalysis_set %}">Refresh#}
-            {# Keywords</a>#}
+            <a class="btn btn-primary" href="{% url 'cold_apply:refresh_keywords' object.id %}">Refresh
+                Keywords</a>
             <a class="btn btn-primary" href="{% url 'resume:index' object.title.id %}" target="_blank">Tailor Resume</a>
             <a class="btn btn-primary" href="{% url 'cold_apply:update_job' object.id %}" target="_blank">Edit Job</a>
         </div>

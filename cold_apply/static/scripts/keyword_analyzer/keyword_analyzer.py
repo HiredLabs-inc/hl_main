@@ -112,6 +112,7 @@ def analyze(job_description: str):
         'trigram': analyzer.trigrams,
     }
     main_df = pd.DataFrame.from_dict(data)
+    print('Analysis completed successfully')
     return main_df.to_json(orient='index')
 
 
