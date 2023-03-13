@@ -22,7 +22,7 @@ class AppCreateView(LoginRequiredMixin, CreateView):
         if form.is_valid():
             app = form.save(commit=False)
             app.save()
-            return redirect(reverse('releases:index'))
+            return redirect(reverse('staff'))
         else:
             print(form.errors)
         return super().form_valid(form)
@@ -36,6 +36,7 @@ class ReleasesListView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['title'] = 'Releases'
+        releases = Release.objects.all().filter(app=self.kwargs['app_pk'])
         context['now'] = timezone.now()
         return context
 

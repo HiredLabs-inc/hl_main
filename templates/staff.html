@@ -109,10 +109,6 @@
                 <p class="text-muted">Logged in as
                     {% if user.is_superuser %}
                         superuser
-                    {% elif user.is_admin %}
-                        admin user
-                    {% elif user.is_staff %}
-                        staff user
                     {% endif %}
                     {{ user.username }}</p>
             {% endif %}

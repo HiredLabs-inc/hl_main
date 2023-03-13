@@ -8,33 +8,26 @@
     <br>
     <p>Here are the tools you have access to:</p>
     <br>
-    <ul>
-        {% if perms.cold_apply %}
-            <li><a class="dropdown-item" href="{% url 'cold_apply:index' %}">Cold Apply</a></li>
-        {% else %}
-            <p>You have access to nothing.</p>
-            <br>
-            <br>
-            <p>If you think this is an error, please contact your administrator.</p>
-        {% endif %}
-        <a class="btn btn-primary" href="{% url 'releases:index' %}">Releases</a>
-    </ul>
-{% endblock %}
-{% block header %}
-{% endblock %}
-{% block overview %}
-{% endblock %}
-{% block work %}
-{% endblock %}
-{% block education %}
-{% endblock %}
-{% block certs %}
-{% endblock %}
-{% block projects %}
-{% endblock %}
-{% block activities %}
-{% endblock %}
-{% block languages %}
-{% endblock %}
-{% block skills %}
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th>App Name</th>
+            <th>Description</th>
+            <th>Last Update</th>
+            <th>Release Notes</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for app in apps %}
+            {% if app.name in perms %}
+                <tr>
+                    <td><a href="{% url app.name|add:':index' %}">{{ app.name }}</a></td>
+                    <td>{{ app.description }}</td>
+                    <td>{{ app.release_set.values.first.date }}</td>
+                    <td><a href="{% url 'releases:index' app.id %}">Go To Notes</a></td>
+                </tr>
+            {% endif %}
+        {% endfor %}
+        </tbody>
+    </table>
 {% endblock %}
