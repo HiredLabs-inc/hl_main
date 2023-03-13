@@ -281,3 +281,10 @@ class JobUpdateView(LoginRequiredMixin, UpdateView):
 def refresh_keywords(request, pk):
     KeywordAnalysis.objects.all().filter(job=pk).delete()
     return redirect(reverse('cold_apply:job_detail', kwargs={'pk': pk}))
+
+
+@login_required
+def delete_job(request, pk):
+    participant = Job.objects.get(id=pk).participant.id
+    Job.objects.get(id=pk).delete()
+    return redirect(reverse('cold_apply:participant_detail', kwargs={'pk': participant}))

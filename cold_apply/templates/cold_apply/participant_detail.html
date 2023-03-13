@@ -52,6 +52,7 @@
                 <th>Total Jobs Found</th>
                 <th>Open Jobs</th>
                 <th>Participant Rejected Jobs</th>
+                <th colspan="2">Add Jobs</th>
             </tr>
             </thead>
             <tbody>
@@ -59,6 +60,9 @@
                 <td>{{ jobs.count }}</td>
                 <td>{{ jobs|length }}</td>
                 <td>{{ jobs|length }}</td>
+                <td><a class="btn btn-primary" href="{% url 'cold_apply:create_job' object.id %}" target="_blank">Add a
+                    Job</a></td>
+
         </table>
         <br>
         <br>
@@ -68,6 +72,7 @@
             <tr>
                 <th>Title</th>
                 <th>Company</th>
+                <th colspan="2">Remove</th>
             </tr>
             </thead>
             <tbody>
@@ -76,6 +81,7 @@
                     <tr>
                         <td><a href="{% url 'cold_apply:job_detail' job.id %}">{{ job.title }}</a></td>
                         <td>{{ job.company }}</td>
+                        <td><a class="btn btn-primary" href="{% url 'cold_apply:delete_job' job.id %}">Delete</a></td>
                     </tr>
                 {% endif %}
             {% endfor %}
