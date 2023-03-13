@@ -26,5 +26,5 @@ urlpatterns = [
     path('userprofile/', include('userprofile.urls')),
     path('cold_apply/', include('cold_apply.urls')),
     path('resume/', include('resume.urls')),
-
+    path('releases/', include('releases.urls')),
 ]

@@ -1,0 +1,69 @@
+{% extends 'staff.html' %}
+{% load tz %}
+{% get_current_timezone as TIME_ZONE %}
+
+{% block title %}
+    <h1>Releases</h1>
+    <p>List of releases with details for each</p>
+    <p class="text-muted">Data retrieved on {{ now|date }} at {{ now|time }} {{ TIME_ZONE }}</p>
+{% endblock %}
+
+{% block content %}
+    {#    <h2 class="sub-header">Current Release</h2>#}
+    {#    {% for phase in phases %}#}
+    {#        {% if phase.active %}#}
+    {#            <h4 class="sub-header">{{ phase.title }}</h4>#}
+    {#            <table class="table table-striped">#}
+    {#                <thead>#}
+    {#                <tr>#}
+    {#                    <th>Name</th>#}
+    {#                    <th>Current Step</th>#}
+    {#                    <th>Last Updated</th>#}
+    {#                    <th>Updated by</th>#}
+    {#                </tr>#}
+    {#                </thead>#}
+    {#                <tbody>#}
+    {#                {% for participant in participants %}#}
+    {#                    {% if participant.current_step.phase == phase %}#}
+    {#                        <tr>#}
+    {#                            <td>#}
+    {#                                <a href="{% url 'cold_apply:participant_detail' participant.id %}">{{ participant.name }}</a>#}
+    {#                            </td>#}
+    {#                            <td>{{ participant.current_step.title }}</td>#}
+    {#                            <td>{{ participant.updated_at|date }}</td>#}
+    {#                            <td>{{ participant.updated_by }}</td>#}
+    {#                        </tr>#}
+    {#                    {% endif %}#}
+    {#                {% endfor %}#}
+    {#                </tbody>#}
+    {#            </table>#}
+    {##}
+    {#        {% endif %}#}
+    {#    {% endfor %}#}
+    {#    <br>#}
+    {#    <br>#}
+    {#    <br>#}
+    <h2 class="sub-header">Past Releases</h2>
+    {% for release in releases %}
+        <h4 class="sub-header">{{ release.major }}.{{ release.minor }}.{{ release.patch }}</h4>
+
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>Changes</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for note in release.note_set %}
+                <td>
+                    {{ note.note }}
+                </td>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% endfor %}
+    {#    TODO: Create releases crud #}
+    {#    <a class="btn btn-primary" href="{% url 'releases:release_create' %}">Create New Release</a>#}
+    <a class="btn btn-primary" href="{% url 'staff' %}">Back</a>
+
+{% endblock %}

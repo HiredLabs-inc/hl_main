@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'userprofile.apps.UserprofileConfig',
     'cold_apply.apps.ColdApplyConfig',
     'resume.apps.ResumeConfig',
+    'releases.apps.ReleasesConfig',
     'django_q',
 ]
 
