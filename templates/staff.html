@@ -110,7 +110,7 @@
                     {% if user.is_superuser %}
                         superuser
                     {% endif %}
-                    {{ user.username }}</p>
+                    {{ user.first_name }} {{ user.last_name }}</p>
                 <p class="text-muted"><a href="{% url 'releases:submit_feedback' %}" target="_blank">Got Feedback?</a>
                 </p>
             {% endif %}
