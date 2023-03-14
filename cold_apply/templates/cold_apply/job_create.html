@@ -3,8 +3,7 @@
 
 
 {% block content %}
-    <h1>Create job for:</h1>
-    <p>{{ pk }}</p>
+    <h3>Creating job for {{ participant.name }}</h3>
     <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
