@@ -39,11 +39,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # 'tasktron.apps.TasktronConfig',
-    # 'informedvoter.apps.InformedvoterConfig',
     'userprofile.apps.UserprofileConfig',
-    # 'resume_parser.apps.ResumeParserConfig',
-    # 'rates.apps.RatesConfig',
+    'resume.apps.ResumeConfig',
+    'cold_apply.apps.ColdApplyConfig',
+    'releases.apps.ReleasesConfig',
     'django_q',
 ]
 
