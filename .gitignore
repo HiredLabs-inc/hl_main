@@ -139,3 +139,4 @@ uploads/
 output/
 
 static_files/
+migrations/
