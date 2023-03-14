@@ -37,6 +37,9 @@ class ReleasesListView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['title'] = 'Releases'
         releases = Release.objects.all().filter(app=self.kwargs['app_pk'])
+        app = App.objects.get(pk=self.kwargs['app_pk'])
+        context['app'] = app
+        context['releases'] = releases
         context['now'] = timezone.now()
         return context
 

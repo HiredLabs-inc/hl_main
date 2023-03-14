@@ -3,7 +3,7 @@
 {% get_current_timezone as TIME_ZONE %}
 
 {% block title %}
-    <h1>Releases</h1>
+    <h1>Releases for {{ app.name }}</h1>
     <p>List of releases with details for each</p>
     <p class="text-muted">Data retrieved on {{ now|date }} at {{ now|time }} {{ TIME_ZONE }}</p>
 {% endblock %}
@@ -11,6 +11,7 @@
 {% block content %}
     <h2 class="sub-header">Releases</h2>
     {% for release in releases %}
+
         <h4 class="sub-header">{{ release.major }}.{{ release.minor }}.{{ release.patch }} {{ release.title }}</h4>
         <p class="text-muted">Created on {{ release.date|date }} at {{ release.date|time }} by {{ release.author }}</p>
         {% if user.is_superuser %}
