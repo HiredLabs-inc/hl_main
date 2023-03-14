@@ -88,6 +88,7 @@ DATABASES = {
         'USER': env('DB_USER'),
         'PASSWORD': env('DB_PASSWORD'),
         'HOST': 'janton42.mysql.pythonanywhere-services.com',
+        'PORT': '',
     }
 }
 
