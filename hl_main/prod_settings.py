@@ -39,10 +39,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'releases.apps.ReleasesConfig',
     'userprofile.apps.UserprofileConfig',
     'resume.apps.ResumeConfig',
     'cold_apply.apps.ColdApplyConfig',
-    'releases.apps.ReleasesConfig',
+
     'django_q',
 ]
 
