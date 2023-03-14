@@ -84,7 +84,7 @@ WSGI_APPLICATION = 'hl_main.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'janton42$HiredLabs',
+        'NAME': 'janton42$hl_main',
         'USER': env('DB_USER'),
         'PASSWORD': env('DB_PASSWORD'),
         'HOST': 'janton42.mysql.pythonanywhere-services.com',
