@@ -40,7 +40,7 @@
     {% endfor %}
     {% if user.is_superuser %}
         <a class="btn btn-primary" href="{% url 'releases:release_create' %}" target="_blank">Create New Release</a>
-        <a class="btn btn-primary" href="{% url 'releases:app_create' %}">Create New App</a>
+        <a class="btn btn-primary" href="{% url 'releases:app_create' %}" target="_blank">Create New App</a>
     {% endif %}
     <a class="btn btn-primary" href="{% url 'staff' %}">Back</a>
 

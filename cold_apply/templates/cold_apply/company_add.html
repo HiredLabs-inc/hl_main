@@ -6,6 +6,14 @@
         {{ form.as_p }}
         <input class="btn btn-primary" type="submit" value="Save">
     </form>
-    <a class="btn btn-primary" href="{% url 'cold_apply:index' %}">Cancel</a>
+    <a class="btn btn-primary" onclick=closeWindow()>Cancel</a>
 {% endblock %}
 
+{% block scripts %}
+
+    <script type="text/javascript">
+        function closeWindow() {
+            window.close();
+        }
+    </script>
+{% endblock %}

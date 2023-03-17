@@ -188,7 +188,7 @@ class ParticipantUpdateView(LoginRequiredMixin, UpdateView):
             participant = form.save(commit=False)
             participant.updated_by = self.request.user
             participant.save()
-            return redirect(reverse('cold_apply:index'))
+            return redirect(reverse('cold_apply:confirm_update_participant'))
         else:
             print(form.errors)
         return super().form_valid(form)
