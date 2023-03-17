@@ -3,13 +3,13 @@
     "model": "releases.release",
     "pk": 2,
     "fields": {
-      "title": "Patch release",
+      "title": "Patch release 1",
       "author": 1,
       "app": 1,
       "major": 1,
       "minor": 0,
       "patch": 1,
-      "date": "2023-03-20T00:00:00Z"
+      "date": "2023-03-20T16:00:00Z"
     }
   },
   {
@@ -17,7 +17,7 @@
     "pk": 3,
     "fields": {
       "release": 2,
-      "text": "Added a second release"
+      "text": "Added seed data for development"
     }
   },
   {
@@ -25,7 +25,64 @@
     "pk": 4,
     "fields": {
       "release": 2,
-      "text": "Made some other changes"
+      "text": "Removed relationship between Title and Participant"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 5,
+    "fields": {
+      "release": 2,
+      "text": "Added 'status reason' dropdown to Job creation view"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 6,
+    "fields": {
+      "release": 2,
+      "text": "Reduced auto-close time for new tabs to 3 seconds (was 10 seconds)"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 7,
+    "fields": {
+      "release": 2,
+      "text": "Added create title and company buttons to Job update view"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 8,
+    "fields": {
+      "release": 2,
+      "text": "Added company update link to job detail view"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 9,
+    "fields": {
+      "release": 2,
+      "text": "Resolved bug: editing some Jobs was throwing an error. \nResolution: added a 30 word minimum to run keyword analysis. \nResult: the browser should no longer throw an error, but may show 27 blank keywords for job descriptions less than 30 words long."
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 10,
+    "fields": {
+      "release": 2,
+      "text": "Reduced keyword results to top five in each category"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 8,
+    "fields": {
+      "release": 2,
+      "text": "Added company update link to job detail view"
     }
   }
+
 ]
