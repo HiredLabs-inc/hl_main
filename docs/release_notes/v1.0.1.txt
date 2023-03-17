@@ -1,1 +1,10 @@
+General updates for project development
 2d8da32 added seed data for phases, steps, and participants
+
+Bug fixes
+Bug: Editing jobs throws a ValueError empty vocabulary; perhaps the documents only  stop words
+Steps taken to resolve:
+7dbc1a0 set minimum job description length to 30 words including stops
+
+Outcome: The error is not thrown, but short job descriptions return 27 empty keyword rows, without creating a new
+database record
