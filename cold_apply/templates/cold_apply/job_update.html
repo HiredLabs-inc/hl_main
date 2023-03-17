@@ -6,5 +6,8 @@
         {{ form.as_p }}
         <input class="btn btn-primary" type="submit" value="Save">
     </form>
+    <a class="btn btn-primary" href="{% url 'cold_apply:create_company' %}" target="_blank">Add Company</a>
+    <a class="btn btn-primary" href="{% url 'cold_apply:create_title' pk %}" target="_blank">Add
+        Title</a>
     <a class="btn btn-primary" href="{% url 'cold_apply:index' %}">Cancel</a>
 {% endblock %}
