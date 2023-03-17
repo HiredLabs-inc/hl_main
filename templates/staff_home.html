@@ -21,7 +21,7 @@
         {% for app in apps %}
             {% if app.name in perms %}
                 <tr>
-                    <td><a href="{% url app.name|add:':index' %}">{{ app.name }}</a></td>
+                    <td><a href="{% url app.name|add:':index' %}">{{ app.name }}</a> v{{ app.release_set.values.first.major }}.{{ app.release_set.values.first.minor }}.{{ app.release_set.values.first.patch }}</td>
                     <td>{{ app.description }}</td>
                     <td>{{ app.release_set.values.first.date }}</td>
                     <td><a href="{% url 'releases:index' app.id %}">Go To Notes</a></td>
