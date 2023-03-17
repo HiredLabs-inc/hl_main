@@ -90,7 +90,7 @@ class Analyzer:
         X_tfidf_df = pd.DataFrame(X_tfidf.toarray())
         X_tfidf_df.columns = feature_names
         X_tfidf_df.sort_values(by=X_tfidf_df.index[0], axis=1, inplace=True, ascending=False)
-        top_twenty = X_tfidf_df.iloc[:, :20].columns.tolist()
+        top_twenty = X_tfidf_df.iloc[:, :5].columns.tolist()
 
         return top_twenty
 
@@ -102,9 +102,16 @@ def analyze(job_description: str):
     # Update stopword list with Enlgish from NLTK + custom stopwords
     analyzer.get_stops()
     # Parse job description and set class uni-, bi- and trigram attributes
-    analyzer.unigrams = analyzer.find_keywords(1, 1)
-    analyzer.bigrams = analyzer.find_keywords(2, 2)
-    analyzer.trigrams = analyzer.find_keywords(3, 3)
+    # Ensure job eescription is long enough to analyze
+    words = job_description.split(' ')
+    if len(words) < 30:
+        analyzer.unigrams = ['']
+        analyzer.bigrams = ['Not enough text to analyze']
+        analyzer.trigrams = ['']
+    else:
+        analyzer.unigrams = analyzer.find_keywords(1, 1)
+        analyzer.bigrams = analyzer.find_keywords(2, 2)
+        analyzer.trigrams = analyzer.find_keywords(3, 3)
     # turn class attributes into a json object
     data = {
         'unigram': analyzer.unigrams,

@@ -80,15 +80,21 @@ def ngram_weighter(lower_bound, upper_bound, filepath_list):
     filepath_list = list of filepaths to job post text files
 
     """
-    vectorizer = TfidfVectorizer(input='content', ngram_range=(lower_bound, upper_bound), stop_words=stop_set)
-    X_tfidf = vectorizer.fit_transform(filepath_list)
-    feature_names = vectorizer.get_feature_names_out()
-    X_tfidf_df = pd.DataFrame(X_tfidf.toarray())
-    X_tfidf_df.columns = feature_names
-    X_tfidf_df.sort_values(by=X_tfidf_df.index[0], axis=1, inplace=True, ascending=False)
-    top_twenty = X_tfidf_df.iloc[:, :20].columns.tolist()
+    words = word_tokenize(filepath_list)
+    print(len(words))
+    print(words)
+    if len(words) < 100:
+        print('Not enough words to process')
+    else:
+        vectorizer = TfidfVectorizer(input='content', ngram_range=(lower_bound, upper_bound), stop_words=stop_set)
+        X_tfidf = vectorizer.fit_transform(filepath_list)
+        feature_names = vectorizer.get_feature_names_out()
+        X_tfidf_df = pd.DataFrame(X_tfidf.toarray())
+        X_tfidf_df.columns = feature_names
+        X_tfidf_df.sort_values(by=X_tfidf_df.index[0], axis=1, inplace=True, ascending=False)
+        top_five = X_tfidf_df.iloc[:, :5].columns.tolist()
 
-    return top_twenty
+    return top_five
 
 
 def jd_analyzer(jds):

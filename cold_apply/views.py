@@ -109,9 +109,13 @@ class JobDetailView(LoginRequiredMixin, DetailView):
             context['keywords'] = KeywordAnalysis.objects.filter(job=self.object)
         else:
             jd = self.object.description
-            analysis = analyze(jd)
-            hook_after_analysis(analysis, self.object.id)
-            context['keywords'] = KeywordAnalysis.objects.filter(job=self.object)
+            words = jd.split(' ')
+            if len(words) < 30:
+                context['keywords'] = 'Not enough words to analyze'
+            else:
+                analysis = analyze(jd)
+                hook_after_analysis(analysis, self.object.id)
+                context['keywords'] = KeywordAnalysis.objects.filter(job=self.object)
 
         context['now'] = timezone.now()
 
