@@ -19,3 +19,4 @@ cea93b5 added create title and company buttons to job update view
 f1f9e43 added company update link to job detail view
 3e9e045 refactored cancel buttons to close browser tabs
 72e5e49 title update link added to job detail view
+6865e8f refactored seed data into single call
