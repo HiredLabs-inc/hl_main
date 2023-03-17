@@ -1,5 +1,5 @@
 General updates for project development
-2d8da32 added seed data for phases, steps, and participants
+2d8da32 added seed data for phases, steps, and participants in cold_apply
 
 Bug fixes
 Bug: Editing jobs throws a ValueError empty vocabulary; perhaps the documents only  stop words
@@ -8,3 +8,11 @@ Steps taken to resolve:
 
 Outcome: The error is not thrown, but short job descriptions return 27 empty keyword rows, without creating a new
 database record
+
+c41a400 reduced autoclose time to 3 seconds
+2abf65e refactored and reduced the autoclose time to 5 seconds
+cea93b5 added create title and company buttons to job update view
+54c6328 removed fk relationship between title and participant
+517feb3 added 'status reason' to job create view
+29f41b9 added seed data for organization and position in resume
+9da60a1 added app seed data in releases
