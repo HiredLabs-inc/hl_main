@@ -1,0 +1,86 @@
+[
+  {
+    "model": "cold_apply.phase",
+    "pk": 1,
+    "fields": {
+      "title": "Phase 1",
+      "start": "Participant Shows Interest",
+      "end": "Intake call completed",
+      "result": "Clear direction for job search and resume type",
+      "active": true,
+      "order": 0
+    }
+  },
+  {
+    "model": "cold_apply.phase",
+    "pk": 2,
+    "fields": {
+      "title": "Phase 2",
+      "start": "Full results of intake call and phase 1 analysis received",
+      "end": "Hired Labs approves of initial job set and tailored resume sets",
+      "result": "First actionable set of open jobs and tailored resumes ready for transmission to participante",
+      "active": true,
+      "order": 1
+    }
+  },
+  {
+    "model": "cold_apply.phase",
+    "pk": 3,
+    "fields": {
+      "title": "Phase 3",
+      "start": "Initial set of jobs and resumes sent to participant",
+      "end": "Changes made to general format of resume or direction of job search",
+      "result": "Initial set of jobs and resumes agreed upon by Hired Labs and participant",
+      "active": true,
+      "order": 2
+    }
+  },
+  {
+    "model": "cold_apply.phase",
+    "pk": 4,
+    "fields": {
+      "title": "Phase 4",
+      "start": "Participant accepts the initial list of open jobs and tailored resumes",
+      "end": "Maximum number iterations of job lists and tailored resumes has been reached",
+      "result": "Participant submitted results of job applications",
+      "active": true,
+      "order": 3
+    }
+  },
+  {
+    "model": "cold_apply.phase",
+    "pk": 5,
+    "fields": {
+      "title": "Phase 5",
+      "start": "Hired Labs contacts participant to declare end to process and request feedback",
+      "end": "Participant submits feedback on overall process and anything else they feel is relevant",
+      "result": "Feedback from participant is recorded",
+      "active": true,
+      "order": 4
+    }
+  },
+  {
+    "model": "cold_apply.phase",
+    "pk": 6,
+    "fields": {
+      "title": "Nurture",
+      "start": "Participant becomes inactive, either by completing the process, or by dropping out along the way",
+      "end": "Participant re-engages with Hired Labs, and becomes active",
+      "result": "None",
+      "active": true,
+      "order": 0
+    }
+  },
+  {
+    "model": "cold_apply.phase",
+    "pk": 7,
+    "fields": {
+      "title": "Do Not Contact",
+      "start": "Participant asks Hired Labs not to contact them anymore",
+      "end": "Participant explicitly requests to be contacted again by Hired Labs",
+      "result": "None",
+      "active": true,
+      "order": 1
+    }
+  }
+]
