@@ -2,7 +2,7 @@ from django.urls import path
 
 from .views import ParticipantListView, PhaseListView, ParticipantDetailView, JobDetailView, ParticipantCreateView, \
     JobCreateView, OrganizationCreateView, ParticipantUpdateView, TitleCreateView, ConfirmCreateView, JobUpdateView, \
-    refresh_keywords, delete_job
+    TitleUpdateView, delete_job, refresh_keywords
 
 app_name = 'cold_apply'  # TODO: Organize this better
 urlpatterns = [
@@ -18,7 +18,9 @@ urlpatterns = [
     path('participants/<int:pk>/update/', ParticipantUpdateView.as_view(), name='update_participant'),
     path('add_company/', OrganizationCreateView.as_view(), name='create_company'),
     path('companies/confirm_add/', ConfirmCreateView.as_view(), name='confirm_add_company'),
-    path('titles/<int:pk>/add_title/', TitleCreateView.as_view(), name='create_title'),
+    path('titles/add_title/', TitleCreateView.as_view(), name='create_title'),
+    path('titles/<int:pk>/update/', TitleUpdateView.as_view(), name='update_title'),
+    path('titles/confirm_update/', ConfirmCreateView.as_view(), name='confirm_update_title'),
     path('titles/confirm_add/', ConfirmCreateView.as_view(), name='confirm_add_title'),
     path('titles/keywords_refresh/<int:pk>/', refresh_keywords, name='refresh_keywords'),
     path('jobs/delete/<int:pk>/', delete_job, name='delete_job')
