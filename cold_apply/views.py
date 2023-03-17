@@ -255,6 +255,7 @@ class TitleCreateView(LoginRequiredMixin, CreateView):
             print(form.errors)
         return super().form_valid(form)
 
+
 class TitleUpdateView(LoginRequiredMixin, UpdateView):
     model = Position
     template_name = 'cold_apply/title_update.html'
@@ -274,6 +275,28 @@ class TitleUpdateView(LoginRequiredMixin, UpdateView):
         else:
             print(form.errors)
         return super().form_valid(form)
+
+
+class OrganizationUpdateView(LoginRequiredMixin, UpdateView):
+    model = Organization
+    template_name = 'cold_apply/company_update.html'
+    fields = ['name', 'website', 'org_type']
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['now'] = timezone.now()
+
+        return context
+
+    def form_valid(self, form):
+        if form.is_valid():
+            organization = form.save(commit=False)
+            organization.save()
+            return redirect(reverse('cold_apply:confirm_update_company'))
+        else:
+            print(form.errors)
+        return super().form_valid(form)
+
 
 class JobUpdateView(LoginRequiredMixin, UpdateView):
     model = Job

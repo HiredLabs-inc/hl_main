@@ -11,7 +11,7 @@
                 <th>Title</th>
             </tr>
             <tr>
-                <td>{{ object.company }}</td>
+                <td><a href="{% url 'cold_apply:update_company' object.company_id %}" target="_blank"> {{ object.company }}</a></td>
                 <td><a href="{% url 'cold_apply:update_title' object.title_id %}" target="_blank"> {{ object.title }}</a></td>
             </tr>
         </table>
