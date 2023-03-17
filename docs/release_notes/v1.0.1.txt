@@ -16,3 +16,6 @@ cea93b5 added create title and company buttons to job update view
 517feb3 added 'status reason' to job create view
 29f41b9 added seed data for organization and position in resume
 9da60a1 added app seed data in releases
+f1f9e43 added company update link to job detail view
+3e9e045 refactored cancel buttons to close browser tabs
+72e5e49 title update link added to job detail view
