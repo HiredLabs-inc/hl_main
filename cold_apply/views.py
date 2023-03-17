@@ -125,7 +125,7 @@ class JobDetailView(LoginRequiredMixin, DetailView):
 class JobCreateView(LoginRequiredMixin, CreateView):
     model = Job
     template_name = 'cold_apply/job_create.html'
-    fields = ['title', 'company', 'application_link', 'description', 'status']
+    fields = ['title', 'company', 'application_link', 'description', 'status', 'status_reason']
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -138,7 +138,6 @@ class JobCreateView(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         if form.is_valid():
             job = form.save(commit=False)
-            job.status_reason = 'In Progress'
             job.participant = Participant.objects.get(id=self.kwargs['pk'])
             job.created_by = self.request.user
             job.updated_by = self.request.user
