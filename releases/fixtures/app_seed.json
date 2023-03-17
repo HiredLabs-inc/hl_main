@@ -1,0 +1,10 @@
+[
+  {
+    "model": "releases.app",
+    "pk": 1,
+    "fields": {
+      "name": "cold_apply",
+      "description": "Job search tools"
+    }
+  }
+]
