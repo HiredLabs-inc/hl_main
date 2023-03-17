@@ -1,0 +1,38 @@
+[
+  {
+    "model": "resume.organization",
+    "pk": 1,
+    "fields": {
+      "org_type": "Work",
+      "name": "Google",
+      "website": "https://www.google.com"
+    }
+  },
+    {
+        "model": "resume.organization",
+        "pk": 2,
+        "fields": {
+        "org_type": "Edu",
+        "name": "MIT",
+        "website": "https://www.mit.edu"
+        }
+    },
+    {
+        "model": "resume.organization",
+        "pk": 3,
+        "fields": {
+        "org_type": "Activity",
+        "name": "Python",
+        "website": "https://www.python.org"
+        }
+    },
+  {
+    "model": "resume.organization",
+    "pk": 4,
+    "fields": {
+      "org_type": "Work",
+      "name": "Facebook",
+      "website": "https://www.facebook.com"
+    }
+  }
+]
