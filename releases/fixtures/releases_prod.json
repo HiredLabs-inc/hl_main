@@ -1,6 +1,67 @@
 [
   {
     "model": "releases.release",
+    "pk": 1,
+    "fields": {
+      "title": "Initial release",
+      "author": 1,
+      "app": 1,
+      "major": 1,
+      "minor": 0,
+      "patch": 0,
+      "date": "2023-03-17T00:00:00Z"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 1,
+    "fields": {
+      "release": 1,
+      "text": "Made the basic platform"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 2,
+    "fields": {
+      "release": 1,
+      "text": "Setup group-based user permissions for apps"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 3,
+    "fields": {
+      "release": 1,
+      "text": "Added basic feedback submission flow"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 4,
+    "fields": {
+      "release": 1,
+      "text": "Added basic participant CRUD flow"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 5,
+    "fields": {
+      "release": 1,
+      "text": "Added participant pipeline"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 6,
+    "fields": {
+      "release": 1,
+      "text": "Added keyword finding algorithm to Job detail view"
+    }
+  },
+  {
+    "model": "releases.release",
     "pk": 2,
     "fields": {
       "title": "Patch release 1",
@@ -14,7 +75,7 @@
   },
   {
     "model": "releases.note",
-    "pk": 3,
+    "pk": 7,
     "fields": {
       "release": 2,
       "text": "Added seed data for development"
@@ -22,7 +83,7 @@
   },
   {
     "model": "releases.note",
-    "pk": 4,
+    "pk": 8,
     "fields": {
       "release": 2,
       "text": "Removed relationship between Title and Participant"
@@ -30,7 +91,7 @@
   },
   {
     "model": "releases.note",
-    "pk": 5,
+    "pk": 9,
     "fields": {
       "release": 2,
       "text": "Added 'status reason' dropdown to Job creation view"
@@ -38,7 +99,7 @@
   },
   {
     "model": "releases.note",
-    "pk": 6,
+    "pk": 10,
     "fields": {
       "release": 2,
       "text": "Reduced auto-close time for new tabs to 3 seconds (was 10 seconds)"
@@ -46,7 +107,7 @@
   },
   {
     "model": "releases.note",
-    "pk": 7,
+    "pk": 11,
     "fields": {
       "release": 2,
       "text": "Added create title and company buttons to Job update view"
@@ -54,7 +115,7 @@
   },
   {
     "model": "releases.note",
-    "pk": 8,
+    "pk": 12,
     "fields": {
       "release": 2,
       "text": "Added company update link to job detail view"
@@ -62,7 +123,7 @@
   },
   {
     "model": "releases.note",
-    "pk": 9,
+    "pk": 13,
     "fields": {
       "release": 2,
       "text": "Resolved bug: editing some Jobs was throwing an error. \nResolution: added a 30 word minimum to run keyword analysis. \nResult: the browser should no longer throw an error, but may show 27 blank keywords for job descriptions less than 30 words long."
@@ -70,7 +131,7 @@
   },
   {
     "model": "releases.note",
-    "pk": 10,
+    "pk": 14,
     "fields": {
       "release": 2,
       "text": "Reduced keyword results to top five in each category"
@@ -78,7 +139,7 @@
   },
   {
     "model": "releases.note",
-    "pk": 8,
+    "pk": 15,
     "fields": {
       "release": 2,
       "text": "Added company update link to job detail view"
