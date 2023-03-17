@@ -1,0 +1,39 @@
+[
+  {
+    "model": "releases.app",
+    "pk": 1,
+    "fields": {
+      "name": "cold_apply",
+      "description": "Job search tools"
+    }
+  },
+  {
+    "model": "releases.release",
+    "pk": 1,
+    "fields": {
+      "title": "Initial release",
+      "author": 1,
+      "app": 1,
+      "major": 1,
+      "minor": 0,
+      "patch": 0,
+      "date": "2023-03-17T00:00:00Z"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 1,
+    "fields": {
+      "release": 1,
+      "text": "Made the basic platform"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 2,
+    "fields": {
+      "release": 1,
+      "text": "Added seed data for development"
+    }
+  }
+]

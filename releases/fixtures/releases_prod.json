@@ -1,0 +1,31 @@
+[
+  {
+    "model": "releases.release",
+    "pk": 2,
+    "fields": {
+      "title": "Patch release",
+      "author": 1,
+      "app": 1,
+      "major": 1,
+      "minor": 0,
+      "patch": 1,
+      "date": "2023-03-20T00:00:00Z"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 3,
+    "fields": {
+      "release": 2,
+      "text": "Added a second release"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 4,
+    "fields": {
+      "release": 2,
+      "text": "Made some other changes"
+    }
+  }
+]

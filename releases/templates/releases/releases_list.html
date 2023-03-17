@@ -13,10 +13,7 @@
     {% for release in releases %}
 
         <h4 class="sub-header">{{ release.major }}.{{ release.minor }}.{{ release.patch }} {{ release.title }}</h4>
-        <p class="text-muted">Created on {{ release.date|date }} at {{ release.date|time }} by {{ release.author }}</p>
-        {% if user.is_superuser %}
-            <a class="btn btn-primary" href="{% url 'releases:note_create' release.id %}" target="_blank">Add Note</a>
-        {% endif %}
+        <p class="text-muted">Created on {{ release.date|date }} at {{ release.date|time }} by {{ release.author.first_name }} {{ release.author.last_name }}</p>
         <table class="table table-striped">
             <thead>
             <tr>
@@ -38,10 +35,6 @@
             </tbody>
         </table>
     {% endfor %}
-    {% if user.is_superuser %}
-        <a class="btn btn-primary" href="{% url 'releases:release_create' %}" target="_blank">Create New Release</a>
-        <a class="btn btn-primary" href="{% url 'releases:app_create' %}" target="_blank">Create New App</a>
-    {% endif %}
     <a class="btn btn-primary" href="{% url 'staff' %}">Back</a>
 
 {% endblock %}

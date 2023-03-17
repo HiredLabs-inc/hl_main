@@ -8,7 +8,7 @@
       "website": "https://www.google.com"
     }
   },
-    {
+  {
         "model": "resume.organization",
         "pk": 2,
         "fields": {
@@ -17,7 +17,7 @@
         "website": "https://www.mit.edu"
         }
     },
-    {
+  {
         "model": "resume.organization",
         "pk": 3,
         "fields": {
@@ -33,6 +33,27 @@
       "org_type": "Work",
       "name": "Facebook",
       "website": "https://www.facebook.com"
+    }
+  },
+  {
+    "model": "resume.position",
+    "pk": 1,
+    "fields": {
+      "title": "Software Engineer"
+    }
+  },
+  {
+    "model": "resume.position",
+    "pk": 2,
+    "fields": {
+      "title": "Software Engineer II"
+    }
+  },
+  {
+    "model": "resume.position",
+    "pk": 3,
+    "fields": {
+      "title": "Software Engineer III"
     }
   }
 ]
