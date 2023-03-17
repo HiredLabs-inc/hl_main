@@ -1,18 +1,5 @@
 [
   {
-    "model": "releases.release",
-    "pk": 1,
-    "fields": {
-      "title": "Initial release",
-      "author": 1,
-      "app": 1,
-      "major": 1,
-      "minor": 0,
-      "patch": 0,
-      "date": "2023-03-17T00:00:00Z"
-    }
-  },
-  {
     "model": "releases.note",
     "pk": 1,
     "fields": {
@@ -70,7 +57,7 @@
       "major": 1,
       "minor": 0,
       "patch": 1,
-      "date": "2023-03-20T15:00:00Z"
+      "date": "2023-03-17T23:47:00Z"
     }
   },
   {
