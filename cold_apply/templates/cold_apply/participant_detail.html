@@ -96,6 +96,7 @@
                 <th>Title</th>
                 <th>Company</th>
                 <th>Closed Reason</th>
+                <th>Remove Jobs</th>
             </tr>
             </thead>
             <tbody>
@@ -105,6 +106,7 @@
                         <td><a href="{% url 'cold_apply:job_detail' job.id %}">{{ job.title }}</a></td>
                         <td>{{ job.company }}</td>
                         <td>{{ job.status_reason }}</td>
+                        <td><a class="btn btn-primary" href="{% url 'cold_apply:delete_job' job.id %}">Delete</a></td>
                     </tr>
                 {% endif %}
             {% endfor %}
