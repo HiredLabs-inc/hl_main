@@ -2,3 +2,4 @@
 db150d2 set MEDIA_ROOT and MEDIA_URL to handle uploaded files
 Updated server (pythonanywere) to serve uploaded files from MEDIA_ROOT/MEDIA_URL
 dc12675 basic feedback interaction flow setup and working
+ffe8037 basic dashboard for handling comments created and working

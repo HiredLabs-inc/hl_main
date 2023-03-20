@@ -3,7 +3,7 @@ from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils import timezone
 from django.views.generic import ListView, DetailView, CreateView, TemplateView, UpdateView
-
+from django.db.models import Count, Q
 from .models import Release, App, Note, Feedback
 
 
@@ -37,9 +37,16 @@ class ReleasesListView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['title'] = 'Releases'
         releases = Release.objects.all().filter(app=self.kwargs['app_pk'])
+        comments = Feedback.objects.filter(app=self.kwargs['app_pk'])
+        totals = comments.aggregate(
+            unread=Count('pk', filter=Q(status='Unread')),
+            read=Count('pk', filter=Q(status='Read')),
+            total=Count('pk')
+        )
         app = App.objects.get(pk=self.kwargs['app_pk'])
         context['app'] = app
         context['releases'] = releases
+        context['totals'] = totals
         context['now'] = timezone.now()
         return context
 
