@@ -12,7 +12,7 @@ class Participant(models.Model):
     email = models.EmailField()
     phone = models.CharField(max_length=20, blank=True, null=True)
     dnc = models.BooleanField(default=False)
-    uploaded_resume = models.FileField(upload_to='./cold_apply/static/uploads/', blank=True, null=True)
+    uploaded_resume = models.FileField(upload_to='uploads/', blank=True, null=True)
     uploaded_resume_title = models.CharField(max_length=100, blank=True, null=True)
     veteran = models.BooleanField(default=False)
     active = models.BooleanField(default=True)

@@ -148,28 +148,48 @@ class JobCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class ParticipantCreateView(LoginRequiredMixin, CreateView):
-    model = Participant
-    template_name = 'cold_apply/participant_create.html'
-    fields = ['name', 'email', 'phone', 'veteran', 'uploaded_resume', 'uploaded_resume_title', 'current_step']
+# class ParticipantCreateView(LoginRequiredMixin, CreateView):
+#     model = Participant
+#     template_name = 'cold_apply/participant_create.html'
+#     fields = ['name', 'email', 'phone', 'veteran', 'uploaded_resume', 'uploaded_resume_title', 'current_step']
+#
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         context['now'] = timezone.now()
+#
+#         return context
+#
+#     def form_valid(self, form):
+#         if self.request.method == 'POST':
+#             form = ParticipantForm(self.request.POST, self.request.FILES)
+#             if form.is_valid():
+#                 participant = form.save(commit=False)
+#                 participant.created_by = self.request.user
+#                 participant.updated_by = self.request.user
+#                 participant.save()
+#                 return redirect(reverse('cold_apply:index'))
+#             else:
+#                 print(form.errors)
+#         else:
+#             form = ParticipantForm()
+#         return super().form_valid(form)
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['now'] = timezone.now()
-
-        return context
-
-    def form_valid(self, form):
+@login_required
+def create_participant(request):
+    if request.method == 'POST':
+        form = ParticipantForm(request.POST, request.FILES)
         if form.is_valid():
             participant = form.save(commit=False)
-            participant.created_by = self.request.user
-            participant.updated_by = self.request.user
+            participant.created_by = request.user
+            participant.updated_by = request.user
             participant.save()
             return redirect(reverse('cold_apply:index'))
         else:
             print(form.errors)
-        return super().form_valid(form)
-
+    else:
+        form = ParticipantForm()
+    context = {'form': form}
+    return render(request, 'cold_apply/participant_create.html', context)
 
 class ParticipantUpdateView(LoginRequiredMixin, UpdateView):
     model = Participant
