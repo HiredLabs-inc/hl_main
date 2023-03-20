@@ -1,1 +1,2 @@
 0f2e7a8 fixed file uploads
+db150d2 set MEDIA_ROOT and MEDIA_URL to handle uploaded files
