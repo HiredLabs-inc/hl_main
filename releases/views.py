@@ -106,7 +106,7 @@ class NoteCreateView(LoginRequiredMixin, CreateView):
 class FeedbackCreateView(LoginRequiredMixin, CreateView):
     model = Feedback
     template_name = 'releases/create_update.html'
-    fields = ['app', 'text']
+    fields = ['app', 'short_description', 'text']
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

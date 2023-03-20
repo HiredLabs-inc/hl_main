@@ -13,8 +13,10 @@
 
 {% block content %}
     <h2 class="sub-header">Comments</h2>
+    <div class="row">
     <h4>Unread</h4>
-    <table class="table table-striped">
+    <div class=col">
+    <table class="table table-striped table-responsive table-hover">
             <thead>
             <tr>
                 <th>Short Description</th>
@@ -43,10 +45,15 @@
             </tbody>
 
         </table>
-
+    </div>
+    </div>
+    <br>
+    <br>
+    <div class="row">
     <h4>Read</h4>
     <p>Need to be moved into either the backlog or the roadmap, or be resolved.</p>
-   <table class="table table-striped">
+    <div class=col">
+        <table class="table table-striped table-responsive table-hover">
             <thead>
             <tr>
                 <th>Short Description</th>
@@ -75,10 +82,15 @@
             </tbody>
 
         </table>
-
+    </div>
+    </div>
+   <br>
+    <br>
+    <div class="row">
     <h4>Added to Backlog</h4>
     <p>Marked as "todo", but not assigned to a sprint</p>
-    <table class="table table-striped">
+    <div class=col">
+    <table class="table table-striped table-responsive table-hover">
             <thead>
             <tr>
                 <th>Short Description</th>
@@ -107,10 +119,15 @@
             </tbody>
 
         </table>
-
+    </div>
+    </div>
+    <br>
+    <br>
+    <div class="row">
     <h4>Added to Roadmap</h4>
     <p>Assigned to a develepmont sprint or patch release</p>
-    <table class="table table-striped">
+    <div class=col">
+    <table class="table table-striped table-responsive table-hover">
             <thead>
             <tr>
                 <th>Short Description</th>
@@ -139,10 +156,15 @@
             </tbody>
 
         </table>
-
+    </div>
+    </div>
+    <br>
+    <br>
+    <div class="row">
     <h4>Resolved</h4>
     <p>All closed issues. May have been built or rejected; see notes of each comment for details.</p>
-    <table class="table table-striped">
+    <div class=col">
+        <table class="table table-striped table-responsive table-hover">
             <thead>
             <tr>
                 <th>Short Description</th>
@@ -171,6 +193,8 @@
             </tbody>
 
         </table>
+    </div>
+    </div>
 
     <a class="btn btn-primary" href="{% url 'releases:index' app.id %}">Back to Release Notes</a>
 

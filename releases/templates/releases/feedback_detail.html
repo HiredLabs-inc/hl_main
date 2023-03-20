@@ -13,7 +13,6 @@
                 <th>Submitted on</th>
                 <th>Status</th>
                 <th>Last Updated</th>
-                <th>Edit</th>
             </tr>
             <tr>
                 <td>{{ object.app.name }}</td>
@@ -23,7 +22,30 @@
                 <td>{{ object.created|date }}</td>
                 <td>{{ object.status }}</td>
                 <td>{{ object.updated|date }}</td>
-                <td><a href="{% url 'releases:feedback_update' object.app.id object.id %}" target="_blank">Update</a></td>
+            </tr>
+        </table>
+    </div>
+    <br>
+    <br>
+    <div class="row">
+        <table class="table-hover">
+            <tr>
+                <th>App</th>
+                <th>Short Description</th>
+                <th>Text</th>
+                <th>Submitted by</th>
+                <th>Submitted on</th>
+                <th>Status</th>
+                <th>Last Updated</th>
+            </tr>
+            <tr>
+                <td>{{ object.app.name }}</td>
+                <td>{{ object.short_description }}</td>
+                <td>{{ object.text}}</td>
+                <td>{{ object.user.first_name }} {{ object.user.last_name }}</td>
+                <td>{{ object.created|date }}</td>
+                <td>{{ object.status }}</td>
+                <td>{{ object.updated|date }}</td>
             </tr>
         </table>
     </div>
