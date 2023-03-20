@@ -1,0 +1,39 @@
+{% extends 'staff.html' %}
+{% load tz %}
+{% get_current_timezone as TIME_ZONE %}
+
+{% block content %}
+    <div class="row">
+        <table class="table-hover">
+            <tr>
+                <th>App</th>
+                <th>Short Description</th>
+                <th>Text</th>
+                <th>Submitted by</th>
+                <th>Submitted on</th>
+                <th>Status</th>
+                <th>Last Updated</th>
+                <th>Edit</th>
+            </tr>
+            <tr>
+                <td>{{ object.app.name }}</td>
+                <td>{{ object.short_description }}</td>
+                <td>{{ object.text}}</td>
+                <td>{{ object.user.first_name }} {{ object.user.last_name }}</td>
+                <td>{{ object.created|date }}</td>
+                <td>{{ object.status }}</td>
+                <td>{{ object.updated|date }}</td>
+                <td><a href="{% url 'releases:feedback_update' object.app.id object.id %}" target="_blank">Update</a></td>
+            </tr>
+        </table>
+    </div>
+    <br>
+    <br>
+    <div class="row">
+        <h3>Navigation</h3>
+        <div class="col">
+            <a class="btn btn-primary" href="{% url 'releases:feedback_list' object.app.id %}">Feedback List</a>
+            <a class="btn btn-primary" href="{% url 'releases:index' object.app.id %}">Back Releases</a>
+        </div>
+    </div>
+{% endblock %}

@@ -15,7 +15,7 @@ class NoteAdmin(admin.ModelAdmin):
 
 
 class FeedbackAdmin(admin.ModelAdmin):
-    list_display = ('user', 'app', 'text', 'created')
+    list_display = ('user', 'app', 'short_description', 'created')
     list_filter = ('user', 'app', 'created')
 
 

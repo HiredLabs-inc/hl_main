@@ -1,0 +1,40 @@
+{% extends 'staff.html' %}
+{% load tz %}
+{% get_current_timezone as TIME_ZONE %}
+
+{% block title %}
+    <h1>Feedback for {{ app.name }}</h1>
+    <p>This is intended for site developers and administrators to interact with user-submitted feedback. Although not a
+    fully-baked ticketing system, it should serve as a simple, asynchronous feedback loop for anyone involvbed in the
+    project.
+    </p>
+    <p class="text-muted">Data retrieved on {{ now|date }} at {{ now|time }} {{ TIME_ZONE }}</p>
+{% endblock %}
+
+{% block content %}
+    <h2 class="sub-header">Comments</h2>
+    {% for comment in feedback %}
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>Short Description</th>
+                <th>Submitted by</th>
+                <th>Created</th>
+                <th>Status</th>
+                <th>Last Updated</th>
+            </tr>
+            </thead>
+            <tbody>
+                    <tr>
+                        <td><a href="{% url 'releases:feedback_detail' comment.id %}"> {{ comment.short_description }}</a></td>
+                        <td>{{ comment.user.first_name }} {{ comment.user.last_name }}</td>
+                        <td>{{ comment.created|date }}</td>
+                        <td>{{ comment.status }}</td>
+                        <td>{{ comment.updated|date }}</td>
+                    </tr>
+            </tbody>
+        </table>
+    {% endfor %}
+    <a class="btn btn-primary" href="{% url 'staff' %}">Back</a>
+
+{% endblock %}

@@ -2,7 +2,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils import timezone
-from django.views.generic import ListView, DetailView, CreateView, TemplateView
+from django.views.generic import ListView, DetailView, CreateView, TemplateView, UpdateView
 
 from .models import Release, App, Note, Feedback
 
@@ -116,6 +116,51 @@ class FeedbackCreateView(LoginRequiredMixin, CreateView):
             print(form.errors)
         return super().form_valid(form)
 
+class FeedbackListView(LoginRequiredMixin, ListView):
+    model = Feedback
+    template_name = 'releases/feedback_list.html'
+    context_object_name = 'feedback'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Feedback'
+        feedback = Feedback.objects.all().filter(app=self.kwargs['app_pk'])
+        app = App.objects.get(pk=self.kwargs['app_pk'])
+        context['app'] = app
+        context['feedback'] = feedback
+        context['now'] = timezone.now()
+        return context
+
+
+class FeedbackDetailView(LoginRequiredMixin, DetailView):
+    model = Feedback
+    template_name = 'releases/feedback_detail.html'
+    context_object_name = 'feedback'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Feedback'
+        return context
+
+class FeedbackUpdateView(LoginRequiredMixin, UpdateView):
+    model = Feedback
+    template_name = 'releases/create_update.html'
+    fields = ['app', 'short_description', 'text', 'status']
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['now'] = timezone.now()
+
+        return context
+
+    def form_valid(self, form):
+        if form.is_valid():
+            feedback = form.save(commit=False)
+            feedback.save()
+            return redirect(reverse('releases:confirm_update_feedback'))
+        else:
+            print(form.errors)
+        return super().form_valid(form)
 
 class ConfirmCreateView(LoginRequiredMixin, TemplateView):
     template_name = 'releases/confirm.html'

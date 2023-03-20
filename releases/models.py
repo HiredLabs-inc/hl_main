@@ -37,10 +37,20 @@ class Note(models.Model):
 
 
 class Feedback(models.Model):
+    STATUSES = [
+        ('Unread', 'Unread'),
+        ('Read', 'Read'),
+        ('Added to Backlog', 'Added to Backlog'),
+        ('Added to Roadmap', 'Added to Roadmap'),
+        ('Resolved', 'Resolved'),
+    ]
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     app = models.ForeignKey(App, on_delete=models.CASCADE)
+    short_description = models.CharField(max_length=50)
     text = models.TextField()
     created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+    status = models.CharField(max_length=20, choices=STATUSES, default='Unread')
 
     def __str__(self):
-        return self.text
+        return self.short_description
