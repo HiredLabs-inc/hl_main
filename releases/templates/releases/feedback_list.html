@@ -13,8 +13,8 @@
 
 {% block content %}
     <h2 class="sub-header">Comments</h2>
-    {% for comment in feedback %}
-        <table class="table table-striped">
+    <h4>Unread</h4>
+    <table class="table table-striped">
             <thead>
             <tr>
                 <th>Short Description</th>
@@ -22,19 +22,156 @@
                 <th>Created</th>
                 <th>Status</th>
                 <th>Last Updated</th>
+                <th>Update</th>
             </tr>
             </thead>
-            <tbody>
-                    <tr>
-                        <td><a href="{% url 'releases:feedback_detail' comment.id %}"> {{ comment.short_description }}</a></td>
+     <tbody>
+
+        {% for comment in feedback %}
+            {% if comment.status == 'Unread' %}
+                <tr>
+                        <td>{{ comment.short_description }}</td>
                         <td>{{ comment.user.first_name }} {{ comment.user.last_name }}</td>
                         <td>{{ comment.created|date }}</td>
                         <td>{{ comment.status }}</td>
                         <td>{{ comment.updated|date }}</td>
-                    </tr>
+                        <td><a href="{% url 'releases:feedback_update' app.id comment.id %}" target="_blank">Update</a> </td>
+            </tr>
+            {% endif %}
+         {% endfor %}
+
             </tbody>
+
         </table>
-    {% endfor %}
-    <a class="btn btn-primary" href="{% url 'staff' %}">Back</a>
+
+    <h4>Read</h4>
+    <p>Need to be moved into either the backlog or the roadmap, or be resolved.</p>
+   <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>Short Description</th>
+                <th>Submitted by</th>
+                <th>Created</th>
+                <th>Status</th>
+                <th>Last Updated</th>
+                <th>Update</th>
+            </tr>
+            </thead>
+     <tbody>
+
+        {% for comment in feedback %}
+            {% if comment.status == 'Read' %}
+                <tr>
+                        <td>{{ comment.short_description }}</td>
+                        <td>{{ comment.user.first_name }} {{ comment.user.last_name }}</td>
+                        <td>{{ comment.created|date }}</td>
+                        <td>{{ comment.status }}</td>
+                        <td>{{ comment.updated|date }}</td>
+                        <td><a href="{% url 'releases:feedback_update' app.id comment.id %}" target="_blank">Update</a> </td>
+            </tr>
+            {% endif %}
+         {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    <h4>Added to Backlog</h4>
+    <p>Marked as "todo", but not assigned to a sprint</p>
+    <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>Short Description</th>
+                <th>Submitted by</th>
+                <th>Created</th>
+                <th>Status</th>
+                <th>Last Updated</th>
+                <th>Update</th>
+            </tr>
+            </thead>
+     <tbody>
+
+        {% for comment in feedback %}
+            {% if comment.status == 'Added to Backlog' %}
+                <tr>
+                        <td>{{ comment.short_description }}</td>
+                        <td>{{ comment.user.first_name }} {{ comment.user.last_name }}</td>
+                        <td>{{ comment.created|date }}</td>
+                        <td>{{ comment.status }}</td>
+                        <td>{{ comment.updated|date }}</td>
+                        <td><a href="{% url 'releases:feedback_update' app.id comment.id %}" target="_blank">Update</a> </td>
+            </tr>
+            {% endif %}
+         {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    <h4>Added to Roadmap</h4>
+    <p>Assigned to a develepmont sprint or patch release</p>
+    <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>Short Description</th>
+                <th>Submitted by</th>
+                <th>Created</th>
+                <th>Status</th>
+                <th>Last Updated</th>
+                <th>Update</th>
+            </tr>
+            </thead>
+     <tbody>
+
+        {% for comment in feedback %}
+            {% if comment.status == 'Added to Roadmap' %}
+                <tr>
+                        <td>{{ comment.short_description }}</td>
+                        <td>{{ comment.user.first_name }} {{ comment.user.last_name }}</td>
+                        <td>{{ comment.created|date }}</td>
+                        <td>{{ comment.status }}</td>
+                        <td>{{ comment.updated|date }}</td>
+                        <td><a href="{% url 'releases:feedback_update' app.id comment.id %}" target="_blank">Update</a> </td>
+            </tr>
+            {% endif %}
+         {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    <h4>Resolved</h4>
+    <p>All closed issues. May have been built or rejected; see notes of each comment for details.</p>
+    <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>Short Description</th>
+                <th>Submitted by</th>
+                <th>Created</th>
+                <th>Status</th>
+                <th>Last Updated</th>
+                <th>Update</th>
+            </tr>
+            </thead>
+     <tbody>
+
+        {% for comment in feedback %}
+            {% if comment.status == 'Resolved' %}
+                <tr>
+                        <td>{{ comment.short_description }}</td>
+                        <td>{{ comment.user.first_name }} {{ comment.user.last_name }}</td>
+                        <td>{{ comment.created|date }}</td>
+                        <td>{{ comment.status }}</td>
+                        <td>{{ comment.updated|date }}</td>
+                        <td><a href="{% url 'releases:feedback_update' app.id comment.id %}" target="_blank">Update</a> </td>
+            </tr>
+            {% endif %}
+         {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    <a class="btn btn-primary" href="{% url 'releases:index' app.id %}">Back to Release Notes</a>
 
 {% endblock %}
