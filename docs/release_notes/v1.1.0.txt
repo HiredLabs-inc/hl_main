@@ -4,3 +4,4 @@ Updated server (pythonanywere) to serve uploaded files from MEDIA_ROOT/MEDIA_URL
 dc12675 basic feedback interaction flow setup and working
 ffe8037 basic dashboard for handling comments created and working
 b954497 added total and unread comment counter to release_list view for admins
+6463b49 created general feedback dashboard and updated feedback detail view
