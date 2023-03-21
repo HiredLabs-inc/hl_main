@@ -7,27 +7,7 @@ from django.db.models import Count, Q
 from .models import Release, App, Note, Feedback
 
 
-# Create your views here.
-class AppCreateView(LoginRequiredMixin, CreateView):
-    model = App
-    template_name = 'releases/create_update.html'
-    fields = ['name', 'description']
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['title'] = 'Create App'
-        return context
-
-    def form_valid(self, form):
-        if form.is_valid():
-            app = form.save(commit=False)
-            app.save()
-            return redirect(reverse('staff'))
-        else:
-            print(form.errors)
-        return super().form_valid(form)
-
-
+# Index: List of releases notes with most recent at the top.
 class ReleasesListView(LoginRequiredMixin, ListView):
     model = Release
     template_name = 'releases/releases_list.html'
@@ -51,17 +31,18 @@ class ReleasesListView(LoginRequiredMixin, ListView):
         return context
 
 
-class ReleaseDetailView(LoginRequiredMixin, DetailView):
-    model = Release
-    template_name = 'releases/release_detail.html'
-    context_object_name = 'release'
+# General-use confirmation view for creating and updating.
+class ConfirmCreateView(LoginRequiredMixin, TemplateView):
+    template_name = 'releases/confirm.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['title'] = 'Release'
+        context['now'] = timezone.now()
+
         return context
 
 
+# Releasess CRUD
 class ReleaseCreateView(LoginRequiredMixin, CreateView):
     model = Release
     template_name = 'releases/create_update.html'
@@ -83,6 +64,18 @@ class ReleaseCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
+class ReleaseDetailView(LoginRequiredMixin, DetailView):
+    model = Release
+    template_name = 'releases/release_detail.html'
+    context_object_name = 'release'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Release'
+        return context
+
+
+# Notes and Apps C (no read, update, delete)
 class NoteCreateView(LoginRequiredMixin, CreateView):
     model = Note
     template_name = 'releases/create_update.html'
@@ -101,6 +94,29 @@ class NoteCreateView(LoginRequiredMixin, CreateView):
         else:
             print(form.errors)
         return super().form_valid(form)
+
+
+class AppCreateView(LoginRequiredMixin, CreateView):
+    model = App
+    template_name = 'releases/create_update.html'
+    fields = ['name', 'description']
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Create App'
+        return context
+
+    def form_valid(self, form):
+        if form.is_valid():
+            app = form.save(commit=False)
+            app.save()
+            return redirect(reverse('staff'))
+        else:
+            print(form.errors)
+        return super().form_valid(form)
+
+
+# Feedback CRUD
 
 
 class FeedbackCreateView(LoginRequiredMixin, CreateView):
@@ -123,6 +139,25 @@ class FeedbackCreateView(LoginRequiredMixin, CreateView):
             print(form.errors)
         return super().form_valid(form)
 
+
+# User-facing dashboard of all feedback from any user for a given app.
+class FeedbackDashboardView(LoginRequiredMixin, ListView):
+    model = Feedback
+    template_name = 'releases/feedback_dashboard.html'
+    context_object_name = 'feedback'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Feedback'
+        feedback = Feedback.objects.all().filter(app=self.kwargs['app_pk'])
+        app = App.objects.get(pk=self.kwargs['app_pk'])
+        context['app'] = app
+        context['feedback'] = feedback
+        context['now'] = timezone.now()
+        return context
+
+
+# Admin and developer-facing list of all feedback in an actionable board.
 class FeedbackListView(LoginRequiredMixin, ListView):
     model = Feedback
     template_name = 'releases/feedback_list.html'
@@ -139,21 +174,7 @@ class FeedbackListView(LoginRequiredMixin, ListView):
         return context
 
 
-class FeedbackDashboardView(LoginRequiredMixin, ListView):
-    model = Feedback
-    template_name = 'releases/feedback_dashboard.html'
-    context_object_name = 'feedback'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['title'] = 'Feedback'
-        feedback = Feedback.objects.all().filter(app=self.kwargs['app_pk'])
-        app = App.objects.get(pk=self.kwargs['app_pk'])
-        context['app'] = app
-        context['feedback'] = feedback
-        context['now'] = timezone.now()
-        return context
-
+# Read details of a given comment, but no update or delete.
 class FeedbackDetailView(LoginRequiredMixin, DetailView):
     model = Feedback
     template_name = 'releases/feedback_detail.html'
@@ -164,6 +185,8 @@ class FeedbackDetailView(LoginRequiredMixin, DetailView):
         context['title'] = 'Feedback'
         return context
 
+
+# Update a given feedback item.
 class FeedbackUpdateView(LoginRequiredMixin, UpdateView):
     model = Feedback
     template_name = 'releases/create_update.html'
@@ -183,12 +206,3 @@ class FeedbackUpdateView(LoginRequiredMixin, UpdateView):
         else:
             print(form.errors)
         return super().form_valid(form)
-
-class ConfirmCreateView(LoginRequiredMixin, TemplateView):
-    template_name = 'releases/confirm.html'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['now'] = timezone.now()
-
-        return context
