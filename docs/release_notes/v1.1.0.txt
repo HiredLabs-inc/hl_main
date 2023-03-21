@@ -5,3 +5,4 @@ dc12675 basic feedback interaction flow setup and working
 ffe8037 basic dashboard for handling comments created and working
 b954497 added total and unread comment counter to release_list view for admins
 6463b49 created general feedback dashboard and updated feedback detail view
+e6e63f0 fixed file uploads on participant_update view
