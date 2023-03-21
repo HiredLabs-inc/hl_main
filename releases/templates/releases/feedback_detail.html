@@ -3,48 +3,48 @@
 {% get_current_timezone as TIME_ZONE %}
 
 {% block content %}
+
     <div class="row">
-        <table class="table-hover">
+    <h4>Feedback Detail</h4>
+        <br>
+        <br>
+        <table class="table table-condensed">
             <tr>
                 <th>App</th>
-                <th>Short Description</th>
-                <th>Text</th>
-                <th>Submitted by</th>
-                <th>Submitted on</th>
+                <th>Short Feedback Description</th>
                 <th>Status</th>
-                <th>Last Updated</th>
             </tr>
             <tr>
                 <td>{{ object.app.name }}</td>
                 <td>{{ object.short_description }}</td>
-                <td>{{ object.text}}</td>
-                <td>{{ object.user.first_name }} {{ object.user.last_name }}</td>
-                <td>{{ object.created|date }}</td>
                 <td>{{ object.status }}</td>
-                <td>{{ object.updated|date }}</td>
             </tr>
         </table>
     </div>
     <br>
     <br>
     <div class="row">
-        <table class="table-hover">
+        <table class="table table-condensed">
             <tr>
-                <th>App</th>
-                <th>Short Description</th>
-                <th>Text</th>
+                <th>Full Feedback Text</th>
+            </tr>
+            <tr>
+                <td>{{ object.text}}</td>
+            </tr>
+        </table>
+    </div>
+    <br>
+    <br>
+    <div class="row">
+        <table class="table table-condensed">
+            <tr>
                 <th>Submitted by</th>
                 <th>Submitted on</th>
-                <th>Status</th>
                 <th>Last Updated</th>
             </tr>
             <tr>
-                <td>{{ object.app.name }}</td>
-                <td>{{ object.short_description }}</td>
-                <td>{{ object.text}}</td>
                 <td>{{ object.user.first_name }} {{ object.user.last_name }}</td>
                 <td>{{ object.created|date }}</td>
-                <td>{{ object.status }}</td>
                 <td>{{ object.updated|date }}</td>
             </tr>
         </table>
@@ -54,7 +54,10 @@
     <div class="row">
         <h3>Navigation</h3>
         <div class="col">
-            <a class="btn btn-primary" href="{% url 'releases:feedback_list' object.app.id %}">Back to Feedback List</a>
+            <a class="btn btn-primary" href="{% url 'releases:feedback_dashboard' object.app.id %}">Back to Feedback Dashboard</a>
+            {% if user.is_superuser %}
+            <a class="btn btn-primary" href="{% url 'releases:feedback_list' object.app.id %}">Back to Feedback Admin</a>
+           {% endif %}
             <a class="btn btn-primary" href="{% url 'releases:index' object.app.id %}">Back to Releases</a>
         </div>
     </div>

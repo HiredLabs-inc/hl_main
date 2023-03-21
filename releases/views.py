@@ -139,6 +139,21 @@ class FeedbackListView(LoginRequiredMixin, ListView):
         return context
 
 
+class FeedbackDashboardView(LoginRequiredMixin, ListView):
+    model = Feedback
+    template_name = 'releases/feedback_dashboard.html'
+    context_object_name = 'feedback'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Feedback'
+        feedback = Feedback.objects.all().filter(app=self.kwargs['app_pk'])
+        app = App.objects.get(pk=self.kwargs['app_pk'])
+        context['app'] = app
+        context['feedback'] = feedback
+        context['now'] = timezone.now()
+        return context
+
 class FeedbackDetailView(LoginRequiredMixin, DetailView):
     model = Feedback
     template_name = 'releases/feedback_detail.html'

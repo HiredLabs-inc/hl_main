@@ -6,8 +6,9 @@
     <h1>Release Notes for {{ app.name }}</h1>
     <p>List of releases with details for each</p>
     <p class="text-muted">Data retrieved on {{ now|date }} at {{ now|time }} {{ TIME_ZONE }}</p>
+    <a class="btn btn-primary" href="{% url 'releases:feedback_dashboard' app.id %}">See Feedback</a>
     {% if user.is_superuser %}
-        <a class="btn btn-primary" href="{% url 'releases:feedback_list' app.id %}">See Feedback</a>
+        <a class="btn btn-primary" href="{% url 'releases:feedback_list' app.id %}">Feedback Admin Dashboard</a>
         <p>{{ totals.total }} total: {{ totals.unread }} unread</p>
     {% endif %}
 {% endblock %}
