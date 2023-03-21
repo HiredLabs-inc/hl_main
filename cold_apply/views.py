@@ -11,61 +11,7 @@ from .models import Participant, Job, Phase, KeywordAnalysis
 from .static.scripts.keyword_analyzer.keyword_analyzer import analyze, hook_after_analysis
 
 
-@login_required
-def index(request):
-    context = {}
-    return render(request, 'cold_apply/index.html', context)
-
-
-@login_required
-def create_participant(request):
-    if request.method == 'POST':
-        form = ParticipantForm(request.POST, request.FILES)
-        if form.is_valid():
-            participant = form.save(commit=False)
-            participant.user = request.user
-            participant.save()
-            return redirect(reverse('cold_apply:index'))
-        else:
-            print(form.errors)
-    else:
-        form = ParticipantForm()
-    context = {'form': form}
-    return render(request, 'cold_apply/create_participant.html', context)
-
-
-@login_required
-def create_Interaction(request):
-    if request.method == 'POST':
-        form = InteractionForm(request.POST)
-        if form.is_valid():
-            interaction = form.save(commit=False)
-            interaction.user = request.user
-            interaction.save()
-            return redirect(reverse('cold_apply:index'))
-        else:
-            print(form.errors)
-    else:
-        form = InteractionForm()
-    context = {'form': form}
-    return render(request, 'cold_apply/create_interaction.html', context)
-
-
-class PhaseListView(LoginRequiredMixin, ListView):
-    model = Phase
-    template_name = 'cold_apply/process.html'
-    context_object_name = 'phases'
-
-    def get_queryset(self):
-        return Phase.objects.all().order_by('order')
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['now'] = timezone.now()
-
-        return context
-
-
+# Index
 class ParticipantListView(LoginRequiredMixin, ListView):
     model = Phase
     template_name = 'cold_apply/participant_list.html'
@@ -83,97 +29,37 @@ class ParticipantListView(LoginRequiredMixin, ListView):
         return context
 
 
-class ParticipantDetailView(LoginRequiredMixin, DetailView):
-    model = Participant
-    template_name = 'cold_apply/participant_detail.html'
-    context_object_name = 'participants'
-    paginate_by = 10
+# process/
+class PhaseListView(LoginRequiredMixin, ListView):
+    model = Phase
+    template_name = 'cold_apply/process.html'
+    context_object_name = 'phases'
+
+    def get_queryset(self):
+        return Phase.objects.all().order_by('order')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['jobs'] = Job.objects.filter(participant=self.object)
         context['now'] = timezone.now()
 
         return context
 
 
-class JobDetailView(LoginRequiredMixin, DetailView):
-    model = Job
-    template_name = 'cold_apply/job_detail.html'
-    context_object_name = 'jobs'
-    paginate_by = 10
+# General-use confirmation page for creating and updating.
+# TODO: Add details about what was created to context
+class ConfirmCreateView(LoginRequiredMixin, TemplateView):
+    template_name = 'cold_apply/confirm_create.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        if KeywordAnalysis.objects.filter(job=self.object).exists():
-            context['keywords'] = KeywordAnalysis.objects.filter(job=self.object)
-        else:
-            jd = self.object.description
-            words = jd.split(' ')
-            if len(words) < 30:
-                context['keywords'] = 'Not enough words to analyze'
-            else:
-                analysis = analyze(jd)
-                hook_after_analysis(analysis, self.object.id)
-                context['keywords'] = KeywordAnalysis.objects.filter(job=self.object)
-
         context['now'] = timezone.now()
 
         return context
 
 
-class JobCreateView(LoginRequiredMixin, CreateView):
-    model = Job
-    template_name = 'cold_apply/job_create.html'
-    fields = ['title', 'company', 'application_link', 'description', 'status', 'status_reason']
+# Participants
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['pk'] = self.kwargs['pk']
-        context['participant'] = Participant.objects.get(id=self.kwargs['pk'])
-        context['now'] = timezone.now()
-
-        return context
-
-    def form_valid(self, form):
-        if form.is_valid():
-            job = form.save(commit=False)
-            job.participant = Participant.objects.get(id=self.kwargs['pk'])
-            job.created_by = self.request.user
-            job.updated_by = self.request.user
-            job.save()
-            return redirect(reverse('cold_apply:confirm_add_job'))
-        else:
-            print(form.errors)
-        return super().form_valid(form)
-
-
-# class ParticipantCreateView(LoginRequiredMixin, CreateView):
-#     model = Participant
-#     template_name = 'cold_apply/participant_create.html'
-#     fields = ['name', 'email', 'phone', 'veteran', 'uploaded_resume', 'uploaded_resume_title', 'current_step']
-#
-#     def get_context_data(self, **kwargs):
-#         context = super().get_context_data(**kwargs)
-#         context['now'] = timezone.now()
-#
-#         return context
-#
-#     def form_valid(self, form):
-#         if self.request.method == 'POST':
-#             form = ParticipantForm(self.request.POST, self.request.FILES)
-#             if form.is_valid():
-#                 participant = form.save(commit=False)
-#                 participant.created_by = self.request.user
-#                 participant.updated_by = self.request.user
-#                 participant.save()
-#                 return redirect(reverse('cold_apply:index'))
-#             else:
-#                 print(form.errors)
-#         else:
-#             form = ParticipantForm()
-#         return super().form_valid(form)
-
+# Create new Participant
 @login_required
 def create_participant(request):
     if request.method == 'POST':
@@ -191,6 +77,23 @@ def create_participant(request):
     context = {'form': form}
     return render(request, 'cold_apply/participant_create.html', context)
 
+
+# Read Participant details
+class ParticipantDetailView(LoginRequiredMixin, DetailView):
+    model = Participant
+    template_name = 'cold_apply/participant_detail.html'
+    context_object_name = 'participants'
+    paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['jobs'] = Job.objects.filter(participant=self.object)
+        context['now'] = timezone.now()
+
+        return context
+
+
+# Update Participant
 @login_required
 def update_participant(request, pk):
     participant = Participant.objects.get(id=pk)
@@ -208,37 +111,8 @@ def update_participant(request, pk):
     context = {'form': form}
     return render(request, 'cold_apply/participant_update.html', context)
 
-# class ParticipantUpdateView(LoginRequiredMixin, UpdateView):
-#     model = Participant
-#     template_name = 'cold_apply/participant_update.html'
-#     fields = ['name', 'email', 'phone', 'veteran', 'active', 'dnc', 'uploaded_resume', 'uploaded_resume_title',
-#               'current_step']
-#
-#     def get_context_data(self, **kwargs):
-#         context = super().get_context_data(**kwargs)
-#         context['now'] = timezone.now()
-#
-#         return context
-#
-#     def form_valid(self, form):
-#         if self.request.method == 'POST':
-#             form = ParticipantForm(self.request.POST, self.request.FILES)
-#             if form.is_valid():
-#                 participant = form.save(commit=False)
-#                 participant.updated_by = self.request.user
-#                 participant.save()
-#                 return redirect(reverse('cold_apply:confirm_update_participant'))
-#             else:
-#                 print(form.errors)
-#         return super().form_valid(form)
 
-
-# TODO Create Interaction using generic CreateView
-
-# TODO View interactions using generic ListView
-
-# TODO View interaction details using generic DetailView
-
+# Organizations
 class OrganizationCreateView(LoginRequiredMixin, CreateView):
     model = Organization
     template_name = 'cold_apply/company_add.html'
@@ -263,9 +137,10 @@ class OrganizationCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-# TODO: Add details about what was created to context
-class ConfirmCreateView(LoginRequiredMixin, TemplateView):
-    template_name = 'cold_apply/confirm_create.html'
+class OrganizationUpdateView(LoginRequiredMixin, UpdateView):
+    model = Organization
+    template_name = 'cold_apply/company_update.html'
+    fields = ['name', 'website', 'org_type']
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -273,6 +148,17 @@ class ConfirmCreateView(LoginRequiredMixin, TemplateView):
 
         return context
 
+    def form_valid(self, form):
+        if form.is_valid():
+            organization = form.save(commit=False)
+            organization.save()
+            return redirect(reverse('cold_apply:confirm_update_company'))
+        else:
+            print(form.errors)
+        return super().form_valid(form)
+
+
+# Titles
 
 class TitleCreateView(LoginRequiredMixin, CreateView):
     model = Position
@@ -316,25 +202,56 @@ class TitleUpdateView(LoginRequiredMixin, UpdateView):
         return super().form_valid(form)
 
 
-class OrganizationUpdateView(LoginRequiredMixin, UpdateView):
-    model = Organization
-    template_name = 'cold_apply/company_update.html'
-    fields = ['name', 'website', 'org_type']
+# Jobs
+class JobCreateView(LoginRequiredMixin, CreateView):
+    model = Job
+    template_name = 'cold_apply/job_create.html'
+    fields = ['title', 'company', 'application_link', 'description', 'status', 'status_reason']
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context['pk'] = self.kwargs['pk']
+        context['participant'] = Participant.objects.get(id=self.kwargs['pk'])
         context['now'] = timezone.now()
 
         return context
 
     def form_valid(self, form):
         if form.is_valid():
-            organization = form.save(commit=False)
-            organization.save()
-            return redirect(reverse('cold_apply:confirm_update_company'))
+            job = form.save(commit=False)
+            job.participant = Participant.objects.get(id=self.kwargs['pk'])
+            job.created_by = self.request.user
+            job.updated_by = self.request.user
+            job.save()
+            return redirect(reverse('cold_apply:confirm_add_job'))
         else:
             print(form.errors)
         return super().form_valid(form)
+
+
+class JobDetailView(LoginRequiredMixin, DetailView):
+    model = Job
+    template_name = 'cold_apply/job_detail.html'
+    context_object_name = 'jobs'
+    paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if KeywordAnalysis.objects.filter(job=self.object).exists():
+            context['keywords'] = KeywordAnalysis.objects.filter(job=self.object)
+        else:
+            jd = self.object.description
+            words = jd.split(' ')
+            if len(words) < 30:
+                context['keywords'] = 'Not enough words to analyze'
+            else:
+                analysis = analyze(jd)
+                hook_after_analysis(analysis, self.object.id)
+                context['keywords'] = KeywordAnalysis.objects.filter(job=self.object)
+
+        context['now'] = timezone.now()
+
+        return context
 
 
 class JobUpdateView(LoginRequiredMixin, UpdateView):
@@ -370,3 +287,25 @@ def delete_job(request, pk):
     participant = Job.objects.get(id=pk).participant.id
     Job.objects.get(id=pk).delete()
     return redirect(reverse('cold_apply:participant_detail', kwargs={'pk': participant}))
+
+
+# TODO Create Interaction using generic CreateView
+@login_required
+def create_interaction(request):
+    if request.method == 'POST':
+        form = InteractionForm(request.POST)
+        if form.is_valid():
+            interaction = form.save(commit=False)
+            interaction.user = request.user
+            interaction.save()
+            return redirect(reverse('cold_apply:index'))
+        else:
+            print(form.errors)
+    else:
+        form = InteractionForm()
+    context = {'form': form}
+    return render(request, 'cold_apply/create_interaction.html', context)
+
+# TODO View interactions using generic ListView
+
+# TODO View interaction details using generic DetailView
