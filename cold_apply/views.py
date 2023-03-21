@@ -191,27 +191,46 @@ def create_participant(request):
     context = {'form': form}
     return render(request, 'cold_apply/participant_create.html', context)
 
-class ParticipantUpdateView(LoginRequiredMixin, UpdateView):
-    model = Participant
-    template_name = 'cold_apply/participant_update.html'
-    fields = ['name', 'email', 'phone', 'veteran', 'active', 'dnc', 'uploaded_resume', 'uploaded_resume_title',
-              'current_step']
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['now'] = timezone.now()
-
-        return context
-
-    def form_valid(self, form):
+@login_required
+def update_participant(request, pk):
+    participant = Participant.objects.get(id=pk)
+    if request.method == 'POST':
+        form = ParticipantForm(request.POST, request.FILES, instance=participant)
         if form.is_valid():
             participant = form.save(commit=False)
-            participant.updated_by = self.request.user
+            participant.updated_by = request.user
             participant.save()
             return redirect(reverse('cold_apply:confirm_update_participant'))
         else:
             print(form.errors)
-        return super().form_valid(form)
+    else:
+        form = ParticipantForm(instance=participant)
+    context = {'form': form}
+    return render(request, 'cold_apply/participant_update.html', context)
+
+# class ParticipantUpdateView(LoginRequiredMixin, UpdateView):
+#     model = Participant
+#     template_name = 'cold_apply/participant_update.html'
+#     fields = ['name', 'email', 'phone', 'veteran', 'active', 'dnc', 'uploaded_resume', 'uploaded_resume_title',
+#               'current_step']
+#
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         context['now'] = timezone.now()
+#
+#         return context
+#
+#     def form_valid(self, form):
+#         if self.request.method == 'POST':
+#             form = ParticipantForm(self.request.POST, self.request.FILES)
+#             if form.is_valid():
+#                 participant = form.save(commit=False)
+#                 participant.updated_by = self.request.user
+#                 participant.save()
+#                 return redirect(reverse('cold_apply:confirm_update_participant'))
+#             else:
+#                 print(form.errors)
+#         return super().form_valid(form)
 
 
 # TODO Create Interaction using generic CreateView
