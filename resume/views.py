@@ -1,11 +1,13 @@
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render
+from django.views.generic import DetailView, ListView
 
-from .models import *
+from .models import Overview, Organization, Experience, Bullet, Education, CertProjectActivity, LanguageFATS, Position
 
 
 # Create your views here.
 def index(request, pk):
-    overview = Overview.objects.all().filter(title=pk).values()
+    overview = Overview.objects.all()
     orgs = Organization.objects.all()
     work = Experience.objects.all().order_by('-start_date')
     bullets = Bullet.objects.all()
@@ -39,3 +41,5 @@ def index(request, pk):
         'target': target,
     }
     return render(request, 'resume/index.html', context)
+
+

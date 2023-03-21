@@ -5,9 +5,9 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, TemplateView
 
-from resume.models import Organization, Position
+from resume.models import Organization, Position, Experience
 from .forms import ParticipantForm, InteractionForm
-from .models import Participant, Job, Phase, KeywordAnalysis
+from .models import Participant, Job, Phase, KeywordAnalysis, ParticipantExperience
 from .static.scripts.keyword_analyzer.keyword_analyzer import analyze, hook_after_analysis
 
 
@@ -289,6 +289,88 @@ def delete_job(request, pk):
     return redirect(reverse('cold_apply:participant_detail', kwargs={'pk': participant}))
 
 
+class ParticipantExperienceListView(LoginRequiredMixin, ListView):
+    model = ParticipantExperience
+    template_name = 'resume/index.html'
+    context_object_name = 'Experiences'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data()
+        context['participant_experiences'] = ParticipantExperience.objects.filter(participant=self.kwargs['pk'])
+        context['experiences'] = Experience.objects.filter(participantexperience__participant_id=self.kwargs['pk']).\
+            order_by('-start_date')
+        context['title'] = Position.objects.filter(id=self.kwargs['title_pk'])
+        context['participant'] = Participant.objects.filter(id=self.kwargs['pk'])
+        context['now'] = timezone.now()
+        return context
+
+
+
+class ParticipantExperienceCreateView(LoginRequiredMixin, CreateView):
+    model = ParticipantExperience
+    template_name = 'cold_apply/create_update.html'
+    fields = ['participant', 'experience']
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['now'] = timezone.now()
+
+        return context
+
+    def form_valid(self, form):
+        if form.is_valid():
+            participant_experience = form.save(commit=False)
+            participant_experience.save()
+            return redirect(reverse('cold_apply:confirm_add_participant_experience'))
+        else:
+            print(form.errors)
+        return super().form_valid(form)
+
+
+# TODO: ParticipantExperienceUpdateView
+
+# TODO: ParticipantExperienceDetailView
+
+# TODO: ParticipantOverviewCreateView
+
+# TODO: ParticipantOverviewUpdateView
+
+# TODO: ParticipantOverviewDeleteView
+
+class ExperienceCreateView(LoginRequiredMixin, CreateView):
+    model = Experience
+    template_name = 'cold_apply/create_update.html'
+    fields = ['start_date', 'end_date', 'org', 'position']
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['now'] = timezone.now()
+
+        return context
+
+    def form_valid(self, form):
+        if form.is_valid():
+            experience = form.save(commit=False)
+            experience.save()
+            return redirect(reverse('cold_apply:confirm_add_experience'))
+        else:
+            print(form.errors)
+        return super().form_valid(form)
+
+
+
+# TODO: ExperienceUpdateView
+
+# TODO: ExperienceDetailView
+
+# TODO: BulletCreateView
+
+# TODO: BulletUpdateView
+
+# TODO: BulletDetailView
+
+
+
 # TODO Create Interaction using generic CreateView
 @login_required
 def create_interaction(request):
@@ -306,6 +388,7 @@ def create_interaction(request):
     context = {'form': form}
     return render(request, 'cold_apply/create_interaction.html', context)
 
+#
 # TODO View interactions using generic ListView
 
 # TODO View interaction details using generic DetailView

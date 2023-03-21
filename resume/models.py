@@ -1,6 +1,7 @@
 from django.db import models
 
 
+
 class Overview(models.Model):
     text = models.TextField()
     title = models.ForeignKey('Position', on_delete=models.CASCADE, default=None, null=True)
@@ -26,7 +27,6 @@ class Organization(models.Model):
 class Position(models.Model):
     title = models.CharField(max_length=50)
 
-
     def __str__(self):
         return f'{self.title}'
 
@@ -47,13 +47,8 @@ class Concentration(models.Model):
 
 
 class Experience(models.Model):
-    EXP_LABELS = [
-        ('Work', 'Work'),
-        ('Leadership', 'Leadership'),
-    ]
     start_date = models.DateField()
-    end_date = models.DateField()
-    label = models.CharField(max_length=20, choices=EXP_LABELS)
+    end_date = models.DateField(null=True, blank=True)
     org = models.ForeignKey(Organization, on_delete=models.CASCADE)
     position = models.ForeignKey(Position, on_delete=models.CASCADE)
 

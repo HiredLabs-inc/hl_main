@@ -1,7 +1,20 @@
 from django.contrib import admin
 
 # Register your models here.
-from .models import Participant, Interaction, Job, Phase, Step, KeywordAnalysis
+from .models import Participant, Interaction, Job, Phase, Step, KeywordAnalysis, ParticipantExperience, \
+    ParticipantOverview
+
+
+class ParticipantOverviewAdmin(admin.ModelAdmin):
+    list_display = ('participant', 'overview')
+    list_filter = ('participant', 'overview')
+    search_fields = ('participant', 'overview')
+
+
+class ParticipantExperienceAdmin(admin.ModelAdmin):
+    list_display = ('participant', 'experience')
+    list_filter = ('participant', 'experience')
+    search_fields = ('participant', 'experience')
 
 
 class ParticipantAdmin(admin.ModelAdmin):
@@ -46,6 +59,8 @@ class KeywordAnalysisAdmin(admin.ModelAdmin):
     search_fields = ('job', 'unigram', 'bigram', 'trigram')
 
 
+admin.site.register(ParticipantOverview, ParticipantOverviewAdmin)
+admin.site.register(ParticipantExperience, ParticipantExperienceAdmin)
 admin.site.register(KeywordAnalysis, KeywordAnalysisAdmin)
 admin.site.register(Phase, PhaseAdmin)
 admin.site.register(Step, StepAdmin)

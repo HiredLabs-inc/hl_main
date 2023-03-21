@@ -3,8 +3,8 @@
 {% get_static_prefix as STATIC_PREFIX %}
 
 {% block content %}
-    {% for title in target %}
-        <p>Target Job: {{ title.title }}</p>
+    {% for person in participant %}
+     <p>Experience for: {{ person.name }}</p>
     {% endfor %}
 
 {% endblock %}
@@ -12,9 +12,7 @@
     <!-- <span id="right-fill"></span> -->
     <header>
         <div class="centered-content">
-            {% for job in target %}
-                <h1>{{ job.whose.name }}</h1>
-            {% endfor %}
+            <h1>Targeted for: {{ title.first }}</h1>
         </div>
     </header>
 
@@ -38,7 +36,22 @@
 
     <div id="work">
         <h3>Work Experience</h3>
-        {% if orgs %}
+        {% if experiences %}
+            {% for experience in experiences %}
+                <h5>{{ experience.position }} at {{ experience.org }}</h5>
+                <p>{{ experience.start_date|date }} -
+                    {% if experience.end_date == None %}
+                Present
+                {% else %}
+                {{ experience.end_date|date }}
+                </p>
+                {% endif %}
+                <ul>
+                {% for bullet in experience.bullet_set.values %}
+                    <li>{{ bullet.text }}</li>
+                    {% endfor %}
+                </ul>
+            {% endfor %}
             {% for org in orgs %}
                 {% if org.org_type == 'Work' %}
                     <div class="container">
@@ -66,7 +79,8 @@
                 {% endif %}
             {% endfor %}
         {% else %}
-            <p>No Organizations found - get a job, ya HUMP!</p>
+            <p>No experience found. Either you haven't had a job, or you haven't entered any work experience into our
+                system. Either way, you're lazy, and you should get a job, ya HUMP!</p>
         {% endif %}
     </div>
 

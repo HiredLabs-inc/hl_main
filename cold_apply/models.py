@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from django.db import models
 
-from resume.models import Organization, Overview, Position, Degree, Concentration, Experience, Bullet, Education, \
+from resume.models import Organization, Overview, Position, Degree, Experience, Concentration, Bullet, Education, \
     CertProjectActivity, LanguageFATS
 
 
@@ -50,6 +50,7 @@ class Interaction(models.Model):
         verbose_name_plural = 'Interactions'
 
 
+# This refers to open jobs, not to jobs a participant has already had in the past
 class Job(models.Model):
     STATUSES = [
         ('Open', 'Open'),
@@ -104,6 +105,7 @@ class Application(models.Model):
 
 # TODO: Add a model for the resume. Tailoring will be done by setting FK to resume.Position
 
+# cold_apply interacation Phases
 class Phase(models.Model):
     title = models.CharField(max_length=200)
     start = models.CharField(max_length=200)
@@ -119,6 +121,7 @@ class Phase(models.Model):
         verbose_name_plural = 'Phases'
 
 
+# cold_apply interaction Phase substeps
 class Step(models.Model):
     OWNER_CHOICES = [
         ('Participant', 'Participant'),
@@ -137,6 +140,8 @@ class Step(models.Model):
         verbose_name_plural = 'Steps'
 
 
+# Results of keyword analysis algorithm. There is one per job, and it is overwritten whenever a new keyword analysis
+# is run.
 class KeywordAnalysis(models.Model):
     job = models.ForeignKey(Job, on_delete=models.CASCADE)
     unigram = models.CharField(max_length=200)
@@ -148,3 +153,25 @@ class KeywordAnalysis(models.Model):
 
     class Meta:
         verbose_name_plural = 'Keyword Analyses'
+
+
+class ParticipantExperience(models.Model):
+    participant = models.ForeignKey(Participant, on_delete=models.CASCADE)
+    experience = models.ForeignKey(Experience, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'{self.participant.name}: {self.experience.position.title}, {self.experience.org.name}'
+
+    class Meta:
+        verbose_name_plural = 'Participant Experiences'
+
+
+class ParticipantOverview(models.Model):
+    participant = models.ForeignKey(Participant, on_delete=models.CASCADE)
+    overview = models.ForeignKey(Overview, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'{self.participant.name}: {self.overview.title}'
+
+    class Meta:
+        verbose_name_plural = 'Participant Overviews'
