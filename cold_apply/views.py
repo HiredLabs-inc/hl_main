@@ -1,5 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Count, Q
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.utils import timezone
@@ -87,7 +88,15 @@ class ParticipantDetailView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['jobs'] = Job.objects.filter(participant=self.object)
+        jobs = Job.objects.filter(participant=self.object)
+        totals = jobs.aggregate(
+            total=Count('pk'),
+            open_jobs=Count('pk', filter=Q(status='Open')),
+            closed_jobs=Count('pk', filter=Q(status='Closed')),
+            rejected=Count('pk', filter=Q(status_reason='Candidate Rejected')),
+        )
+        context['jobs'] = jobs
+        context['totals'] = totals
         context['now'] = timezone.now()
 
         return context
@@ -297,14 +306,13 @@ class ParticipantExperienceListView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data()
         context['participant_experiences'] = ParticipantExperience.objects.filter(participant=self.kwargs['pk'])
-        context['experiences'] = Experience.objects.filter(participantexperience__participant_id=self.kwargs['pk']).\
+        context['experiences'] = Experience.objects.filter(participantexperience__participant_id=self.kwargs['pk']). \
             order_by('-start_date')
         context['title'] = Position.objects.filter(id=self.kwargs['title_pk'])
         context['overview'] = Overview.objects.all()
         context['participant'] = Participant.objects.filter(id=self.kwargs['pk'])
         context['now'] = timezone.now()
         return context
-
 
 
 class ParticipantExperienceCreateView(LoginRequiredMixin, CreateView):
@@ -359,7 +367,6 @@ class ExperienceCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-
 # TODO: ExperienceUpdateView
 
 # TODO: ExperienceDetailView
@@ -369,7 +376,6 @@ class ExperienceCreateView(LoginRequiredMixin, CreateView):
 # TODO: BulletUpdateView
 
 # TODO: BulletDetailView
-
 
 
 # TODO Create Interaction using generic CreateView

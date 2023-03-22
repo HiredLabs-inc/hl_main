@@ -57,9 +57,9 @@
             </thead>
             <tbody>
             <tr>
-                <td>{{ jobs.count }}</td>
-                <td>{{ jobs|length }}</td>
-                <td>{{ jobs|length }}</td>
+                <td>{{ totals.total }}</td>
+                <td>{{ totals.open_jobs }}</td>
+                <td>{{ totals.rejected }}</td>
                 <td><a class="btn btn-primary" href="{% url 'cold_apply:create_job' object.id %}" target="_blank">Add a
                     Job</a></td>
 
