@@ -7,7 +7,7 @@ class Overview(models.Model):
     title = models.ForeignKey('Position', on_delete=models.CASCADE, default=None, null=True)
 
     def __str__(self):
-        return self.title
+        return self.title.title
 
 
 class Organization(models.Model):

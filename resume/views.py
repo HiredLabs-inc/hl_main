@@ -7,7 +7,7 @@ from .models import Overview, Organization, Experience, Bullet, Education, CertP
 
 # Create your views here.
 def index(request, pk):
-    overview = Overview.objects.all()
+    # overview = Overview.objects.all()
     orgs = Organization.objects.all()
     work = Experience.objects.all().order_by('-start_date')
     bullets = Bullet.objects.all()

@@ -5,7 +5,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, TemplateView
 
-from resume.models import Organization, Position, Experience
+from resume.models import Organization, Position, Experience, Overview
 from .forms import ParticipantForm, InteractionForm
 from .models import Participant, Job, Phase, KeywordAnalysis, ParticipantExperience
 from .static.scripts.keyword_analyzer.keyword_analyzer import analyze, hook_after_analysis
@@ -300,6 +300,7 @@ class ParticipantExperienceListView(LoginRequiredMixin, ListView):
         context['experiences'] = Experience.objects.filter(participantexperience__participant_id=self.kwargs['pk']).\
             order_by('-start_date')
         context['title'] = Position.objects.filter(id=self.kwargs['title_pk'])
+        context['overview'] = Overview.objects.all()
         context['participant'] = Participant.objects.filter(id=self.kwargs['pk'])
         context['now'] = timezone.now()
         return context

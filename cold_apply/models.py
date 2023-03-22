@@ -171,7 +171,7 @@ class ParticipantOverview(models.Model):
     overview = models.ForeignKey(Overview, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f'{self.participant.name}: {self.overview.title}'
+        return f'{self.participant.name}: {self.overview.title.title}'
 
     class Meta:
         verbose_name_plural = 'Participant Overviews'

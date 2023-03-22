@@ -3,9 +3,8 @@
 {% get_static_prefix as STATIC_PREFIX %}
 
 {% block content %}
-    {% for person in participant %}
-     <p>Experience for: {{ person.name }}</p>
-    {% endfor %}
+
+     <p>Experience for: {{ participant.first.name }}</p>
 
 {% endblock %}
 {% block header %}
@@ -23,7 +22,11 @@
         {% if overview %}
             <p>
                 {% for summary in overview %}
-                    {{ summary.text }}
+                    {% if summary.participantoverview_set.first.participant.name == participant.first.name %}
+                        {% if summary.title.title == title.first.title %}
+                            {{ summary.text }}
+                        {% endif %}
+                    {% endif %}
                 {% endfor %}
             </p>
         {% else %}
