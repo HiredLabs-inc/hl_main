@@ -9,3 +9,4 @@ e6e63f0 fixed file uploads on participant_update view
 d1604ad added basic work experience to 'tailor_resume' button on job_detail page
 0da81d6 tailored overview matching title and participant tied to 'tailor_resume' button in job_detail view
 aae4469 fixed job counter on participant_detail page
+12a6262 targeted resumes working
