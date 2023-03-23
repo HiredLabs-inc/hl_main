@@ -52,11 +52,11 @@
                 </p>
                 {% endif %}
 
-                <ul>
+                <ul id="bulletList">
                 <a href="{% url 'cold_apply:create_bullet' experience_pk=experience.id %}" target="_blank">Add bullet statements</a>
                 {% for bullet in weighted_bullets %}
                     {% if bullet.bullet.experience == experience %}
-                        <li>{{ bullet.bullet.text }} ({{ bullet.weight }})</li>
+                        <li>{{ bullet.bullet.text }}  ({{ bullet.weight }})</li>
                     {% endif %}
                 {% endfor %}
                 </ul>
@@ -97,6 +97,11 @@
     <br>
 {% endblock %}
 
+{% block scripts %}
+    <script type="text/javascript">
+        $('#bulletList li:gt(2)').hide();
+    </script>
+{% endblock %}
 {##}
 {#{% block education %}#}
 {#    {% if edu %}#}
