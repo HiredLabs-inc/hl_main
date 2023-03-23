@@ -43,7 +43,7 @@
         <a href="{% url 'cold_apply:create_experience' pk=participant.first.id %}" target="_blank">Add Work Experience</a>
         {% if experiences %}
             {% for experience in experiences %}
-                <h5>{{ experience.position }} at {{ experience.org }}</h5>
+                <h5><a href="" target="_blank">{{ experience.position }} at {{ experience.org }}</a></h5>
                 <p>{{ experience.start_date|date }} -
                     {% if experience.end_date == None %}
                 Present
@@ -51,9 +51,9 @@
                 {{ experience.end_date|date }}
                 </p>
                 {% endif %}
-                <a href="" target="_blank">Edit experience</a>
-                <a href="" target="_blank">Add bullet statements</a>
+
                 <ul>
+                <a href="" target="_blank">Add bullet statements</a>
                 {% for bullet in weighted_bullets %}
                     {% if bullet.bullet.experience == experience %}
                         <li>{{ bullet.bullet.text }} ({{ bullet.weight }})</li>
