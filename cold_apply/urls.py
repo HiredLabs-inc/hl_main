@@ -3,7 +3,7 @@ from django.urls import path
 from .views import ParticipantListView, PhaseListView, ParticipantDetailView, JobDetailView, \
     JobCreateView, OrganizationCreateView, TitleCreateView, ConfirmCreateView, JobUpdateView, \
     TitleUpdateView, OrganizationUpdateView, delete_job, refresh_keywords, create_participant, update_participant, \
-    ParticipantExperienceCreateView, ParticipantExperienceListView, ExperienceCreateView
+    ParticipantExperienceCreateView, ParticipantExperienceListView, ExperienceCreateView, BulletCreateView
 
 app_name = 'cold_apply'
 
@@ -64,4 +64,10 @@ urlpatterns += [
          name='confirm_add_participant_experience'),
     path('experience/confirm_add/', ConfirmCreateView.as_view(), name='confirm_add_experience'),
     path('experience/<int:pk>/update/', JobUpdateView.as_view(), name='update_experience'),
+    ]
+
+# Bullets CRUD
+urlpatterns += [
+    path('experience/<int:experience_pk>/add_bullet/', BulletCreateView.as_view(), name='create_bullet'),
+    path('bullets/confirm_add/', ConfirmCreateView.as_view(), name='confirm_add_bullet'),
     ]

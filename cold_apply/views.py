@@ -251,11 +251,11 @@ class JobDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         if KeywordAnalysis.objects.filter(job=self.object).exists():
-            context['keywords'] = KeywordAnalysis.objects.filter(job=self.object)[:5]
+            context['keywords'] = KeywordAnalysis.objects.filter(job=self.object)
         else:
             analysis = analyze(self.object.description)
             hook_after_jd_analysis(analysis, self.object.id)
-            context['keywords'] = KeywordAnalysis.objects.filter(job=self.object)[:5]
+            context['keywords'] = KeywordAnalysis.objects.filter(job=self.object)
 
         context['now'] = timezone.now()
 
@@ -331,7 +331,7 @@ class ParticipantExperienceListView(LoginRequiredMixin, ListView):
             context['job'] = job
             context['title'] = position.title
             context['weighted_bullets'] = WeightedBullet.objects.filter(participant=self.kwargs['pk'])\
-                .filter(position=position.id).order_by('-weight')[0:5]
+                .filter(position=position.id).order_by('-weight')
             context['overview'] = Overview.objects.filter(participantoverview__participant_id=self.kwargs['pk']).filter(title_id=position.id)
             context['participant'] = Participant.objects.filter(id=self.kwargs['pk'])
             context['now'] = timezone.now()
@@ -400,6 +400,27 @@ class ExperienceCreateView(LoginRequiredMixin, CreateView):
 # TODO: ExperienceDetailView
 
 # TODO: BulletCreateView
+class BulletCreateView(LoginRequiredMixin, CreateView):
+    model = Bullet
+    template_name = 'cold_apply/bullet_create.html'
+    fields = ['text']
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['now'] = timezone.now()
+
+        return context
+
+    def form_valid(self, form):
+        if form.is_valid():
+            bullet = form.save(commit=False)
+            bullet.experience = Experience.objects.get(id=self.kwargs['experience_pk'])
+            bullet.type = 'Work'
+            bullet.save()
+            return redirect(reverse('cold_apply:confirm_add_bullet'))
+        else:
+            print(form.errors)
+        return super().form_valid(form)
 
 # TODO: BulletUpdateView
 
