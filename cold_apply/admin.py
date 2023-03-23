@@ -2,7 +2,19 @@ from django.contrib import admin
 
 # Register your models here.
 from .models import Participant, Interaction, Job, Phase, Step, KeywordAnalysis, ParticipantExperience, \
-    ParticipantOverview
+    ParticipantOverview, WeightedBullet, BulletKeyword
+
+
+class BulletKeywordAdmin(admin.ModelAdmin):
+    list_display = ('bullet', 'unigram', 'bigram', 'trigram')
+    list_filter = ('bullet', 'unigram', 'bigram', 'trigram')
+    search_fields = ('bullet', 'unigram', 'bigram', 'trigram')
+
+
+class WeightedBulletAdmin(admin.ModelAdmin):
+    list_display = ('participant', 'position', 'bullet', 'weight')
+    list_filter = ('participant', 'position', 'bullet', 'weight')
+    search_fields = ('participant', 'position', 'bullet', 'weight')
 
 
 class ParticipantOverviewAdmin(admin.ModelAdmin):
@@ -54,11 +66,13 @@ class StepAdmin(admin.ModelAdmin):
 
 
 class KeywordAnalysisAdmin(admin.ModelAdmin):
-    list_display = ('job', 'unigram', 'bigram', 'trigram')
+    list_display = ('id', 'job', 'unigram', 'bigram', 'trigram')
     list_filter = ('job', 'unigram', 'bigram', 'trigram')
     search_fields = ('job', 'unigram', 'bigram', 'trigram')
 
 
+admin.site.register(BulletKeyword, BulletKeywordAdmin)
+admin.site.register(WeightedBullet, WeightedBulletAdmin)
 admin.site.register(ParticipantOverview, ParticipantOverviewAdmin)
 admin.site.register(ParticipantExperience, ParticipantExperienceAdmin)
 admin.site.register(KeywordAnalysis, KeywordAnalysisAdmin)

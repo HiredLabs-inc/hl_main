@@ -175,3 +175,28 @@ class ParticipantOverview(models.Model):
 
     class Meta:
         verbose_name_plural = 'Participant Overviews'
+
+
+class WeightedBullet(models.Model):
+    participant = models.ForeignKey(Participant, on_delete=models.CASCADE)
+    position = models.ForeignKey(Position, on_delete=models.CASCADE)
+    bullet = models.ForeignKey(Bullet, on_delete=models.CASCADE)
+    weight = models.FloatField()
+
+    def __str__(self):
+        return f'{self.participant.name}: {self.position.title} {self.bullet.text} ({self.weight})'
+
+    class Meta:
+        verbose_name_plural = 'Weighted Bullets'
+
+class BulletKeyword(models.Model):
+    bullet = models.ForeignKey(Bullet, on_delete=models.CASCADE)
+    unigram = models.CharField(max_length=200)
+    bigram = models.CharField(max_length=200)
+    trigram = models.CharField(max_length=200)
+
+    def __str__(self):
+        return f'{self.bullet.text}: {self.unigram}, {self.bigram}, {self.trigram}'
+
+    class Meta:
+        verbose_name_plural = 'Bullet Keywords'

@@ -6,11 +6,12 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, TemplateView
 
-from resume.models import Organization, Position, Experience, Overview
+from resume.models import Organization, Position, Experience, Overview, Bullet
 from .forms import ParticipantForm, InteractionForm
-from .models import Participant, Job, Phase, KeywordAnalysis, ParticipantExperience
-from .static.scripts.keyword_analyzer.keyword_analyzer import analyze, hook_after_analysis
-
+from .models import Participant, Job, Phase, KeywordAnalysis, ParticipantExperience, WeightedBullet, BulletKeyword
+from .static.scripts.keyword_analyzer.keyword_analyzer import analyze, hook_after_jd_analysis, \
+    hook_after_bullet_analysis
+from .static.scripts.resume_writer.bullet_weighter import weigh, hook_after_weighting
 
 # Index
 class ParticipantListView(LoginRequiredMixin, ListView):
@@ -95,6 +96,9 @@ class ParticipantDetailView(LoginRequiredMixin, DetailView):
             closed_jobs=Count('pk', filter=Q(status='Closed')),
             rejected=Count('pk', filter=Q(status_reason='Candidate Rejected')),
         )
+        latest_experience = Experience.objects.filter(participantexperience__participant_id=self.kwargs['pk']). \
+            order_by('-start_date').first()
+        context['latest_experience'] = latest_experience
         context['jobs'] = jobs
         context['totals'] = totals
         context['now'] = timezone.now()
@@ -247,16 +251,11 @@ class JobDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         if KeywordAnalysis.objects.filter(job=self.object).exists():
-            context['keywords'] = KeywordAnalysis.objects.filter(job=self.object)
+            context['keywords'] = KeywordAnalysis.objects.filter(job=self.object)[:5]
         else:
-            jd = self.object.description
-            words = jd.split(' ')
-            if len(words) < 30:
-                context['keywords'] = 'Not enough words to analyze'
-            else:
-                analysis = analyze(jd)
-                hook_after_analysis(analysis, self.object.id)
-                context['keywords'] = KeywordAnalysis.objects.filter(job=self.object)
+            analysis = analyze(self.object.description)
+            hook_after_jd_analysis(analysis, self.object.id)
+            context['keywords'] = KeywordAnalysis.objects.filter(job=self.object)[:5]
 
         context['now'] = timezone.now()
 
@@ -304,15 +303,39 @@ class ParticipantExperienceListView(LoginRequiredMixin, ListView):
     context_object_name = 'Experiences'
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data()
-        context['participant_experiences'] = ParticipantExperience.objects.filter(participant=self.kwargs['pk'])
-        context['experiences'] = Experience.objects.filter(participantexperience__participant_id=self.kwargs['pk']). \
-            order_by('-start_date')
-        context['title'] = Position.objects.filter(id=self.kwargs['title_pk'])
-        context['overview'] = Overview.objects.all()
-        context['participant'] = Participant.objects.filter(id=self.kwargs['pk'])
-        context['now'] = timezone.now()
-        return context
+            context = super().get_context_data()
+            job = Job.objects.get(id=self.kwargs['job_pk'])
+            position = Position.objects.get(job=self.kwargs['job_pk'])
+            # Clear existing weighted bullets
+            if WeightedBullet.objects.filter(participant=self.kwargs['pk']) \
+                    .filter(position=position.id).exists():
+                WeightedBullet.objects.filter(participant=self.kwargs['pk']) \
+                    .filter(position=position.id).delete()
+            experiences = Experience.objects.filter(participantexperience__participant_id=self.kwargs['pk']). \
+                order_by('-start_date')
+            for exp in experiences:
+                bullets = Bullet.objects.filter(experience=exp)
+                keywords = KeywordAnalysis.objects.filter(job_id=job.id)
+                for bullet in bullets:
+                    # Clear existing bullet keywords
+                    if BulletKeyword.objects.filter(bullet=bullet.id).exists():
+                        BulletKeyword.objects.filter(bullet=bullet.id).delete()
+
+                    b_kwords = analyze(bullet.text)
+                    hook_after_bullet_analysis(b_kwords, bullet.id)
+                    bullet_keywords = BulletKeyword.objects.filter(bullet=bullet.id)
+                    weight = weigh(bullet_keywords=bullet_keywords, jd_keywords=keywords)
+                    hook_after_weighting(weight, participant_id=self.kwargs['pk'], position_id=position.id, bullet_id=bullet.id)
+            context['participant_experiences'] = ParticipantExperience.objects.filter(participant=self.kwargs['pk'])
+            context['experiences'] = experiences
+            context['job'] = job
+            context['title'] = position.title
+            context['weighted_bullets'] = WeightedBullet.objects.filter(participant=self.kwargs['pk'])\
+                .filter(position=position.id).order_by('-weight')[0:5]
+            context['overview'] = Overview.objects.filter(participantoverview__participant_id=self.kwargs['pk']).filter(title_id=position.id)
+            context['participant'] = Participant.objects.filter(id=self.kwargs['pk'])
+            context['now'] = timezone.now()
+            return context
 
 
 class ParticipantExperienceCreateView(LoginRequiredMixin, CreateView):

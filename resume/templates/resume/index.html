@@ -4,29 +4,27 @@
 
 {% block content %}
 
-     <p>Experience for: {{ participant.first.name }}</p>
+     <p>Targeted to: {{ job.title }} at {{ job.company }} on: {{ now|date }}</p>
 
 {% endblock %}
 {% block header %}
     <!-- <span id="right-fill"></span> -->
     <header>
         <div class="centered-content">
-            <h1>Targeted for: {{ title.first }}</h1>
+            <h1>{{ participant.first.name }}</h1>
+            <p>{{ participant.first.email }} | {{ participant.first.phone }}</p>
         </div>
     </header>
 
 {% endblock %}
 
 {% block overview %}
+    <h3>Overview</h3>
     <div id="overview">
         {% if overview %}
             <p>
                 {% for summary in overview %}
-                    {% if summary.participantoverview_set.first.participant.name == participant.first.name %}
-                        {% if summary.title.title == title.first.title %}
-                            {{ summary.text }}
-                        {% endif %}
-                    {% endif %}
+                    {{ summary.text }}
                 {% endfor %}
             </p>
         {% else %}
@@ -50,9 +48,11 @@
                 </p>
                 {% endif %}
                 <ul>
-                {% for bullet in experience.bullet_set.values %}
-                    <li>{{ bullet.text }}</li>
-                    {% endfor %}
+                {% for bullet in weighted_bullets %}
+                    {% if bullet.bullet.experience == experience %}
+                        <li>{{ bullet.bullet.text }} ({{ bullet.weight }})</li>
+                    {% endif %}
+                {% endfor %}
                 </ul>
             {% endfor %}
             {% for org in orgs %}

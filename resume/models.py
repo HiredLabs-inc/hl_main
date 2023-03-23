@@ -53,7 +53,7 @@ class Experience(models.Model):
     position = models.ForeignKey(Position, on_delete=models.CASCADE)
 
     def __str__(self):
-        return '{}: {}'.format(self.org, self.position)
+        return f'{self.org}: {self.position}, {self.start_date} - {self.end_date}'
 
 
 class Bullet(models.Model):

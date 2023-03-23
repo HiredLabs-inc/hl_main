@@ -49,7 +49,7 @@ urlpatterns += [
 
 # Participant Experiences CRUD
 urlpatterns += [
-    path('participant/<int:pk>/title/<int:title_pk>/experience/', ParticipantExperienceListView.as_view(),\
+    path('participant/<int:pk>/job/<int:job_pk>', ParticipantExperienceListView.as_view(),\
          name='participant_experience_list'),
     path('participants/<int:pk>/add_experience/', ParticipantExperienceCreateView.as_view(),\
          name='add_participant_experience'),

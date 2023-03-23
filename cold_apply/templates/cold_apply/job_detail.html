@@ -83,7 +83,7 @@
             {# TODO: Make keyword refresh button functional#}
             <a class="btn btn-primary" href="{% url 'cold_apply:refresh_keywords' object.id %}">Refresh
                 Keywords</a>
-            <a class="btn btn-primary" href="{% url 'cold_apply:participant_experience_list' pk=object.participant.id title_pk=object.title.id %}" target="_blank">Tailor Resume</a>
+            <a class="btn btn-primary" href="{% url 'cold_apply:participant_experience_list' pk=object.participant.id job_pk=object.id %}" target="_blank">Tailor Resume</a>
             <a class="btn btn-primary" href="{% url 'cold_apply:update_job' object.id %}" target="_blank">Edit Job</a>
         </div>
     </div>
