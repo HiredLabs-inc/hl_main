@@ -43,5 +43,29 @@
       "release": 3,
       "text": "added tailored resumes, including overview and bullet statements for each job"
     }
+  },
+  {
+    "model": "releases.note",
+    "pk": 20,
+    "fields": {
+      "release": 3,
+      "text": "separated bullet_create template, and adjusted job detail to show all keywords"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 21,
+    "fields": {
+      "release": 3,
+      "text": "added create company and title to experience_create page"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 22,
+    "fields": {
+      "release": 3,
+      "text": "added a button to create work experience for a participant on the targeted resume view"
+    }
   }
 ]
