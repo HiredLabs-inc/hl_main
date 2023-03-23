@@ -1,12 +1,4 @@
-0f2e7a8 fixed file uploads for new users
-db150d2 set MEDIA_ROOT and MEDIA_URL to handle uploaded files
-Updated server (pythonanywere) to serve uploaded files from MEDIA_ROOT/MEDIA_URL
-dc12675 basic feedback interaction flow setup and working
-ffe8037 basic dashboard for handling comments created and working
-b954497 added total and unread comment counter to release_list view for admins
-6463b49 created general feedback dashboard and updated feedback detail view
-e6e63f0 fixed file uploads on participant_update view
-d1604ad added basic work experience to 'tailor_resume' button on job_detail page
-0da81d6 tailored overview matching title and participant tied to 'tailor_resume' button in job_detail view
-aae4469 fixed job counter on participant_detail page
-12a6262 targeted resumes working
+created general feedback and feedback admin dashboards
+added total and unread comment counter to release_list view for admins
+fixed file uploads for new and updated participants
+added tailored resumes, including overview and bullet statements for each job
