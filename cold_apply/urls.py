@@ -51,7 +51,7 @@ urlpatterns += [
 urlpatterns += [
     path('participant/<int:pk>/job/<int:job_pk>', ParticipantExperienceListView.as_view(),\
          name='participant_experience_list'),
-    path('participants/<int:pk>/add_experience/', ParticipantExperienceCreateView.as_view(),\
+    path('participants/<int:pk>/add_experience/<int:experience_pk>', ParticipantExperienceCreateView.as_view(),\
          name='add_participant_experience'),
     path('experience/confirm_add/', ConfirmCreateView.as_view(), name='confirm_add_participant_experience'),
 
@@ -59,7 +59,9 @@ urlpatterns += [
 
 # Experience CRUD
 urlpatterns += [
-    path('experience/new', ExperienceCreateView.as_view(), name='create_experience'),
-    path('experience/confirm', ConfirmCreateView.as_view(), name='confirm_create_experience'),
+    path('participant/<int:pk>/experience/new', ExperienceCreateView.as_view(), name='create_experience'),
+    path('participant/<int:pk>/experience/<int:experience_pk>/confirm', ParticipantExperienceCreateView.as_view(),\
+         name='confirm_add_participant_experience'),
+    path('experience/confirm_add/', ConfirmCreateView.as_view(), name='confirm_add_experience'),
     path('experience/<int:pk>/update/', JobUpdateView.as_view(), name='update_experience'),
     ]

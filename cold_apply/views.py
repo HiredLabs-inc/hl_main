@@ -340,11 +340,13 @@ class ParticipantExperienceListView(LoginRequiredMixin, ListView):
 
 class ParticipantExperienceCreateView(LoginRequiredMixin, CreateView):
     model = ParticipantExperience
-    template_name = 'cold_apply/create_update.html'
-    fields = ['participant', 'experience']
+    template_name = 'cold_apply/participantexperience_create.html'
+    fields = []
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context['participant'] = Participant.objects.get(id=self.kwargs['pk'])
+        context['experience'] = Experience.objects.get(id=self.kwargs['experience_pk'])
         context['now'] = timezone.now()
 
         return context
@@ -352,8 +354,10 @@ class ParticipantExperienceCreateView(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         if form.is_valid():
             participant_experience = form.save(commit=False)
+            participant_experience.participant = Participant.objects.get(id=self.kwargs['pk'])
+            participant_experience.experience = Experience.objects.get(id=self.kwargs['experience_pk'])
             participant_experience.save()
-            return redirect(reverse('cold_apply:confirm_add_participant_experience'))
+            return redirect(reverse('cold_apply:confirm_add_experience'))
         else:
             print(form.errors)
         return super().form_valid(form)
@@ -384,7 +388,8 @@ class ExperienceCreateView(LoginRequiredMixin, CreateView):
         if form.is_valid():
             experience = form.save(commit=False)
             experience.save()
-            return redirect(reverse('cold_apply:confirm_add_experience'))
+            return redirect(reverse('cold_apply:confirm_add_participant_experience',
+                                    kwargs={'pk': self.kwargs['pk'], 'experience_pk': experience.id}))
         else:
             print(form.errors)
         return super().form_valid(form)
