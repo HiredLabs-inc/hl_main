@@ -53,7 +53,7 @@
                 {% endif %}
 
                 <ul id="bulletList">
-                <a href="{% url 'cold_apply:create_bullet' experience_pk=experience.id %}" target="_blank">Add bullet statements</a>
+                <a href="{% url 'cold_apply:create_bullet' pk=participant.first.id experience_pk=experience.id %}" target="_blank">Add bullet statements</a>
                 {% for bullet in weighted_bullets %}
                     {% if bullet.bullet.experience == experience %}
                         <li>{{ bullet.bullet.text }}  ({{ bullet.weight }})</li>

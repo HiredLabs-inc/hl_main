@@ -68,6 +68,6 @@ urlpatterns += [
 
 # Bullets CRUD
 urlpatterns += [
-    path('experience/<int:experience_pk>/add_bullet/', BulletCreateView.as_view(), name='create_bullet'),
+    path('participant/<int:pk>/experience/<int:experience_pk>/add_bullet/', BulletCreateView.as_view(), name='create_bullet'),
     path('bullets/confirm_add/', ConfirmCreateView.as_view(), name='confirm_add_bullet'),
     ]

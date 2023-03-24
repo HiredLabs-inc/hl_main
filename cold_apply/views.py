@@ -380,6 +380,7 @@ class ExperienceCreateView(LoginRequiredMixin, CreateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context['participant'] = Participant.objects.get(id=self.kwargs['pk'])
         context['now'] = timezone.now()
 
         return context
@@ -407,6 +408,8 @@ class BulletCreateView(LoginRequiredMixin, CreateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context['participant'] = Participant.objects.get(id=self.kwargs['pk'])
+        context['experience'] = Experience.objects.get(id=self.kwargs['experience_pk'])
         context['now'] = timezone.now()
 
         return context

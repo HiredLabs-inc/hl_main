@@ -1,6 +1,14 @@
 {% extends 'staff.html' %}
 
 {% block content %}
+    <h3>Adding New Resume Bullet</h3>
+    <p>For: {{ participant.name }}</p>
+    <p>Experience: {{ experience.position.title }} at {{ experience.org.name }}</p>
+    <p>{{ experience.start_date|date }} to {% if experience.end_date == None %}
+        Present
+        {% else %}
+        {{ experience.end_date|date }}
+        {% endif %}</p>
     <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
