@@ -29,7 +29,7 @@
             <a href="" target="_blank">Edit Overview</a>
             </p>
         {% else %}
-            <a href="" target="_blank">Add Overview</a>
+            <a href="{% url 'cold_apply:create_overview' pk=participant.first.id position_pk=job.id %}" target="_blank">Add Overview</a>
         {% endif %}
     </div>
     <br>

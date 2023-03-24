@@ -8,7 +8,8 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, T
 
 from resume.models import Organization, Position, Experience, Overview, Bullet
 from .forms import ParticipantForm, InteractionForm
-from .models import Participant, Job, Phase, KeywordAnalysis, ParticipantExperience, WeightedBullet, BulletKeyword
+from .models import Participant, Job, Phase, KeywordAnalysis, ParticipantExperience, WeightedBullet, BulletKeyword, \
+    ParticipantOverview
 from .static.scripts.keyword_analyzer.keyword_analyzer import analyze, hook_after_jd_analysis, \
     hook_after_bullet_analysis
 from .static.scripts.resume_writer.bullet_weighter import weigh, hook_after_weighting
@@ -368,6 +369,56 @@ class ParticipantExperienceCreateView(LoginRequiredMixin, CreateView):
 # TODO: ParticipantExperienceDetailView
 
 # TODO: ParticipantOverviewCreateView
+
+class OverviewCreateView(LoginRequiredMixin, CreateView):
+    model = Overview
+    template_name = 'cold_apply/overview_create.html'
+    fields = ['text']
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['participant'] = Participant.objects.get(id=self.kwargs['pk'])
+        context['position'] = Position.objects.get(id=self.kwargs['position_pk'])
+        context['now'] = timezone.now()
+
+        return context
+
+    def form_valid(self, form):
+        if form.is_valid():
+            overview = form.save(commit=False)
+            overview.participant = Participant.objects.get(id=self.kwargs['pk'])
+            overview.title = Position.objects.get(id=self.kwargs['position_pk'])
+            overview.save()
+            return redirect(reverse('cold_apply:create_participant_overview',
+                                    kwargs={'pk': self.kwargs['pk'], 'overview_pk': overview.id}))
+        else:
+            print(form.errors)
+        return super().form_valid(form)
+
+
+class ParticipantOverviewCreateView(LoginRequiredMixin, CreateView):
+    model = ParticipantOverview
+    template_name = 'cold_apply/participantoverview_create.html'
+    fields = []
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['participant'] = Participant.objects.get(id=self.kwargs['pk'])
+        context['overview'] = Overview.objects.get(id=self.kwargs['overview_pk'])
+        context['now'] = timezone.now()
+
+        return context
+
+    def form_valid(self, form):
+        if form.is_valid():
+            participant_overview = form.save(commit=False)
+            participant_overview.participant = Participant.objects.get(id=self.kwargs['pk'])
+            participant_overview.overview = Overview.objects.get(id=self.kwargs['overview_pk'])
+            participant_overview.save()
+            return redirect(reverse('cold_apply:confirm_add_overview'))
+        else:
+            print(form.errors)
+        return super().form_valid(form)
 
 # TODO: ParticipantOverviewUpdateView
 

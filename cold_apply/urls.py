@@ -3,7 +3,8 @@ from django.urls import path
 from .views import ParticipantListView, PhaseListView, ParticipantDetailView, JobDetailView, \
     JobCreateView, OrganizationCreateView, TitleCreateView, ConfirmCreateView, JobUpdateView, \
     TitleUpdateView, OrganizationUpdateView, delete_job, refresh_keywords, create_participant, update_participant, \
-    ParticipantExperienceCreateView, ParticipantExperienceListView, ExperienceCreateView, BulletCreateView
+    ParticipantExperienceCreateView, ParticipantExperienceListView, ExperienceCreateView, BulletCreateView, \
+    OverviewCreateView, ParticipantOverviewCreateView
 
 app_name = 'cold_apply'
 
@@ -19,7 +20,7 @@ urlpatterns += [
     path('participants/<int:pk>/', ParticipantDetailView.as_view(), name='participant_detail'),
     path('participants/<int:pk>/update/', update_participant, name='update_participant'),
     path('participants/confirm_update/', ConfirmCreateView.as_view(), name='confirm_update_participant'),
-    ]
+]
 
 # Companies CU (no read or delete) TODO: Add delete
 urlpatterns += [
@@ -45,29 +46,39 @@ urlpatterns += [
     path('jobs/<int:pk>/update/', JobUpdateView.as_view(), name='update_job'),
     path('jobs/confirm_update/', ConfirmCreateView.as_view(), name='confirm_update_job'),
     path('jobs/delete/<int:pk>/', delete_job, name='delete_job'),
-    ]
+]
 
 # Participant Experiences CRUD
 urlpatterns += [
-    path('participant/<int:pk>/job/<int:job_pk>', ParticipantExperienceListView.as_view(),\
+    path('participant/<int:pk>/job/<int:job_pk>', ParticipantExperienceListView.as_view(), \
          name='participant_experience_list'),
-    path('participants/<int:pk>/add_experience/<int:experience_pk>', ParticipantExperienceCreateView.as_view(),\
+    path('participants/<int:pk>/add_experience/<int:experience_pk>', ParticipantExperienceCreateView.as_view(), \
          name='add_participant_experience'),
     path('experience/confirm_add/', ConfirmCreateView.as_view(), name='confirm_add_participant_experience'),
 
-    ]
+]
 
 # Experience CRUD
 urlpatterns += [
     path('participant/<int:pk>/experience/new', ExperienceCreateView.as_view(), name='create_experience'),
-    path('participant/<int:pk>/experience/<int:experience_pk>/confirm', ParticipantExperienceCreateView.as_view(),\
+    path('participant/<int:pk>/experience/<int:experience_pk>/confirm', ParticipantExperienceCreateView.as_view(), \
          name='confirm_add_participant_experience'),
     path('experience/confirm_add/', ConfirmCreateView.as_view(), name='confirm_add_experience'),
     path('experience/<int:pk>/update/', JobUpdateView.as_view(), name='update_experience'),
-    ]
+]
 
 # Bullets CRUD
 urlpatterns += [
-    path('participant/<int:pk>/experience/<int:experience_pk>/add_bullet/', BulletCreateView.as_view(), name='create_bullet'),
+    path('participant/<int:pk>/experience/<int:experience_pk>/add_bullet/', BulletCreateView.as_view(),
+         name='create_bullet'),
     path('bullets/confirm_add/', ConfirmCreateView.as_view(), name='confirm_add_bullet'),
-    ]
+]
+
+# Overviews CRUD
+urlpatterns += [
+    path('participant/<int:pk>/title/<int:position_pk>/add_overview/', OverviewCreateView.as_view(),
+         name='create_overview'),
+    path('participant/<int:pk>/title/<int:overview_pk>/confirm/', ParticipantOverviewCreateView.as_view(), \
+         name='create_participant_overview'),
+    path('overviews/confirm_add/', ConfirmCreateView.as_view(), name='confirm_add_overview'),
+]

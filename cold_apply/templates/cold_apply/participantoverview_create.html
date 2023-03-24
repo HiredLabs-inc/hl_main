@@ -1,0 +1,24 @@
+{% extends 'staff.html' %}
+
+{% block content %}
+
+    <p>
+        Are you sure you want to add a new overview for the title {{ overview.title.title }} to {{ participant.name }}'s
+        professional experience?
+    </p>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <input class="btn btn-primary" type="submit" value="Save">
+    </form>
+    <a class="btn btn-primary" onclick=closeWindow()>Cancel</a>
+{% endblock %}
+
+{% block scripts %}
+
+    <script type="text/javascript">
+        function closeWindow() {
+            window.close();
+        }
+    </script>
+{% endblock %}
