@@ -1,7 +1,6 @@
 {% extends 'staff.html' %}
 
 {% block content %}
-    {# TODO: Refactor into a table #}
     <div class="row">
         <h3>{{ object.name }}</h3>
         {% if object.dnc %}
@@ -43,9 +42,6 @@
     </div>
     <br>
     <p>Uploaded Resume: {{ object.uploaded_resume_title }}
-        {#        <a href="{{ MEDIA_URL }}{{ object.uploaded_resume }}">#}
-        {#            {{ object.uploaded_resume_title }}#}
-        {#        </a>{#TODO: update for prod#}
     </p>
     <br>
     <br>

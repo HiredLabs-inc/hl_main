@@ -317,6 +317,7 @@ class ParticipantExperienceListView(LoginRequiredMixin, ListView):
             for exp in experiences:
                 bullets = Bullet.objects.filter(experience=exp)
                 keywords = KeywordAnalysis.objects.filter(job_id=job.id)
+                # TODO: fix this section
                 for bullet in bullets:
                     # Clear existing bullet keywords
                     if BulletKeyword.objects.filter(bullet=bullet.id).exists():

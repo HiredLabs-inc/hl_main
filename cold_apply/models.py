@@ -103,7 +103,6 @@ class Application(models.Model):
         verbose_name_plural = 'Applications'
 
 
-# TODO: Add a model for the resume. Tailoring will be done by setting FK to resume.Position
 
 # cold_apply interacation Phases
 class Phase(models.Model):

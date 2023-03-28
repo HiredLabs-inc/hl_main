@@ -50,16 +50,15 @@
                 {% else %}
                 {{ experience.end_date|date }}
                 </p>
-                {% endif %}
-
-                <ul id="bulletList">
                 <a href="{% url 'cold_apply:create_bullet' pk=participant.first.id experience_pk=experience.id %}" target="_blank">Add bullet statements</a>
+                {% endif %}
                 {% for bullet in weighted_bullets %}
+                <ul>
                     {% if bullet.bullet.experience == experience %}
-                        <li>{{ bullet.bullet.text }}  ({{ bullet.weight }})</li>
+                        <li>{{ bullet.bullet.text}}  ({{ bullet.weight }})</li>
                     {% endif %}
-                {% endfor %}
                 </ul>
+                {% endfor %}
             {% endfor %}
             {% for org in orgs %}
                 {% if org.org_type == 'Work' %}
@@ -97,11 +96,6 @@
     <br>
 {% endblock %}
 
-{% block scripts %}
-    <script type="text/javascript">
-        $('#bulletList li:gt(2)').hide();
-    </script>
-{% endblock %}
 {##}
 {#{% block education %}#}
 {#    {% if edu %}#}
