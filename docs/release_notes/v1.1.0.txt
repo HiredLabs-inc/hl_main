@@ -5,3 +5,7 @@ added tailored resumes, including overview and bullet statements for each job
 separated bullet_create template, and adjusted job detail to show all keywords
 added create company and title to experience_create page
 added a button to create work experience for a participant on the targeted resume view
+dec07e1 improved performance of weighting algorithm, and refactored to use stems instead of whole words
+febd0a0 refactored participant_detail view to a table
+16ceca3 added overview create to tailored resume page
+64049a0 updated to include information about parent objects for new bullets and experiences.
