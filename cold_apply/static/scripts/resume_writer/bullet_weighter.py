@@ -184,10 +184,11 @@ def bullet_strength_calculator(res_stems: list, jd_stems: list) -> int:
     return count
 
 
-def weigh(jd_keywords: object, bullet_keywords: object):
+def weigh(jd_keywords: object, bullet: object):
     weight = 0
+    ps = nltk.PorterStemmer()
     jd_unique = set()
-    bullet_unique = set()
+    bullet_stems = set()
     for word in jd_keywords:
         bigram_singles = word.bigram.split(' ')
         bigram_1, bigram_2 = bigram_singles[0], bigram_singles[1]
@@ -206,27 +207,15 @@ def weigh(jd_keywords: object, bullet_keywords: object):
         if trigram_3 not in jd_unique:
             jd_unique.add(trigram_3)
 
-    for k_word in bullet_keywords:
-        bigram_singles_2 = k_word.bigram.split(' ')
-        bigram_3, bigram_4 = bigram_singles_2[0], bigram_singles_2[1]
-        trigram_singles_2 = k_word.trigram.split(' ')
-        trigram_4, trigram_5, trigram_6 = trigram_singles_2[0], trigram_singles_2[1], trigram_singles_2[2]
-        if k_word.unigram not in bullet_unique:
-            bullet_unique.add(k_word.unigram)
-        if bigram_3 not in bullet_unique:
-            bullet_unique.add(bigram_3)
-        if bigram_4 not in bullet_unique:
-            bullet_unique.add(bigram_4)
-        if trigram_4 not in bullet_unique:
-            bullet_unique.add(trigram_4)
-        if trigram_5 not in bullet_unique:
-            bullet_unique.add(trigram_6)
-        if trigram_6 not in bullet_unique:
-            bullet_unique.add(trigram_3)
+    jd_stems = set()
+    for word in jd_unique:
+        jd_stems.add(ps.stem(word))
 
+    for word in bullet.text.split(' '):
+        bullet_stems.add(ps.stem(word))
 
-    for word in bullet_unique:
-        if word in jd_unique:
+    for stem in bullet_stems:
+        if stem in jd_stems:
             weight += 1
 
     data = {
