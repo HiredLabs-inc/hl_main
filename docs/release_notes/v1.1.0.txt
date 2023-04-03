@@ -10,3 +10,4 @@ febd0a0 refactored participant_detail view to a table
 16ceca3 added overview create to tailored resume page
 64049a0 updated to include information about parent objects for new bullets and experiences.
 3d1a2ab limited bullet points to 3 per job
+dcb0f88 refactored create overview to link to target title
