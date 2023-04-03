@@ -103,7 +103,6 @@ class Application(models.Model):
         verbose_name_plural = 'Applications'
 
 
-
 # cold_apply interacation Phases
 class Phase(models.Model):
     title = models.CharField(max_length=200)
@@ -187,6 +186,7 @@ class WeightedBullet(models.Model):
 
     class Meta:
         verbose_name_plural = 'Weighted Bullets'
+
 
 class BulletKeyword(models.Model):
     bullet = models.ForeignKey(Bullet, on_delete=models.CASCADE)

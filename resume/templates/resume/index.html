@@ -52,10 +52,16 @@
                 </p>
                 <a href="{% url 'cold_apply:create_bullet' pk=participant.first.id experience_pk=experience.id %}" target="_blank">Add bullet statements</a>
                 {% endif %}
-                {% for bullet in weighted_bullets %}
+                {% for bullet, text in weighted_set.items %}
                 <ul>
-                    {% if bullet.bullet.experience == experience %}
-                        <li>{{ bullet.bullet.text}}  ({{ bullet.weight }})</li>
+                    {% if bullet == experience.id %}
+                        {% for point in text.values %}
+                            {% for text in weighted_bullets %}
+                                {% if point.bullet_id == text.bullet.id %}
+                                    <li>{{ text.bullet.text }}  ({{ text.weight }})</li>
+                                {% endif %}
+                            {% endfor %}
+                        {% endfor %}
                     {% endif %}
                 </ul>
                 {% endfor %}

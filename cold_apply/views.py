@@ -310,22 +310,31 @@ class ParticipantExperienceListView(LoginRequiredMixin, ListView):
         participant = Participant.objects.filter(id=self.kwargs['pk'])
         position = Position.objects.get(job=self.kwargs['job_pk'])
         # Clear existing weighted bullets
-        if WeightedBullet.objects.filter(participant=self.kwargs['pk']).filter(position=position.id).exists():
-            WeightedBullet.objects.filter(participant=self.kwargs['pk']).filter(position=position.id).delete()
+        if WeightedBullet.objects.filter(participant=self.kwargs['pk']).exists():
+            WeightedBullet.objects.filter(participant=self.kwargs['pk']).delete()
         experiences = Experience.objects.filter(participantexperience__participant_id=self.kwargs['pk']) \
             .order_by('-start_date')
+        weight_set = dict()
+        # Get relevant bullets for each experience
         for exp in experiences:
             bullets = Bullet.objects.filter(experience=exp)
             keywords = KeywordAnalysis.objects.filter(job_id=job.id)
-            # TODO: fix this section
+            # Weigh each bullet
             for bullet in bullets:
                 weight = weigh(bullet=bullet, jd_keywords=keywords)
                 hook_after_weighting(weight, participant_id=self.kwargs['pk'], position_id=position.id,
                                      bullet_id=bullet.id)
+
+            # Get top 3 bullets
+            top_bullets = WeightedBullet.objects.filter(participant=self.kwargs['pk']) \
+                .filter(bullet__experience=exp).order_by('-weight')[:3]
+            exp_weight = {exp.id: top_bullets}
+            weight_set.update(exp_weight)
         context['participant_experiences'] = ParticipantExperience.objects.filter(participant=self.kwargs['pk'])
         context['experiences'] = experiences
         context['job'] = job
         context['title'] = position.title
+        context['weighted_set'] = weight_set
         context['weighted_bullets'] = WeightedBullet.objects.filter(participant=self.kwargs['pk']) \
             .filter(position=position.id).order_by('-weight')
         context['overview'] = Overview.objects.filter(participantoverview__participant_id=self.kwargs['pk']) \
