@@ -373,7 +373,7 @@ class ParticipantExperienceCreateView(LoginRequiredMixin, CreateView):
 
 # TODO: ParticipantExperienceDetailView
 
-# TODO: ParticipantOverviewCreateView
+# TODO: ParticipantExperienceDeleteView
 
 class OverviewCreateView(LoginRequiredMixin, CreateView):
     model = Overview
@@ -427,6 +427,28 @@ class ParticipantOverviewCreateView(LoginRequiredMixin, CreateView):
 
 
 # TODO: ParticipantOverviewUpdateView
+
+class OverviewUpdateView(LoginRequiredMixin, UpdateView):
+    model = Overview
+    template_name = 'cold_apply/participant_update.html'
+    fields = ['text']
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['position'] = Position.objects.get(id=self.kwargs['position_pk'])
+        context['now'] = timezone.now()
+
+        return context
+
+    def form_valid(self, form):
+        if form.is_valid():
+            overview = form.save(commit=False)
+            overview.title = Position.objects.get(id=self.kwargs['position_pk'])
+            overview.save()
+            return redirect(reverse('cold_apply:confirm_update_overview'))
+        else:
+            print(form.errors)
+        return super().form_valid(form)
 
 # TODO: ParticipantOverviewDeleteView
 

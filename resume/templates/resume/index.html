@@ -25,8 +25,9 @@
             <p>
                 {% for summary in overview %}
                     {{ summary.text }}
+                    <a href="{% url 'cold_apply:update_overview' pk=summary.id position_pk=job.title_id %}" target="_blank">Edit Overview</a>
                 {% endfor %}
-            <a href="" target="_blank">Edit Overview</a>
+
             </p>
         {% else %}
             <a href="{% url 'cold_apply:create_overview' pk=participant.first.id position_pk=job.title_id %}" target="_blank">Add Overview</a>

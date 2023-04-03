@@ -4,7 +4,7 @@ from .views import ParticipantListView, PhaseListView, ParticipantDetailView, Jo
     JobCreateView, OrganizationCreateView, TitleCreateView, ConfirmCreateView, JobUpdateView, \
     TitleUpdateView, OrganizationUpdateView, delete_job, refresh_keywords, create_participant, update_participant, \
     ParticipantExperienceCreateView, ParticipantExperienceListView, ExperienceCreateView, BulletCreateView, \
-    OverviewCreateView, ParticipantOverviewCreateView
+    OverviewCreateView, ParticipantOverviewCreateView, OverviewUpdateView
 
 app_name = 'cold_apply'
 
@@ -78,7 +78,10 @@ urlpatterns += [
 urlpatterns += [
     path('participant/<int:pk>/title/<int:position_pk>/add_overview/', OverviewCreateView.as_view(),
          name='create_overview'),
-    path('participant/<int:pk>/title/<int:overview_pk>/confirm/', ParticipantOverviewCreateView.as_view(), \
+    path('participant/<int:pk>/title/<int:overview_pk>/confirm/', ParticipantOverviewCreateView.as_view(),
          name='create_participant_overview'),
     path('overviews/confirm_add/', ConfirmCreateView.as_view(), name='confirm_add_overview'),
+    path('title/<int:position_pk>/overviews/<int:pk>/update/',
+         OverviewUpdateView.as_view(), name='update_overview'),
+    path('overviews/confirm_update/', ConfirmCreateView.as_view(), name='confirm_update_overview'),
 ]
