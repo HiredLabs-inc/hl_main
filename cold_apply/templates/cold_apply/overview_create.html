@@ -4,6 +4,7 @@
     <h3>Adding New Overview</h3>
     <p>For: {{ participant.name }}</p>
     <p>Title: {{ position.title }}</p>
+    <p>Title id: {{ position.id }}</p>
     <form method="post">
         {% csrf_token %}
         {{ form.as_p }}

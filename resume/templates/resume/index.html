@@ -29,7 +29,8 @@
             <a href="" target="_blank">Edit Overview</a>
             </p>
         {% else %}
-            <a href="{% url 'cold_apply:create_overview' pk=participant.first.id position_pk=job.id %}" target="_blank">Add Overview</a>
+            <a href="{% url 'cold_apply:create_overview' pk=participant.first.id position_pk=job.title_id %}" target="_blank">Add Overview</a>
+            <p> for title: {{ job.title }} job_id: {{ job.id }} title_id: {{ job.title_id }}</p>
         {% endif %}
     </div>
     <br>
@@ -49,9 +50,9 @@
                 Present
                 {% else %}
                 {{ experience.end_date|date }}
+                {% endif %}
                 </p>
                 <a href="{% url 'cold_apply:create_bullet' pk=participant.first.id experience_pk=experience.id %}" target="_blank">Add bullet statements</a>
-                {% endif %}
                 {% for bullet, text in weighted_set.items %}
                 <ul>
                     {% if bullet == experience.id %}
