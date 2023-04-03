@@ -43,7 +43,7 @@
         <a href="{% url 'cold_apply:create_experience' pk=participant.first.id %}" target="_blank">Add Work Experience</a>
         {% if experiences %}
             {% for experience in experiences %}
-                <h5><a href="" target="_blank">{{ experience.position }} at {{ experience.org }}</a></h5>
+                <h5><a href="{% url 'cold_apply:update_experience' experience.id %}" target="_blank">{{ experience.position }} at {{ experience.org }}</a></h5>
                 <p>{{ experience.start_date|date }} -
                     {% if experience.end_date == None %}
                 Present

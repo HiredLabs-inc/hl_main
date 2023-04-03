@@ -474,6 +474,26 @@ class ExperienceCreateView(LoginRequiredMixin, CreateView):
 
 # TODO: ExperienceUpdateView
 
+class ExperienceUpdateView(LoginRequiredMixin, UpdateView):
+    model = Experience
+    template_name = 'cold_apply/participant_update.html'
+    fields = ['start_date', 'end_date', 'org', 'position']
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['now'] = timezone.now()
+
+        return context
+
+    def form_valid(self, form):
+        if form.is_valid():
+            experience = form.save(commit=False)
+            experience.save()
+            return redirect(reverse('cold_apply:confirm_update_experience'))
+        else:
+            print(form.errors)
+        return super().form_valid(form)
+
 # TODO: ExperienceDetailView
 
 class BulletCreateView(LoginRequiredMixin, CreateView):
@@ -500,8 +520,6 @@ class BulletCreateView(LoginRequiredMixin, CreateView):
             print(form.errors)
         return super().form_valid(form)
 
-
-# TODO: BulletUpdateView
 
 class BulletUpdateView(LoginRequiredMixin, UpdateView):
     model = Bullet
