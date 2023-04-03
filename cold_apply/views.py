@@ -369,7 +369,6 @@ class ParticipantExperienceCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-# TODO: ParticipantExperienceUpdateView
 
 # TODO: ParticipantExperienceDetailView
 
@@ -426,7 +425,6 @@ class ParticipantOverviewCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-# TODO: ParticipantOverviewUpdateView
 
 class OverviewUpdateView(LoginRequiredMixin, UpdateView):
     model = Overview
@@ -450,7 +448,6 @@ class OverviewUpdateView(LoginRequiredMixin, UpdateView):
             print(form.errors)
         return super().form_valid(form)
 
-# TODO: ParticipantOverviewDeleteView
 
 class ExperienceCreateView(LoginRequiredMixin, CreateView):
     model = Experience
@@ -479,7 +476,6 @@ class ExperienceCreateView(LoginRequiredMixin, CreateView):
 
 # TODO: ExperienceDetailView
 
-# TODO: BulletCreateView
 class BulletCreateView(LoginRequiredMixin, CreateView):
     model = Bullet
     template_name = 'cold_apply/bullet_create.html'
@@ -506,6 +502,29 @@ class BulletCreateView(LoginRequiredMixin, CreateView):
 
 
 # TODO: BulletUpdateView
+
+class BulletUpdateView(LoginRequiredMixin, UpdateView):
+    model = Bullet
+    template_name = 'cold_apply/participant_update.html'
+    fields = ['text']
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['experience'] = Experience.objects.get(id=self.kwargs['experience_pk'])
+        context['now'] = timezone.now()
+
+        return context
+
+    def form_valid(self, form):
+        if form.is_valid():
+            bullet = form.save(commit=False)
+            bullet.experience = Experience.objects.get(id=self.kwargs['experience_pk'])
+            bullet.type = 'Work'
+            bullet.save()
+            return redirect(reverse('cold_apply:confirm_update_bullet'))
+        else:
+            print(form.errors)
+        return super().form_valid(form)
 
 # TODO: BulletDetailView
 

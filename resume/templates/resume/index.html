@@ -27,11 +27,9 @@
                     {{ summary.text }}
                     <a href="{% url 'cold_apply:update_overview' pk=summary.id position_pk=job.title_id %}" target="_blank">Edit Overview</a>
                 {% endfor %}
-
             </p>
         {% else %}
             <a href="{% url 'cold_apply:create_overview' pk=participant.first.id position_pk=job.title_id %}" target="_blank">Add Overview</a>
-            <p> for title: {{ job.title }} job_id: {{ job.id }} title_id: {{ job.title_id }}</p>
         {% endif %}
     </div>
     <br>
@@ -60,7 +58,7 @@
                         {% for point in text.values %}
                             {% for text in weighted_bullets %}
                                 {% if point.bullet_id == text.bullet.id %}
-                                    <li>{{ text.bullet.text }}  ({{ text.weight }})</li>
+                                    <li>{{ text.bullet.text }}  ({{ text.weight }}) <a href="{% url 'cold_apply:update_bullet' pk=text.bullet.id experience_pk=experience.id %}" target="_blank">[edit]</a></li>
                                 {% endif %}
                             {% endfor %}
                         {% endfor %}
