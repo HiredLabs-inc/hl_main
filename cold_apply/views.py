@@ -14,6 +14,7 @@ from .static.scripts.keyword_analyzer.keyword_analyzer import analyze, hook_afte
     hook_after_bullet_analysis
 from .static.scripts.resume_writer.bullet_weighter import weigh, hook_after_weighting
 
+
 # Index
 class ParticipantListView(LoginRequiredMixin, ListView):
     model = Phase
@@ -304,41 +305,34 @@ class ParticipantExperienceListView(LoginRequiredMixin, ListView):
     context_object_name = 'Experiences'
 
     def get_context_data(self, **kwargs):
-            context = super().get_context_data()
-            job = Job.objects.get(id=self.kwargs['job_pk'])
-            participant = Participant.objects.filter(id=self.kwargs['pk'])
-            position = Position.objects.get(job=self.kwargs['job_pk'])
-            # Clear existing weighted bullets
-            if WeightedBullet.objects.filter(participant=self.kwargs['pk']).filter(position=position.id).exists():
-                WeightedBullet.objects.filter(participant=self.kwargs['pk']).filter(position=position.id).delete()
-            experiences = Experience.objects.filter(participantexperience__participant_id=self.kwargs['pk']) \
-                .order_by('-start_date')
-            for exp in experiences:
-                bullets = Bullet.objects.filter(experience=exp)
-                keywords = KeywordAnalysis.objects.filter(job_id=job.id)
-                # TODO: fix this section
-                for bullet in bullets:
-                    # Clear existing bullet keywords
-                    # if BulletKeyword.objects.filter(bullet=bullet.id).exists():
-                    #     BulletKeyword.objects.filter(bullet=bullet.id).delete()
-                    #
-                    # b_kwords = analyze(bullet.text)
-                    # hook_after_bullet_analysis(b_kwords, bullet.id)
-                    # bullet_keywords = BulletKeyword.objects.filter(bullet=bullet.id)
-                    weight = weigh(bullet=bullet, jd_keywords=keywords)
-                    hook_after_weighting(weight, participant_id=self.kwargs['pk'], position_id=position.id,
-                                         bullet_id=bullet.id)
-            context['participant_experiences'] = ParticipantExperience.objects.filter(participant=self.kwargs['pk'])
-            context['experiences'] = experiences
-            context['job'] = job
-            context['title'] = position.title
-            context['weighted_bullets'] = WeightedBullet.objects.filter(participant=self.kwargs['pk'])\
-                .filter(position=position.id).order_by('-weight')
-            context['overview'] = Overview.objects.filter(participantoverview__participant_id=self.kwargs['pk']) \
-                .filter(title_id=position.id)
-            context['participant'] = participant
-            context['now'] = timezone.now()
-            return context
+        context = super().get_context_data()
+        job = Job.objects.get(id=self.kwargs['job_pk'])
+        participant = Participant.objects.filter(id=self.kwargs['pk'])
+        position = Position.objects.get(job=self.kwargs['job_pk'])
+        # Clear existing weighted bullets
+        if WeightedBullet.objects.filter(participant=self.kwargs['pk']).filter(position=position.id).exists():
+            WeightedBullet.objects.filter(participant=self.kwargs['pk']).filter(position=position.id).delete()
+        experiences = Experience.objects.filter(participantexperience__participant_id=self.kwargs['pk']) \
+            .order_by('-start_date')
+        for exp in experiences:
+            bullets = Bullet.objects.filter(experience=exp)
+            keywords = KeywordAnalysis.objects.filter(job_id=job.id)
+            # TODO: fix this section
+            for bullet in bullets:
+                weight = weigh(bullet=bullet, jd_keywords=keywords)
+                hook_after_weighting(weight, participant_id=self.kwargs['pk'], position_id=position.id,
+                                     bullet_id=bullet.id)
+        context['participant_experiences'] = ParticipantExperience.objects.filter(participant=self.kwargs['pk'])
+        context['experiences'] = experiences
+        context['job'] = job
+        context['title'] = position.title
+        context['weighted_bullets'] = WeightedBullet.objects.filter(participant=self.kwargs['pk']) \
+            .filter(position=position.id).order_by('-weight')
+        context['overview'] = Overview.objects.filter(participantoverview__participant_id=self.kwargs['pk']) \
+            .filter(title_id=position.id)
+        context['participant'] = participant
+        context['now'] = timezone.now()
+        return context
 
 
 class ParticipantExperienceCreateView(LoginRequiredMixin, CreateView):
@@ -422,6 +416,7 @@ class ParticipantOverviewCreateView(LoginRequiredMixin, CreateView):
             print(form.errors)
         return super().form_valid(form)
 
+
 # TODO: ParticipantOverviewUpdateView
 
 # TODO: ParticipantOverviewDeleteView
@@ -477,6 +472,7 @@ class BulletCreateView(LoginRequiredMixin, CreateView):
         else:
             print(form.errors)
         return super().form_valid(form)
+
 
 # TODO: BulletUpdateView
 
