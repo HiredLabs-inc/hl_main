@@ -11,3 +11,6 @@ febd0a0 refactored participant_detail view to a table
 64049a0 updated to include information about parent objects for new bullets and experiences.
 3d1a2ab limited bullet points to 3 per job
 dcb0f88 refactored create overview to link to target title
+4df7d7b added expereince update functionality)
+55efa59 added bullet edit button
+6cd2e68 added overview update functionality
