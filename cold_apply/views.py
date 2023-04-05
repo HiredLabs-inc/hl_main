@@ -2,12 +2,13 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Count, Q
 from django.shortcuts import render, redirect
+from django.forms import DateField
 from django.urls import reverse
 from django.utils import timezone
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, TemplateView
 
 from resume.models import Organization, Position, Experience, Overview, Bullet
-from .forms import ParticipantForm, InteractionForm
+from .forms import ParticipantForm, InteractionForm, ExperienceForm
 from .models import Participant, Job, Phase, KeywordAnalysis, ParticipantExperience, WeightedBullet, BulletKeyword, \
     ParticipantOverview
 from .static.scripts.keyword_analyzer.keyword_analyzer import analyze, hook_after_jd_analysis, \
@@ -452,7 +453,8 @@ class OverviewUpdateView(LoginRequiredMixin, UpdateView):
 class ExperienceCreateView(LoginRequiredMixin, CreateView):
     model = Experience
     template_name = 'cold_apply/create_update.html'
-    fields = ['start_date', 'end_date', 'org', 'position']
+    form_class = ExperienceForm
+
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

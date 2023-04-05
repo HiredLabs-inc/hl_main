@@ -3,11 +3,13 @@
 {% block content %}
     <h3>Adding New Experience</h3>
     <p>For: {{ participant.name }}</p>
+    <p class="text-danger">Date input format: YYYY-MM-DD</p>
     <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
         <input class="btn btn-primary" type="submit" value="Save">
     </form>
+
     <a class="btn btn-primary" href="{% url 'cold_apply:create_company' %}" target="_blank">Add Company</a>
     <a class="btn btn-primary" href="{% url 'cold_apply:create_title'%}" target="_blank">Add
         Title</a>
