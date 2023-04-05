@@ -51,7 +51,7 @@
         </table>
     </div>
     <br>
-    <p>Uploaded Resume: <a href="/media/{{ object.uploaded_resume }}" target="_blank">
+    <p>Uploaded Resume: <a href="{{ MEDIA_PREFIX }}{{ object.uploaded_resume }}" target="_blank">
         {{ object.uploaded_resume_title }}</a>
     </p>
     <br>

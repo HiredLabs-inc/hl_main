@@ -23,75 +23,9 @@ from django.core import serializers
 from cold_apply.static.scripts.resume_writer import vars
 import json
 
-# import time
-# import matplotlib.pyplot as plt
 import pandas as pd
 
 
-# def fetch_base_data(filepath):
-#     data = pd.read_csv(filepath, header=None)
-#     data.columns = ['label', 'body_text']
-#     # data['body_text_nostop'] = data['body_text'].apply(lambda x: clean_data(x.lower()))
-#     return data
-
-
-# def feature_text_length(filepath):
-#     data = fetch_base_data(filepath)
-#     data['body_len'] = data['body_text'].apply(lambda x: len(x) - x.count(' '))
-#     return data
-
-
-# def make_hist(filepath):
-#     data = feature_text_length(filepath)
-#     bins = np.linspace(2, 6000, 100)
-#     pyplot.hist(data[data['label'] == 'nofit']['body_len'], bins, alpha=0.5, label='nofit')
-#     pyplot.hist(data[data['label'] == 'fit']['body_len'], bins, alpha=0.5, label='fit')
-#     pyplot.legend(loc='upper left')
-#     pyplot.show()
-
-# takes in a list of job descriptions
-# def chart_token_freq(jd_set):
-#     # print('Parsing verb stems...')
-#     # time.sleep(2)
-#     verbs = chart_prepper(jd_set, 'VERB')
-#     verb_group_data = verbs[0]
-#     verb_group_names = verbs[1]
-#
-#     # print('Parsing adjective stems...')
-#     # time.sleep(2.0009)
-#     adj = chart_prepper(jd_set, 'ADJ')
-#     adj_group_data = adj[0]
-#     adj_group_names = adj[1]
-#
-#     # print('Parsing noun stems...')
-#     # time.sleep(2.0009)
-#     nouns = chart_prepper(jd_set, 'NOUN')
-#     noun_group_data = nouns[0]
-#     noun_group_names = nouns[1]
-#
-#     # print('Finding the most impactful language...')
-#     # time.sleep(2.3)
-#     # print('Preparing vizualization...')
-#     # time.sleep(3.4)
-#
-#     fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(10, 10))
-#     fig.suptitle('Most Common Stems [top 20]')
-#     ax1.barh(verb_group_names, verb_group_data)
-#     ax1.invert_yaxis()
-#     ax1.set_ylabel('Stems')
-#     ax1.set_xlabel('Frequency')
-#     ax1.set_title('Verbs')
-#
-#     ax2.barh(adj_group_names, adj_group_data)
-#     ax2.invert_yaxis()
-#     ax2.set_xlabel('Frequency')
-#     ax2.set_title('Adjectives')
-#
-#     ax3.barh(noun_group_names, noun_group_data)
-#     ax3.invert_yaxis()
-#     ax3.set_xlabel('Frequency')
-#     ax3.set_title('Nouns')
-#     plt.show()
 # TODO: Make this a class
 def corpus_prepper(corpus: str) -> list:
     # jds = os.listdir(path=corpus) TODO: Make this a class attribute that can be passed from the web page

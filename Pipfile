@@ -18,6 +18,7 @@ scikit-learn = "*"
 django-q = "*"
 "pdfminer.six" = "*"
 "backports.zoneinfo" = "*"
+fpdf = "*"
 
 [dev-packages]
 
