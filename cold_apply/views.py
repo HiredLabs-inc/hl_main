@@ -302,6 +302,22 @@ def delete_job(request, pk):
 
 class ParticipantExperienceListView(LoginRequiredMixin, ListView):
     model = ParticipantExperience
+    template_name = 'cold_apply/participant_experience_list.html'
+    context_object_name = 'experiences'
+    paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['participant'] = Participant.objects.get(id=self.kwargs['pk'])
+        context['now'] = timezone.now()
+
+        return context
+
+    def get_queryset(self):
+        return Experience.objects.filter(participantexperience__participant_id=self.kwargs['pk']) \
+            .order_by('-start_date')
+class TailoredResumeView(LoginRequiredMixin, ListView):
+    model = ParticipantExperience
     template_name = 'resume/index.html'
     context_object_name = 'Experiences'
 

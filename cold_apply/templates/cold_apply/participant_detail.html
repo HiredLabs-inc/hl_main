@@ -16,11 +16,21 @@
             {% endif %}
         </h5>
         {% if latest_experience %}
-            <p>{{ latest_experience.position.title }} at {{ latest_experience.org.name }}</p>
+            <h6 class="sub-header">Latest Experience</h6>
+            <p>{{ latest_experience.position.title }} at {{ latest_experience.org.name }}: {{ latest_experience.start_date|date }} -
+                {% if latest_experience.end_date == None %}
+                    Present
+                    {% else %}
+                    {{ latest_experience.end_date|date }}
+                    {% endif %}
+            </p>
+
 {#            <a class="btn btn-primary" href="{% url 'cold_apply:participant_experience_list' pk=object.id title_pk=latest_experience.position.id %}" target="_blank">See Resume</a>#}
             {% else %}
-                <p>No experience entered. <a href="{% url 'cold_apply:create_experience' object.id %}" target="_blank">Add Work Experience</a> </p>
+                <p>No experience entered.</p>
         {% endif %}
+            <a href="{% url 'cold_apply:participant_experience_list' object.id %}" target="_blank">See All Experience</a>
+        <br>
         <table class="table table-striped">
             <thead>
             <tr>

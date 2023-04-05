@@ -3,8 +3,9 @@ from django.urls import path
 from .views import ParticipantListView, PhaseListView, ParticipantDetailView, JobDetailView, \
     JobCreateView, OrganizationCreateView, TitleCreateView, ConfirmCreateView, JobUpdateView, \
     TitleUpdateView, OrganizationUpdateView, delete_job, refresh_keywords, create_participant, update_participant, \
-    ParticipantExperienceCreateView, ParticipantExperienceListView, ExperienceCreateView, BulletCreateView, \
-    OverviewCreateView, ParticipantOverviewCreateView, OverviewUpdateView, BulletUpdateView, ExperienceUpdateView
+    ParticipantExperienceCreateView, TailoredResumeView, ExperienceCreateView, BulletCreateView, \
+    OverviewCreateView, ParticipantOverviewCreateView, OverviewUpdateView, BulletUpdateView, ExperienceUpdateView, \
+    ParticipantExperienceListView
 
 app_name = 'cold_apply'
 
@@ -50,9 +51,11 @@ urlpatterns += [
 
 # Participant Experiences CRUD
 urlpatterns += [
-    path('participant/<int:pk>/job/<int:job_pk>', ParticipantExperienceListView.as_view(), \
+    path('participant/<int:pk>/experience/', ParticipantExperienceListView.as_view(),
          name='participant_experience_list'),
-    path('participants/<int:pk>/add_experience/<int:experience_pk>', ParticipantExperienceCreateView.as_view(), \
+    path('participant/<int:pk>/job/<int:job_pk>', TailoredResumeView.as_view(),
+         name='tailored_resume'),
+    path('participants/<int:pk>/add_experience/<int:experience_pk>', ParticipantExperienceCreateView.as_view(),
          name='add_participant_experience'),
     path('experience/confirm_add/', ConfirmCreateView.as_view(), name='confirm_add_participant_experience'),
 
@@ -61,7 +64,7 @@ urlpatterns += [
 # Experience CRUD
 urlpatterns += [
     path('participant/<int:pk>/experience/new', ExperienceCreateView.as_view(), name='create_experience'),
-    path('participant/<int:pk>/experience/<int:experience_pk>/confirm', ParticipantExperienceCreateView.as_view(), \
+    path('participant/<int:pk>/experience/<int:experience_pk>/confirm', ParticipantExperienceCreateView.as_view(),
          name='confirm_add_participant_experience'),
     path('experience/confirm_add/', ConfirmCreateView.as_view(), name='confirm_add_experience'),
     path('experience/<int:pk>/update/', ExperienceUpdateView.as_view(), name='update_experience'),

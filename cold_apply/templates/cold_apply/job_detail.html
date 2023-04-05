@@ -82,7 +82,7 @@
         <div class="col">
             <a class="btn btn-primary" href="{% url 'cold_apply:refresh_keywords' object.id %}">Refresh
                 Keywords</a>
-            <a class="btn btn-primary" href="{% url 'cold_apply:participant_experience_list' pk=object.participant.id job_pk=object.id %}" target="_blank">Tailor Resume</a>
+            <a class="btn btn-primary" href="{% url 'cold_apply:tailored_resume' pk=object.participant.id job_pk=object.id %}" target="_blank">Tailor Resume</a>
             <a class="btn btn-primary" href="{% url 'cold_apply:update_job' object.id %}" target="_blank">Edit Job</a>
         </div>
     </div>

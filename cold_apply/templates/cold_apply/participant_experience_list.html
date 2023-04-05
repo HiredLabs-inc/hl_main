@@ -1,0 +1,34 @@
+{% extends 'staff.html' %}
+{% load tz %}
+{% get_current_timezone as TIME_ZONE %}
+
+{% block title %}
+    <h1>Participant Experiences</h1>
+    <h6>{{ participant.name }}</h6>
+    <p class="text-muted">Data retrieved on {{ now|date }} at {{ now|time }} {{ TIME_ZONE }}</p>
+{% endblock %}
+
+{% block content %}
+    {% for exp in experiences %}
+
+            <h5>{{ exp.position }} at {{ exp.org }}</h5>
+            <p class="text-muted">{{ exp.start_date }} -
+            {% if exp.end_date == None %}
+                Present
+            {% else %}
+                {{ exp.end_date }}
+            {% endif %}
+            </p>
+    {% endfor %}
+    <a class="btn btn-primary" href="{% url 'cold_apply:create_experience' participant.id %}" target="_blank">Add Experience</a>
+    <a class="btn btn-primary" onclick=closeWindow()>Close this Tab</a>
+{% endblock %}
+
+{% block scripts %}
+
+    <script type="text/javascript">
+        function closeWindow() {
+            window.close();
+        }
+    </script>
+{% endblock %}
