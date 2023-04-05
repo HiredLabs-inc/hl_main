@@ -5,7 +5,7 @@
 {% block content %}
 
      <p>Targeted to: {{ job.title }} at {{ job.company }} on: {{ now|date }}</p>
-
+    <a href="{{ MEDIA_URL }}resumes/{{ participant.first.name }}/{{ job.company }}_{{ job.title }}.pdf" target="_blank">See Pdf</a>
 {% endblock %}
 {% block header %}
     <!-- <span id="right-fill"></span> -->

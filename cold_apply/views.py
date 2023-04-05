@@ -14,6 +14,7 @@ from .models import Participant, Job, Phase, KeywordAnalysis, ParticipantExperie
 from .static.scripts.keyword_analyzer.keyword_analyzer import analyze, hook_after_jd_analysis, \
     hook_after_bullet_analysis
 from .static.scripts.resume_writer.bullet_weighter import weigh, hook_after_weighting
+from .static.scripts.resume_writer.file_writer import write_resume
 
 
 # Index
@@ -358,6 +359,7 @@ class TailoredResumeView(LoginRequiredMixin, ListView):
             .filter(title_id=position.id)
         context['participant'] = participant
         context['now'] = timezone.now()
+        write_resume(context)
         return context
 
 
