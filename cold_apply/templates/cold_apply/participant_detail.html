@@ -19,7 +19,7 @@
             <p>{{ latest_experience.position.title }} at {{ latest_experience.org.name }}</p>
 {#            <a class="btn btn-primary" href="{% url 'cold_apply:participant_experience_list' pk=object.id title_pk=latest_experience.position.id %}" target="_blank">See Resume</a>#}
             {% else %}
-                <p>No experience entered. <a href="https://www.random.org/" target="_blank">Add experience</a> </p>
+                <p>No experience entered. <a href="{% url 'cold_apply:create_experience' object.id %}" target="_blank">Add Work Experience</a> </p>
         {% endif %}
         <table class="table table-striped">
             <thead>
