@@ -20,6 +20,7 @@ django-q = "*"
 "backports.zoneinfo" = "*"
 fpdf = "*"
 pytest-django = "*"
+sphinx = "*"
 
 [dev-packages]
 pytest = "*"
