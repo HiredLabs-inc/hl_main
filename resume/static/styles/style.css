@@ -218,7 +218,7 @@ li {
   top: -40px;
   background: rgba(23, 33, 33, 1);
 } */
-}
+/*}*/
 
 /*over width of 360*/
 @media (min-width: 22.4375em) {
@@ -370,4 +370,4 @@ h4 {
     margin: 0 35% 0 30%;
    }
 
-}
+}}

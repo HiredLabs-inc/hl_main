@@ -15,6 +15,7 @@ class InteractionForm(forms.ModelForm):
         model = Interaction
         fields = ['participant', 'interaction_type', 'notes']
 
+
 class ExperienceForm(forms.ModelForm):
     class Meta:
         model = Experience
@@ -24,5 +25,5 @@ class ExperienceForm(forms.ModelForm):
                 'class': 'form-control datetimepicker-input',
                 'data-target': '#datetimepicker1'
             }
-        ))
+            ))
         fields = ['position', 'org', 'start_date', 'end_date']

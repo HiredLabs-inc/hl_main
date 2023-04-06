@@ -19,8 +19,11 @@ django-q = "*"
 "pdfminer.six" = "*"
 "backports.zoneinfo" = "*"
 fpdf = "*"
+pytest-django = "*"
 
 [dev-packages]
+pytest = "*"
+pytest-dotenv = "*"
 
 [requires]
 python_version = "3.8"
