@@ -27,6 +27,7 @@ class Participant(models.Model):
 
     class Meta:
         verbose_name_plural = 'Participants'
+        ordering = ['-created_at']
 
 
 class Interaction(models.Model):

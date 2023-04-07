@@ -23,6 +23,9 @@ class Organization(models.Model):
     def __str__(self):
         return f'{self.name}'
 
+    class Meta:
+        verbose_name_plural = 'Organizations'
+        ordering = ['name']
 
 class Position(models.Model):
     title = models.CharField(max_length=50)
@@ -30,6 +33,9 @@ class Position(models.Model):
     def __str__(self):
         return f'{self.title}'
 
+    class Meta:
+        verbose_name_plural = 'Positions'
+        ordering = ['title']
 
 class Degree(models.Model):
     name = models.CharField(max_length=250)
