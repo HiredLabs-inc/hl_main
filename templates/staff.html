@@ -50,6 +50,9 @@
                                 {% if perms.cold_apply %}
                                     <li><a class="dropdown-item" href="{% url 'cold_apply:index' %}">Cold Apply</a></li>
                                 {% endif %}
+                                {% if perms.rates %}
+                                    <li><a class="dropdown-item" href="{% url 'rates:index' %}">World Rates</a></li>
+                                {% endif %}
                                 <li><a class="dropdown-item" href="{% url 'home' %}">View Public Site</a></li>
                                 {% if user.is_staff %}
                                     <li><a class="dropdown-item" href="{% url 'admin:index' %}">Admin Panel</a></li>

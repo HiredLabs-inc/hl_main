@@ -29,4 +29,5 @@ urlpatterns = [
     path('cold_apply/', include('cold_apply.urls')),
     path('resume/', include('resume.urls')),
     path('releases/', include('releases.urls')),
+    path('rates/', include('rates.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) # this only works in development

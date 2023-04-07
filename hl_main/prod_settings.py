@@ -39,11 +39,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'releases.apps.ReleasesConfig',
-    'userprofile.apps.UserprofileConfig',
-    'resume.apps.ResumeConfig',
     'cold_apply.apps.ColdApplyConfig',
-
+    'rates.apps.RatesConfig',
+    'releases.apps.ReleasesConfig',
+    'resume.apps.ResumeConfig',
+    'userprofile.apps.UserprofileConfig',
     'django_q',
 ]
 
@@ -149,6 +149,9 @@ TIME_ZONE = 'America/Los_Angeles'
 USE_I18N = True
 
 USE_TZ = True
+
+# Format nubmers with thousands separators
+USE_THOUSAND_SEPARATOR = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/

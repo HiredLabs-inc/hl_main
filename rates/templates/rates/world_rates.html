@@ -1,0 +1,33 @@
+{% extends 'staff_home.html' %}
+
+{% block content %}
+    <h1>Rate Recommendation Process</h1>
+    <ol>
+        <li>Data is downloaded from the
+            <a href="https://hdr.undp.org/data-center/documentation-and-downloads" target="_blank">
+                Inequality-adjusted Human Development Index
+            </a>, which is calculated by the United Nations Development Programme.
+        </li>
+        <li>Relevant data is then formatted.
+            {% if perms.rates.delete_raterequest %} (see "latest" tab
+            <a href="https://docs.google.com/spreadsheets/d/1rKPS-hCmwAaHoNoJKjjzz42NxPAljJ1u/edit#gid=930579211" target="_blank">
+                here</a>)
+            {% endif %}
+        </li>
+        <li>One of six zones (A-F) is assigned to each country.
+            {% if perms.rates.delete_raterequest %} (see "distribution" tab
+            <a href="https://docs.google.com/spreadsheets/d/1rKPS-hCmwAaHoNoJKjjzz42NxPAljJ1u/edit#gid=966028313" target="_blank">
+                here</a>)
+            {% endif %}
+        </li>
+        <li>Base rates are established for a list of skill titles. {% if perms.rates.delete_raterequest %} (see "template" tab
+            <a href="https://docs.google.com/spreadsheets/d/1SWqHKepNTNKxoZFKENajiiKWDFXqFux22U0ReMtgwrM/edit#gid=0" target="_blank">
+                here</a>){% endif %}
+        </li>
+        <li>These formatted data are uploaded to the web application and used as inputs for a proprietary
+            algorithm that translates the base rate for each skill into a country-specific pay rate
+            range recommendation (<a href="{% url 'rates:index' %}">here</a>).
+        </li>
+    </ol>
+
+{% endblock %}

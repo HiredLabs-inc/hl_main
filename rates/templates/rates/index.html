@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="centered-content">
+  <h2>International Pay Rates</h2>
+</div>
+
+<div class="container">
+  <p>Tool to translate pay rates from one country to another.
+  </p>
+  <a href="{% url 'rates:world_rates' %}">New Rate Estimate</a>
+  <br>
+  <br>
+  <div class="row">
+    <div class="col-lg-12">
+      <h3>Rate Requests</h3>
+      {% if rate_estimates %}
+      <div class="table-responsive-sm">
+        <table class="table table-hover">
+          <tr>
+              <th>ID</th>
+              <th>Employer Country</th>
+              <th>Worker Country</th>
+              <th>Skill Level</th>
+              <th>Lowest Rate</th>
+              <th>Median Rate</th>
+              <th>Highest Rate</th>
+              <th>Created</th>
+{#            <th colspan="2">Update</th>#}
+          </tr>
+          {% for estimate in rate_estimates %}
+          <tr>
+            <td>
+                <p>{{ estimate.id }}</p>
+            </td>
+            <td>
+                <p>{{ estimate.rate_request.employer_country }}</p>
+            </td>
+            <td>
+                <p>{{ estimate.rate_request.worker_country }}</p>
+            </td>
+            <td>
+                <p>{{ estimate.skill_level }}</p>
+            </td>
+            <td>
+                <p>{{ estimate.lowest_rate }}</p>
+            </td>
+            <td>
+                <p>{{ estimate.median_rate }}</p>
+              </td>
+            <td>
+                <p>{{ estimate.highest_rate }}</p>
+            </td>
+            <td>
+                <p>{{ estimate.time_stamp }}</p>
+            </td>
+          </tr>
+          {% endfor %}
+        </table>
+      </div>
+
+      {% else %}
+        <p>You don't have any previous rate recommendations.</p>
+      {% endif %}
+      </div>
+    </div>
+
+</div>
+
+{% endblock %}

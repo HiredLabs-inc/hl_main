@@ -1,0 +1,65 @@
+{% extends 'staff_home.html' %}
+{% load l10n %}
+
+
+
+{% block content %}
+    <h3>Rate Recommendations</h3>
+        <p>Provides a rate range (high, mid, low) recommendation for a given skill, at a given experience level, in a
+            given country. </p>
+        <p>Select a skill, level, and country to generate a rate recommendation.</p>
+    <div class="form-group">
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <input class="btn btn-primary" type="submit" value="Submit">
+        </form>
+    </div>
+{#    <a class="btn btn-primary" onclick=refreshWindow()>Refresh This Page</a>#}
+    <br>
+    {% if rate_responses %}
+        <h4>Rate Recommendations</h4>
+        <a href="{% url 'rates:world_rates' %}">How are these calculated?</a>
+        <table class="table table-striped table-responsive">
+        <thead>
+            <tr>
+                <th>Work Country</th>
+                <th>Zone</th>
+                <th>Ref. Rate</th>
+                <th>Title</th>
+                <th>Level</th>
+                <th>High</th>
+                <th>Mid</th>
+                <th>Low</th>
+                <th>Request Date</th>
+            </tr>
+        </thead>
+            {% for rec in rate_responses %}
+                <tr>
+                    <td>{{ rec.rate_request.worker_country.name }}</td>
+                    <td>{{ rec.rate_request.worker_country.zone }}</td>
+                    <td>${{ rec.rate_request.rate|localize }}</td>
+                    <td>{{ rec.rate_request.skill }}</td>
+                    <td>{{ rec.rate_request.level }}</td>
+                    {% localize on %}
+                        <td>${{ rec.highest_rate }}</td>
+                        <td>${{ rec.median_rate }}</td>
+                        <td>${{ rec.lowest_rate }}</td>
+                    {% endlocalize %}
+                    <td>{{ rec.rate_request.time_stamp|date }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+        {% else %}
+        <p>No rate recommendations - get crackin', chief!</p>
+    {% endif %}
+{% endblock %}
+
+{% block scripts %}
+
+    <script type="text/javascript">
+        function refreshWindow() {
+            location.reload();
+        }
+    </script>
+{% endblock %}
