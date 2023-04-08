@@ -8,7 +8,7 @@ from .forms import RateRequestForm
 
 from .models import RateRequest, RateResponse
 
-from rates.static.scripts.rate_core.main import recommend, hook_after_recommendation
+from rates.static.scripts.rate_core.main import recommend, hook_after_recommendation, ref_rate_recommend
 
 
 class RateRequestListView(LoginRequiredMixin, ListView):
@@ -58,8 +58,20 @@ class RecommendationCreateView(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         if form.is_valid():
             form.instance.user = self.request.user
-            form.instance.rate = form.instance.skill.base
-            rec = recommend(title=form.instance.skill, level=form.instance.level, zone=form.instance.worker_country.zone,rate=form.instance.rate)
+            ref = ref_rate_recommend(
+                title=form.instance.skill,
+                level=form.instance.level,
+                zone=form.instance.employer_country.zone,
+                rate=form.instance.skill.base
+            )
+            ref_rate = float(ref['median_rate'][0])
+            form.instance.rate = ref_rate
+            rec = recommend(
+                title=form.instance.skill,
+                level=form.instance.level,
+                zone=form.instance.worker_country.zone,
+                rate=form.instance.skill.base
+            )
             form.save()
             hook_after_recommendation(rec, form.instance.id)
             return redirect(reverse('rates:index'))

@@ -3,7 +3,7 @@ import json
 import pandas as pd
 from django.core import serializers
 
-from rates.static.scripts.rate_core.core_utils import bigStepper
+from rates.static.scripts.rate_core.core_utils import bigStepper, levelStepper
 import datetime
 
 
@@ -20,6 +20,13 @@ def recommend(level, zone, title, rate):
     main_df = pd.DataFrame.from_dict(rec)
     return main_df.to_json(orient='index')
 
+def ref_rate_recommend(level, zone, title, rate):
+    zone_hash = {'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 5, 'F': 6}
+    mid = levelStepper(level=level, zone=zone_hash[zone], rate=float(rate), title=title)
+    rec = {
+        'median_rate': [mid],
+    }
+    return rec
 
 def hook_after_recommendation(reco: object, req_id: int):
     data = json.loads(reco)

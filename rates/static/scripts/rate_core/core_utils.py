@@ -40,4 +40,5 @@ def levelStepper(level, zone, rate, title):
 
 
 def bigStepper(level, zone, rate, title):
-    return levelStepper(level, zone, zoneStepper(zone, rate, title), title)
+    starter_rate = zoneStepper(zone - 1, rate, title)
+    return levelStepper(level, zone, starter_rate, title)
