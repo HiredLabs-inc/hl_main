@@ -56,12 +56,15 @@ class RecommendationCreateView(LoginRequiredMixin, CreateView):
         return context
 
     def form_valid(self, form):
-        form.instance.user = self.request.user
-        form.instance.rate = form.instance.skill.base
-        rec = recommend(title=form.instance.skill, level=form.instance.level, zone=form.instance.worker_country.zone,rate=form.instance.rate)
-        form.save()
-        hook_after_recommendation(rec, form.instance.id)
-        return redirect(reverse('rates:index'))
+        if form.is_valid():
+            form.instance.user = self.request.user
+            form.instance.rate = form.instance.skill.base
+            rec = recommend(title=form.instance.skill, level=form.instance.level, zone=form.instance.worker_country.zone,rate=form.instance.rate)
+            form.save()
+            hook_after_recommendation(rec, form.instance.id)
+            return redirect(reverse('rates:index'))
+        else:
+            print(form.errors)
         return super().form_valid(form)
 
 @login_required
