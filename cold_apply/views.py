@@ -1,3 +1,5 @@
+import datetime
+
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Count, Q
@@ -317,6 +319,8 @@ class ParticipantExperienceListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         return Experience.objects.filter(participantexperience__participant_id=self.kwargs['pk']) \
             .order_by('-start_date')
+
+
 class TailoredResumeView(LoginRequiredMixin, ListView):
     model = ParticipantExperience
     template_name = 'resume/index.html'
@@ -342,10 +346,20 @@ class TailoredResumeView(LoginRequiredMixin, ListView):
                 weight = weigh(bullet=bullet, jd_keywords=keywords)
                 hook_after_weighting(weight, participant_id=self.kwargs['pk'], position_id=position.id,
                                      bullet_id=bullet.id)
-
+            # Set dynamic cutoff for number of bullets
+            # More recent jobs should have more bullets, older jobs should have fewer
+            cutoff = 1
+            five_years_ago = (timezone.now() - datetime.timedelta(weeks=260)).date()
+            ten_years_ago = (timezone.now() - datetime.timedelta(weeks=520)).date()
+            if exp.end_date is None:
+                cutoff = 5
+            elif exp.end_date > five_years_ago:
+                cutoff = 5
+            elif exp.end_date > ten_years_ago:
+                cutoff = 3
             # Get top 3 bullets
             top_bullets = WeightedBullet.objects.filter(participant=self.kwargs['pk']) \
-                .filter(bullet__experience=exp).order_by('-weight')[:3]
+                              .filter(bullet__experience=exp).order_by('-weight')[:cutoff]
             exp_weight = {exp.id: top_bullets}
             weight_set.update(exp_weight)
         context['participant_experiences'] = ParticipantExperience.objects.filter(participant=self.kwargs['pk'])
@@ -386,7 +400,6 @@ class ParticipantExperienceCreateView(LoginRequiredMixin, CreateView):
         else:
             print(form.errors)
         return super().form_valid(form)
-
 
 
 # TODO: ParticipantExperienceDetailView
@@ -444,7 +457,6 @@ class ParticipantOverviewCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-
 class OverviewUpdateView(LoginRequiredMixin, UpdateView):
     model = Overview
     template_name = 'cold_apply/participant_update.html'
@@ -472,7 +484,6 @@ class ExperienceCreateView(LoginRequiredMixin, CreateView):
     model = Experience
     template_name = 'cold_apply/create_update.html'
     form_class = ExperienceForm
-
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -513,6 +524,7 @@ class ExperienceUpdateView(LoginRequiredMixin, UpdateView):
         else:
             print(form.errors)
         return super().form_valid(form)
+
 
 # TODO: ExperienceDetailView
 
@@ -563,6 +575,7 @@ class BulletUpdateView(LoginRequiredMixin, UpdateView):
         else:
             print(form.errors)
         return super().form_valid(form)
+
 
 # TODO: BulletDetailView
 
