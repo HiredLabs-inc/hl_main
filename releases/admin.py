@@ -5,8 +5,8 @@ from .models import App, Release, Note, Feedback
 
 
 class AppAdmin(admin.ModelAdmin):
-    list_display = ('name', 'description')
-    list_filter = ('name',)
+    list_display = ('id', 'name', 'description')
+    list_filter = ('id','name',)
 
 
 class NoteAdmin(admin.ModelAdmin):
@@ -20,8 +20,8 @@ class FeedbackAdmin(admin.ModelAdmin):
 
 
 class ReleaseAdmin(admin.ModelAdmin):
-    list_display = ('app', 'major', 'minor', 'patch', 'date')
-    list_filter = ('app', 'date')
+    list_display = ('id', 'app', 'major', 'minor', 'patch', 'date')
+    list_filter = ('id', 'app', 'date')
 
 
 admin.site.register(App, AppAdmin)

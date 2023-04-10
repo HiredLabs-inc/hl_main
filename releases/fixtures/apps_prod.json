@@ -1,0 +1,18 @@
+[
+    {
+    "model": "releases.app",
+    "pk": 1,
+    "fields": {
+      "name": "cold_apply",
+      "description": "Automated job search tools."
+    }
+  },
+  {
+    "model": "releases.app",
+    "pk": 2,
+    "fields": {
+      "name": "rates",
+      "description": "Global pay rate translator."
+    }
+  }
+]

@@ -33,7 +33,7 @@ class Note(models.Model):
     text = models.TextField()
 
     def __str__(self):
-        return self.text
+        return f'{self.release_id}: {self.text}'
 
 
 class Feedback(models.Model):

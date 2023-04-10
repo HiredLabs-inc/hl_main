@@ -27,9 +27,11 @@
             <tbody>
             {% if release.note_set %}
                 {% for note in release.note_set.all %}
+                    {% if note.release_id == release.id %}
                     <tr>
                         <td>{{ note.text }}</td>
                     </tr>
+                    {% endif %}
                 {% endfor %}
             {% else %}
                 <tr>

@@ -1,71 +1,40 @@
 [
   {
     "model": "releases.release",
-    "pk": 3,
+    "pk": 1,
     "fields": {
-      "title": "Feature Enhancement 1",
+      "title": "Initial Release of Cold Apply App",
+      "author": 1,
+      "app": 1,
+      "major": 1,
+      "minor": 0,
+      "patch": 0,
+      "date": "2023-03-13T00:00:00Z"
+    }
+  },
+  {
+    "model": "releases.release",
+    "pk": 2,
+    "fields": {
+      "title": "Resume Writer Added",
       "author": 1,
       "app": 1,
       "major": 1,
       "minor": 1,
       "patch": 0,
-      "date": ""
+      "date": "2023-04-10T00:00:00Z"
     }
-  },
-  {
-    "model": "releases.note",
-    "pk": 16,
+  },{
+  "model": "releases.release",
+    "pk": 3,
     "fields": {
-      "release": 3,
-      "text": "created general feedback and feedback admin dashboards"
+      "title": "Initial Release of Rate Equity Translator",
+      "author": 1,
+      "app": 2,
+      "major": 1,
+      "minor": 0,
+      "patch": 0,
+      "date": "2023-04-10T00:00:00Z"
     }
-  },
-  {
-    "model": "releases.note",
-    "pk": 17,
-    "fields": {
-      "release": 3,
-      "text": "added total and unread comment counter to release_list view for admins"
-    }
-  },
-  {
-    "model": "releases.note",
-    "pk": 18,
-    "fields": {
-      "release": 3,
-      "text": "fixed file uploads for new and updated participants"
-    }
-  },
-  {
-    "model": "releases.note",
-    "pk": 19,
-    "fields": {
-      "release": 3,
-      "text": "added tailored resumes, including overview and bullet statements for each job"
-    }
-  },
-  {
-    "model": "releases.note",
-    "pk": 20,
-    "fields": {
-      "release": 3,
-      "text": "separated bullet_create template, and adjusted job detail to show all keywords"
-    }
-  },
-  {
-    "model": "releases.note",
-    "pk": 21,
-    "fields": {
-      "release": 3,
-      "text": "added create company and title to experience_create page"
-    }
-  },
-  {
-    "model": "releases.note",
-    "pk": 22,
-    "fields": {
-      "release": 3,
-      "text": "added a button to create work experience for a participant on the targeted resume view"
-    }
-  }
+}
 ]
