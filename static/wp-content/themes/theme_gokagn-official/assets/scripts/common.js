@@ -1,6 +1,6 @@
 "use strict";
 
-const root = "http://localhost:10162";
+const root = "https://localhost:10162";
 
 // page heading h1
 function pageTitle() {

@@ -22,7 +22,7 @@ const _highlight = (node, addItems, text, className) => {
       const closestNode = parent.closest("body, svg, foreignObject");
       const isInSVG = closestNode && closestNode.matches("svg");
       if (isInSVG) {
-        span = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+        span = document.createElementNS("https://www.w3.org/2000/svg", "tspan");
       } else {
         span = document.createElement("span");
         span.classList.add(className);
@@ -40,7 +40,7 @@ const _highlight = (node, addItems, text, className) => {
 
       if (isInSVG) {
         const rect = document.createElementNS(
-          "http://www.w3.org/2000/svg",
+          "https://www.w3.org/2000/svg",
           "rect"
         );
         const bbox = parent.getBBox();
