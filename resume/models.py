@@ -81,7 +81,7 @@ class Education(models.Model):
     concentration = models.ForeignKey(Concentration, on_delete=models.CASCADE)
 
     def __str__(self):
-        return '{}: {}, {}'.format( \
+        return '{}: {}, {}'.format(
             self.org, self.degree, self.concentration)
 
 

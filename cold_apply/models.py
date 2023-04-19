@@ -176,6 +176,16 @@ class ParticipantOverview(models.Model):
         verbose_name_plural = 'Participant Overviews'
 
 
+class ParticipantEducation(models.Model):
+    participant = models.ForeignKey(Participant, on_delete=models.CASCADE)
+    education = models.ForeignKey(Education, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'{self.participant.name}: {self.education.degree}, {self.education.org}'
+
+    class Meta:
+        verbose_name_plural = 'Participant Education'
+
 class WeightedBullet(models.Model):
     participant = models.ForeignKey(Participant, on_delete=models.CASCADE)
     position = models.ForeignKey(Position, on_delete=models.CASCADE)

@@ -16,7 +16,7 @@
             {% endif %}
         </h5>
         {% if latest_experience %}
-            <h6 class="sub-header">Latest Experience</h6>
+            <h6 class="sub-header">Latest Work Experience</h6>
             <p>{{ latest_experience.position.title }} at {{ latest_experience.org.name }}: {{ latest_experience.start_date|date }} -
                 {% if latest_experience.end_date == None %}
                     Present
@@ -29,7 +29,7 @@
             {% else %}
                 <p>No experience entered.</p>
         {% endif %}
-            <a href="{% url 'cold_apply:participant_experience_list' object.id %}" target="_blank">See All Experience</a>
+            <a href="{% url 'cold_apply:participant_experience_list' object.id %}" target="_blank">See All Work Experience</a>
         <br>
         <table class="table table-striped">
             <thead>
