@@ -24,13 +24,19 @@
                     {{ latest_experience.end_date|date }}
                     {% endif %}
             </p>
-
-{#            <a class="btn btn-primary" href="{% url 'cold_apply:participant_experience_list' pk=object.id title_pk=latest_experience.position.id %}" target="_blank">See Resume</a>#}
             {% else %}
                 <p>No experience entered.</p>
         {% endif %}
             <a href="{% url 'cold_apply:participant_experience_list' object.id %}" target="_blank">See All Work Experience</a>
         <br>
+        <br>
+        <h6>Highest Education</h6>
+        {% if highest_edu %}
+            {{ highest_edu.degree.abbr }} - {{ highest_edu.degree.concentration }} | {{ highest_edu.org.name }}
+        {% else %}
+            <p>No education entered.</p>
+        {% endif %}
+            <a href="#" target="_blank">See All Education</a>
         <table class="table table-striped">
             <thead>
             <tr>
