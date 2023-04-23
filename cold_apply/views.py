@@ -9,7 +9,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, TemplateView
 
-from resume.models import Organization, Position, Experience, Overview, Bullet
+from resume.models import Organization, Position, Experience, Overview, Bullet, Education
 from .forms import ParticipantForm, InteractionForm, ExperienceForm
 from .models import Participant, Job, Phase, KeywordAnalysis, ParticipantExperience, WeightedBullet, BulletKeyword, \
     ParticipantOverview, ParticipantEducation
@@ -323,6 +323,75 @@ class ParticipantExperienceListView(LoginRequiredMixin, ListView):
             .order_by('-start_date')
 
 
+class EducationCreateView(LoginRequiredMixin, CreateView):
+    model = Education
+    template_name = 'cold_apply/education_create.html'
+    fields = ['degree', 'concentration', 'org']
+    # form_class = ExperienceForm
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['participant'] = Participant.objects.get(id=self.kwargs['pk'])
+        context['now'] = timezone.now()
+
+        return context
+
+    def form_valid(self, form):
+        if form.is_valid():
+            education = form.save(commit=False)
+            education.save()
+            return redirect(reverse('cold_apply:confirm_add_participant_experience',
+                                    kwargs={'pk': self.kwargs['pk'], 'education_pk': education.id}))
+        else:
+            print(form.errors)
+        return super().form_valid(form)
+
+class ParticipantEducationCreateView(LoginRequiredMixin, CreateView):
+    model = ParticipantEducation
+    template_name = 'cold_apply/participanteducation_create.html'
+    fields = []
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['participant'] = Participant.objects.get(id=self.kwargs['pk'])
+        context['education'] = Education.objects.get(id=self.kwargs['education_pk'])
+        context['now'] = timezone.now()
+
+        return context
+
+    def form_valid(self, form):
+        if form.is_valid():
+            participant_education = form.save(commit=False)
+            participant_education.participant = Participant.objects.get(id=self.kwargs['pk'])
+            participant_education.education = Education.objects.get(id=self.kwargs['education_pk'])
+            participant_education.save()
+            return redirect(reverse('cold_apply:confirm_add_education'))
+        else:
+            print(form.errors)
+        return super().form_valid(form)
+
+
+# TODO: ParticipantExperienceUpdateView
+class ParticipantExperienceUpdateView(LoginRequiredMixin, UpdateView):
+    model = Experience
+    template_name = 'cold_apply/participant_exp_update.html'
+    fields = ['start_date', 'end_date', 'org', 'position']
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['experience'] = Experience.objects.get(id=self.kwargs['pk'])
+        context['participant'] = Participant.objects.get(id=self.kwargs['participant_pk'])
+        context['now'] = timezone.now()
+
+        return context
+
+@login_required
+def delete_exp(request, participant_id, pk):
+    ParticipantExperience.objects.filter(participant_id=participant_id).filter(experience=pk).delete()
+    Experience.objects.get(id=pk).delete()
+    return redirect(reverse('cold_apply:participant_experience_list', kwargs={'pk': participant_id}))
+
+
 class TailoredResumeView(LoginRequiredMixin, ListView):
     model = ParticipantExperience
     template_name = 'resume/index.html'
@@ -419,11 +488,7 @@ class ParticipantExperinceUpdateView(LoginRequiredMixin, UpdateView):
 
         return context
 
-@login_required
-def delete_exp(request, participant_id, pk):
-    ParticipantExperience.objects.filter(participant_id=participant_id).filter(experience=pk).delete()
-    Experience.objects.get(id=pk).delete()
-    return redirect(reverse('cold_apply:participant_detail', kwargs={'pk': participant_id}))
+
 
 class OverviewCreateView(LoginRequiredMixin, CreateView):
     model = Overview

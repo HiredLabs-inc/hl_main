@@ -38,12 +38,13 @@
             {% endif %}
             <a href="{% url 'cold_apply:update_participant_experience' participant_pk=participant.id pk=exp.id %}"
                target="_blank">Update</a>
-            <a href="{% url 'cold_apply:delete_experience' participant.id exp.id %}" target="_blank">Delete</a>
+            <a href="{% url 'cold_apply:delete_experience' participant.id exp.id %}">Delete</a>
             </p>
 
     {% endfor %}
     {% endif %}
     <a class="btn btn-primary" href="{% url 'cold_apply:create_experience' participant.id %}" target="_blank">Add Experience</a>
+    <a class="btn btn-primary" href="{% url 'cold_apply:create_education' participant.id %}" target="_blank">Add Education</a>
     <a class="btn btn-primary" onclick=closeWindow()>Close this Tab</a>
 {% endblock %}
 
