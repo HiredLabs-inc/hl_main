@@ -403,10 +403,18 @@ class ParticipantExperienceCreateView(LoginRequiredMixin, CreateView):
 
 
 # TODO: ParticipantExperienceUpdateView
+class ParticipantExperinceUpdateView(LoginRequiredMixin, UpdateView):
+    model = Experience
+    template_name = 'cold_apply/participant_exp_update.html'
+    fields = ['start_date', 'end_date', 'org', 'position']
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['experience'] = Experience.objects.get(id=self.kwargs['pk'])
+        context['participant'] = Participant.objects.get(id=self.kwargs['participant_pk'])
+        context['now'] = timezone.now()
 
-
-# TODO: ParticipantExperienceDeleteView
+        return context
 
 @login_required
 def delete_exp(request, participant_id, pk):

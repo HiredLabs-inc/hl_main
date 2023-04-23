@@ -1,0 +1,36 @@
+{% extends 'staff.html' %}
+
+{% block content %}
+    <h1>Editing Experience</h1>
+    <p>Participant: {{ participant.name }}</p>
+    <p>
+        Title: {{ experience.position.title }}
+        <p class="text-danger">Warning: Titles Are Shared - Changes May Affect Others</p>
+    <a href="{% url 'cold_apply:update_title' experience.position.id %}" target="_blank">Edit title</a>
+        <p>Correcting a typo is always acceptable, but be careful making major changes to the title. For example,
+            changing "Back End Developer" to "Development Wizard" is not advised, but changing it to
+            "Backend Developer" is fine. Please try using one of the titles listed in the "Position" dropdown below.
+            If there is nothing acceptable, also consider adding a new title before editing this one.
+        </p>
+
+    </p>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <input class="btn btn-primary" type="submit" value="Save">
+    </form>
+    <a class="btn btn-primary" href="{% url 'cold_apply:create_company' %}" target="_blank">Add Company</a>
+    <a class="btn btn-primary" href="{% url 'cold_apply:create_title'%}" target="_blank">Add
+        Title</a>
+    <a class="btn btn-primary" onclick=closeWindow()>Cancel</a>
+{% endblock %}
+
+{% block scripts %}
+
+    <script type="text/javascript">
+        function closeWindow() {
+            window.close();
+        }
+    </script>
+{% endblock %}

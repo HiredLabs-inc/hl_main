@@ -5,7 +5,7 @@ from .views import ParticipantListView, PhaseListView, ParticipantDetailView, Jo
     TitleUpdateView, OrganizationUpdateView, delete_job, refresh_keywords, create_participant, update_participant, \
     ParticipantExperienceCreateView, TailoredResumeView, ExperienceCreateView, BulletCreateView, \
     OverviewCreateView, ParticipantOverviewCreateView, OverviewUpdateView, BulletUpdateView, ExperienceUpdateView, \
-    ParticipantExperienceListView, delete_exp
+    ParticipantExperienceListView, delete_exp, ParticipantExperinceUpdateView
 
 app_name = 'cold_apply'
 
@@ -53,6 +53,8 @@ urlpatterns += [
 urlpatterns += [
     path('participant/<int:pk>/experience/', ParticipantExperienceListView.as_view(),
          name='participant_experience_list'),
+    path('participant/<int:participant_pk>/experience/<int:pk>', ParticipantExperinceUpdateView.as_view(),
+         name='update_participant_experience'),
     path('participant/<int:pk>/job/<int:job_pk>', TailoredResumeView.as_view(),
          name='tailored_resume'),
     path('participants/<int:pk>/add_experience/<int:experience_pk>', ParticipantExperienceCreateView.as_view(),

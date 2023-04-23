@@ -18,7 +18,8 @@
             {% else %}
                 {{ exp.end_date }}
             {% endif %}
-
+            <a href="{% url 'cold_apply:update_participant_experience' participant_pk=participant.id pk=exp.id %}"
+               target="_blank">Update</a>
             <a href="{% url 'cold_apply:delete_experience' participant.id exp.id %}" target="_blank">Delete</a>
             </p>
 
