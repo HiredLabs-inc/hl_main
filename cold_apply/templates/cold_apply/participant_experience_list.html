@@ -9,7 +9,9 @@
 {% endblock %}
 
 {% block content %}
-    <h3>Professional Expereince</h3>
+    <h3>Professional Experience</h3>
+    {% if experiences %}
+
     {% for exp in experiences %}
 
             <h5>{{ exp.position }} at {{ exp.org }}</h5>
@@ -25,8 +27,12 @@
             </p>
 
     {% endfor %}
-    {% if education %}
+        {% else %}
+        <p>No Professional Experience Entered</p>
+    {% endif %}
     <h3>Education</h3>
+    {% if education %}
+
         {% for edu in education %}
             <h5>{{ edu.education.degree }} | {{ edu.education.concentration }}</h5>
             <p class="text-muted">
@@ -42,6 +48,8 @@
             </p>
 
     {% endfor %}
+        {% else %}
+        <p>No Education Entered</p>
     {% endif %}
     <a class="btn btn-primary" href="{% url 'cold_apply:create_experience' participant.id %}" target="_blank">Add Experience</a>
     <a class="btn btn-primary" href="{% url 'cold_apply:create_education' participant.id %}" target="_blank">Add Education</a>
