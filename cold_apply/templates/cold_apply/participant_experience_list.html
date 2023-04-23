@@ -18,7 +18,10 @@
             {% else %}
                 {{ exp.end_date }}
             {% endif %}
+
+            <a href="{% url 'cold_apply:delete_experience' participant.id exp.id %}" target="_blank">Delete</a>
             </p>
+
     {% endfor %}
     <a class="btn btn-primary" href="{% url 'cold_apply:create_experience' participant.id %}" target="_blank">Add Experience</a>
     <a class="btn btn-primary" onclick=closeWindow()>Close this Tab</a>

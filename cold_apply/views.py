@@ -402,9 +402,17 @@ class ParticipantExperienceCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-# TODO: ParticipantExperienceDetailView
+# TODO: ParticipantExperienceUpdateView
+
+
 
 # TODO: ParticipantExperienceDeleteView
+
+@login_required
+def delete_exp(request, participant_id, pk):
+    ParticipantExperience.objects.filter(participant_id=participant_id).filter(experience=pk).delete()
+    Experience.objects.get(id=pk).delete()
+    return redirect(reverse('cold_apply:participant_detail', kwargs={'pk': participant_id}))
 
 class OverviewCreateView(LoginRequiredMixin, CreateView):
     model = Overview
