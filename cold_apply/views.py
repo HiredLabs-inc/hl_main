@@ -12,7 +12,7 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, T
 from resume.models import Organization, Position, Experience, Overview, Bullet
 from .forms import ParticipantForm, InteractionForm, ExperienceForm
 from .models import Participant, Job, Phase, KeywordAnalysis, ParticipantExperience, WeightedBullet, BulletKeyword, \
-    ParticipantOverview
+    ParticipantOverview, ParticipantEducation
 from .static.scripts.keyword_analyzer.keyword_analyzer import analyze, hook_after_jd_analysis, \
     hook_after_bullet_analysis
 from .static.scripts.resume_writer.bullet_weighter import weigh, hook_after_weighting
@@ -311,7 +311,9 @@ class ParticipantExperienceListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['participant'] = Participant.objects.get(id=self.kwargs['pk'])
+        participant = Participant.objects.get(id=self.kwargs['pk'])
+        context['participant'] = participant
+        context['education'] = ParticipantEducation.objects.filter(participant=participant)
         context['now'] = timezone.now()
 
         return context
@@ -372,6 +374,7 @@ class TailoredResumeView(LoginRequiredMixin, ListView):
         context['overview'] = Overview.objects.filter(participantoverview__participant_id=self.kwargs['pk']) \
             .filter(title_id=position.id)
         context['participant'] = participant
+        context['education'] = ParticipantEducation.objects.filter(participant=self.kwargs['pk'])
         context['now'] = timezone.now()
         write_resume(context)
         return context

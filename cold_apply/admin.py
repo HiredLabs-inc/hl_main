@@ -2,7 +2,13 @@ from django.contrib import admin
 
 # Register your models here.
 from .models import Participant, Interaction, Job, Phase, Step, KeywordAnalysis, ParticipantExperience, \
-    ParticipantOverview, WeightedBullet, BulletKeyword
+    ParticipantOverview, WeightedBullet, BulletKeyword, ParticipantEducation
+
+
+class ParticipantEducationAdmin(admin.ModelAdmin):
+    list_display = ('participant', 'education')
+    list_filter = ('participant', 'education')
+    search_fields = ('participant', 'education')
 
 
 class BulletKeywordAdmin(admin.ModelAdmin):

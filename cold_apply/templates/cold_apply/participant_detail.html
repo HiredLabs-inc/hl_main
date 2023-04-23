@@ -27,7 +27,6 @@
             {% else %}
                 <p>No experience entered.</p>
         {% endif %}
-            <a href="{% url 'cold_apply:participant_experience_list' object.id %}" target="_blank">See All Work Experience</a>
         <br>
         <br>
         <h6>Highest Education</h6>
@@ -36,7 +35,7 @@
         {% else %}
             <p>No education entered.</p>
         {% endif %}
-            <a href="#" target="_blank">See All Education</a>
+            <a href="{% url 'cold_apply:participant_experience_list' object.id %}" target="_blank">See All Educaiton and Experience</a>
         <table class="table table-striped">
             <thead>
             <tr>
