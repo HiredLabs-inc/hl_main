@@ -386,6 +386,15 @@ class ParticipantExperienceUpdateView(LoginRequiredMixin, UpdateView):
 
         return context
 
+    def form_valid(self, form):
+        if form.is_valid():
+            experience = form.save(commit=False)
+            experience.save()
+            return redirect(reverse('cold_apply:confirm_update_experience'))
+        else:
+            print(form.errors)
+        return super().form_valid(form)
+
 @login_required
 def delete_exp(request, participant_id, pk):
     ParticipantExperience.objects.filter(participant_id=participant_id).filter(experience=pk).delete()
@@ -475,7 +484,6 @@ class ParticipantExperienceCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-# TODO: ParticipantExperienceUpdateView
 class ParticipantExperinceUpdateView(LoginRequiredMixin, UpdateView):
     model = Experience
     template_name = 'cold_apply/participant_exp_update.html'

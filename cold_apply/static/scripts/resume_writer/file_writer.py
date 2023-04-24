@@ -26,7 +26,7 @@ from django.conf import settings
 
 
 class PDF(FPDF):
-    def __init__(self, context):
+    def __init__(self, context: object):
         super().__init__()
         self.person = context['participant'][0]
         self.output_path = f'{settings.MEDIA_ROOT}resumes/{self.person.name}/'
@@ -51,7 +51,12 @@ class PDF(FPDF):
             self.multi_cell(190, 5, overview, 0, 'J')
             self.ln(4)
         elif section_title == 'Professional Experience':
+            exp_count = len(context['experiences'])
+            exp_counter = 0
             for exp in context['experiences']:
+                exp_counter += 1
+                if exp_counter == 4 and exp_counter != exp_count:
+                    self.add_page()
                 self.set_font('Times', 'B', size=11)
                 self.cell(w=100, h=5, txt=exp.position.title, ln=0, align='L')
                 start = exp.start_date.strftime('%B %Y')
@@ -77,11 +82,17 @@ class PDF(FPDF):
                                     self.multi_cell(w=175, h=5, txt=t.bullet.text, border=0, align='J')
                                     self.ln(1)
                 self.ln(4)
+        elif section_title == 'Education':
+            for edu in context['education']:
+                formatted = f'{edu.education.degree.abbr} in {edu.education.concentration} - {edu.education.org.name}'
+                self.set_font('Times', size=11)
+                self.cell(w=190, h=5, txt=formatted, ln=1, align='C')
+                self.ln(2)
 
-    def footer(self):
-        self.set_y(-15)
-        self.set_font('Arial', 'I', 8)
-        self.cell(0, 10, 'Page ' + str(self.page_no()) + '/{nb}', 0, 0, 'C')
+    # def footer(self):
+    #     self.set_y(-15)
+    #     self.set_font('Arial', 'I', 8)
+    #     self.cell(0, 10, 'Page ' + str(self.page_no()) + '/{nb}', 0, 0, 'C')
 
 
 def write_resume(context):
@@ -90,6 +101,7 @@ def write_resume(context):
     pdf.add_page()
     pdf.add_resume_section(section_title='Overview', context=context)
     pdf.add_resume_section(section_title='Professional Experience', context=context)
+    pdf.add_resume_section(section_title='Education', context=context)
 
     # TODO: Add skills section
     pdf.output(f'{pdf.output_path}{context["job"].company.name}_{context["title"]}.pdf', 'F')
@@ -98,4 +110,3 @@ def write_resume(context):
     print("Juandale Pringle Windlebug the III has claimed ownership of this vessel")
 
     # Juandale Pringle Windlebug the III has claimed ownership of this vessel
-
