@@ -107,6 +107,7 @@ class ParticipantDetailView(LoginRequiredMixin, DetailView):
         context['latest_experience'] = latest_experience
         context['jobs'] = jobs
         context['totals'] = totals
+        context['highest_edu'] = Education.objects.filter(participanteducation__participant_id=self.kwargs['pk'])
         context['now'] = timezone.now()
 
         return context
@@ -340,7 +341,7 @@ class EducationCreateView(LoginRequiredMixin, CreateView):
         if form.is_valid():
             education = form.save(commit=False)
             education.save()
-            return redirect(reverse('cold_apply:confirm_add_participant_experience',
+            return redirect(reverse('cold_apply:confirm_add_participant_education',
                                     kwargs={'pk': self.kwargs['pk'], 'education_pk': education.id}))
         else:
             print(form.errors)

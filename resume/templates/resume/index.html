@@ -70,8 +70,11 @@
             <p>No experience found. Either you haven't had a job, or you haven't entered any work experience into our
                 system.</p>
         {% endif %}
-
+        <h3>Education</h3>
         {% if education %}
+            {% for edu in education %}
+                {{ edu.education.degree.abbr }} in {{ edu.education.concentration }} at {{ edu.education.org }}
+            {% endfor %}
         {% else %}
         <p>No education entered </p>
         {% endif %}

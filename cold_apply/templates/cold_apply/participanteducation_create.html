@@ -3,9 +3,8 @@
 {% block content %}
 
     <p>
-        Are you sure you want to add {{ experience.position }} at {{ experience.org.name }}
-        from {{ experience.start_date|date }} to {{ experience.end_date }} to {{ participant.name }}'s
-        professional experience?
+        Are you sure you want to add {{ education.degree }} in {{ education.concentration }} at {{ education.org.name }}
+         to {{ participant.name }}'s education experience?
     </p>
     <form method="post">
         {% csrf_token %}

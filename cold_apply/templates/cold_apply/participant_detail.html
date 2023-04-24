@@ -31,7 +31,7 @@
         <br>
         <h6>Highest Education</h6>
         {% if highest_edu %}
-            {{ highest_edu.degree.abbr }} - {{ highest_edu.degree.concentration }} | {{ highest_edu.org.name }}
+            {{ highest_edu.first.degree.abbr }} in {{ highest_edu.first.concentration }} | {{ highest_edu.first.org }}
         {% else %}
             <p>No education entered.</p>
         {% endif %}

@@ -39,14 +39,14 @@ class Position(models.Model):
 
 class Degree(models.Model):
     name = models.CharField(max_length=250)
-    abbr = models.CharField(max_length=4)
+    abbr = models.CharField(max_length=20)
 
     def __str__(self):
         return '{}: {}'.format(self.abbr, self.name)
 
 
 class Concentration(models.Model):
-    name = models.CharField(max_length=25)
+    name = models.CharField(max_length=150)
 
     def __str__(self):
         return self.name

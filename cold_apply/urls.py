@@ -5,7 +5,8 @@ from .views import ParticipantListView, PhaseListView, ParticipantDetailView, Jo
     TitleUpdateView, OrganizationUpdateView, delete_job, refresh_keywords, create_participant, update_participant, \
     ParticipantExperienceCreateView, TailoredResumeView, ExperienceCreateView, BulletCreateView, \
     OverviewCreateView, ParticipantOverviewCreateView, OverviewUpdateView, BulletUpdateView, ExperienceUpdateView, \
-    ParticipantExperienceListView, delete_exp, ParticipantExperienceUpdateView, EducationCreateView
+    ParticipantExperienceListView, delete_exp, ParticipantExperienceUpdateView, EducationCreateView, \
+    ParticipantEducationCreateView
 
 app_name = 'cold_apply'
 
@@ -76,7 +77,9 @@ urlpatterns += [
 # Education CRUD
 urlpatterns += [
     path('participant/<int:pk>/education/new', EducationCreateView.as_view(), name='create_education'),
-
+    path('participant/<int:pk>/edu/<int:education_pk>/confirm', ParticipantEducationCreateView.as_view(),
+         name='confirm_add_participant_education'),
+    path('education/confirm_add/', ConfirmCreateView.as_view(), name='confirm_add_education'),
     ]
 
 
