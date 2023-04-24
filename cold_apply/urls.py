@@ -6,7 +6,7 @@ from .views import ParticipantListView, PhaseListView, ParticipantDetailView, Jo
     ParticipantExperienceCreateView, TailoredResumeView, ExperienceCreateView, BulletCreateView, \
     OverviewCreateView, ParticipantOverviewCreateView, OverviewUpdateView, BulletUpdateView, ExperienceUpdateView, \
     ParticipantExperienceListView, delete_exp, ParticipantExperienceUpdateView, EducationCreateView, \
-    ParticipantEducationCreateView
+    ParticipantEducationCreateView, delete_education, EducationUpdateView, ConcentrationCreateView
 
 app_name = 'cold_apply'
 
@@ -60,7 +60,6 @@ urlpatterns += [
          name='tailored_resume'),
     path('participants/<int:pk>/add_experience/<int:experience_pk>', ParticipantExperienceCreateView.as_view(),
          name='add_participant_experience'),
-    path('participants/<int:participant_id>/exp/<int:pk>/delete/', delete_exp, name='delete_experience'),
 
 ]
 
@@ -72,6 +71,7 @@ urlpatterns += [
     path('experience/confirm_add/', ConfirmCreateView.as_view(), name='confirm_add_experience'),
     path('experience/<int:pk>/update/', ExperienceUpdateView.as_view(), name='update_experience'),
     path('experience/confirm_update/', ConfirmCreateView.as_view(), name='confirm_update_experience'),
+    path('participants/<int:participant_id>/exp/<int:pk>/delete/', delete_exp, name='delete_experience'),
 ]
 
 # Education CRUD
@@ -80,6 +80,11 @@ urlpatterns += [
     path('participant/<int:pk>/edu/<int:education_pk>/confirm', ParticipantEducationCreateView.as_view(),
          name='confirm_add_participant_education'),
     path('education/confirm_add/', ConfirmCreateView.as_view(), name='confirm_add_education'),
+    path('participants/<int:participant_id>/edu/<int:pk>/delete/', delete_education, name='delete_education'),
+    path('education/<int:pk>/update/', EducationUpdateView.as_view(), name='update_education'),
+    path('education/confirm_update/', ConfirmCreateView.as_view(), name='confirm_update_education'),
+    path('concentration/new/', ConcentrationCreateView.as_view(), name='create_concentration'),
+    path('concentration/confirm_add/', ConfirmCreateView.as_view(), name='confirm_add_concentration'),
     ]
 
 

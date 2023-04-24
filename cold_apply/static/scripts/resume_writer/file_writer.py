@@ -83,11 +83,30 @@ class PDF(FPDF):
                                     self.ln(1)
                 self.ln(4)
         elif section_title == 'Education':
+            ed_count = len(context['education'])
+            ed_counter = 0
             for edu in context['education']:
+                ed_counter += 1
                 formatted = f'{edu.education.degree.abbr} in {edu.education.concentration} - {edu.education.org.name}'
-                self.set_font('Times', size=11)
-                self.cell(w=190, h=5, txt=formatted, ln=1, align='C')
-                self.ln(2)
+                if ed_count == 1:
+                    alignment = 'C'
+                    line = 1
+                    self.set_font('Times', size=11)
+                    self.cell(w=190, h=5, txt=formatted, ln=line, align=alignment)
+                    self.ln(2)
+                else:
+                    if ed_counter % 2 == 0:
+                        alignment = 'R'
+                        line = 0
+                        self.set_font('Times', size=11)
+                        self.cell(w=100, h=5, txt=formatted, ln=line, align=alignment)
+                    else:
+                        alignment = 'L'
+                        line = 0
+                        self.set_font('Times', size=11)
+                        self.cell(w=90, h=5, txt=formatted, ln=line, align=alignment)
+
+
 
     # def footer(self):
     #     self.set_y(-15)

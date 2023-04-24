@@ -9,7 +9,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, TemplateView
 
-from resume.models import Organization, Position, Experience, Overview, Bullet, Education
+from resume.models import Organization, Position, Experience, Overview, Bullet, Education, Concentration
 from .forms import ParticipantForm, InteractionForm, ExperienceForm
 from .models import Participant, Job, Phase, KeywordAnalysis, ParticipantExperience, WeightedBullet, BulletKeyword, \
     ParticipantOverview, ParticipantEducation
@@ -347,6 +347,26 @@ class EducationCreateView(LoginRequiredMixin, CreateView):
             print(form.errors)
         return super().form_valid(form)
 
+class EducationUpdateView(LoginRequiredMixin, UpdateView):
+    model = Education
+    template_name = 'cold_apply/participant_update.html'
+    fields = ['degree', 'concentration', 'org']
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['now'] = timezone.now()
+
+        return context
+
+    def form_valid(self, form):
+        if form.is_valid():
+            education = form.save(commit=False)
+            education.save()
+            return redirect(reverse('cold_apply:confirm_update_education'))
+        else:
+            print(form.errors)
+        return super().form_valid(form)
+
 class ParticipantEducationCreateView(LoginRequiredMixin, CreateView):
     model = ParticipantEducation
     template_name = 'cold_apply/participanteducation_create.html'
@@ -371,6 +391,25 @@ class ParticipantEducationCreateView(LoginRequiredMixin, CreateView):
             print(form.errors)
         return super().form_valid(form)
 
+class ConcentrationCreateView(LoginRequiredMixin, CreateView):
+    model = Concentration
+    template_name = 'cold_apply/concentration_create.html'
+    fields = ['name']
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['now'] = timezone.now()
+
+        return context
+
+    def form_valid(self, form):
+        if form.is_valid():
+            concentration = form.save(commit=False)
+            concentration.save()
+            return redirect(reverse('cold_apply:confirm_add_concentration'))
+        else:
+            print(form.errors)
+        return super().form_valid(form)
 
 # TODO: ParticipantExperienceUpdateView
 class ParticipantExperienceUpdateView(LoginRequiredMixin, UpdateView):
@@ -401,6 +440,11 @@ def delete_exp(request, participant_id, pk):
     Experience.objects.get(id=pk).delete()
     return redirect(reverse('cold_apply:participant_experience_list', kwargs={'pk': participant_id}))
 
+@login_required
+def delete_education(request, participant_id, pk):
+    ParticipantEducation.objects.filter(participant_id=participant_id).filter(education=pk).delete()
+    Education.objects.get(id=pk).delete()
+    return redirect(reverse('cold_apply:participant_experience_list', kwargs={'pk': participant_id}))
 
 class TailoredResumeView(LoginRequiredMixin, ListView):
     model = ParticipantExperience
