@@ -35,6 +35,18 @@
       "minor": 0,
       "patch": 0,
       "date": "2023-04-10T00:00:00Z"
+    },
+  {
+  "model": "releases.release",
+    "pk": 4,
+    "fields": {
+      "title": "Patch Fixes",
+      "author": 1,
+      "app": 1,
+      "major": 1,
+      "minor": 1,
+      "patch": 1,
+      "date": "2023-04-15T00:00:00Z"
     }
 }
 ]
