@@ -24,7 +24,8 @@
       "patch": 0,
       "date": "2023-04-10T00:00:00Z"
     }
-  },{
+  },
+  {
   "model": "releases.release",
     "pk": 3,
     "fields": {
@@ -35,7 +36,8 @@
       "minor": 0,
       "patch": 0,
       "date": "2023-04-10T00:00:00Z"
-    },
+    }
+  },
   {
   "model": "releases.release",
     "pk": 4,
@@ -48,5 +50,5 @@
       "patch": 1,
       "date": "2023-04-15T00:00:00Z"
     }
-}
+  }
 ]
