@@ -122,7 +122,7 @@ def write_resume(context):
     pdf.add_resume_section(section_title='Professional Experience', context=context)
     pdf.add_resume_section(section_title='Education', context=context)
 
-    # TODO: Add skills section
+    # TODO: Add skills-first vs chronological order option
     pdf.output(f'{pdf.output_path}{context["job"].company.name}_{context["title"]}.pdf', 'F')
 
     print('Your .pdf has been created.\nGood bye!\n')
