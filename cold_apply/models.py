@@ -186,6 +186,7 @@ class ParticipantEducation(models.Model):
     class Meta:
         verbose_name_plural = 'Participant Education'
 
+
 class WeightedBullet(models.Model):
     participant = models.ForeignKey(Participant, on_delete=models.CASCADE)
     position = models.ForeignKey(Position, on_delete=models.CASCADE)
@@ -210,3 +211,29 @@ class BulletKeyword(models.Model):
 
     class Meta:
         verbose_name_plural = 'Bullet Keywords'
+
+
+class Skill(models.Model):
+    TYPES = [
+        ('Hard', 'Hard'),
+        ('Soft', 'Soft'),
+    ]
+    title = models.CharField(max_length=200)
+    type = models.CharField(max_length=200, choices=TYPES, default='Hard')
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name_plural = 'Skills'
+
+
+class SkillBullet(models.Model):
+    skill = models.ForeignKey(Skill, on_delete=models.CASCADE)
+    bullet = models.ForeignKey(Bullet, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'{self.skill.title}: {self.bullet.text}'
+
+    class Meta:
+        verbose_name_plural = 'Skill Bullets'
