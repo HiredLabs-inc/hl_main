@@ -447,6 +447,19 @@ def delete_education(request, participant_id, pk):
     Education.objects.get(id=pk).delete()
     return redirect(reverse('cold_apply:participant_experience_list', kwargs={'pk': participant_id}))
 
+
+class ParticipantBullet:
+    pass
+
+
+@login_required
+def delete_bullet(request, participant_id, pk):
+    WeightedBullet.objects.filter(bullet=pk).delete()
+    BulletKeyword.objects.filter(bullet=pk).delete()
+    Bullet.objects.get(id=pk).delete()
+    return redirect(reverse('cold_apply:participant_experience_list', kwargs={'pk': participant_id}))
+
+
 class TailoredResumeView(LoginRequiredMixin, ListView):
     model = ParticipantExperience
     template_name = 'resume/index.html'

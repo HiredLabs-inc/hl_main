@@ -11,28 +11,33 @@
 {% block content %}
     <h3>Professional Experience</h3>
     {% if experiences %}
-
     {% for exp in experiences %}
-        <p>Participant Experience ID: {{ exp.id }}</p>
             <h5>{{ exp.position }} at {{ exp.org }}</h5>
+
             <p class="text-muted">{{ exp.start_date }} -
             {% if exp.end_date == None %}
                 Present
             {% else %}
                 {{ exp.end_date }}
             {% endif %}
+            <br>
+            <a href="{% url 'cold_apply:update_participant_experience' participant_pk=participant.id pk=exp.id %}"
+               target="_blank">Update Experience</a>
+            <br>
+            <a href="{% url 'cold_apply:delete_experience' participant.id exp.id %}">Delete Experience</a>
             {%  if bullets %}
                 <ul>
                 {%  for bullet in bullets %}
                     {% if bullet.experience == exp %}
-                        <li>{{ bullet.text }}</li>
+                        <li>{{ bullet.text }}
+                            <a href="{% url 'cold_apply:update_bullet' pk=bullet.id experience_pk=bullet.experience_id %}"
+                               target="_blank">[edit]</a>
+                            <a href="{% url 'cold_apply:delete_bullet' participant_id=participant.id pk=bullet.id %}">[delete]</a>
+                        </li>
                     {% endif %}
                 {% endfor %}
                 </ul>
             {% endif %}
-            <a href="{% url 'cold_apply:update_participant_experience' participant_pk=participant.id pk=exp.id %}"
-               target="_blank">Update</a>
-            <a href="{% url 'cold_apply:delete_experience' participant.id exp.id %}">Delete</a>
             </p>
 
     {% endfor %}
@@ -41,15 +46,14 @@
     {% endif %}
     <h3>Education</h3>
     {% if education %}
-
         {% for edu in education %}
             <h5>{{ edu.education.degree.abbr }} | {{ edu.education.concentration }} - {{ edu.education.org.name }}</h5>
             <p class="text-muted">
             <a href="{% url 'cold_apply:update_education' edu.education.id %}"
-               target="_blank">Update</a>
-            <a href="{% url 'cold_apply:delete_education' participant.id edu.education.id %}">Delete</a>
+               target="_blank">Update Education</a>
+        <br>
+            <a href="{% url 'cold_apply:delete_education' participant.id edu.education.id %}">Delete Education</a>
             </p>
-
     {% endfor %}
         {% else %}
         <p>No Education Entered</p>
