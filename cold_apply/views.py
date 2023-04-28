@@ -315,6 +315,7 @@ class ParticipantExperienceListView(LoginRequiredMixin, ListView):
         participant = Participant.objects.get(id=self.kwargs['pk'])
         context['participant'] = participant
         context['education'] = ParticipantEducation.objects.filter(participant=participant)
+        context['bullets'] = Bullet.objects.filter(experience__participantexperience__participant=participant)
         context['now'] = timezone.now()
 
         return context

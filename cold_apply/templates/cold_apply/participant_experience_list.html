@@ -13,13 +13,22 @@
     {% if experiences %}
 
     {% for exp in experiences %}
-
+        <p>Participant Experience ID: {{ exp.id }}</p>
             <h5>{{ exp.position }} at {{ exp.org }}</h5>
             <p class="text-muted">{{ exp.start_date }} -
             {% if exp.end_date == None %}
                 Present
             {% else %}
                 {{ exp.end_date }}
+            {% endif %}
+            {%  if bullets %}
+                <ul>
+                {%  for bullet in bullets %}
+                    {% if bullet.experience == exp %}
+                        <li>{{ bullet.text }}</li>
+                    {% endif %}
+                {% endfor %}
+                </ul>
             {% endif %}
             <a href="{% url 'cold_apply:update_participant_experience' participant_pk=participant.id pk=exp.id %}"
                target="_blank">Update</a>
