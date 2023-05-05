@@ -4,6 +4,8 @@ from django.db import models
 from resume.models import Organization, Overview, Position, Degree, Experience, Concentration, Bullet, Education, \
     CertProjectActivity, LanguageFATS
 
+from rates.models import Country
+
 
 # Create your models here.
 
@@ -237,3 +239,50 @@ class SkillBullet(models.Model):
 
     class Meta:
         verbose_name_plural = 'Skill Bullets'
+
+
+class State(models.Model):
+    name = models.CharField(max_length=200)
+    abbreviation = models.CharField(max_length=2)
+
+    def __str__(self):
+        return f'{self.name}, {self.abbreviation}'
+
+    class Meta:
+        verbose_name_plural = 'States'
+
+class Location(models.Model):
+    city = models.CharField(max_length=200)
+    state = models.ForeignKey(State, on_delete=models.SET_NULL, null=True)
+    country = models.ForeignKey(Country, on_delete=models.SET_NULL, null=True)
+
+    def __str__(self):
+        return f'{self.city}, {self.state.name}, {self.country.name}'
+
+    class Meta:
+        verbose_name_plural = 'Locations'
+
+class Applicant(models.Model):
+    BRANCHES = [
+        ('Army', 'Army'),
+        ('Navy', 'Navy'),
+        ('Air Force', 'Air Force'),
+        ('Marines', 'Marines'),
+        ('Coast Guard', 'Coast Guard'),
+        ('Space Force', 'Space Force'),
+        ('Not a Veteran', 'Not a Veteran'),
+    ]
+    name = models.CharField(max_length=200)
+    email = models.EmailField(max_length=200)
+    phone = models.CharField(max_length=200)
+    location = models.ForeignKey(Location, on_delete=models.SET_NULL, null=True)
+    linkedin = models.URLField(max_length=200)
+    resume = models.FileField(upload_to='uploads/', blank=True, null=True)
+    special_training = models.TextField(blank=True, null=True)
+    special_skills = models.TextField(blank=True, null=True)
+    job_links = models.TextField(blank=True, null=True)
+    work_preferences = models.TextField(blank=True, null=True)
+    service_branch = models.CharField(max_length=200, choices=BRANCHES, null=True, default='Not a Veteran')
+    military_specialiaty = models.CharField(max_length=200, null=True)
+    years_of_service = models.IntegerField(null=True)
+    rank_at_separation = models.CharField(max_length=200, null=True)
