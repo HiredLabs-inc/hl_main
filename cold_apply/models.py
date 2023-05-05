@@ -275,7 +275,7 @@ class Applicant(models.Model):
     name = models.CharField(max_length=200)
     email = models.EmailField(max_length=200)
     phone = models.CharField(max_length=200)
-    location = models.ForeignKey(Location, on_delete=models.SET_NULL, null=True)
+    location = models.TextField(blank=True, null=True)
     linkedin = models.URLField(max_length=200)
     resume = models.FileField(upload_to='uploads/', blank=True, null=True)
     special_training = models.TextField(blank=True, null=True)

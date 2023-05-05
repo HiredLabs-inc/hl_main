@@ -1,0 +1,27 @@
+{% extends 'new_applicant_index.html' %}
+
+{% block content %}
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div class="row">
+        <input class="btn btn-primary" type="submit" value="Submit">
+            </div>
+    </form>
+    <br>
+    <br>
+    <div>
+    <div class="row">
+    <a class="btn btn-primary" onclick=closeWindow()>Cancel</a>
+    </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+
+    <script type="text/javascript">
+        function closeWindow() {
+            window.close();
+        }
+    </script>
+{% endblock %}

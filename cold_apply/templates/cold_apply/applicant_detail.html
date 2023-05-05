@@ -1,0 +1,109 @@
+{% extends 'staff.html' %}
+{% load tz %}
+{% get_current_timezone as TIME_ZONE %}
+
+{% block content %}
+
+    <div class="row">
+        <table class="table-hover">
+            <tr>
+                <th>Company</th>
+                <th>Title</th>
+            </tr>
+            <tr>
+                <td><a href="{% url 'cold_apply:update_company' object.company_id %}" target="_blank"> {{ object.company }}</a></td>
+                <td><a href="{% url 'cold_apply:update_title' object.title_id %}" target="_blank"> {{ object.title }}</a></td>
+            </tr>
+        </table>
+    </div>
+    <br>
+    <br>
+    <div class="row">
+        <table class="table-hover">
+            <tr>
+                <th>Status</th>
+                <th>Status Reason</th>
+                <th>Last Updated</th>
+                <th>Last Updated By</th>
+            </tr>
+            <tr>
+                <td>{{ object.status }}</td>
+                <td>{{ object.status_reason }}</td>
+                <td>{{ object.updated_at|date }}</td>
+                <td>{{ object.updated_by }}</td>
+            </tr>
+        </table>
+    </div>
+    <br>
+    <br>
+    {% if keywords %}
+        <div class="row">
+            <h2 class="sub-header">Keywords</h2>
+            <table class="table table-stribed">
+                <thead>
+                <tr>
+                    <th>Unigrams</th>
+                    <th>Bigrams</th>
+                    <th>Trigrams</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>
+                        <ol>
+                            {% for keyword in keywords %}
+                                <li>{{ keyword.unigram }}</li>
+                            {% endfor %}
+                        </ol>
+                    </td>
+                    <td>
+                        <ol>
+                            {% for keyword in keywords %}
+                                <li>{{ keyword.bigram }}</li>
+                            {% endfor %}
+                        </ol>
+                    </td>
+                    <td>
+                        <ol>
+                            {% for keyword in keywords %}
+                                <li>{{ keyword.trigram }}</li>
+                            {% endfor %}
+                        </ol>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+    <br>
+    <br>
+    <div class="row">
+        <h3>Actions</h3>
+        <div class="col">
+            <a class="btn btn-primary" href="{% url 'cold_apply:refresh_keywords' object.id %}">Refresh
+                Keywords</a>
+            <a class="btn btn-primary" href="{% url 'cold_apply:tailored_resume' pk=object.participant.id job_pk=object.id %}" target="_blank">Tailor Resume</a>
+            <a class="btn btn-primary" href="{% url 'cold_apply:update_job' object.id %}" target="_blank">Edit Job</a>
+        </div>
+    </div>
+    <div class="row">
+        <h3>Description</h3>
+        <div class="col">
+            <p>{{ object.description }}</p>
+        </div>
+    </div>
+    <div class="row">
+        <h3>Application Link</h3>
+        <div class="col">
+            <p>{{ object.application_link }}</p>
+        </div>
+    </div>
+    <div class="row">
+        <h3>Navigation</h3>
+        <div class="col">
+            <a class="btn btn-primary" href="{% url 'cold_apply:participant_detail' object.participant.id %}">Back to
+                Participant Detail</a>
+            <a class="btn btn-primary" href="{% url 'cold_apply:index' %}">Back to Pipeline</a>
+        </div>
+    </div>
+{% endblock %}

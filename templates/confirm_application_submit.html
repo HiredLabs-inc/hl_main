@@ -1,0 +1,20 @@
+{% extends 'new_applicant_index.html' %}
+
+
+{% block content %}
+    <h2>Success!</h2>
+    <p>
+        Thank you for your interest in Hired Labs! Our team will contact you within 2-3 business days.
+    </p>
+    <br>
+    <p>This page will self-destruct in a few seconds, but feel free to close it whenever you want (or if it fails to close
+        itself).</p>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        setTimeout(function () {
+            window.close();
+        }, 10_000);
+    </script>
+{% endblock %}

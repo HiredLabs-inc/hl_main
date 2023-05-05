@@ -4,15 +4,15 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Count, Q
 from django.shortcuts import render, redirect
-from django.forms import DateField
+from django.forms import inlineformset_factory
 from django.urls import reverse
 from django.utils import timezone
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, TemplateView
 
 from resume.models import Organization, Position, Experience, Overview, Bullet, Education, Concentration
-from .forms import ParticipantForm, InteractionForm, ExperienceForm
+from .forms import ParticipantForm, InteractionForm, ExperienceForm, ApplicantForm
 from .models import Participant, Job, Phase, KeywordAnalysis, ParticipantExperience, WeightedBullet, BulletKeyword, \
-    ParticipantOverview, ParticipantEducation
+    ParticipantOverview, ParticipantEducation, Location, Applicant
 from .static.scripts.keyword_analyzer.keyword_analyzer import analyze, hook_after_jd_analysis, \
     hook_after_bullet_analysis
 from .static.scripts.resume_writer.bullet_weighter import weigh, hook_after_weighting
@@ -57,6 +57,16 @@ class PhaseListView(LoginRequiredMixin, ListView):
 # TODO: Add details about what was created to context
 class ConfirmCreateView(LoginRequiredMixin, TemplateView):
     template_name = 'cold_apply/confirm_create.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['now'] = timezone.now()
+
+        return context
+
+
+class ConfirmApplicationView(TemplateView):
+    template_name = 'confirm_application_submit.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -329,6 +339,7 @@ class EducationCreateView(LoginRequiredMixin, CreateView):
     model = Education
     template_name = 'cold_apply/education_create.html'
     fields = ['degree', 'concentration', 'org']
+
     # form_class = ExperienceForm
 
     def get_context_data(self, **kwargs):
@@ -347,6 +358,7 @@ class EducationCreateView(LoginRequiredMixin, CreateView):
         else:
             print(form.errors)
         return super().form_valid(form)
+
 
 class EducationUpdateView(LoginRequiredMixin, UpdateView):
     model = Education
@@ -367,6 +379,7 @@ class EducationUpdateView(LoginRequiredMixin, UpdateView):
         else:
             print(form.errors)
         return super().form_valid(form)
+
 
 class ParticipantEducationCreateView(LoginRequiredMixin, CreateView):
     model = ParticipantEducation
@@ -392,6 +405,7 @@ class ParticipantEducationCreateView(LoginRequiredMixin, CreateView):
             print(form.errors)
         return super().form_valid(form)
 
+
 class ConcentrationCreateView(LoginRequiredMixin, CreateView):
     model = Concentration
     template_name = 'cold_apply/concentration_create.html'
@@ -411,6 +425,7 @@ class ConcentrationCreateView(LoginRequiredMixin, CreateView):
         else:
             print(form.errors)
         return super().form_valid(form)
+
 
 # TODO: ParticipantExperienceUpdateView
 class ParticipantExperienceUpdateView(LoginRequiredMixin, UpdateView):
@@ -435,11 +450,13 @@ class ParticipantExperienceUpdateView(LoginRequiredMixin, UpdateView):
             print(form.errors)
         return super().form_valid(form)
 
+
 @login_required
 def delete_exp(request, participant_id, pk):
     ParticipantExperience.objects.filter(participant_id=participant_id).filter(experience=pk).delete()
     Experience.objects.get(id=pk).delete()
     return redirect(reverse('cold_apply:participant_experience_list', kwargs={'pk': participant_id}))
+
 
 @login_required
 def delete_education(request, participant_id, pk):
@@ -554,7 +571,6 @@ class ParticipantExperinceUpdateView(LoginRequiredMixin, UpdateView):
         context['now'] = timezone.now()
 
         return context
-
 
 
 class OverviewCreateView(LoginRequiredMixin, CreateView):
@@ -748,7 +764,26 @@ def create_interaction(request):
     context = {'form': form}
     return render(request, 'cold_apply/create_interaction.html', context)
 
-#
+
 # TODO View interactions using generic ListView
 
 # TODO View interaction details using generic DetailView
+
+# TODO Create Applicant using generic CreateView (no login)
+def create_applicant(request):
+    if request.method == 'POST':
+        form = ApplicantForm(request.POST, request.FILES)
+        if form.is_valid():
+            applicant = form.save(commit=False)
+            applicant.save()
+            return redirect(reverse('cold_apply:confirm_create_applicant'))
+        else:
+            print(form.errors)
+    else:
+        form = ApplicantForm()
+    context = {'form': form}
+    return render(request, 'cold_apply/applicant_create.html', context)
+
+# TODO View applicant list using generic ListView (login required)
+
+# TODO View applicant details using generic DetailView (login required)
