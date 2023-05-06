@@ -31,7 +31,7 @@ class ExperienceForm(forms.ModelForm):
 class ApplicantForm(forms.ModelForm):
     class Meta:
         model = Applicant
-        fields = ['name', 'email', 'phone', 'linkedin', 'resume', 'special_training', 'special_skills',
+        fields = ['name', 'email', 'phone', 'linkedin', 'location', 'resume', 'special_training', 'special_skills',
                   'job_links', 'work_preferences', 'service_branch', 'military_specialiaty', 'years_of_service',
                   'rank_at_separation']
         widgets = {
@@ -70,7 +70,7 @@ class ApplicantForm(forms.ModelForm):
             'military_specialiaty': forms.TextInput(attrs={'class': 'form-control',
                                                            'placeholder': 'Enter N/A if not a veteran'}),
             'years_of_service': forms.NumberInput(attrs={'class': 'form-control',
-                                                         'placeholder': 'Enter N/A if not a veteran'}),
+                                                         'placeholder': 'Enter 0 if not a veteran'}),
             'rank_at_separation': forms.TextInput(attrs={'class': 'form-control',
                                                          'placeholder': 'Enter N/A if not a veteran'}),
         }

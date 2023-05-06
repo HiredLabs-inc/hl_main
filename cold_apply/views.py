@@ -769,7 +769,6 @@ def create_interaction(request):
 
 # TODO View interaction details using generic DetailView
 
-# TODO Create Applicant using generic CreateView (no login)
 def create_applicant(request):
     if request.method == 'POST':
         form = ApplicantForm(request.POST, request.FILES)
@@ -785,5 +784,12 @@ def create_applicant(request):
     return render(request, 'cold_apply/applicant_create.html', context)
 
 # TODO View applicant list using generic ListView (login required)
+class ApplicantListView(LoginRequiredMixin, ListView):
+    model = Applicant
+    template_name = 'cold_apply/applicant_list.html'
+    context_object_name = 'applicant_list'
+
+    def get_queryset(self):
+        return Applicant.objects.all().order_by('name')
 
 # TODO View applicant details using generic DetailView (login required)

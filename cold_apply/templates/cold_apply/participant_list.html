@@ -7,6 +7,9 @@
     <p>Below is the current list of participants in our Cold Apply process. For details on the process, please see the
         <a href="{% url 'cold_apply:process' %}">process overview</a>.</p>
     <a class="btn btn-primary" href="{% url 'cold_apply:add_participant' %}">Add New Participant</a>
+    <br>
+    <br>
+    <a class="btn btn-primary" href="{% url 'cold_apply:applicant_list' %}" target="_blank">See Applicants</a>
     <p class="text-muted">Data retrieved on {{ now|date }} at {{ now|time }} {{ TIME_ZONE }}</p>
 {% endblock %}
 

@@ -7,7 +7,7 @@ from .views import ParticipantListView, PhaseListView, ParticipantDetailView, Jo
     OverviewCreateView, ParticipantOverviewCreateView, OverviewUpdateView, BulletUpdateView, ExperienceUpdateView, \
     ParticipantExperienceListView, delete_exp, ParticipantExperienceUpdateView, EducationCreateView, \
     ParticipantEducationCreateView, delete_education, EducationUpdateView, ConcentrationCreateView, delete_bullet, \
-    create_applicant, ConfirmApplicationView
+    create_applicant, ConfirmApplicationView, ApplicantListView
 
 app_name = 'cold_apply'
 
@@ -115,4 +115,5 @@ urlpatterns += [
 urlpatterns += [
     path('new_applicant/', create_applicant, name='create_applicant'),
     path('new_applicant/confirm/', ConfirmApplicationView.as_view(), name='confirm_create_applicant'),
+    path('applicants/', ApplicantListView.as_view(), name='applicant_list'),
 ]

@@ -1,0 +1,43 @@
+{% extends 'staff.html' %}
+{% load tz %}
+{% get_current_timezone as TIME_ZONE %}
+
+{% block title %}
+    <h1>Applicants</h1>
+    <p>Below is the current list of people who have volunteered to participate in Hired Labs' Beta Trials.</p>
+    <a class="btn btn-primary" href="{% url 'cold_apply:add_participant' %}" target="_blank">Add New Participant</a>
+    <p class="text-muted">Data retrieved on {{ now|date }} at {{ now|time }} {{ TIME_ZONE }}</p>
+{% endblock %}
+
+{% block content %}
+    <h2 class="sub-header">Applicants</h2>
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>LinkedIn</th>
+                    <th>Resume</th>
+                    <th>Service Branch</th>
+                    <th>MOS</th>
+                    <th>Rank at Separation</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for applicant in applicant_list %}
+                        <tr>
+                            <td>{{ applicant.name }}</td>
+                            <td>{{ applicant.email }}</td>
+                            <td>{{ applicant.phone}}</td>
+                            <td>{{ applicant.linkedin }}</td>
+                            <td><a href="{{ MEDIA_PREFIX }}{{ applicant.resume }}" target="_blank">
+                                {{ applicant.resume }}</a></td>
+                            <td>{{ applicant.service_branch }}</td>
+                            <td>{{ applicant.military_specialiaty }}</td>
+                            <td>{{ applicant.rank_at_separation }}</td>
+                        </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+{% endblock %}
