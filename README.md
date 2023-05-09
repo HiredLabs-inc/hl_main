@@ -1,36 +1,94 @@
-# Project Title
+# Hired Labs, Inc. Main Website and Tools
 
-Description of the project
+This is the main website for Hired Labs, Inc. It serves as a platform for web applications and tools to help accomplish
+our mission of ending veteran underemployment.
 
 ## Installation
 
 ### 1. Installation steps
 
-Linux/MacOS
+### Linux
+#### 1.1. Clone the repository and move to working directory
 ```bash
-python --version
+ git clone git@github.com:janton42/hl_main.git && cd hl_main
 ```
 
-Windows
+#### 1.2. Install dependencies and initialize virtual environment
+```bash
+  pipenv install && pipenv shell
 ```
-py --version
+
+#### 1.3. Install MySQL
+```bash
+  sudo apt-get install mysql-server
+```
+Refer to the MySql docs for details on installation and configuration. https://dev.mysql.com/doc/
+
+#### 1.4. Create a database
+```bash
+  mysql -u root -p
+```
+
+```sql
+  CREATE DATABASE HiredLabs;
+      quit;
+```
+
+Refer to this helpful MySql cheat sheet for more commands: https://devhints.io/mysql
+
+#### 1.5. Create a .env file containing the environment variables below in the hl_main/ subdirectory
+
+    DJANGO_SECRET_KEY=long-string-of-characters
+    DB_USER=username-you-created-in-MySql
+    DB_PASSWORD=password-you-created-in-MySql
+
+#### 1.6. Run migrations
+```bash
+  python3 manage.py migrate
+```
+
+#### 1.7. Load development seed data
+```bash
+  python3 manage.py loaddata dev_data
+```
+
+#### 1.8. Run development server
+```bash
+  python3 manage.py runserver
+```
+
+#### 1.9. Open localhost:8000 in your browser
+```bash
+ xdg-open http://127.0.0.1:8000/
+```
+
+#### MacOS
+```
+Why are you using a Mac? Do the same steps as above, but use Homebrew, or whatever.
+```
+
+#### Windows
+```
+Just don't...
 ```
 
 ## Usage
-Describe how to use the project
+With the development server running, you'll be able to access the web apps by logging in with these credentials:
+    
+        username: admin
+        password: admin
 
-Linux/MacOS
-```bash
-python3 manage.py runserver
-```
-Windows
-```bash
-py manage.py runserver
-```
+Your browser may warn you that this password is not secure. You can create another superuser with a more secure password, 
+if you wish. Simply run the command below and follow the prompts:
 
+```bash
+  python3 manage.py createsuperuser 
+```
 
 ## Contributing
-Pull requests are welcome. For major changes, please open an issue first to discuss the change.
+Pull requests are welcome. For major changes, please open an issue first to discuss the change. Please see 
+CODE_OF_CONDUCT.md for details on our code of conduct.
 
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](code_of_conduct.md)
 ## License
 [GPL-3.0 license](https://www.gnu.org/licenses/gpl-3.0.en.html)
