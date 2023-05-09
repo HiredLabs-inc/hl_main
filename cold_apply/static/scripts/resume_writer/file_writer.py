@@ -55,8 +55,8 @@ class PDF(FPDF):
             exp_counter = 0
             for exp in context['experiences']:
                 exp_counter += 1
-                if exp_counter == 4 and exp_counter != exp_count:
-                    self.add_page()
+                # if exp_counter == 4 and exp_counter != exp_count:
+                #     self.add_page()
                 self.set_font('Times', 'B', size=11)
                 self.cell(w=100, h=5, txt=exp.position.title, ln=0, align='L')
                 start = exp.start_date.strftime('%B %Y')
