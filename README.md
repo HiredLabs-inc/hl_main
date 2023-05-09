@@ -36,9 +36,15 @@ Refer to this helpful MySql cheat sheet for more commands: https://devhints.io/m
 
 #### 1.5. Create a .env file containing the environment variables below in the hl_main/ subdirectory
 
+```bash
+vi hl_main/.env
+i # enter insert mode
 DJANGO_SECRET_KEY=long-string-of-characters
 DB_USER=username-you-created-in-MySql
 DB_PASSWORD=password-you-created-in-MySql
+q # quit insert mode
+:wq # write and quit
+```
 
 #### 1.6. Run migrations
 ```bash
