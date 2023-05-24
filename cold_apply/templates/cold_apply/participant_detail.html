@@ -1,13 +1,20 @@
 {% extends 'staff.html' %}
 
 {% block content %}
-    <div class="row">
-        <h3>{{ object.name }}</h3>
-        {% if object.dnc %}
-            <p class="text-danger">Do Not Contact</p>
-        {% else %}
-            <p class="text-success">Contactable</p>
-        {% endif %}
+    <div class="row pt-4">
+        <div>
+            <div class="d-flex align-items-center">
+                <h3 class="me-3">{{ object.name }}</h3>
+                <div>
+                {% if object.dnc %}
+                    <span class="badge rounded-pill text-bg-danger fs-6">Do Not Contact</span>
+                {% else %}
+                    <span class="badge rounded-pill text-bg-success  fs-6">Contactable</span>
+                {% endif %}
+            </div>
+            </div>
+        
+        
         <h5 class="sub-header">
             {% if object.veteran %}
                 Veteran
@@ -16,7 +23,7 @@
             {% endif %}
         </h5>
         {% if latest_experience %}
-            <h6 class="sub-header">Latest Work Experience</h6>
+            <h6 class="mb-0">Latest Work Experience</h6>
             <p>{{ latest_experience.position.title }} at {{ latest_experience.org.name }}: {{ latest_experience.start_date|date }} -
                 {% if latest_experience.end_date == None %}
                     Present
@@ -27,15 +34,18 @@
             {% else %}
                 <p>No experience entered.</p>
         {% endif %}
-        <br>
-        <br>
-        <h6>Highest Education</h6>
+        <h6 class="mb-0">Highest Education</h6>
         {% if highest_edu %}
             {{ highest_edu.first.degree.abbr }} in {{ highest_edu.first.concentration }} | {{ highest_edu.first.org }}
         {% else %}
             <p>No education entered.</p>
         {% endif %}
-            <a href="{% url 'cold_apply:participant_experience_list' object.id %}" target="_blank">See All Education and Experience</a>
+        <p>
+            <a href="{% url 'cold_apply:participant_experience_list' object.id %}">See All Education and Experience</a>
+        </p>
+        <p>Uploaded Resume: <a href="{{ MEDIA_PREFIX }}{{ object.uploaded_resume }}" target="_blank">
+            {{ object.uploaded_resume_title }}</a>
+        </p>
         <table class="table table-striped">
             <thead>
             <tr>
@@ -55,13 +65,10 @@
             </tbody>
         </table>
     </div>
-    <br>
-    <p>Uploaded Resume: <a href="{{ MEDIA_PREFIX }}{{ object.uploaded_resume }}" target="_blank">
-        {{ object.uploaded_resume_title }}</a>
-    </p>
-    <br>
-    <br>
+    </div>
+    
     <div class="row">
+        <div>
         <h4>Jobs</h4>
         <table class="table table-striped">
             <thead>
@@ -129,6 +136,7 @@
             {% endfor %}
             </tbody>
         </table>
+    </div>
     </div>
     <br>
     <br>

@@ -1,10 +1,11 @@
 from django.db import models
 
 
-
 class Overview(models.Model):
     text = models.TextField()
-    title = models.ForeignKey('Position', on_delete=models.CASCADE, default=None, null=True)
+    title = models.ForeignKey(
+        "Position", on_delete=models.CASCADE, default=None, null=True
+    )
 
     def __str__(self):
         return self.title.title
@@ -12,37 +13,41 @@ class Overview(models.Model):
 
 class Organization(models.Model):
     ORG_TYPES = [
-        ('Work', 'Work'),
-        ('Edu', 'Edu'),
-        ('Activity', 'Activity'),
+        ("Work", "Work"),
+        ("Edu", "Edu"),
+        ("Activity", "Activity"),
     ]
-    org_type = models.CharField(max_length=20, choices=ORG_TYPES, default=None, null=True)
+    org_type = models.CharField(
+        max_length=20, choices=ORG_TYPES, default=None, null=True
+    )
     name = models.CharField(max_length=250)
     website = models.CharField(max_length=100)
 
     def __str__(self):
-        return f'{self.name}'
+        return f"{self.name}"
 
     class Meta:
-        verbose_name_plural = 'Organizations'
-        ordering = ['name']
+        verbose_name_plural = "Organizations"
+        ordering = ["name"]
+
 
 class Position(models.Model):
     title = models.CharField(max_length=50)
 
     def __str__(self):
-        return f'{self.title}'
+        return f"{self.title}"
 
     class Meta:
-        verbose_name_plural = 'Positions'
-        ordering = ['title']
+        verbose_name_plural = "Positions"
+        ordering = ["title"]
+
 
 class Degree(models.Model):
     name = models.CharField(max_length=250)
     abbr = models.CharField(max_length=20)
 
     def __str__(self):
-        return '{}: {}'.format(self.abbr, self.name)
+        return "{}: {}".format(self.abbr, self.name)
 
 
 class Concentration(models.Model):
@@ -57,22 +62,31 @@ class Experience(models.Model):
     end_date = models.DateField(null=True, blank=True)
     org = models.ForeignKey(Organization, on_delete=models.CASCADE)
     position = models.ForeignKey(Position, on_delete=models.CASCADE)
+    
+    participant = models.ManyToManyField(
+        through="cold_apply.ParticipantExperience",
+        to="cold_apply.Participant",
+        through_fields=(
+            "experience",
+            "participant",
+        ),
+    )
 
     def __str__(self):
-        return f'{self.org}: {self.position}, {self.start_date} - {self.end_date}'
+        return f"{self.org}: {self.position}, {self.start_date} - {self.end_date}"
 
 
 class Bullet(models.Model):
-    BULLET_TYPES = [
-        ('Work', 'Work'),
-        ('Summary', 'Summary')
-    ]
+    BULLET_TYPES = [("Work", "Work"), ("Summary", "Summary")]
     experience = models.ForeignKey(Experience, on_delete=models.CASCADE)
     text = models.TextField()
     type = models.CharField(max_length=20, choices=BULLET_TYPES)
+    skills = models.ManyToManyField(
+        to="cold_apply.Skill", through="cold_apply.SkillBullet", blank=True
+    )
 
     def __str__(self):
-        return '{}: {}, {}'.format(self.id, self.text, self.experience)
+        return "{}: {}, {}".format(self.id, self.text, self.experience)
 
 
 class Education(models.Model):
@@ -81,15 +95,14 @@ class Education(models.Model):
     concentration = models.ForeignKey(Concentration, on_delete=models.CASCADE)
 
     def __str__(self):
-        return '{}: {}, {}'.format(
-            self.org, self.degree, self.concentration)
+        return "{}: {}, {}".format(self.org, self.degree, self.concentration)
 
 
 class CertProjectActivity(models.Model):
     OPTIONS = [
-        ('Certification', 'Certification'),
-        ('Project', 'Project'),
-        ('Activity', 'Activity')
+        ("Certification", "Certification"),
+        ("Project", "Project"),
+        ("Activity", "Activity"),
     ]
     org = models.ForeignKey(Organization, on_delete=models.CASCADE)
     title = models.CharField(max_length=250)
@@ -97,31 +110,29 @@ class CertProjectActivity(models.Model):
     variety = models.CharField(max_length=20, choices=OPTIONS)
 
     def __str__(self):
-        return '{}: {}, {}'.format( \
-            self.org, self.title, self.description)
+        return "{}: {}, {}".format(self.org, self.title, self.description)
 
 
 class LanguageFATS(models.Model):
     LANGFATS_TYPES = [
-        ('Human', 'Human'),
-        ('Computer', 'Computer'),
-        ('Framework', 'Framework'),
-        ('Ability', 'Ability'),
-        ('Technology', 'Technology'),
-        ('Skill', 'Skill'),
+        ("Human", "Human"),
+        ("Computer", "Computer"),
+        ("Framework", "Framework"),
+        ("Ability", "Ability"),
+        ("Technology", "Technology"),
+        ("Skill", "Skill"),
     ]
     LEVELS = [
-        ('Native', 'Native'),
-        ('Fluent', 'Fluent'),
-        ('Intermediate', 'Intermediate'),
-        ('Expert', 'Expert'),
-        ('Beginner', 'Beginner'),
-        ('Novice', 'Novice'),
+        ("Native", "Native"),
+        ("Fluent", "Fluent"),
+        ("Intermediate", "Intermediate"),
+        ("Expert", "Expert"),
+        ("Beginner", "Beginner"),
+        ("Novice", "Novice"),
     ]
     title = models.CharField(max_length=250)
     lang_type = models.CharField(max_length=20, choices=LANGFATS_TYPES)
     level = models.CharField(max_length=20, choices=LEVELS)
 
     def __str__(self):
-        return '{}: {}, {}'.format( \
-            self.title, self.lang_type, self.level)
+        return "{}: {}, {}".format(self.title, self.lang_type, self.level)

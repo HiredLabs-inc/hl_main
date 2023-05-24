@@ -1,0 +1,16 @@
+{% load form_helpers %}
+<form action="{% url 'cold_apply:update_bullet' pk=bullet.id %}"
+      hx-post="{% url 'cold_apply:update_bullet' pk=bullet.id %}"
+      method="post"
+      hx-boost="true"
+      >
+      {% csrf_token %}
+
+
+      {{form.text|input_class:"w-100"|input_styles:"height:100px"}}
+      {{form.skills}}
+      {{form.skills.errors}}
+      
+    <button type="submit">Update Bullet</button>
+    <button type="button" hx-get="{% url 'cold_apply:bullet_detail' pk=bullet.id %}" hx-target="closest form" hx-swap="outerHTML">Cancel</button>
+</form>

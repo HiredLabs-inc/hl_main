@@ -1,0 +1,14 @@
+{% load form_helpers %}
+
+<form action="{% url 'cold_apply:create_bullet' experience_pk=experience.id %}"
+      method="post"
+      hx-boost="true"
+      
+      >
+      {% csrf_token %}
+
+    {{form.text|input_class:"w-100"|input_styles:"height:100px"}}
+    {{form.skills}}
+    <button type="submit">Add Bullet</button>
+    <button type="button" hx-on="click: this.closest('form').remove()">Cancel</button>
+</form>

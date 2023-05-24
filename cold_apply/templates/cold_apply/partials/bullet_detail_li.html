@@ -1,0 +1,11 @@
+<li>{{ bullet.text }}
+    <a href="{% url 'cold_apply:update_bullet' pk=bullet.id %}"
+        hx-get="{% url 'cold_apply:update_bullet' pk=bullet.id %}"
+        hx-target="closest li"
+        hx-swap="outerHTML"
+    >[edit]</a>
+    <a hx-confirm="Delete bullet point?" hx-boost="true" href="{% url 'cold_apply:delete_bullet' pk=bullet.id %}" hx-swap="innerHTML show:no-scroll">[delete]</a>
+    {% for skill in bullet.skills.all %}
+    <small class="badge rounded-pill text-bg-success">{{skill}}</small>
+    {% endfor %}
+</li>

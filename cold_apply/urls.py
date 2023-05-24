@@ -1,8 +1,8 @@
 from django.urls import path
 
-from .views import ParticipantListView, PhaseListView, ParticipantDetailView, JobDetailView, \
+from .views import BulletDetailView, ParticipantListView, PhaseListView, ParticipantDetailView, JobDetailView, \
     JobCreateView, OrganizationCreateView, TitleCreateView, ConfirmCreateView, JobUpdateView, \
-    TitleUpdateView, OrganizationUpdateView, delete_job, refresh_keywords, create_participant, update_participant, \
+    TitleUpdateView, OrganizationUpdateView, create_bullet_view, delete_job, refresh_keywords, create_participant, update_participant, \
     ParticipantExperienceCreateView, TailoredResumeView, ExperienceCreateView, BulletCreateView, \
     OverviewCreateView, ParticipantOverviewCreateView, OverviewUpdateView, BulletUpdateView, ExperienceUpdateView, \
     ParticipantExperienceListView, delete_exp, ParticipantExperienceUpdateView, EducationCreateView, \
@@ -91,12 +91,13 @@ urlpatterns += [
 
 # Bullets CRUD
 urlpatterns += [
-    path('participant/<int:pk>/experience/<int:experience_pk>/add_bullet/', BulletCreateView.as_view(),
+    path('experience/<int:experience_pk>/add_bullet/', create_bullet_view,
          name='create_bullet'),
     path('bullets/confirm_add/', ConfirmCreateView.as_view(), name='confirm_add_bullet'),
-    path('experience/<int:experience_pk>/bullets/<int:pk>/update/', BulletUpdateView.as_view(), name='update_bullet'),
+    path('bullets/<int:pk>/update/', BulletUpdateView.as_view(), name='update_bullet'),
     path('bullets/confirm_update/', ConfirmCreateView.as_view(), name='confirm_update_bullet'),
-    path('bullets/participant/<int:participant_id>/delete/<int:pk>/', delete_bullet, name='delete_bullet'),
+    path('bullets/<int:pk>/delete', delete_bullet, name='delete_bullet'),
+    path('bullets/<int:pk>', BulletDetailView.as_view(), name='bullet_detail')
 ]
 
 # Overviews CRUD

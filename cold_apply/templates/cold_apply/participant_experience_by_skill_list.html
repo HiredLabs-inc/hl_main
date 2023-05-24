@@ -1,0 +1,26 @@
+{% extends 'staff.html' %}
+{% load tz %}
+{% get_current_timezone as TIME_ZONE %}
+
+{% block title %}
+    <h1>Participant Experiences</h1>
+    <h6>Participant: {{ participant.name }}</h6>
+    <p class="text-muted">Data retrieved on {{ now|date }} at {{ now|time }} {{ TIME_ZONE }}</p>
+
+    <div class="mb-4">
+        <div>
+            Layout:
+        </div>
+        <div>
+            <span class="fw-bolder">Chronological</span> | <a href="#">By Skill</a>
+        </div>
+    </div>
+{% endblock %}
+
+
+
+{% block content %}
+    {% for bullet in bullets%} 
+        {{bullet}}
+    {% endfor %}
+{% endblock %}

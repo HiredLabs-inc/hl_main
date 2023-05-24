@@ -140,3 +140,4 @@ output/
 
 static_files/
 .idea/
+.vscode
