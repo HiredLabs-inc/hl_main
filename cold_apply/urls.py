@@ -14,7 +14,6 @@ from .views import (
     JobUpdateView,
     TitleUpdateView,
     OrganizationUpdateView,
-    create_bullet_view,
     delete_job,
     refresh_keywords,
     create_participant,
