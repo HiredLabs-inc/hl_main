@@ -21,10 +21,10 @@
                 {{ exp.end_date }}
             {% endif %}
             <br>
-            <a href="{% url 'cold_apply:update_participant_experience' participant_pk=participant.id pk=exp.id %}"
+            <a href="{% url 'cold_apply:update_experience' pk=exp.id %}"
                target="_blank">Update Experience</a>
             <br>
-            <a href="{% url 'cold_apply:delete_experience' participant.id exp.id %}">Delete Experience</a>
+            <a href="{% url 'cold_apply:delete_experience' exp.id %}">Delete Experience</a>
             {%  if bullets %}
                 <ul>
                 {%  for bullet in bullets %}
@@ -32,7 +32,7 @@
                         <li>{{ bullet.text }}
                             <a href="{% url 'cold_apply:update_bullet' pk=bullet.id experience_pk=bullet.experience_id %}"
                                target="_blank">[edit]</a>
-                            <a href="{% url 'cold_apply:delete_bullet' participant_id=participant.id pk=bullet.id %}">[delete]</a>
+                            <a href="{% url 'cold_apply:delete_bullet' pk=bullet.id %}">[delete]</a>
                         </li>
                     {% endif %}
                 {% endfor %}
