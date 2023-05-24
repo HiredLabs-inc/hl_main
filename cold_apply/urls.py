@@ -196,7 +196,7 @@ urlpatterns += [
 urlpatterns += [
     path(
         "experience/<int:experience_pk>/add_bullet/",
-        create_bullet_view,
+        BulletCreateView.as_view(),
         name="create_bullet",
     ),
     path(

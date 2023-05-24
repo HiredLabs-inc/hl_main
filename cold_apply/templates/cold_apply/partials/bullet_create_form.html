@@ -2,7 +2,8 @@
 
 <form action="{% url 'cold_apply:create_bullet' experience_pk=experience.id %}"
       method="post"
-      hx-boost="true"
+      hx-target="this"
+      hx-post="{% url 'cold_apply:create_bullet' experience_pk=experience.id %}"
       
       >
       {% csrf_token %}

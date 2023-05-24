@@ -6,6 +6,7 @@ from .models import (
     Interaction,
     Job,
     Phase,
+    Skill,
     Step,
     KeywordAnalysis,
     WeightedBullet,
@@ -58,6 +59,7 @@ class WeightedBulletAdmin(admin.ModelAdmin):
     list_display = ("participant", "position", "bullet", "weight")
     list_filter = ("participant", "position", "bullet", "weight")
     search_fields = ("participant", "position", "bullet", "weight")
+
 
 class ParticipantAdmin(admin.ModelAdmin):
     list_display = (
@@ -147,6 +149,11 @@ class KeywordAnalysisAdmin(admin.ModelAdmin):
     list_display = ("id", "job", "unigram", "bigram", "trigram")
     list_filter = ("job", "unigram", "bigram", "trigram")
     search_fields = ("job", "unigram", "bigram", "trigram")
+
+
+@admin.register(Skill)
+class SkillAdmin(admin.ModelAdmin):
+    pass
 
 
 admin.site.register(State, StateAdmin)

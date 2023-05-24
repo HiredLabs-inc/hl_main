@@ -675,49 +675,14 @@ class ExperienceUpdateView(LoginRequiredMixin, UpdateView):
 # TODO: ExperienceDetailView
 
 
-def create_bullet_view(request, experience_pk):
-    experience = get_object_or_404(Experience, pk=experience_pk)
-
-    bullet_form = BulletForm
-
-    if request.method == "POST":
-        form = bullet_form(request.POST)
-        if form.is_valid():
-            form.instance.experience = experience
-            form.instance.type = "Work"
-            bullet = form.save()
-            context = {
-                "bullet": bullet,
-            }
-            if "Hx-Request" in request.headers:
-                response = HttpResponse("", headers={"Hx-Refresh": "true"})
-                return response
-
-            return redirect(
-                reverse(
-                    "cold_apply:participant_experience_list",
-                    kwargs={"pk": bullet.experience.participant.first().id},
-                ),
-            )
-
-    else:
-        form = bullet_form()
-
-    context = {"form": form, "experience": experience}
-    if "Hx-Request" in request.headers:
-        return render(
-            request,
-            "cold_apply/partials/bullet_create_form.html",
-            context=context,
-        )
-
-    return render(request, "cold_apply/bullet_create.html", context=context)
-
-
-class BulletCreateView(LoginRequiredMixin, CreateView):
+class BulletCreateView(HtmxViewMixin, LoginRequiredMixin, CreateView):
     model = Bullet
     template_name = "cold_apply/bullet_create.html"
-    fields = ["text"]
+    htmx_template = "cold_apply/partials/bullet_create_form.html"
+    form_class = BulletForm
+
+    def get_success_url(self) -> str:
+        return reverse("cold_apply:bullet_detail", kwargs={"pk": self.object.id})
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -728,15 +693,31 @@ class BulletCreateView(LoginRequiredMixin, CreateView):
         return context
 
     def form_valid(self, form):
-        if form.is_valid():
-            bullet = form.save(commit=False)
-            bullet.experience = Experience.objects.get(id=self.kwargs["experience_pk"])
-            bullet.type = "Work"
-            bullet.save()
-            return redirect(reverse("cold_apply:confirm_add_bullet"))
-        else:
-            print(form.errors)
-        return super().form_valid(form)
+        form.instance.experience = Experience.objects.get(
+            id=self.kwargs["experience_pk"]
+        )
+        form.instance.type = "Work"
+        response = super().form_valid(form)
+
+        if "Hx-Request" in self.request.headers:
+            # already on the experience list page so just
+            # refresh on successful create to update the list
+            return HttpResponse(
+                headers={
+                    "HX-Refresh": "true",
+
+                    # Could use HX-Redirect as it does the same but it causes a scroll to top
+                    # so HX-Refresh looks better, use HX-Redirect if
+                    # you need full page reload navigation to somewhere else e.g:
+
+                    # "HX-Redirect": reverse(
+                    #     "cold_apply:participant_experience_list",
+                    #     kwargs={"pk": self.object.experience.participant_id},
+                    # )
+                }
+            )
+
+        return response
 
 
 class BulletUpdateView(HtmxViewMixin, LoginRequiredMixin, UpdateView):
@@ -748,26 +729,12 @@ class BulletUpdateView(HtmxViewMixin, LoginRequiredMixin, UpdateView):
     def get_success_url(self) -> str:
         return reverse("cold_apply:bullet_detail", kwargs={"pk": self.object.id})
 
-    def get_template_names(self):
-        if self.request.headers.get("Hx-Request"):
-            return [self.htmx_template]
-        return [self.template_name]
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["experience"] = self.object.experience
         context["now"] = timezone.now()
 
         return context
-
-    def form_valid(self, form):
-        if "Hx-Request" in self.request.headers:
-            bullet = form.save()
-            return redirect(
-                reverse("cold_apply:bullet_detail", kwargs={"pk": bullet.id})
-            )
-
-        return super().form_valid(form)
 
 
 # TODO: BulletDetailView
