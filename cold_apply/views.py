@@ -1,12 +1,8 @@
 import datetime
-from typing import Any, Dict, List
-
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Count, Q
-from django.db.models.query import QuerySet
-from django.forms.models import BaseModelForm
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render, redirect
 from django.forms import inlineformset_factory
 from django.forms import models as model_forms
@@ -42,18 +38,13 @@ from .models import (
     Job,
     Phase,
     KeywordAnalysis,
-    ParticipantExperience,
     WeightedBullet,
     BulletKeyword,
-    ParticipantOverview,
-    ParticipantEducation,
-    Location,
     Applicant,
 )
 from .static.scripts.keyword_analyzer.keyword_analyzer import (
     analyze,
     hook_after_jd_analysis,
-    hook_after_bullet_analysis,
 )
 from .static.scripts.resume_writer.bullet_weighter import weigh, hook_after_weighting
 from .static.scripts.resume_writer.file_writer import write_resume
@@ -154,9 +145,7 @@ class ParticipantDetailView(LoginRequiredMixin, DetailView):
             rejected=Count("pk", filter=Q(status_reason="Candidate Rejected")),
         )
         latest_experience = (
-            Experience.objects.filter(
-                participantexperience__participant_id=self.kwargs["pk"]
-            )
+            Experience.objects.filter(participant_id=self.kwargs["pk"])
             .order_by("-start_date")
             .first()
         )
@@ -164,7 +153,7 @@ class ParticipantDetailView(LoginRequiredMixin, DetailView):
         context["jobs"] = jobs
         context["totals"] = totals
         context["highest_edu"] = Education.objects.filter(
-            participanteducation__participant_id=self.kwargs["pk"]
+            participant_id=self.kwargs["pk"]
         )
         context["now"] = timezone.now()
 
@@ -380,7 +369,7 @@ def delete_job(request, pk):
 
 
 class ParticipantExperienceListView(LoginRequiredMixin, ListView):
-    model = ParticipantExperience
+    model = Experience
     template_name = "cold_apply/participant_experience_list.html"
     context_object_name = "experiences"
     paginate_by = 10
@@ -389,31 +378,26 @@ class ParticipantExperienceListView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         participant = Participant.objects.get(id=self.kwargs["pk"])
         context["participant"] = participant
-        context["education"] = ParticipantEducation.objects.filter(
-            participant=participant
-        )
-        context["bullets"] = Bullet.objects.filter(
-            experience__participantexperience__participant=participant
-        )
+        context["education"] = Education.objects.filter(participant=participant)
+        context["bullets"] = Bullet.objects.filter(experience__participant=participant)
         context["now"] = timezone.now()
 
         return context
 
     def get_queryset(self):
-        return Experience.objects.filter(
-            participantexperience__participant_id=self.kwargs["pk"]
-        ).order_by("-start_date")
+        return Experience.objects.filter(participant_id=self.kwargs["pk"]).order_by(
+            "-start_date"
+        )
+
 
 class ParticipantExperienceBySkillListView(LoginRequiredMixin, ListView):
     model = Bullet
     template_name = "cold_apply/participant_experience_by_skill_list.html"
     context_object_name = "bullets"
 
-    def get_queryset(self) -> QuerySet[Any]:
+    def get_queryset(self):
+        return self.model.objects.filter(experience__participant__id=self.kwargs["pk"])
 
-        return self.model.objects.filter(
-            experience__participant__id=self.kwargs['pk']
-        )
 
 class EducationCreateView(LoginRequiredMixin, CreateView):
     model = Education
@@ -465,35 +449,6 @@ class EducationUpdateView(LoginRequiredMixin, UpdateView):
         return super().form_valid(form)
 
 
-class ParticipantEducationCreateView(LoginRequiredMixin, CreateView):
-    model = ParticipantEducation
-    template_name = "cold_apply/participanteducation_create.html"
-    fields = []
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["participant"] = Participant.objects.get(id=self.kwargs["pk"])
-        context["education"] = Education.objects.get(id=self.kwargs["education_pk"])
-        context["now"] = timezone.now()
-
-        return context
-
-    def form_valid(self, form):
-        if form.is_valid():
-            participant_education = form.save(commit=False)
-            participant_education.participant = Participant.objects.get(
-                id=self.kwargs["pk"]
-            )
-            participant_education.education = Education.objects.get(
-                id=self.kwargs["education_pk"]
-            )
-            participant_education.save()
-            return redirect(reverse("cold_apply:confirm_add_education"))
-        else:
-            print(form.errors)
-        return super().form_valid(form)
-
-
 class ConcentrationCreateView(LoginRequiredMixin, CreateView):
     model = Concentration
     template_name = "cold_apply/concentration_create.html"
@@ -515,75 +470,41 @@ class ConcentrationCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-# TODO: ParticipantExperienceUpdateView
-class ParticipantExperienceUpdateView(LoginRequiredMixin, UpdateView):
-    model = Experience
-    template_name = "cold_apply/participant_exp_update.html"
-    fields = ["start_date", "end_date", "org", "position"]
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["experience"] = Experience.objects.get(id=self.kwargs["pk"])
-        context["participant"] = Participant.objects.get(
-            id=self.kwargs["participant_pk"]
-        )
-        context["now"] = timezone.now()
-
-        return context
-
-    def form_valid(self, form):
-        if form.is_valid():
-            experience = form.save(commit=False)
-            experience.save()
-            return redirect(reverse("cold_apply:confirm_update_experience"))
-        else:
-            print(form.errors)
-        return super().form_valid(form)
-
-
 @login_required
-def delete_exp(request, participant_id, pk):
-    ParticipantExperience.objects.filter(participant_id=participant_id).filter(
-        experience=pk
-    ).delete()
-    Experience.objects.get(id=pk).delete()
+def delete_exp(request, pk):
+    exp = get_object_or_404(Experience, pk=pk)
+    participant_id = exp.participant_id
+
+    exp.delete()
     return redirect(
         reverse("cold_apply:participant_experience_list", kwargs={"pk": participant_id})
     )
 
 
 @login_required
-def delete_education(request, participant_id, pk):
-    ParticipantEducation.objects.filter(participant_id=participant_id).filter(
-        education=pk
-    ).delete()
-    Education.objects.get(id=pk).delete()
+def delete_education(request, pk):
+    education = get_object_or_404(Education, pk=pk)
+    participant_id = education.participant_id
+    education.delete()
     return redirect(
         reverse("cold_apply:participant_experience_list", kwargs={"pk": participant_id})
     )
-
-
-class ParticipantBullet:
-    pass
 
 
 @login_required
 def delete_bullet(request, pk):
     WeightedBullet.objects.filter(bullet=pk).delete()
     BulletKeyword.objects.filter(bullet=pk).delete()
-    bullet = Bullet.objects.prefetch_related("experience__participant").get(id=pk)
-    participant_id = bullet.experience.participant.first().id
+    bullet = Bullet.objects.select_related("experience").get(id=pk)
+    participant_id = bullet.experience.participant_id
     bullet.delete()
     return redirect(
-        reverse(
-            "cold_apply:participant_experience_list",
-            kwargs={"pk": participant_id},
-        )
+        reverse("cold_apply:participant_experience_list", kwargs={"pk": participant_id})
     )
 
 
 class TailoredResumeView(LoginRequiredMixin, ListView):
-    model = ParticipantExperience
+    model = Experience
     template_name = "resume/index.html"
     context_object_name = "Experiences"
 
@@ -596,7 +517,7 @@ class TailoredResumeView(LoginRequiredMixin, ListView):
         if WeightedBullet.objects.filter(participant=self.kwargs["pk"]).exists():
             WeightedBullet.objects.filter(participant=self.kwargs["pk"]).delete()
         experiences = Experience.objects.filter(
-            participantexperience__participant_id=self.kwargs["pk"]
+            participant_id=self.kwargs["pk"]
         ).order_by("-start_date")
         weight_set = dict()
         # Get relevant bullets for each experience
@@ -631,9 +552,6 @@ class TailoredResumeView(LoginRequiredMixin, ListView):
             )
             exp_weight = {exp.id: top_bullets}
             weight_set.update(exp_weight)
-        context["participant_experiences"] = ParticipantExperience.objects.filter(
-            participant=self.kwargs["pk"]
-        )
         context["experiences"] = experiences
         context["job"] = job
         context["title"] = position.title
@@ -644,59 +562,12 @@ class TailoredResumeView(LoginRequiredMixin, ListView):
             .order_by("-weight")
         )
         context["overview"] = Overview.objects.filter(
-            participantoverview__participant_id=self.kwargs["pk"]
+            participant_id=self.kwargs["pk"]
         ).filter(title_id=position.id)
         context["participant"] = participant
-        context["education"] = ParticipantEducation.objects.filter(
-            participant=self.kwargs["pk"]
-        )
+        context["education"] = Education.objects.filter(participant=self.kwargs["pk"])
         context["now"] = timezone.now()
         write_resume(context)
-        return context
-
-
-class ParticipantExperienceCreateView(LoginRequiredMixin, CreateView):
-    model = ParticipantExperience
-    template_name = "cold_apply/participantexperience_create.html"
-    fields = []
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["participant"] = Participant.objects.get(id=self.kwargs["pk"])
-        context["experience"] = Experience.objects.get(id=self.kwargs["experience_pk"])
-        context["now"] = timezone.now()
-
-        return context
-
-    def form_valid(self, form):
-        if form.is_valid():
-            participant_experience = form.save(commit=False)
-            participant_experience.participant = Participant.objects.get(
-                id=self.kwargs["pk"]
-            )
-            participant_experience.experience = Experience.objects.get(
-                id=self.kwargs["experience_pk"]
-            )
-            participant_experience.save()
-            return redirect(reverse("cold_apply:confirm_add_experience"))
-        else:
-            print(form.errors)
-        return super().form_valid(form)
-
-
-class ParticipantExperinceUpdateView(LoginRequiredMixin, UpdateView):
-    model = Experience
-    template_name = "cold_apply/participant_exp_update.html"
-    fields = ["start_date", "end_date", "org", "position"]
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["experience"] = Experience.objects.get(id=self.kwargs["pk"])
-        context["participant"] = Participant.objects.get(
-            id=self.kwargs["participant_pk"]
-        )
-        context["now"] = timezone.now()
-
         return context
 
 
@@ -721,39 +592,10 @@ class OverviewCreateView(LoginRequiredMixin, CreateView):
             overview.save()
             return redirect(
                 reverse(
-                    "cold_apply:create_participant_overview",
-                    kwargs={"pk": self.kwargs["pk"], "overview_pk": overview.id},
+                    "cold_apply:index",
+                    # kwargs={"pk": self.kwargs["pk"], "overview_pk": overview.id},
                 )
             )
-        else:
-            print(form.errors)
-        return super().form_valid(form)
-
-
-class ParticipantOverviewCreateView(LoginRequiredMixin, CreateView):
-    model = ParticipantOverview
-    template_name = "cold_apply/participantoverview_create.html"
-    fields = []
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["participant"] = Participant.objects.get(id=self.kwargs["pk"])
-        context["overview"] = Overview.objects.get(id=self.kwargs["overview_pk"])
-        context["now"] = timezone.now()
-
-        return context
-
-    def form_valid(self, form):
-        if form.is_valid():
-            participant_overview = form.save(commit=False)
-            participant_overview.participant = Participant.objects.get(
-                id=self.kwargs["pk"]
-            )
-            participant_overview.overview = Overview.objects.get(
-                id=self.kwargs["overview_pk"]
-            )
-            participant_overview.save()
-            return redirect(reverse("cold_apply:confirm_add_overview"))
         else:
             print(form.errors)
         return super().form_valid(form)
@@ -795,18 +637,15 @@ class ExperienceCreateView(LoginRequiredMixin, CreateView):
         return context
 
     def form_valid(self, form):
-        if form.is_valid():
-            experience = form.save(commit=False)
-            experience.save()
-            return redirect(
-                reverse(
-                    "cold_apply:confirm_add_participant_experience",
-                    kwargs={"pk": self.kwargs["pk"], "experience_pk": experience.id},
-                )
+        form.instance.participant_id = self.kwargs["pk"]
+        experience = form.save()
+
+        return redirect(
+            reverse(
+                "cold_apply:participant_experience_list",
+                kwargs={"pk": self.kwargs["pk"]},
             )
-        else:
-            print(form.errors)
-        return super().form_valid(form)
+        )
 
 
 # TODO: ExperienceUpdateView
@@ -909,7 +748,7 @@ class BulletUpdateView(HtmxViewMixin, LoginRequiredMixin, UpdateView):
     def get_success_url(self) -> str:
         return reverse("cold_apply:bullet_detail", kwargs={"pk": self.object.id})
 
-    def get_template_names(self) -> List[str]:
+    def get_template_names(self):
         if self.request.headers.get("Hx-Request"):
             return [self.htmx_template]
         return [self.template_name]
@@ -924,11 +763,10 @@ class BulletUpdateView(HtmxViewMixin, LoginRequiredMixin, UpdateView):
     def form_valid(self, form):
         if "Hx-Request" in self.request.headers:
             bullet = form.save()
-            return render(
-                self.request,
-                "cold_apply/partials/bullet_detail_li.html",
-                context={"bullet": bullet},
+            return redirect(
+                reverse("cold_apply:bullet_detail", kwargs={"pk": bullet.id})
             )
+
         return super().form_valid(form)
 
 

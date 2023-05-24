@@ -1,8 +1,8 @@
 from django import forms
 
-from resume.models import Bullet
+from resume.models import Bullet, Experience
 
-from .models import Participant, Interaction, Experience, Applicant, Skill
+from .models import Participant, Interaction, Applicant, Skill
 
 
 class ParticipantForm(forms.ModelForm):

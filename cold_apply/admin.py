@@ -6,15 +6,10 @@ from .models import (
     Interaction,
     Job,
     Phase,
-    Skill,
-    SkillBullet,
     Step,
     KeywordAnalysis,
-    ParticipantExperience,
-    ParticipantOverview,
     WeightedBullet,
     BulletKeyword,
-    ParticipantEducation,
     Applicant,
     State,
 )
@@ -53,12 +48,6 @@ class ApplicantAdmin(admin.ModelAdmin):
     )
 
 
-class ParticipantEducationAdmin(admin.ModelAdmin):
-    list_display = ("participant", "education")
-    list_filter = ("participant", "education")
-    search_fields = ("participant", "education")
-
-
 class BulletKeywordAdmin(admin.ModelAdmin):
     list_display = ("bullet", "unigram", "bigram", "trigram")
     list_filter = ("bullet", "unigram", "bigram", "trigram")
@@ -69,19 +58,6 @@ class WeightedBulletAdmin(admin.ModelAdmin):
     list_display = ("participant", "position", "bullet", "weight")
     list_filter = ("participant", "position", "bullet", "weight")
     search_fields = ("participant", "position", "bullet", "weight")
-
-
-class ParticipantOverviewAdmin(admin.ModelAdmin):
-    list_display = ("participant", "overview")
-    list_filter = ("participant", "overview")
-    search_fields = ("participant", "overview")
-
-
-class ParticipantExperienceAdmin(admin.ModelAdmin):
-    list_display = ("participant", "experience")
-    list_filter = ("participant", "experience")
-    search_fields = ("participant", "experience")
-
 
 class ParticipantAdmin(admin.ModelAdmin):
     list_display = (
@@ -173,22 +149,10 @@ class KeywordAnalysisAdmin(admin.ModelAdmin):
     search_fields = ("job", "unigram", "bigram", "trigram")
 
 
-@admin.register(Skill)
-class SkillAdmin(admin.ModelAdmin):
-    pass
-
-
-@admin.register(SkillBullet)
-class SkillBulletAdmin(admin.ModelAdmin):
-    pass
-
-
 admin.site.register(State, StateAdmin)
 admin.site.register(Applicant, ApplicantAdmin)
 admin.site.register(BulletKeyword, BulletKeywordAdmin)
 admin.site.register(WeightedBullet, WeightedBulletAdmin)
-admin.site.register(ParticipantOverview, ParticipantOverviewAdmin)
-admin.site.register(ParticipantExperience, ParticipantExperienceAdmin)
 admin.site.register(KeywordAnalysis, KeywordAnalysisAdmin)
 admin.site.register(Phase, PhaseAdmin)
 admin.site.register(Step, StepAdmin)

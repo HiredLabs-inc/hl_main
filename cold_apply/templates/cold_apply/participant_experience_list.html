@@ -33,10 +33,10 @@
                 {{ exp.end_date }}
             {% endif %}
             <br>
-            <a href="{% url 'cold_apply:update_participant_experience' participant_pk=participant.id pk=exp.id %}"
-            target="_blank">Update Experience</a>
+            <a href="{% url 'cold_apply:update_experience' pk=exp.id %}"
+               target="_blank">Update Experience</a>
             <br>
-            <a href="{% url 'cold_apply:delete_experience' participant.id exp.id %}">Delete Experience</a>
+            <a href="{% url 'cold_apply:delete_experience' exp.id %}">Delete Experience</a>
             {%  if bullets %}
                 <ul id="bullets_list_{{exp.id}}">
                 {%  for bullet in bullets %}

@@ -6,6 +6,9 @@ class Overview(models.Model):
     title = models.ForeignKey(
         "Position", on_delete=models.CASCADE, default=None, null=True
     )
+    participant = models.ForeignKey(
+        "cold_apply.Participant", on_delete=models.CASCADE
+    )
 
     def __str__(self):
         return self.title.title
@@ -62,14 +65,8 @@ class Experience(models.Model):
     end_date = models.DateField(null=True, blank=True)
     org = models.ForeignKey(Organization, on_delete=models.CASCADE)
     position = models.ForeignKey(Position, on_delete=models.CASCADE)
-    
-    participant = models.ManyToManyField(
-        through="cold_apply.ParticipantExperience",
-        to="cold_apply.Participant",
-        through_fields=(
-            "experience",
-            "participant",
-        ),
+    participant = models.ForeignKey(
+        "cold_apply.Participant", on_delete=models.CASCADE
     )
 
     def __str__(self):
@@ -93,6 +90,9 @@ class Education(models.Model):
     org = models.ForeignKey(Organization, on_delete=models.CASCADE)
     degree = models.ForeignKey(Degree, on_delete=models.CASCADE)
     concentration = models.ForeignKey(Concentration, on_delete=models.CASCADE)
+    participant = models.ForeignKey(
+        "cold_apply.Participant", on_delete=models.CASCADE
+    )
 
     def __str__(self):
         return "{}: {}, {}".format(self.org, self.degree, self.concentration)
