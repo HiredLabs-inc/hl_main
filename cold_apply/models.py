@@ -193,9 +193,14 @@ class WeightedBullet(models.Model):
 
     def __str__(self):
         return f"{self.participant.name}: {self.position.title} {self.bullet.text} ({self.weight})"
+    
+    @property
+    def weight_display(self):
+        return f"({self.weight})"
 
     class Meta:
         verbose_name_plural = "Weighted Bullets"
+        ordering = ['-weight']
 
 
 class BulletKeyword(models.Model):

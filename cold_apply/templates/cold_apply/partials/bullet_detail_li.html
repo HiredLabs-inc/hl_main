@@ -1,3 +1,4 @@
+{% with show_skill_badges=show_skill_badges|default:False show_experience_subtext=show_experience_subtext|default:False %}
 <li>{{ bullet.text }}
     <a href="{% url 'cold_apply:update_bullet' pk=bullet.id %}"
         hx-get="{% url 'cold_apply:update_bullet' pk=bullet.id %}"
@@ -5,7 +6,14 @@
         hx-swap="outerHTML"
     >[edit]</a>
     <a hx-confirm="Delete bullet point?" hx-boost="true" href="{% url 'cold_apply:delete_bullet' pk=bullet.id %}" hx-swap="innerHTML show:no-scroll">[delete]</a>
-    {% for skill in bullet.skills.all %}
-    <small class="badge rounded-pill text-bg-success">{{skill}}</small>
-    {% endfor %}
+    {% if show_skill_badges %}
+        {% for skill in bullet.skills.all %}
+        <small class="badge rounded-pill text-bg-success">{{skill}}</small>
+        {% endfor %}
+    {% endif %}
+    {% if show_experience_subtext %}
+        <small class="text-muted">({{bullet.experience}})</small>
+    {% endif %}
+    {{extra_text}}
 </li>
+{% endwith %}

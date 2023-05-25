@@ -12,7 +12,7 @@
             Layout:
         </div>
         <div>
-            <span class="fw-bolder">Chronological</span> | <a href="#">By Skill</a>
+            <span class="fw-bolder">Chronological</span> | <a href="{% url 'cold_apply:participant_experience_by_skill_list' participant.id %}">By Skill</a>
         </div>
     </div>
 {% endblock %}
@@ -41,7 +41,7 @@
                 <ul id="bullets_list_{{exp.id}}">
                 {%  for bullet in bullets %}
                     {% if bullet.experience == exp %}
-                        {% include 'cold_apply/partials/bullet_detail_li.html' %}
+                        {% include 'cold_apply/partials/bullet_detail_li.html' with show_skill_badges=True %}
                     {% endif %}
                 {% endfor %}
                 </ul>

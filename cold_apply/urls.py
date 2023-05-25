@@ -2,6 +2,7 @@ from django.urls import path
 
 from .views import (
     BulletDetailView,
+    ParticipantExperienceBySkillListView,
     ParticipantExperienceListView,
     ParticipantListView,
     PhaseListView,
@@ -17,8 +18,8 @@ from .views import (
     delete_job,
     refresh_keywords,
     create_participant,
+    tailored_resume_view,
     update_participant,
-    TailoredResumeView,
     ExperienceCreateView,
     BulletCreateView,
     OverviewCreateView,
@@ -116,8 +117,13 @@ urlpatterns += [
         name="participant_experience_list",
     ),
     path(
-        "participant/<int:pk>/job/<int:job_pk>",
-        TailoredResumeView.as_view(),
+        "participant/<int:pk>/experience_skills",
+        ParticipantExperienceBySkillListView.as_view(),
+        name="participant_experience_by_skill_list"
+    ),
+    path(
+        "job/<int:job_pk>",
+        tailored_resume_view,
         name="tailored_resume",
     ),
 ]

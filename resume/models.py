@@ -70,7 +70,7 @@ class Experience(models.Model):
     )
 
     def __str__(self):
-        return f"{self.org}: {self.position}, {self.start_date} - {self.end_date}"
+        return f"{self.org}: {self.position}, {self.start_date} - {self.end_date or 'Present'}"
 
 
 class Bullet(models.Model):

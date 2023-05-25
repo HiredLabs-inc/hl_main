@@ -156,7 +156,7 @@ def weigh(jd_keywords: object, bullet: object):
         'weight': [weight]
     }
     main_df = pd.DataFrame.from_dict(data)
-    print('Weighting completed successfully')
+    # print('Weighting completed successfully')
     return main_df.to_json(orient='index')
 
 
@@ -175,4 +175,5 @@ def hook_after_weighting(task, position_id: int, participant_id: int, bullet_id:
     result = json.dumps(serialized)
     for obj in serializers.deserialize('json', result):
         obj.save()
-    print('Weighting hook completed successfully')
+    return obj.object
+    # print('Weighting hook completed successfully')

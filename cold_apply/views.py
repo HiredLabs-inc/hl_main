@@ -1,4 +1,6 @@
 import datetime
+from pprint import pprint
+from typing import Any, Dict
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Count, Q
@@ -14,6 +16,10 @@ from django.views.generic import (
     CreateView,
     UpdateView,
     TemplateView,
+)
+from cold_apply.resume_formatting import (
+    group_bullets_by_experience,
+    group_bullets_by_skill,
 )
 from hl_main.mixins import HtmxViewMixin
 
@@ -38,6 +44,7 @@ from .models import (
     Job,
     Phase,
     KeywordAnalysis,
+    Skill,
     WeightedBullet,
     BulletKeyword,
     Applicant,
@@ -47,7 +54,11 @@ from .static.scripts.keyword_analyzer.keyword_analyzer import (
     hook_after_jd_analysis,
 )
 from .static.scripts.resume_writer.bullet_weighter import weigh, hook_after_weighting
-from .static.scripts.resume_writer.file_writer import write_resume
+from .static.scripts.resume_writer.file_writer import (
+    write_chronological_resume,
+    write_resume,
+    write_skills_resume,
+)
 
 
 # Index
@@ -391,12 +402,27 @@ class ParticipantExperienceListView(LoginRequiredMixin, ListView):
 
 
 class ParticipantExperienceBySkillListView(LoginRequiredMixin, ListView):
-    model = Bullet
+    model = Skill
     template_name = "cold_apply/participant_experience_by_skill_list.html"
-    context_object_name = "bullets"
+    context_object_name = "skills"
+
+    def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
+        return {
+            **super().get_context_data(**kwargs),
+            "participant": Participant.objects.get(pk=self.kwargs["pk"]),
+            "uncategorised_bullets": Bullet.objects.filter(
+                experience__participant_id=self.kwargs["pk"], skills__isnull=True
+            ),
+        }
 
     def get_queryset(self):
-        return self.model.objects.filter(experience__participant__id=self.kwargs["pk"])
+        # get all skills for participant with tagged bullets
+        # bullets can duplicate within skills
+        return (
+            self.model.objects.prefetch_related("bullet_set")
+            .filter(bullet__experience__participant_id=self.kwargs["pk"])
+            .distinct()
+        )
 
 
 class EducationCreateView(LoginRequiredMixin, CreateView):
@@ -503,72 +529,98 @@ def delete_bullet(request, pk):
     )
 
 
-class TailoredResumeView(LoginRequiredMixin, ListView):
-    model = Experience
+class TailoredResumView(LoginRequiredMixin, DetailView):
+    model = Job
     template_name = "resume/index.html"
-    context_object_name = "Experiences"
+    context_object_name = "job"
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data()
-        job = Job.objects.get(id=self.kwargs["job_pk"])
-        participant = Participant.objects.filter(id=self.kwargs["pk"])
-        position = Position.objects.get(job=self.kwargs["job_pk"])
-        # Clear existing weighted bullets
-        if WeightedBullet.objects.filter(participant=self.kwargs["pk"]).exists():
-            WeightedBullet.objects.filter(participant=self.kwargs["pk"]).delete()
-        experiences = Experience.objects.filter(
-            participant_id=self.kwargs["pk"]
-        ).order_by("-start_date")
-        weight_set = dict()
-        # Get relevant bullets for each experience
-        for exp in experiences:
-            bullets = Bullet.objects.filter(experience=exp)
-            keywords = KeywordAnalysis.objects.filter(job_id=job.id)
-            # Weigh each bullet
-            for bullet in bullets:
-                weight = weigh(bullet=bullet, jd_keywords=keywords)
-                hook_after_weighting(
-                    weight,
-                    participant_id=self.kwargs["pk"],
-                    position_id=position.id,
-                    bullet_id=bullet.id,
-                )
-            # Set dynamic cutoff for number of bullets
-            # More recent jobs should have more bullets, older jobs should have fewer
-            cutoff = 1
-            five_years_ago = (timezone.now() - datetime.timedelta(weeks=260)).date()
-            ten_years_ago = (timezone.now() - datetime.timedelta(weeks=520)).date()
-            if exp.end_date is None:
-                cutoff = 5
-            elif exp.end_date > five_years_ago:
-                cutoff = 5
-            elif exp.end_date > ten_years_ago:
-                cutoff = 3
-            # Get top 3 bullets
-            top_bullets = (
-                WeightedBullet.objects.filter(participant=self.kwargs["pk"])
-                .filter(bullet__experience=exp)
-                .order_by("-weight")[:cutoff]
-            )
-            exp_weight = {exp.id: top_bullets}
-            weight_set.update(exp_weight)
-        context["experiences"] = experiences
-        context["job"] = job
-        context["title"] = position.title
-        context["weighted_set"] = weight_set
-        context["weighted_bullets"] = (
-            WeightedBullet.objects.filter(participant=self.kwargs["pk"])
-            .filter(position=position.id)
-            .order_by("-weight")
+    def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+
+
+def weigh_bullets(bullets, job, keywords):
+    for bullet in bullets:
+        weight = weigh(bullet=bullet, jd_keywords=keywords)
+
+        weighted_bullet = hook_after_weighting(
+            weight,
+            participant_id=job.participant.id,
+            position_id=job.title.id,
+            bullet_id=bullet.id,
         )
-        context["overview"] = Overview.objects.filter(
-            participant_id=self.kwargs["pk"]
-        ).filter(title_id=position.id)
-        context["participant"] = participant
-        context["education"] = Education.objects.filter(participant=self.kwargs["pk"])
-        context["now"] = timezone.now()
-        write_resume(context)
-        return context
+
+    return WeightedBullet.objects.filter(bullet_id__in=bullets)
+
+
+@login_required
+def tailored_resume_view(request, job_pk):
+    job = get_object_or_404(
+        Job.objects.select_related("title", "participant").prefetch_related(
+            "keywordanalysis_set"
+        ),
+        pk=job_pk,
+    )
+
+    format_options = ["chronological", "skills"]
+    resume_format = request.GET.get("resume_format", format_options[0])
+    if resume_format not in format_options:
+        resume_format = format_options[0]
+
+    # delete existing weightings
+    WeightedBullet.objects.filter(participant=job.participant).delete()
+
+    bullets = Bullet.objects.filter(experience__participant=job.participant)
+    keywords = job.keywordanalysis_set.all()
+    overview = Overview.objects.filter(participant=job.participant, title=job.title)
+    education = Education.objects.filter(participant=job.participant)
+
+    context = {}
+    weighted_bullets = weigh_bullets(bullets, job, keywords)
+    if resume_format == "chronological":
+        weighted_bullets = weighted_bullets.select_related(
+            "bullet__experience"
+        ).order_by("-weight", "-bullet__experience__start_date")
+
+        context["chronological_experiences"] = group_bullets_by_experience(
+            weighted_bullets
+        )
+
+        write_chronological_resume(
+            job.participant,
+            overview,
+            education,
+            job,
+            context["chronological_experiences"],
+        )
+
+    elif resume_format == "skills":
+        weighted_bullets = list(
+            weighted_bullets.select_related("bullet").prefetch_related("bullet__skills")
+        )
+
+        skills = Skill.objects.filter(
+            bullet__experience__participant=job.participant
+        ).distinct()
+
+        context["skill_list"] = group_bullets_by_skill(weighted_bullets, skills)
+
+        write_skills_resume(
+            job.participant, overview, education, job, context["skill_list"]
+        )
+
+    context.update(
+        {
+            "resume_format": resume_format,
+            "job": job,
+            "title": job.title,
+            "overview": overview,
+            "participant": job.participant,
+            "education": education,
+            "now": timezone.now(),
+        }
+    )
+
+    return render(request, "resume/index.html", context=context)
 
 
 class OverviewCreateView(LoginRequiredMixin, CreateView):
@@ -705,11 +757,9 @@ class BulletCreateView(HtmxViewMixin, LoginRequiredMixin, CreateView):
             return HttpResponse(
                 headers={
                     "HX-Refresh": "true",
-
                     # Could use HX-Redirect as it does the same but it causes a scroll to top
                     # so HX-Refresh looks better, use HX-Redirect if
                     # you need full page reload navigation to somewhere else e.g:
-
                     # "HX-Redirect": reverse(
                     #     "cold_apply:participant_experience_list",
                     #     kwargs={"pk": self.object.experience.participant_id},
@@ -724,6 +774,7 @@ class BulletUpdateView(HtmxViewMixin, LoginRequiredMixin, UpdateView):
     model = Bullet
     template_name = "cold_apply/participant_update.html"
     htmx_template = "cold_apply/partials/bullet_update_form.html"
+    refresh_on_save = True
     form_class = BulletForm
 
     def get_success_url(self) -> str:

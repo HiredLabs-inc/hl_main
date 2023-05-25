@@ -12,7 +12,7 @@
             Layout:
         </div>
         <div>
-            <span class="fw-bolder">Chronological</span> | <a href="#">By Skill</a>
+            <a href="{% url 'cold_apply:participant_experience_list' participant.id %}">Chronological</a> | <span class="fw-bolder">By Skill</span>
         </div>
     </div>
 {% endblock %}
@@ -20,7 +20,29 @@
 
 
 {% block content %}
-    {% for bullet in bullets%} 
-        {{bullet}}
+    <h3>Skills</h3>
+        
+    {% for skill in skills%} 
+        <div class="mb-4">
+            <h5>{{skill}} ({{skill.bullet_set.count}})</h5>
+            <ul>
+            {% for bullet in skill.bullet_set.all %}
+                {% include 'cold_apply/partials/bullet_detail_li.html' with show_experience_subtext=True %}
+            {% endfor %}
+            </ul>
+        </div>
+
+
     {% endfor %}
+    {% if uncategorised_bullets %}
+    <div class="mb-4">
+        <h5>Uncategorised ({{uncategorised_bullets.count}})</h5>
+        <ul>
+        {% for bullet in uncategorised_bullets %}
+        {% include 'cold_apply/partials/bullet_detail_li.html' with show_experience_subtext=True %}
+        {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+   
 {% endblock %}
