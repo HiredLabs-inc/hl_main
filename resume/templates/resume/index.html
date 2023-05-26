@@ -7,19 +7,6 @@
      <p>Targeted to: {{ job.title }} at {{ job.company }} on: {{ now|date }}</p>
     <a href="{{ MEDIA_URL }}resumes/{{ participant.name }}/{{ job.company }}_{{ job.title }}.pdf" target="_blank">See Pdf</a>
 
-    <div class="mb-4">
-        <div>
-            Layout:
-        </div>
-        <div>
-            {% if resume_format == "chronological" %}
-                <span class="fw-bolder">Chronological</span> | <a href="?resume_format=skills">By Skill</a> 
-            {% elif resume_format == "skills" %}
-                <a href="?resume_format=chronological">Chronological</a> | <span class="fw-bolder">By Skill</span>
-            {% endif %}
-            
-        </div>
-    </div>
 {% endblock %}
 {% block header %}
     <!-- <span id="right-fill"></span> -->
@@ -33,6 +20,7 @@
 {% endblock %}
 
 {% block overview %}
+{% if "overview" in form.sections.value %}
     <h3>Overview</h3>
     <div id="overview">
         {% if overview %}
@@ -48,10 +36,12 @@
     </div>
     <br>
     <br>
+{% endif %}
 {% endblock %}
 
 {% block work %}
 <div id="work">
+    {% if "bullets" in form.sections.value %}
     {% if resume_format == "chronological" %}
         <h3>Professional Experience</h3>
         <a href="{% url 'cold_apply:create_experience' pk=participant.id %}" target="_blank">Add Work Experience</a>
@@ -74,7 +64,7 @@
                     {% endfor %}
             </ul>
         {% endfor %}
-        {% if not experience_list %}
+        {% if not chronological_experiences %}
             <p>No experience found. Either you haven't had a job, or you haven't entered any work experience into our
                 system.</p>
         {% endif %}
@@ -89,7 +79,9 @@
             </ul>
         {% endfor %}
     {% endif %}
-        
+    {% endif %}
+    
+    {% if "education" in form.education.value %}
     <h3>Education</h3>
     {% if education %}
         {% for edu in education %}
@@ -97,6 +89,7 @@
         {% endfor %}
     {% else %}
     <p>No education entered </p>
+    {% endif %}
     {% endif %}
     </div>
     <br>

@@ -1,13 +1,8 @@
-import datetime
-from pprint import pprint
 from typing import Any, Dict
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Count, Q
-from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render, redirect
-from django.forms import inlineformset_factory
-from django.forms import models as model_forms
 from django.urls import reverse
 from django.utils import timezone
 from django.views.generic import (
@@ -17,6 +12,7 @@ from django.views.generic import (
     UpdateView,
     TemplateView,
 )
+from django.views.decorators.http import require_http_methods
 from cold_apply.resume_formatting import (
     group_bullets_by_experience,
     group_bullets_by_skill,
@@ -38,6 +34,9 @@ from .forms import (
     InteractionForm,
     ExperienceForm,
     ApplicantForm,
+    ResumeConfigForm,
+    ResumeFormatChoices,
+    ResumeSections,
 )
 from .models import (
     Participant,
@@ -529,6 +528,28 @@ def delete_bullet(request, pk):
     )
 
 
+def configure_tailored_resume_view(request, job_pk):
+    job = get_object_or_404(Job.objects.select_related("participant"), pk=job_pk)
+    experiences = Experience.objects.filter(participant=job.participant)
+    skills = Skill.objects.filter(
+        bullet__experience__participant=job.participant
+    ).distinct()
+    if request.method == "POST":
+        form = ResumeConfigForm(request.POST, experiences=experiences, skills=skills)
+    else:
+        form = ResumeConfigForm(experiences=experiences, skills=skills)
+    return render(
+        request,
+        "cold_apply/configure_tailored_resume.html",
+        context={"form": form, "job": job},
+    )
+
+
+class ConfigureTailoredResumeView(LoginRequiredMixin, CreateView):
+    def get_form(self, form_class):
+        experiences = Experience.objects.filter(participant=self.kwargs[""])
+
+
 class TailoredResumView(LoginRequiredMixin, DetailView):
     model = Job
     template_name = "resume/index.html"
@@ -553,6 +574,7 @@ def weigh_bullets(bullets, job, keywords):
 
 
 @login_required
+@require_http_methods(["POST"])
 def tailored_resume_view(request, job_pk):
     job = get_object_or_404(
         Job.objects.select_related("title", "participant").prefetch_related(
@@ -561,66 +583,82 @@ def tailored_resume_view(request, job_pk):
         pk=job_pk,
     )
 
-    format_options = ["chronological", "skills"]
-    resume_format = request.GET.get("resume_format", format_options[0])
-    if resume_format not in format_options:
-        resume_format = format_options[0]
+    experiences = Experience.objects.filter(participant=job.participant)
+    skills = Skill.objects.filter(
+        bullet__experience__participant=job.participant
+    ).distinct()
 
-    # delete existing weightings
-    WeightedBullet.objects.filter(participant=job.participant).delete()
+    form = ResumeConfigForm(request.POST, skills=skills, experiences=experiences)
+    if form.is_valid():
+        resume_format = form.cleaned_data["resume_format"]
 
-    bullets = Bullet.objects.filter(experience__participant=job.participant)
-    keywords = job.keywordanalysis_set.all()
-    overview = Overview.objects.filter(participant=job.participant, title=job.title)
-    education = Education.objects.filter(participant=job.participant)
+        # delete existing weightings
+        WeightedBullet.objects.filter(participant=job.participant).delete()
 
-    context = {}
-    weighted_bullets = weigh_bullets(bullets, job, keywords)
-    if resume_format == "chronological":
-        weighted_bullets = weighted_bullets.select_related(
-            "bullet__experience"
-        ).order_by("-weight", "-bullet__experience__start_date")
+        bullets = Bullet.objects.filter(experience__participant=job.participant)
 
-        context["chronological_experiences"] = group_bullets_by_experience(
-            weighted_bullets
+        keywords = job.keywordanalysis_set.all()
+        overview = Overview.objects.filter(participant=job.participant, title=job.title)
+        education = Education.objects.filter(participant=job.participant)
+
+        context = {}
+
+        if resume_format == "chronological":
+            bullets = bullets.filter(experience_id__in=form.cleaned_data["experiences"])
+
+            weighted_bullets = weigh_bullets(bullets, job, keywords)
+            weighted_bullets = weighted_bullets.select_related(
+                "bullet__experience"
+            ).order_by("-weight", "-bullet__experience__start_date")
+
+            context["chronological_experiences"] = group_bullets_by_experience(
+                weighted_bullets
+            )
+
+            write_chronological_resume(
+                job.participant,
+                overview,
+                education,
+                job,
+                context["chronological_experiences"],
+                form.cleaned_data["sections"],
+            )
+
+        elif resume_format == "skills":
+            weighted_bullets = weigh_bullets(bullets, job, keywords)
+            weighted_bullets = list(
+                weighted_bullets.select_related("bullet").prefetch_related(
+                    "bullet__skills"
+                )
+            )
+
+            skills = Skill.objects.filter(id__in=form.cleaned_data["skills"]).distinct()
+
+            context["skill_list"] = group_bullets_by_skill(weighted_bullets, skills)
+
+            write_skills_resume(
+                job.participant,
+                overview,
+                education,
+                job,
+                context["skill_list"],
+                form.cleaned_data["sections"],
+            )
+
+        context.update(
+            {
+                "resume_format": resume_format,
+                "job": job,
+                "title": job.title,
+                "overview": overview,
+                "participant": job.participant,
+                "education": education,
+                "now": timezone.now(),
+                "form": form,
+            }
         )
 
-        write_chronological_resume(
-            job.participant,
-            overview,
-            education,
-            job,
-            context["chronological_experiences"],
-        )
-
-    elif resume_format == "skills":
-        weighted_bullets = list(
-            weighted_bullets.select_related("bullet").prefetch_related("bullet__skills")
-        )
-
-        skills = Skill.objects.filter(
-            bullet__experience__participant=job.participant
-        ).distinct()
-
-        context["skill_list"] = group_bullets_by_skill(weighted_bullets, skills)
-
-        write_skills_resume(
-            job.participant, overview, education, job, context["skill_list"]
-        )
-
-    context.update(
-        {
-            "resume_format": resume_format,
-            "job": job,
-            "title": job.title,
-            "overview": overview,
-            "participant": job.participant,
-            "education": education,
-            "now": timezone.now(),
-        }
-    )
-
-    return render(request, "resume/index.html", context=context)
+        return render(request, "resume/index.html", context=context)
 
 
 class OverviewCreateView(LoginRequiredMixin, CreateView):

@@ -1,0 +1,44 @@
+{% extends 'staff.html' %}
+
+{% block content %}
+<h3>Configure Tailored Resume Options</h3>
+    <form action="{% url 'cold_apply:tailored_resume' job.id %}" method="post" x-data="{ 
+        resume_format: '{{form.resume_format.value}}' || '{{form.resume_format.field.initial}}'
+      }">
+        {% csrf_token %}
+    <div class="mb-4">
+        <h4>Sections</h4>
+        {{form.sections}}
+    </div>
+    <h4>Resume Format</h4>
+    <div class="mb-4" >
+        <div  class="mb-4" >
+           
+            <input type="radio" class="btn-check" name="resume_format" value="chronological" x-model="resume_format"  id="chronological"  autocomplete="off">
+            <label class="btn btn-outline-primary" for="chronological">Chronological</label>
+
+            <input type="radio" class="btn-check" name="resume_format" value="skills" x-model="resume_format"  id="skills"  autocomplete="off">
+            <label class="btn btn-outline-primary" for="skills">Skills</label>
+        
+        </div>
+        <div>
+            <div x-show="resume_format==='chronological'">
+                <div>
+                    <p>Select Experiences</p>
+                    {{form.experiences}}
+                </div>
+                
+            </div>
+            <div x-show="resume_format==='skills'">
+                <div>
+                    <p>Select Skills</p>
+                    {{form.skills}}
+                </div>
+            </div>
+        </div>
+      </div>
+      <button type="submit" :disabled="resume_format === 'None'">Generate Resume</button>
+
+    </form>
+      
+{% endblock content %}

@@ -16,6 +16,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>
 
 import os
+from cold_apply.forms import ResumeSections
 from cold_apply.static.scripts.resume_writer import vars
 import time
 from datetime import date
@@ -61,7 +62,7 @@ class PDF(FPDF):
     def add_chronological_experience_section(self, experiences):
         for experience in experiences:
             exp = experience["obj"]
-           
+
             self.set_font("Times", "B", size=11)
             self.cell(w=100, h=5, txt=exp.position.title, ln=0, align="L")
             start = exp.start_date.strftime("%B %Y")
@@ -169,7 +170,7 @@ class PDF(FPDF):
     #     self.cell(0, 10, 'Page ' + str(self.page_no()) + '/{nb}', 0, 0, 'C')
 
 
-def write_skills_resume(participant, overview, education, job, skills):
+def write_skills_resume(participant, overview, education, job, skills, sections):
     """
     participant: Participant
     overview: Overview
@@ -180,13 +181,20 @@ def write_skills_resume(participant, overview, education, job, skills):
     pdf = PDF({"participant": [participant]})
     pdf.alias_nb_pages()
     pdf.add_page()
-    pdf.add_resume_section(section_title="Overview", context={"overview": overview})
-    pdf.add_skills_section(skills)
-    pdf.add_resume_section(section_title="Education", context={"education": education})
+    if ResumeSections.OVERVIEW in sections:
+        pdf.add_resume_section(section_title="Overview", context={"overview": overview})
+    if ResumeSections.BULLETS in sections:
+        pdf.add_skills_section(skills)
+    if ResumeSections.EDUCATION in sections:
+        pdf.add_resume_section(
+            section_title="Education", context={"education": education}
+        )
     pdf.output(f"{pdf.output_path}{job.company.name}_{job.title.title}.pdf", "F")
 
 
-def write_chronological_resume(participant, overview, education, job, experiences):
+def write_chronological_resume(
+    participant, overview, education, job, experiences, sections
+):
     """
     participant: Participant
     overview: Overview
@@ -198,9 +206,15 @@ def write_chronological_resume(participant, overview, education, job, experience
     pdf = PDF({"participant": [participant]})
     pdf.alias_nb_pages()
     pdf.add_page()
-    pdf.add_resume_section(section_title="Overview", context={"overview": overview})
-    pdf.add_chronological_experience_section(experiences)
-    pdf.add_resume_section(section_title="Education", context={"education": education})
+    if ResumeSections.OVERVIEW in sections:
+        pdf.add_resume_section(section_title="Overview", context={"overview": overview})
+    if ResumeSections.BULLETS in sections:
+        pdf.add_chronological_experience_section(experiences)
+    if ResumeSections.EDUCATION in sections:
+        pdf.add_resume_section(
+            section_title="Education", context={"education": education}
+        )
+
     pdf.output(f"{pdf.output_path}{job.company.name}_{job.title.title}.pdf", "F")
 
 

@@ -1,4 +1,7 @@
+from typing import Any, Mapping, Optional, Type, Union
 from django import forms
+from django.db import models
+from django.forms.utils import ErrorList
 
 from resume.models import Bullet, Experience
 
@@ -139,3 +142,51 @@ class BulletForm(forms.ModelForm):
     class Meta:
         model = Bullet
         fields = ["text", "skills"]
+
+
+class ResumeFormatChoices(models.TextChoices):
+    CHRONOLOGICAL = "chronological"
+    SKILLS = "skills"
+
+
+class ResumeSections(models.TextChoices):
+    OVERVIEW = "overview"
+    BULLETS = "bullets"
+    EDUCATION = "education"
+    AWARDS = "awards"
+
+
+class ResumeConfigForm(forms.Form):
+    """
+    Allows user to configure the tailored resume output
+    """
+
+    def __init__(self, *args, **kwargs) -> None:
+        experiences = kwargs.pop("experiences")
+        skills = kwargs.pop("skills")
+        super().__init__(*args, **kwargs)
+        self.fields["experiences"].queryset = experiences
+        self.fields["experiences"].initial = experiences
+        self.fields["skills"].queryset = skills
+        self.fields["skills"].initial = skills
+
+    # queryset for choices passed into constructor eg ResumeConfigForm(experiences=Experiences.objects.filter(...))
+    experiences = forms.ModelMultipleChoiceField(
+        queryset=Experience.objects.none(),
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
+    )
+    skills = forms.ModelMultipleChoiceField(
+        queryset=Skill.objects.none(),
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
+    )
+    sections = forms.MultipleChoiceField(
+        choices=ResumeSections.choices,
+        # set everything on to begin with
+        initial=[sect for sect, _ in ResumeSections.choices],
+        widget=forms.CheckboxSelectMultiple,
+    )
+    resume_format = forms.ChoiceField(
+        choices=ResumeFormatChoices.choices, widget=forms.RadioSelect
+    )

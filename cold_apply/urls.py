@@ -15,6 +15,7 @@ from .views import (
     JobUpdateView,
     TitleUpdateView,
     OrganizationUpdateView,
+    configure_tailored_resume_view,
     delete_job,
     refresh_keywords,
     create_participant,
@@ -119,10 +120,15 @@ urlpatterns += [
     path(
         "participant/<int:pk>/experience_skills",
         ParticipantExperienceBySkillListView.as_view(),
-        name="participant_experience_by_skill_list"
+        name="participant_experience_by_skill_list",
     ),
     path(
-        "job/<int:job_pk>",
+        "job/<int:job_pk>/configure",
+        configure_tailored_resume_view,
+        name="configure_tailored_resume",
+    ),
+    path(
+        "job/<int:job_pk>/resume",
         tailored_resume_view,
         name="tailored_resume",
     ),
