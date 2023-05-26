@@ -2,7 +2,9 @@ from typing import Any, Dict
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Count, Q
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render, redirect
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 from django.views.generic import (
@@ -13,6 +15,8 @@ from django.views.generic import (
     TemplateView,
 )
 from django.views.decorators.http import require_http_methods
+from weasyprint import HTML
+
 from cold_apply.resume_formatting import (
     group_bullets_by_experience,
     group_bullets_by_skill,
@@ -657,6 +661,14 @@ def tailored_resume_view(request, job_pk):
                 "form": form,
             }
         )
+
+        html = HTML(
+            string=render_to_string("resume/index.html", context=context),
+            base_url=request.build_absolute_uri("/"),
+        )
+        response = HttpResponse(html.write_pdf(), content_type="application/pdf")
+        # response['Content-Disposition'] = 'attachment; filename=test.pdf'
+        return response
 
         return render(request, "resume/index.html", context=context)
 

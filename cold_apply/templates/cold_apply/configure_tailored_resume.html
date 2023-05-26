@@ -2,9 +2,8 @@
 
 {% block content %}
 <h3>Configure Tailored Resume Options</h3>
-    <form action="{% url 'cold_apply:tailored_resume' job.id %}" method="post" x-data="{ 
-        resume_format: '{{form.resume_format.value}}' || '{{form.resume_format.field.initial}}'
-      }">
+    <form action="{% url 'cold_apply:tailored_resume' job.id %}" method="post" 
+    x-data="{ resume_format: '{{form.resume_format.value}}' || '{{form.resume_format.field.initial}}'}">
         {% csrf_token %}
     <div class="mb-4">
         <h4>Sections</h4>

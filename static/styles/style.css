@@ -5,6 +5,11 @@ html {
   min-height: 100%;
 }
 
+h1 {
+  font-size: 5rem !important;
+  color: red;
+}
+
 body {
   margin-bottom: 60px;
 }
