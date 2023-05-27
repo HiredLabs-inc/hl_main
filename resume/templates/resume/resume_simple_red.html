@@ -1,0 +1,114 @@
+{% extends 'resume/base_resume.html' %}
+
+{% block content %}
+
+<div class="container-fluid">
+    <!-- Name  -->
+    <div class="row">
+        <div class="col-9">
+            <h1 class="fw-bold  red">{{job.participant.name}}</h1>
+            <h4>{{job.participant.experience_set.first.position  }}</h4>
+        </div>
+        <div class="col-3 fst-italic">
+            <div>{{job.participant.phone}}</div>
+            <div>{{job.participant.email}}</div>
+        </div>
+    </div>
+    <!-- Overview  -->
+    {% if "overview" in form.sections.value %}
+    <div class="row my-4 border-top border-bottom border-danger border-2 py-3">
+        <div class="col-4 text-end">
+            <h6  class="fw-bolder text-muted">Profile</h6>
+        </div>
+        <div class="col-8">
+            {{overview.text}}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Bullets  -->
+    {% if "bullets" in form.sections.value %}
+    <div  class="row my-4">
+        <div class="col-4  text-end text-muted">
+            <h6 class="fw-bolder">
+                {% if resume_format == "skills" %}
+                    Skills
+                {% elif resume_format == "chronological" %}
+                    Experience
+                {% endif %}
+            </h6>
+        </div>
+        <div class="col-8">
+            {% if resume_format == "skills" %}
+            {% for skill in skills_with_bullets %}
+                <h6 class="fw-bolder">{{skill.obj}}</h6>
+                <ul>
+                    {% for weighted_bullet in skill.bullets %}
+                    <li>{{weighted_bullet.bullet.text}}</li>
+                    {% endfor %}
+                </ul>
+            {% endfor %}
+            {% elif resume_format == "chronological" %}
+                {% for experience in chronological_experiences %}
+                    <h6> <span class="fw-bolder">{{experience.obj.position}}</span> / {{experience.obj.org}}</h6>
+                    <p class="text-muted">{{ experience.obj.start_date|date }} - {{experience.obj.end_date | date|default:"Present"}}</p>
+                    <ul>
+                        {% for weighted_bullet in experience.bullets %}
+                        <li>{{weighted_bullet.bullet.text}}</li>
+                        {% endfor %}
+                    </ul>
+                {% endfor %}
+            {% endif %}
+            
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Education  -->
+    {% if "education" in form.sections.value and education %}
+    <div  class="row my-4">
+        <div class="col-4  text-end">
+            <h6  class="fw-bolder text-muted">Education</h6>
+        </div>
+        <div class="col-8">
+        {% for edu in education %}
+            <h6 ><span class="fw-bolder">{{ edu.org }}</span> / {{ edu.degree.abbr }} in {{ edu.concentration }}</h6>
+        {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row my-4">
+        <div class="col-4 text-end">
+            <h6 class="fw-bolder text-muted">Skills</h6>
+        </div>
+        <div class="col-8">
+            <div class="row">
+            {% for skill in skills %}
+            <div class="col-6">
+                <ul>
+                    <li>{{skill}}</li>
+                </ul>
+            </div>    
+            {% endfor %}
+            </div>  
+        </div>
+    </div>
+</div>
+
+{% endblock content %}
+
+
+{% block styles %}
+    <style>
+        .red {
+            color: #c00000
+        }
+    </style>
+
+{% endblock styles %}
+
+
+
+
+

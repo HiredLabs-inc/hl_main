@@ -1,0 +1,92 @@
+{% extends 'resume/base_resume.html' %}
+
+{% block content %}
+
+<div class="container-fluid">
+    <!-- Name  -->
+    <div class="row mb-4">
+        <div class="w-100 border-top border-success border-4"></div>
+    </div>
+
+    <div  class="row mb-4">
+        <div class="col">
+            <h3 class="fw-semibold">{{job.participant.name}}</h3>
+            <h4 class="spearmint">{{job.participant.experience_set.first.position  }}</h4>
+            <div>{{job.participant.phone}}</div>
+            <div>{{job.participant.email}}</div>
+        </div>
+    </div>
+    <!-- Overview  -->
+    {% if "overview" in form.sections.value %}
+    <div class="row my-4">
+        <div class="col">
+            <h4 class="spearmint">Profile</h4>
+            <div>{{overview.text}}</div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Bullets  -->
+    {% if "bullets" in form.sections.value %}
+    <div  class="row my-4">
+        <div class="col">
+
+            {% if resume_format == "skills" %}
+            <h4 class="spearmint">Skills</h4>
+            {% for skill in skills_with_bullets %}
+                <h4 class="fw-bolder">{{skill.obj}}</h4>
+                <ul>
+                    {% for weighted_bullet in skill.bullets %}
+                    <li>{{weighted_bullet.bullet.text}}</li>
+                    {% endfor %}
+                </ul>
+            {% endfor %}
+            {% elif resume_format == "chronological" %}
+            <h4 class="spearmint">Experience</h4>
+            {% for experience in chronological_experiences %}
+                <h6>{{experience.obj.org}} -  <span class="text-muted fst-italic">{{experience.obj.position}}</span></h6>
+                <p class="text-muted">{{ experience.obj.start_date|date }} - {{experience.obj.end_date | date|default:"Present"}}</p>
+                <ul>
+                    {% for weighted_bullet in experience.bullets %}
+                    <li>{{weighted_bullet.bullet.text}}</li>
+                    {% endfor %}
+                </ul>
+            {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Education  -->
+    {% if "education" in form.sections.value and education %}
+    <div  class="row my-4">
+        <div class="col">
+            <h4 class="spearmint">Education</h4>
+            {% for edu in education %}
+                <h6>{{ edu.org }} - <span class="text-muted fst-italic">{{ edu.degree.abbr }} in {{ edu.concentration }}</span></h6>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Awards  -->
+    {% if "awards" in form.sections.value and awards %}
+    <div  class="row my-4">
+        <div class="col">
+            <h4 class="spearmint">Awards</h4>
+            <p>{{awards}}</p>
+        </div>
+    </div>
+    {% endif %}
+    
+
+</div>
+<style>
+    .spearmint {
+        color: #00ab44
+    }
+</style>
+{% endblock content %}
+
+
+

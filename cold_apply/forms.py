@@ -4,6 +4,7 @@ from django.db import models
 from django.forms.utils import ErrorList
 
 from resume.models import Bullet, Experience
+from resume.pdf import ResumeTemplates
 
 from .models import Participant, Interaction, Applicant, Skill
 
@@ -188,5 +189,12 @@ class ResumeConfigForm(forms.Form):
         widget=forms.CheckboxSelectMultiple,
     )
     resume_format = forms.ChoiceField(
-        choices=ResumeFormatChoices.choices, widget=forms.RadioSelect
+        choices=ResumeFormatChoices.choices,
+        widget=forms.RadioSelect,
+        initial=ResumeFormatChoices.CHRONOLOGICAL,
+    )
+    resume_template = forms.ChoiceField(
+        choices=ResumeTemplates.choices,
+        initial=ResumeTemplates.SWISS,
+        widget=forms.RadioSelect
     )

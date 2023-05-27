@@ -11,15 +11,9 @@
         </div>
         <div class="col-8">
             <div style="width:100%; border-top:3px solid black;" class="mb-3"></div>
-            <h5 class="fw-bolder">{{job.participant.name}}</h5>
+            <h6 class="fw-bolder">{{job.participant.name}}</h6>
             <div>{{job.participant.phone}}</div>
             <div>{{job.participant.email}}</div>
-                
-                
-                
-                
-                
-            
         </div>
     </div>
     <!-- Overview  -->
@@ -27,7 +21,7 @@
     <div class="row my-4">
         <div class="col-4">
             <div style="width:20px; border-top:3px solid black;" class="mb-3"></div>
-            <h5>Profile</h5>
+            <h6  class="fw-bolder">Profile</h6>
         </div>
         <div class="col-8">
             <div style="width:100%; border-top:3px solid black;" class="mb-3"></div>
@@ -41,45 +35,63 @@
     <div  class="row my-4">
         <div class="col-4">
             <div style="width:20px; border-top:3px solid black;" class="mb-3"></div>
-            Experience
+            <h6 class="fw-bolder">
+                {% if resume_format == "skills" %}
+                    Skills
+                {% elif resume_format == "chronological" %}
+                    Experience
+                {% endif %}
+            </h6>
         </div>
         <div class="col-8">
             <div style="width:100%; border-top:3px solid black;" class="mb-3"></div>
-            {% for experience in chronological_experiences %}
-                <h5> <span class="fw-bolder">{{experience.obj.position}}</span> / {{experience.obj.org}}</h5>
-                <p class="text-muted">{{ experience.obj.start_date|date }} - {{experience.obj.end_date | date|default:"Present"}}</p>
+            {% if resume_format == "skills" %}
+            {% for skill in skills_with_bullets %}
+                <h6 class="fw-bolder">{{skill.obj}}</h6>
                 <ul>
-                    {% for weighted_bullet in experience.bullets %}
+                    {% for weighted_bullet in skill.bullets %}
                     <li>{{weighted_bullet.bullet.text}}</li>
                     {% endfor %}
                 </ul>
             {% endfor %}
+            {% elif resume_format == "chronological" %}
+                {% for experience in chronological_experiences %}
+                    <h6> <span class="fw-bolder">{{experience.obj.position}}</span> / {{experience.obj.org}}</h6>
+                    <p class="text-muted">{{ experience.obj.start_date|date }} - {{experience.obj.end_date | date|default:"Present"}}</p>
+                    <ul>
+                        {% for weighted_bullet in experience.bullets %}
+                        <li>{{weighted_bullet.bullet.text}}</li>
+                        {% endfor %}
+                    </ul>
+                {% endfor %}
+            {% endif %}
+            
         </div>
     </div>
     {% endif %}
 
     <!-- Education  -->
-    {% if "education" in form.sections.value %}
+    {% if "education" in form.sections.value and education %}
     <div  class="row my-4">
         <div class="col-4">
             <div style="width:20px; border-top:3px solid black;" class="mb-3"></div>
-            <h5>Education</h5>
+            <h6  class="fw-bolder">Education</h6>
         </div>
         <div class="col-8">
             <div style="width:100%; border-top:3px solid black;" class="mb-3"></div>
         {% for edu in education %}
-            <h5><span class="fw-bolder">{{ edu.org }}</span> / {{ edu.degree.abbr }} in {{ edu.concentration }}</h5>
+            <h6 ><span class="fw-bolder">{{ edu.org }}</span> / {{ edu.degree.abbr }} in {{ edu.concentration }}</h6>
         {% endfor %}
         </div>
     </div>
     {% endif %}
 
     <!-- Awards  -->
-    {% if "awards" in form.sections.value %}
+    {% if "awards" in form.sections.value and awards %}
     <div  class="row my-4">
         <div class="col-4">
             <div style="width:20px; border-top:3px solid black;" class="mb-3"></div>
-            <h5>Awards</h5>
+            <h6 class="fw-bolder">Awards</h6>
         </div>
         <div class="col-8">
             <div style="width:100%; border-top:3px solid black;" class="mb-3"></div>

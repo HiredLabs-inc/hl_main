@@ -1,10 +1,30 @@
 {% extends 'staff.html' %}
+{% load static %}
 
 {% block content %}
-<h3>Configure Tailored Resume Options</h3>
+<h3 class="mb-4">Configure Tailored Resume Options</h3>
     <form action="{% url 'cold_apply:tailored_resume' job.id %}" method="get" 
     x-data="{ resume_format: '{{form.resume_format.value}}' || '{{form.resume_format.field.initial}}'}">
         {% csrf_token %}
+    <div class="mb-4 row" x-data="{'selectedImage': '{{form.resume_template.value|default:''}}' || '{{form.resume_template.field.initial|default:''}}'}">
+        <div class="col-3">
+          {% for choice_value, choice_label in form.resume_template.field.choices  %}
+          <div>
+            <input   type="radio" id="{{ form.resume_template.auto_id }}_{{ choice_value }}" name="{{ form.resume_template.html_name }}" value="{{ choice_value }}"
+                {% if choice_value == form.resume_template.value %}checked{% endif  %}  x-model="selectedImage">
+            <label for="{{ form.resume_template.auto_id }}_{{ choice_value }}">
+                {% comment %} <img src="/static/images/resume_previews/resume_{{choice_value}}.png" alt="{{ choice_label }}"> {% endcomment %}
+                {{choice_label}}
+            </label>
+        </div>
+            
+        {% endfor %}
+    </div>
+          
+        <div class="col-9">
+            <img :src="'/static/images/resume_previews/resume_' + selectedImage + '.png'" alt="" style="height: 450px;" class="border border-gray">
+        </div>
+    </div>
     <div class="mb-4">
         <h4>Sections</h4>
         {{form.sections}}

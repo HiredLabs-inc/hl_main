@@ -1,0 +1,117 @@
+{% extends 'resume/base_resume.html' %}
+
+{% block head %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lato&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+{% endblock head %}
+
+
+
+{% block content %}
+
+<div class="container-fluid p-5">
+    <!-- Name  -->
+    
+
+    <div  class="row mb-4">
+        <div class="col">
+            <h1 class="accent fw-bold  playfair">Hello</h1>
+            <h1 class=" playfair">I'm {{job.participant.name}}</h1>
+
+            <div class="fs-5">{{job.participant.phone}}</div>
+            <div class="mb-4 fs-5">{{job.participant.email}}</div>
+        </div>
+    </div>
+    <!-- Overview  -->
+    {% if "overview" in form.sections.value %}
+    <div class="row my-4">
+        <div class="col">
+            <h3 class="playfair mb-4 accent fw-bold">Profile</h3>
+            <div class="text-muted">{{overview.text}}</div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Bullets  -->
+    {% if "bullets" in form.sections.value %}
+    <div  class="row my-4">
+        <div class="col">
+
+            {% if resume_format == "skills" %}
+            <h3 class="playfair mb-4  accent fw-bold">Skills</h3>
+            {% for skill in skills_with_bullets %}
+                <h4 class="fw-bolder accent">{{skill.obj}}</h4>
+                <ul  class="text-muted ">
+                    {% for weighted_bullet in skill.bullets %}
+                    <li>{{weighted_bullet.bullet.text}}</li>
+                    {% endfor %}
+                </ul>
+            {% endfor %}
+            {% elif resume_format == "chronological" %}
+            <h3 class="playfair mb-4  accent fw-bold">Experience</h3>
+            {% for experience in chronological_experiences %}
+                <h4 class="playfair"><span class="fw-bold">{{experience.obj.org}}</span> -  <span class="text-muted fst-italic ">{{experience.obj.position}}</span></h4>
+                <p class="text-muted">{{ experience.obj.start_date|date }} - {{experience.obj.end_date | date|default:"Present"}}</p>
+                <ul class="text-muted">
+                    {% for weighted_bullet in experience.bullets %}
+                    <li>{{weighted_bullet.bullet.text}}</li>
+                    {% endfor %}
+                </ul>
+            {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Education  -->
+    {% if "education" in form.sections.value and education %}
+    <div  class="row my-4">
+        <div class="col">
+            <h3 class="playfair mb-4  accent fw-bold">Education</h3>
+            {% for edu in education %}
+                <h4  class="playfair"><span class="fw-bold">{{ edu.org }}</span> - <span class="text-muted fst-italic">{{ edu.degree.abbr }} in {{ edu.concentration }}</span></h4>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Awards  -->
+    {% if "awards" in form.sections.value and awards %}
+    <div  class="row my-4">
+        <div class="col">
+            <h3 class="playfair mb-4">Awards</h3>
+            <p>{{awards}}</p>
+        </div>
+    </div>
+    {% endif %}
+    
+
+</div>
+
+{% endblock content %}
+
+
+
+{% block styles %}
+<style>
+    body, html {
+        font-size: 9px;
+        font-family:'Lato', sans-serif;
+    }
+
+    .playfair {
+        font-family: 'Playfair Display', serif;
+
+
+    }
+    .accent {
+        color: #f75d5d
+    }
+    ul {
+        padding-left: 5rem;
+    }
+
+</style>
+{% endblock styles %}
+

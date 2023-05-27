@@ -71,6 +71,9 @@ class Experience(models.Model):
 
     def __str__(self):
         return f"{self.org}: {self.position}, {self.start_date} - {self.end_date or 'Present'}"
+    
+    class Meta:
+        ordering = ['-start_date']
 
 
 class Bullet(models.Model):

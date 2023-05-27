@@ -1,4 +1,5 @@
 {% load static %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,7 +14,7 @@
     {% block head %}
     {% endblock head %}
 </head>
-<body class="container-fluid">
+<body>
     {% block content %}
         <header>
             <div class="centered-content">
@@ -69,7 +70,7 @@
             {% endif %}
         {% elif resume_format == "skills" %}
             <h3>Professional Skills</h3>
-            {% for skill in skill_list %}
+            {% for skill in skills_with_bullets %}
                 <h5>{{skill.obj}}</h5>
                 <ul>
                     {% for bullet in skill.bullets %}
@@ -99,9 +100,15 @@
             page-break-inside: avoid;
         }
         @page { 
-            size: auto;
-            margin: 10mm 0 10mm 0;
+            
+            margin: 5mm 5mm 5mm 5mm;
+        }
+        body {
+            font-size: 9pt
         }
     </style>
+    {% block styles %}
+    {% endblock styles %}
+    
 </body>
 </html>

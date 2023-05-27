@@ -634,7 +634,9 @@ def tailored_resume_view(request, job_pk):
 
             skills = Skill.objects.filter(id__in=form.cleaned_data["skills"]).distinct()
 
-            context["skill_list"] = group_bullets_by_skill(weighted_bullets, skills)
+            context["skills_with_bullets"] = group_bullets_by_skill(
+                weighted_bullets, skills
+            )
 
             # write_skills_resume(
             #     job.participant,
@@ -655,19 +657,17 @@ def tailored_resume_view(request, job_pk):
                 "education": education,
                 "now": timezone.now(),
                 "form": form,
+                "skills": skills,
             }
         )
+        resume_template = f"resume/resume_{form.cleaned_data['resume_template']}.html"
+        if request.GET.get("format") == "preview":
+            return render(request, resume_template, context=context)
 
-        # print(build)
-        pdf_content = write_template_to_pdf(
-            request, "resume/swiss_resume.html", context=context
-        )
-
+        pdf_content = write_template_to_pdf(request, resume_template, context=context)
         response = HttpResponse(pdf_content, content_type="application/pdf")
         # response['Content-Disposition'] = 'attachment; filename=test.pdf'
         return response
-
-        return render(request, "resume/swiss_resume.html", context=context)
 
 
 class OverviewCreateView(LoginRequiredMixin, CreateView):
