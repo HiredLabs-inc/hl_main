@@ -1,0 +1,91 @@
+{% extends 'resume/base_resume.html' %}
+
+{% block content %}
+
+<div class="container-fluid">
+    <!-- Name  -->
+    <div  class="row mb-4  py-3">
+        <div class="col-4">
+            <h3>Your Name</h3>
+            <p>Creative Director</p>
+        </div>
+        <div class="col-8 border-top border-5   py-3">
+            <h5>Your Name</h5>
+            <div>123 Your Street</div>
+            <div>Your City, ST 12345</div>
+            <div>123.456.7890</div>
+            <div>no_reply@example.com</div>
+                
+                
+                
+                
+                
+            
+        </div>
+    </div>
+    <!-- Overview  -->
+    {% if "overview" in form.sections.value %}
+    <div class="row my-4">
+        <div class="col-4  py-3">
+            <h5>Overview</h5>
+        </div>
+        <div class="col-8 border-top border-5   py-3">
+            {{overview.text}}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Bullets  -->
+    {% if "bullets" in form.sections.value %}
+    <div  class="row my-4">
+        <div class="col-4  py-3">
+            Experience
+        </div>
+        <div class="col-8 border-top border-5   py-3">
+            {% for experience in chronological_experiences %}
+                <h5>{{experience.obj.position}} at {{experience.obj.org}}</h5>
+                <p>{{ experience.obj.start_date|date }} - {{experience.obj.end_date | date|default:"Present"}}</p>
+                <ul>
+                    {% for weighted_bullet in experience.bullets %}
+                    <li>{{weighted_bullet.bullet.text}}</li>
+                    {% endfor %}
+                </ul>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Education  -->
+    {% if "education" in form.sections.value %}
+    <div  class="row my-4">
+        <div class="col-4  py-3">
+            <h5>Education</h5>
+        </div>
+        <div class="col-8 border-top border-5  py-3">
+        {% for edu in education %}
+            <h3><span class="font-bolder">{{ edu.education.org }}</span> / {{ edu.education.degree.abbr }} in {{ edu.education.concentration }}</h3>
+           <p>{{edu.start_date}} - {{edu.end_date}} ({{edu.org.name}})</p>
+        {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Awards  -->
+    {% if "awards" in form.sections.value %}
+    <div  class="row my-4">
+        <div class="col-4  py-3">
+            <h5>Awards</h5>
+        </div>
+        <div class="col-8 border-top border-5  py-3">
+
+        </div>
+    </div>
+    {% endif %}
+    
+
+</div>
+
+{% endblock content %}
+
+
+

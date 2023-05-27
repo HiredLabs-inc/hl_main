@@ -20,7 +20,7 @@ django-q = "*"
 "backports.zoneinfo" = "*"
 fpdf = "*"
 pytest-django = "*"
-weasyprint = "*"
+playwright = "*"
 
 [dev-packages]
 pytest = "*"

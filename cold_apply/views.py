@@ -15,7 +15,7 @@ from django.views.generic import (
     TemplateView,
 )
 from django.views.decorators.http import require_http_methods
-from weasyprint import HTML
+from playwright.sync_api import sync_playwright
 
 from cold_apply.resume_formatting import (
     group_bullets_by_experience,
@@ -32,6 +32,7 @@ from resume.models import (
     Education,
     Concentration,
 )
+from resume.pdf import write_template_to_pdf
 from .forms import (
     BulletForm,
     ParticipantForm,
@@ -39,8 +40,6 @@ from .forms import (
     ExperienceForm,
     ApplicantForm,
     ResumeConfigForm,
-    ResumeFormatChoices,
-    ResumeSections,
 )
 from .models import (
     Participant,
@@ -59,7 +58,6 @@ from .static.scripts.keyword_analyzer.keyword_analyzer import (
 from .static.scripts.resume_writer.bullet_weighter import weigh, hook_after_weighting
 from .static.scripts.resume_writer.file_writer import (
     write_chronological_resume,
-    write_resume,
     write_skills_resume,
 )
 
@@ -442,18 +440,13 @@ class EducationCreateView(LoginRequiredMixin, CreateView):
 
         return context
 
+    def get_success_url(self) -> str:
+        return reverse(
+            "cold_apply:confirm_add_education",
+        )
+
     def form_valid(self, form):
-        if form.is_valid():
-            education = form.save(commit=False)
-            education.save()
-            return redirect(
-                reverse(
-                    "cold_apply:confirm_add_participant_education",
-                    kwargs={"pk": self.kwargs["pk"], "education_pk": education.id},
-                )
-            )
-        else:
-            print(form.errors)
+        form.instance.participant_id = self.kwargs["pk"]
         return super().form_valid(form)
 
 
@@ -578,7 +571,7 @@ def weigh_bullets(bullets, job, keywords):
 
 
 @login_required
-@require_http_methods(["POST"])
+# @require_http_methods(["POST"])
 def tailored_resume_view(request, job_pk):
     job = get_object_or_404(
         Job.objects.select_related("title", "participant").prefetch_related(
@@ -592,7 +585,7 @@ def tailored_resume_view(request, job_pk):
         bullet__experience__participant=job.participant
     ).distinct()
 
-    form = ResumeConfigForm(request.POST, skills=skills, experiences=experiences)
+    form = ResumeConfigForm(request.GET, skills=skills, experiences=experiences)
     if form.is_valid():
         resume_format = form.cleaned_data["resume_format"]
 
@@ -602,7 +595,9 @@ def tailored_resume_view(request, job_pk):
         bullets = Bullet.objects.filter(experience__participant=job.participant)
 
         keywords = job.keywordanalysis_set.all()
-        overview = Overview.objects.filter(participant=job.participant, title=job.title)
+        overview = Overview.objects.filter(
+            participant=job.participant, title=job.title
+        ).first()
         education = Education.objects.filter(participant=job.participant)
 
         context = {}
@@ -619,14 +614,14 @@ def tailored_resume_view(request, job_pk):
                 weighted_bullets
             )
 
-            write_chronological_resume(
-                job.participant,
-                overview,
-                education,
-                job,
-                context["chronological_experiences"],
-                form.cleaned_data["sections"],
-            )
+            # write_chronological_resume(
+            #     job.participant,
+            #     overview,
+            #     education,
+            #     job,
+            #     context["chronological_experiences"],
+            #     form.cleaned_data["sections"],
+            # )
 
         elif resume_format == "skills":
             weighted_bullets = weigh_bullets(bullets, job, keywords)
@@ -640,14 +635,14 @@ def tailored_resume_view(request, job_pk):
 
             context["skill_list"] = group_bullets_by_skill(weighted_bullets, skills)
 
-            write_skills_resume(
-                job.participant,
-                overview,
-                education,
-                job,
-                context["skill_list"],
-                form.cleaned_data["sections"],
-            )
+            # write_skills_resume(
+            #     job.participant,
+            #     overview,
+            #     education,
+            #     job,
+            #     context["skill_list"],
+            #     form.cleaned_data["sections"],
+            # )
 
         context.update(
             {
@@ -662,15 +657,16 @@ def tailored_resume_view(request, job_pk):
             }
         )
 
-        html = HTML(
-            string=render_to_string("resume/index.html", context=context),
-            base_url=request.build_absolute_uri("/"),
-        )
-        response = HttpResponse(html.write_pdf(), content_type="application/pdf")
-        # response['Content-Disposition'] = 'attachment; filename=test.pdf'
-        return response
+        # print(build)
+        # pdf_content = write_template_to_pdf(
+        #     request, "resume/base_resume.html", context=context
+        # )
 
-        return render(request, "resume/index.html", context=context)
+        # response = HttpResponse(pdf_content, content_type="application/pdf")
+        # response['Content-Disposition'] = 'attachment; filename=test.pdf'
+        # return response
+
+        return render(request, "resume/swiss_resume.html", context=context)
 
 
 class OverviewCreateView(LoginRequiredMixin, CreateView):

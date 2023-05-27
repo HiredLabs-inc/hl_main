@@ -62,12 +62,12 @@
     <h3>Education</h3>
     {% if education %}
         {% for edu in education %}
-            <h5>{{ edu.education.degree.abbr }} | {{ edu.education.concentration }} - {{ edu.education.org.name }}</h5>
+            <h5>{{ edu.degree.abbr }} | {{ edu.concentration }} - {{ edu.org.name }}</h5>
             <p class="text-muted">
-            <a href="{% url 'cold_apply:update_education' edu.education.id %}"
+            <a href="{% url 'cold_apply:update_education' edu.id %}"
                target="_blank">Update Education</a>
         <br>
-            <a href="{% url 'cold_apply:delete_education' participant.id edu.education.id %}">Delete Education</a>
+            <a href="{% url 'cold_apply:delete_education' edu.id %}">Delete Education</a>
             </p>
     {% endfor %}
         {% else %}
