@@ -4,17 +4,16 @@
 
 <div class="container-fluid">
     <!-- Name  -->
-    <div  class="row mb-4  py-3">
+    <div  class="row mb-4">
         <div class="col-4">
-            <h3>Your Name</h3>
-            <p>Creative Director</p>
+            <h3 class="fw-bold">{{job.participant.name}}</h3>
+            <p>{{job.participant.experience_set.first.position  }}</p>
         </div>
-        <div class="col-8 border-top border-5   py-3">
-            <h5>Your Name</h5>
-            <div>123 Your Street</div>
-            <div>Your City, ST 12345</div>
-            <div>123.456.7890</div>
-            <div>no_reply@example.com</div>
+        <div class="col-8">
+            <div style="width:100%; border-top:3px solid black;" class="mb-3"></div>
+            <h5 class="fw-bolder">{{job.participant.name}}</h5>
+            <div>{{job.participant.phone}}</div>
+            <div>{{job.participant.email}}</div>
                 
                 
                 
@@ -26,10 +25,12 @@
     <!-- Overview  -->
     {% if "overview" in form.sections.value %}
     <div class="row my-4">
-        <div class="col-4  py-3">
-            <h5>Overview</h5>
+        <div class="col-4">
+            <div style="width:20px; border-top:3px solid black;" class="mb-3"></div>
+            <h5>Profile</h5>
         </div>
-        <div class="col-8 border-top border-5   py-3">
+        <div class="col-8">
+            <div style="width:100%; border-top:3px solid black;" class="mb-3"></div>
             {{overview.text}}
         </div>
     </div>
@@ -38,13 +39,15 @@
     <!-- Bullets  -->
     {% if "bullets" in form.sections.value %}
     <div  class="row my-4">
-        <div class="col-4  py-3">
+        <div class="col-4">
+            <div style="width:20px; border-top:3px solid black;" class="mb-3"></div>
             Experience
         </div>
-        <div class="col-8 border-top border-5   py-3">
+        <div class="col-8">
+            <div style="width:100%; border-top:3px solid black;" class="mb-3"></div>
             {% for experience in chronological_experiences %}
-                <h5>{{experience.obj.position}} at {{experience.obj.org}}</h5>
-                <p>{{ experience.obj.start_date|date }} - {{experience.obj.end_date | date|default:"Present"}}</p>
+                <h5> <span class="fw-bolder">{{experience.obj.position}}</span> / {{experience.obj.org}}</h5>
+                <p class="text-muted">{{ experience.obj.start_date|date }} - {{experience.obj.end_date | date|default:"Present"}}</p>
                 <ul>
                     {% for weighted_bullet in experience.bullets %}
                     <li>{{weighted_bullet.bullet.text}}</li>
@@ -58,13 +61,14 @@
     <!-- Education  -->
     {% if "education" in form.sections.value %}
     <div  class="row my-4">
-        <div class="col-4  py-3">
+        <div class="col-4">
+            <div style="width:20px; border-top:3px solid black;" class="mb-3"></div>
             <h5>Education</h5>
         </div>
-        <div class="col-8 border-top border-5  py-3">
+        <div class="col-8">
+            <div style="width:100%; border-top:3px solid black;" class="mb-3"></div>
         {% for edu in education %}
-            <h3><span class="font-bolder">{{ edu.education.org }}</span> / {{ edu.education.degree.abbr }} in {{ edu.education.concentration }}</h3>
-           <p>{{edu.start_date}} - {{edu.end_date}} ({{edu.org.name}})</p>
+            <h5><span class="fw-bolder">{{ edu.org }}</span> / {{ edu.degree.abbr }} in {{ edu.concentration }}</h5>
         {% endfor %}
         </div>
     </div>
@@ -73,10 +77,12 @@
     <!-- Awards  -->
     {% if "awards" in form.sections.value %}
     <div  class="row my-4">
-        <div class="col-4  py-3">
+        <div class="col-4">
+            <div style="width:20px; border-top:3px solid black;" class="mb-3"></div>
             <h5>Awards</h5>
         </div>
-        <div class="col-8 border-top border-5  py-3">
+        <div class="col-8">
+            <div style="width:100%; border-top:3px solid black;" class="mb-3"></div>
 
         </div>
     </div>

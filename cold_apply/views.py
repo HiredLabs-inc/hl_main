@@ -579,6 +579,7 @@ def tailored_resume_view(request, job_pk):
         ),
         pk=job_pk,
     )
+    job.participant.experience_set.first()
 
     experiences = Experience.objects.filter(participant=job.participant)
     skills = Skill.objects.filter(
@@ -658,13 +659,13 @@ def tailored_resume_view(request, job_pk):
         )
 
         # print(build)
-        # pdf_content = write_template_to_pdf(
-        #     request, "resume/base_resume.html", context=context
-        # )
+        pdf_content = write_template_to_pdf(
+            request, "resume/swiss_resume.html", context=context
+        )
 
-        # response = HttpResponse(pdf_content, content_type="application/pdf")
+        response = HttpResponse(pdf_content, content_type="application/pdf")
         # response['Content-Disposition'] = 'attachment; filename=test.pdf'
-        # return response
+        return response
 
         return render(request, "resume/swiss_resume.html", context=context)
 
