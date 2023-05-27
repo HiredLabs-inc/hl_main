@@ -170,7 +170,7 @@ urlpatterns += [
         name="confirm_add_education",
     ),
     path(
-        "participants/<int:participant_id>/edu/<int:pk>/delete/",
+        "education/<int:pk>/delete/",
         delete_education,
         name="delete_education",
     ),

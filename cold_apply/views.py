@@ -439,18 +439,13 @@ class EducationCreateView(LoginRequiredMixin, CreateView):
 
         return context
 
+    def get_success_url(self) -> str:
+        return reverse(
+            "cold_apply:confirm_add_education",
+        )
+
     def form_valid(self, form):
-        if form.is_valid():
-            education = form.save(commit=False)
-            education.save()
-            return redirect(
-                reverse(
-                    "cold_apply:confirm_add_participant_education",
-                    kwargs={"pk": self.kwargs["pk"], "education_pk": education.id},
-                )
-            )
-        else:
-            print(form.errors)
+        form.instance.participant_id = self.kwargs["pk"]
         return super().form_valid(form)
 
 
