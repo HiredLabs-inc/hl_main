@@ -7,6 +7,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('cold_apply', '0016_alter_applicant_location'),
+        ('resume', '0009_auto_20230524_2048')
     ]
 
     operations = [
