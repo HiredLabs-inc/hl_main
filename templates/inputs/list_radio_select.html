@@ -1,0 +1,13 @@
+<ul class="list-group" style="cursor: pointer;">
+    {% for choice_value, choice_label in form_field.field.choices  %}
+    <li class="list-group-item  list-group-item-action" @click="{{alpine_selected_var_name}}='{{choice_value}}'" :class="{'active': {{alpine_selected_var_name}}=='{{choice_value}}'}">
+      <label for="{{ form_field.auto_id }}_{{ choice_value }}">
+          <input   type="radio" id="{{ form_field.auto_id }}_{{ choice_value }}" name="{{ form_field.html_name }}" value="{{ choice_value }}"
+      
+          {% if choice_value == form_field.value %}checked{% endif  %}  x-model="{{alpine_selected_var_name}}">
+     
+          {{choice_label}}
+      </label>
+  </li>
+  {% endfor %}
+</ul>

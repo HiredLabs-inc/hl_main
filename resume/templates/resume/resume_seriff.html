@@ -26,7 +26,7 @@
 </div>
 <div class="row">
     <div class="col-8">
-        {% if resume_format == "skills" %}
+        {% if template_format == "skills" %}
         <div class="row">
             <div class="col">
                 <h4 class="blue ">Skills</h4>
@@ -34,20 +34,20 @@
                 <h4 class="fw-bolder">{{skill.obj}}</h4>
                 <ul  class="list-unstyled">
                     {% for weighted_bullet in skill.bullets %}
-                    <li>{{weighted_bullet.bullet.text}}</li>
-                    {% endfor %}
+                    {% include 'resume/partials/weighted_bullet.html' %}
+                {% endfor %}
                 </ul>
             </div>
         </div>
         {% endfor %}
-        {% elif resume_format == "chronological" %}
+        {% elif template_format == "chronological" %}
         <h4 class="blue mb-4">Experience</h4>
         {% for experience in chronological_experiences %}
             <div class="fs-5"><span class="fw-bold">{{experience.obj.org}}</span> -  <span class="fst-italic">{{experience.obj.position}}</span></div>
             <div class="text-muted ">{{ experience.obj.start_date|date }} - {{experience.obj.end_date | date|default:"Present"}}</div>
             <ul  class="list-unstyled text-muted mb-5">
                 {% for weighted_bullet in experience.bullets %}
-                <li>{{weighted_bullet.bullet.text}}</li>
+                        {% include 'resume/partials/weighted_bullet.html' %}
                 {% endfor %}
             </ul>
         {% endfor %}

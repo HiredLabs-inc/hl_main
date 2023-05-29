@@ -1,0 +1,7 @@
+{% if form.preview.value == 'True' %}
+    {% include 'cold_apply/partials/bullet_detail_li.html' with bullet=weighted_bullet.bullet extra_text=weighted_bullet.weight_display %}
+{% else %}
+    <li>{{weighted_bullet.bullet.text}}</li>
+{% endif %}
+
+

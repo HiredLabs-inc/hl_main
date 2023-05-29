@@ -1,0 +1,123 @@
+{% extends 'resume/base_resume.html' %}
+
+{% block content %}
+<div class="px-5">
+    <header class="">
+        <div class="text-center bg-gray-blue py-1 px-2 text-white fw-bold">
+            <h1>{{ participant.name }}</h1>
+           
+        </div>
+        <div class="text-center py-2">
+            <div>{{ participant.email }} </div>
+            <div>{{ participant.phone }}</div>
+        </div>
+    </header>
+    {% if "overview" in form.sections.value %}
+    <div class="bg-gray fw-bolder py-1 px-2">
+        <h3  class="mb-1">Summary Statement</h3>
+    </div>
+    <div id="overview" class="px-2 py-2">
+        {{overview.text}}
+    </div>
+    {% endif %}
+
+    {% if "bullets" in form.sections.value %}
+    {% if template_format == "chronological" %}
+    <div class="bg-gray fw-bolder py-1 px-2">
+        <h3  class="mb-1">Professional Experience</h3>
+    </div>
+    <div class="px-2 py-2">
+    {% for experience in chronological_experiences %}
+        <h5>
+            {{ experience.obj.position }} at {{ experience.obj.org }}
+        </h5>
+        <p>{{ experience.obj.start_date|date }} -
+            {% if experience.obj.end_date == None %}
+        Present
+        {% else %}
+        {{ experience.obj.end_date|date }}
+        {% endif %}
+        </p>
+        <ul>
+            {% for weighted_bullet in experience.bullets %}
+                {% include 'resume/partials/weighted_bullet.html' %}
+            {% endfor %}
+        </ul>
+    {% endfor %}
+    {% if not chronological_experiences %}
+        <p>No experience found. Either you haven't had a job, or you haven't entered any work experience into our
+            system.</p>
+    {% endif %}
+    </div>
+
+   
+    {% elif template_format == "skills" %}
+    <div class="bg-gray fw-bolder py-1 px-2">
+        <h3  class="mb-1">Professional Skills</h3>
+    </div>
+    <div class="px-2 py-2">
+        {% for skill in skills_with_bullets %}
+            <h5>{{skill.obj}}</h5>
+            <ul>
+                {% for weighted_bullet in skill.bullets %}
+                    {% include 'resume/partials/weighted_bullet.html' %}
+                {% endfor %}
+            </ul>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+
+    {% endif %}
+
+    <div class="bg-gray fw-bolder py-1 px-2">
+        <h3 class="mb-1">Skills</h3>
+        
+    </div>
+    <div class="px-2 py-2">
+    <ul>
+        {% for skill in skills %}
+        <li>{{skill}}</li>
+        {% endfor %}
+        
+    </ul>
+    </div>
+
+    {% if "education" in form.sections.value %}
+    <div class="bg-gray fw-bolder py-1 px-2">
+        <h3 class="mb-1">Education</h3>
+    </div>
+    
+
+   
+    {% if education %}
+    <div class="px-2 py-2">
+    <ul>
+        {% for edu in education %}
+           <li> {{ edu.degree.abbr }} in {{ edu.concentration }} at {{ edu.org }}</li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>No education entered </p>
+    {% endif %}
+    </div>
+    {% endif %}
+
+</div>
+{% endblock content %}
+
+{% block styles %}
+    <style>
+
+    .bg-gray-blue {
+        background-color: #44749d
+    }
+    .bg-gray {
+        background-color: #c6d4e1
+    }
+    </style>
+
+{% endblock styles %}
+
+
+

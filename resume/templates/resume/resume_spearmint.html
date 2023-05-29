@@ -31,24 +31,24 @@
     <div  class="row my-4">
         <div class="col">
 
-            {% if resume_format == "skills" %}
+            {% if template_format == "skills" %}
             <h4 class="spearmint">Skills</h4>
             {% for skill in skills_with_bullets %}
                 <h4 class="fw-bolder">{{skill.obj}}</h4>
                 <ul>
                     {% for weighted_bullet in skill.bullets %}
-                    <li>{{weighted_bullet.bullet.text}}</li>
+                        {% include 'resume/partials/weighted_bullet.html' %}
                     {% endfor %}
                 </ul>
             {% endfor %}
-            {% elif resume_format == "chronological" %}
+            {% elif template_format == "chronological" %}
             <h4 class="spearmint">Experience</h4>
             {% for experience in chronological_experiences %}
                 <h6>{{experience.obj.org}} -  <span class="text-muted fst-italic">{{experience.obj.position}}</span></h6>
                 <p class="text-muted">{{ experience.obj.start_date|date }} - {{experience.obj.end_date | date|default:"Present"}}</p>
                 <ul>
                     {% for weighted_bullet in experience.bullets %}
-                    <li>{{weighted_bullet.bullet.text}}</li>
+                        {% include 'resume/partials/weighted_bullet.html' %}
                     {% endfor %}
                 </ul>
             {% endfor %}

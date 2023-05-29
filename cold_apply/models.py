@@ -37,6 +37,15 @@ class Participant(models.Model):
 
     def __str__(self):
         return f"{self.name}: {self.email}"
+    
+    @property
+    def first_name(self):
+        return self.name.split(' ')[0]
+    
+    @property
+    def last_name(self):
+        return self.name.split(' ')[1]
+
 
     class Meta:
         verbose_name_plural = "Participants"

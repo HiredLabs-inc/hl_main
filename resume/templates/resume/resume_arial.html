@@ -28,31 +28,31 @@
     <div  class="row my-4  border-top border-2 pt-2">
         <div class="col-3 p-0">
             <h5 class="fw-bolder accent">
-                {% if resume_format == "skills" %}
+                {% if template_format == "skills" %}
                     Skills
-                {% elif resume_format == "chronological" %}
+                {% elif template_format == "chronological" %}
                     Experience
                 {% endif %}
             </h4>
         </div>
         <div class="col-9">
-            {% if resume_format == "skills" %}
+            {% if template_format == "skills" %}
             {% for skill in skills_with_bullets %}
                 <h6 class="fw-bolder">{{skill.obj}}</h6>
                 <ul>
                     {% for weighted_bullet in skill.bullets %}
-                    <li>{{weighted_bullet.bullet.text}}</li>
+                        {% include 'resume/partials/weighted_bullet.html' %}
                     {% endfor %}
                 </ul>
             {% endfor %}
-            {% elif resume_format == "chronological" %}
+            {% elif template_format == "chronological" %}
                 {% for experience in chronological_experiences %}
                     <div class="fs-6"><span class="fw-bold">{{experience.obj.position}}</span>- <span class="fst-italic fs-6">{{ experience.obj.start_date|date }} - {{experience.obj.end_date | date|default:"Present"}}</span> </div>
                     <div class="text-muted mb-2">{{experience.obj.org}}</div>
                     <ul>
                         {% for weighted_bullet in experience.bullets %}
-                        <li>{{weighted_bullet.bullet.text}}</li>
-                        {% endfor %}
+                        {% include 'resume/partials/weighted_bullet.html' %}
+                    {% endfor %}
                     </ul>
                 {% endfor %}
             {% endif %}

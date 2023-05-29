@@ -571,7 +571,7 @@ def weigh_bullets(bullets, job, keywords):
 
 
 @login_required
-# @require_http_methods(["POST"])
+@require_http_methods(["POST"])
 def tailored_resume_view(request, job_pk):
     job = get_object_or_404(
         Job.objects.select_related("title", "participant").prefetch_related(
@@ -586,9 +586,9 @@ def tailored_resume_view(request, job_pk):
         bullet__experience__participant=job.participant
     ).distinct()
 
-    form = ResumeConfigForm(request.GET, skills=skills, experiences=experiences)
+    form = ResumeConfigForm(request.POST, skills=skills, experiences=experiences)
     if form.is_valid():
-        resume_format = form.cleaned_data["resume_format"]
+        template_format = form.cleaned_data["template_format"]
 
         # delete existing weightings
         WeightedBullet.objects.filter(participant=job.participant).delete()
@@ -603,7 +603,7 @@ def tailored_resume_view(request, job_pk):
 
         context = {}
 
-        if resume_format == "chronological":
+        if template_format == "chronological":
             bullets = bullets.filter(experience_id__in=form.cleaned_data["experiences"])
 
             weighted_bullets = weigh_bullets(bullets, job, keywords)
@@ -615,16 +615,8 @@ def tailored_resume_view(request, job_pk):
                 weighted_bullets
             )
 
-            # write_chronological_resume(
-            #     job.participant,
-            #     overview,
-            #     education,
-            #     job,
-            #     context["chronological_experiences"],
-            #     form.cleaned_data["sections"],
-            # )
 
-        elif resume_format == "skills":
+        elif template_format == "skills":
             weighted_bullets = weigh_bullets(bullets, job, keywords)
             weighted_bullets = list(
                 weighted_bullets.select_related("bullet").prefetch_related(
@@ -638,18 +630,9 @@ def tailored_resume_view(request, job_pk):
                 weighted_bullets, skills
             )
 
-            # write_skills_resume(
-            #     job.participant,
-            #     overview,
-            #     education,
-            #     job,
-            #     context["skill_list"],
-            #     form.cleaned_data["sections"],
-            # )
-
         context.update(
             {
-                "resume_format": resume_format,
+                "template_format": template_format,
                 "job": job,
                 "title": job.title,
                 "overview": overview,
@@ -661,14 +644,15 @@ def tailored_resume_view(request, job_pk):
             }
         )
         resume_template = f"resume/resume_{form.cleaned_data['resume_template']}.html"
-        if request.GET.get("format") == "preview":
+
+        if form.cleaned_data.get("preview", False) is True:
             return render(request, resume_template, context=context)
 
         pdf_content = write_template_to_pdf(request, resume_template, context=context)
         response = HttpResponse(pdf_content, content_type="application/pdf")
         # response['Content-Disposition'] = 'attachment; filename=test.pdf'
         return response
-
+    print(form.errors)
 
 class OverviewCreateView(LoginRequiredMixin, CreateView):
     model = Overview

@@ -185,16 +185,21 @@ class ResumeConfigForm(forms.Form):
     sections = forms.MultipleChoiceField(
         choices=ResumeSections.choices,
         # set everything on to begin with
-        initial=[sect for sect, _ in ResumeSections.choices],
+        initial=[ResumeSections.OVERVIEW, ResumeSections.BULLETS, ResumeSections.EDUCATION],
         widget=forms.CheckboxSelectMultiple,
     )
-    resume_format = forms.ChoiceField(
+    template_format = forms.ChoiceField(
         choices=ResumeFormatChoices.choices,
         widget=forms.RadioSelect,
         initial=ResumeFormatChoices.CHRONOLOGICAL,
     )
     resume_template = forms.ChoiceField(
         choices=ResumeTemplates.choices,
-        initial=ResumeTemplates.SWISS,
+        initial=ResumeTemplates.STANDARD,
         widget=forms.RadioSelect
+    )
+    preview = forms.BooleanField(
+        initial=False,
+        required=False,
+        widget=forms.HiddenInput,
     )

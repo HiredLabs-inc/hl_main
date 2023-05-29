@@ -1,63 +1,109 @@
 {% extends 'staff.html' %}
 {% load static %}
-
+{% comment %} {
+    {% for value, label in form.resume_template.field.choices %}
+        {{value}}:'{% static 'images/resume_previews/resume_'|add:value|add:'.png' %}',
+    {% endfor %}
+} {% endcomment %}
 {% block content %}
-<h3 class="mb-4">Configure Tailored Resume Options</h3>
-    <form action="{% url 'cold_apply:tailored_resume' job.id %}" method="get" 
-    x-data="{ resume_format: '{{form.resume_format.value}}' || '{{form.resume_format.field.initial}}'}">
-        {% csrf_token %}
-    <div class="mb-4 row" x-data="{'selectedImage': '{{form.resume_template.value|default:''}}' || '{{form.resume_template.field.initial|default:''}}'}">
-        <div class="col-3">
-          {% for choice_value, choice_label in form.resume_template.field.choices  %}
-          <div>
-            <input   type="radio" id="{{ form.resume_template.auto_id }}_{{ choice_value }}" name="{{ form.resume_template.html_name }}" value="{{ choice_value }}"
-                {% if choice_value == form.resume_template.value %}checked{% endif  %}  x-model="selectedImage">
-            <label for="{{ form.resume_template.auto_id }}_{{ choice_value }}">
-                {% comment %} <img src="/static/images/resume_previews/resume_{{choice_value}}.png" alt="{{ choice_label }}"> {% endcomment %}
-                {{choice_label}}
-            </label>
-        </div>
-            
-        {% endfor %}
-    </div>
-          
-        <div class="col-9">
-            <img :src="'/static/images/resume_previews/resume_' + selectedImage + '.png'" alt="" style="height: 450px;" class="border border-gray">
-        </div>
-    </div>
-    <div class="mb-4">
-        <h4>Sections</h4>
-        {{form.sections}}
-    </div>
-    <h4>Resume Format</h4>
-    <div class="mb-4" >
-        <div  class="mb-4" >
-           
-            <input type="radio" class="btn-check" name="resume_format" value="chronological" x-model="resume_format"  id="chronological"  autocomplete="off">
-            <label class="btn btn-outline-primary" for="chronological">Chronological</label>
+<div class="pt-4 pb-5" >
+<h3 class="mb-2">Configure Tailored Resume Options</h3>
+<p>Select resume template, which sections and bullet points you want to include and any additional template specific format options.</p>
+<hr>
+<h5 class="fw-bolder mb-4">1. Resume Template</h5>
+<form action="{% url 'cold_apply:tailored_resume' job.id %}" method="post" 
+x-data="{ 
+    template_format: '',
+    resume_template: '',
+    preview: '{{form.preview.value}}',
+    preview_img_paths: {
+        {% for value, label in form.resume_template.field.choices %}
+            {{value}}:'{% static 'images/resume_previews/resume_'|add:value|add:'.png' %}',
+        {% endfor %}    
+    }
 
-            <input type="radio" class="btn-check" name="resume_format" value="skills" x-model="resume_format"  id="skills"  autocomplete="off">
-            <label class="btn btn-outline-primary" for="skills">Skills</label>
+}
+"
+x-init="resume_template=$el['resume_template'].value; template_format=$el['template_format'].value">
+    {% csrf_token %}
+<div class="mb-4 row">
+    <div class="col-3">
+    {% include 'inputs/list_radio_select.html' with form_field=form.resume_template alpine_selected_var_name='resume_template' %}
+
+</div>
         
+    <div class="col-9">
+        <img :src="preview_img_paths[resume_template]" 
+        alt="" 
+        style="height: 450px;box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);" 
+        class="border border-gray rounded"
+        >
+    </div>
+</div>
+<hr>
+<div class="mb-4">
+    <h5 class="fw-bolder mb-4">2. Select Template Sections</h5>
+    <p>Select which sections you wish to include from the final resume. </p>
+    {{form.sections}}
+    <p class="text-danger fw-semibold mt-3">Removing too many sections may break the resume layout.</p>
+    
+</div>
+<hr>
+<h5 class="fw-bolder mb-4">3. Template Format</h5>
+<div class="mb-4 row" >
+    <div class="col-3">
+        {% include 'inputs/list_radio_select.html' with form_field=form.template_format alpine_selected_var_name='template_format' %}
+    </div>
+    <div class="col-9 border rounded pt-2">
+        <div x-show="template_format=='chronological'">
+            <p class="fw-bolder mb-2">Chronological</p>
+            <p>
+            Resume will list experiences in chronological order with a list of bullet point details under each.
+            </p>
+            
+            <p>Bullet points are sorted according to weighting of relevance to the job's description.</p>
         </div>
-        <div>
-            <div x-show="resume_format==='chronological'">
-                <div>
-                    <p>Select Experiences</p>
-                    {{form.experiences}}
-                </div>
-                
-            </div>
-            <div x-show="resume_format==='skills'">
-                <div>
-                    <p>Select Skills</p>
-                    {{form.skills}}
-                </div>
-            </div>
+        <div x-show="template_format=='skills'">
+            <p class="fw-bolder mb-2">Skills</p>
+            <p>
+                Resume will list applicant's skills as section headings, bullet points that have been tagged as demonstrating a skill will be listed below
+                each skill heading. 
+            </p>
+            <p>Bullet points are sorted according to weighting of relevance to the job's description. If a bullet point is tagged as multiple skills, it will only be shown once under the first skill found.</p>
+            
         </div>
-      </div>
-      <button type="submit" :disabled="resume_format === 'None'">Generate Resume</button>
+    </div>
+    <div class="col mt-4">
+        <p class="fw-bolder">3.1 Configure specific skills or experiences</p>
+        <div x-show="template_format==='chronological'">
+            <p>Experiences Found: {{form.experiences.field.queryset.count}} (<a href="{% url 'cold_apply:participant_experience_list' job.participant.id %}">configure experience</a>)</p>
+            <div>
+                {{form.experiences}}
+            </div>
+            
+        </div>
+        <div x-show="template_format==='skills'">
+            <p>Skills Found: {{form.skills.field.queryset.count}} (<a href="{% url 'cold_apply:participant_experience_by_skill_list' job.participant.id %}">configure skills</a>)</p>
+            
+            <div>
+                {{form.skills}}
+            </div>
+            
+        </div>
+    </div>
+    </div>
+    <input type="hidden" name="preview" x-model="preview" id="id_preview" >
+    <hr>
+    <div class="rol">
+        <div class="col">
+            <h5 class="fw-semibold">4. Select Output</h5>
+            <p>Preview will display bullet weightings and allow inline editting of text content.</p>
+            <button class="btn btn-primary" type="submit" :disabled="template_format === 'None'">Generate PDF Resume</button>
+            <button class="btn btn-secondary" @click="preview='True'" type="submit">Preview Content</button>
+        </div>
+    </div>
+   
 
-    </form>
-      
+</form>
+</div>
 {% endblock content %}

@@ -162,6 +162,8 @@ STATICFILES_DIRS = (
 )
 
 STATIC_URL = 'static/'
+# STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
+
 RESUME_OUT_PATH = os.path.join(BASE_DIR, 'resume_parser/static/output/')
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')

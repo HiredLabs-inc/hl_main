@@ -11,88 +11,14 @@
         integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD"
         crossorigin="anonymous">
     <link rel="stylesheet" href="{% static 'styles/style.css' %}">
+    <script src="{% static 'assets/htmx.min.js' %}" defer></script>
+    <script src="{% static 'assets/alpine.min.js' %}" defer></script>
+
     {% block head %}
     {% endblock head %}
 </head>
-<body>
+<body x-data="">
     {% block content %}
-        <header>
-            <div class="centered-content">
-                <h1>{{ participant.name }}</h1>
-                <p>{{ participant.email }} | {{ participant.phone }}</p>
-            </div>
-        </header>
-        {% if "overview" in form.sections.value %}
-                <h3>Overview</h3>
-                <div id="overview">
-                    {% if overview %}
-                        <p>
-                            {% for summary in overview %}
-                                {{ summary.text }}
-                                <a href="{% url 'cold_apply:update_overview' pk=summary.id position_pk=job.title_id %}" target="_blank">Edit Overview</a>
-                            {% endfor %}
-                        </p>
-                    {% else %}
-                        <a href="{% url 'cold_apply:create_overview' pk=participant.id position_pk=job.title_id %}" target="_blank">Add Overview</a>
-                    {% endif %}
-                </div>
-                <br>
-                <br>
-            {% endif %}
-
-            {% if "bullets" in form.sections.value %}
-        {% if resume_format == "chronological" %}
-            <h3>Professional Experience</h3>
-            {% for experience in chronological_experiences %}
-                <div class="bullets">
-                <h5>
-                    <a href="{% url 'cold_apply:update_experience' pk=experience.obj.id %}" target="_blank">
-                        {{ experience.obj.position }} at {{ experience.obj.org }}
-                    </a>
-                </h5>
-                <p>{{ experience.obj.start_date|date }} -
-                    {% if experience.obj.end_date == None %}
-                Present
-                {% else %}
-                {{ experience.obj.end_date|date }}
-                {% endif %}
-                </p>
-                    <ul>
-                        {% for bullet in experience.bullets %}
-                            {% include 'cold_apply/partials/bullet_detail_li.html' with bullet=bullet.bullet extra_text=bullet.weight_display %}
-                            {% endfor %}
-                    </ul>
-                </div>
-            {% endfor %}
-            {% if not chronological_experiences %}
-                <p>No experience found. Either you haven't had a job, or you haven't entered any work experience into our
-                    system.</p>
-            {% endif %}
-        {% elif resume_format == "skills" %}
-            <h3>Professional Skills</h3>
-            {% for skill in skills_with_bullets %}
-                <h5>{{skill.obj}}</h5>
-                <ul>
-                    {% for bullet in skill.bullets %}
-                    {% include 'cold_apply/partials/bullet_detail_li.html' with show_experience_subtext=True bullet=bullet.bullet extra_text=bullet.weight_display %}             
-                    {% endfor %}
-                </ul>
-            {% endfor %}
-        {% endif %}
-        {% endif %}
-
-        {% if "education" in form.sections.value %}
-        <h3>Education</h3>
-        {% if education %}
-            {% for edu in education %}
-                {{ edu.education.degree.abbr }} in {{ edu.education.concentration }} at {{ edu.education.org }}
-            {% endfor %}
-        {% else %}
-        <p>No education entered </p>
-        {% endif %}
-        {% endif %}
-
-
     {% endblock content %}
     <style>
         .break-after {page-break-after: always; }
@@ -109,6 +35,21 @@
     </style>
     {% block styles %}
     {% endblock styles %}
+
+    {% if form.preview.value == 'True' %}
+    <div class="px-5">
+        <form method="post" @submit.prevent="$el['preview'].value='False'; $el.submit()">
+            {% csrf_token %}
+            <div class="d-none">
+            {{form.as_p}}
+            </div>
+
+            <button class="btn btn-secondary" onclick="history.back()">Back to Configuration</button>
+            <button class="btn btn-primary" type="submit">Generate PDF</button>
+        </form>
+        
+    </div>
+    {% endif %}
     
 </body>
 </html>
