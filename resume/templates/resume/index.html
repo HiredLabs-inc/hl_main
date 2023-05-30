@@ -73,7 +73,7 @@
         <h3>Education</h3>
         {% if education %}
             {% for edu in education %}
-                {{ edu.education.degree.abbr }} in {{ edu.education.concentration }} at {{ edu.education.org }}
+                {{ edu.degree.abbr }} in {{ edu.concentration }} at {{ edu.org }}
             {% endfor %}
         {% else %}
         <p>No education entered </p>
