@@ -1,6 +1,6 @@
 from django import forms
 
-from resume.models import Bullet, Experience
+from resume.models import Bullet, CertProjectActivity, Experience
 from resume.pdf import (
     RESUME_TEMPLATE_SECTIONS,
     ResumeCoreTemplates,
@@ -155,11 +155,14 @@ class ResumeConfigForm(forms.Form):
     def __init__(self, *args, **kwargs) -> None:
         experiences = kwargs.pop("experiences")
         skills = kwargs.pop("skills")
+        certifications = kwargs.pop("certifications")
         super().__init__(*args, **kwargs)
         self.fields["experiences"].queryset = experiences
         self.fields["experiences"].initial = experiences
         self.fields["skills"].queryset = skills
         self.fields["skills"].initial = skills
+        self.fields["certifications"].queryset = certifications
+        self.fields["certifications"].initial = certifications
 
     # queryset for choices passed into constructor eg ResumeConfigForm(experiences=Experiences.objects.filter(...))
     experiences = forms.ModelMultipleChoiceField(
@@ -169,6 +172,11 @@ class ResumeConfigForm(forms.Form):
     )
     skills = forms.ModelMultipleChoiceField(
         queryset=Skill.objects.none(),
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
+    )
+    certifications = forms.ModelMultipleChoiceField(
+        queryset=CertProjectActivity.objects.none(),
         widget=forms.CheckboxSelectMultiple,
         required=False,
     )
@@ -195,7 +203,9 @@ class ResumeConfigForm(forms.Form):
         required=False,
         widget=forms.HiddenInput,
     )
-    no_colors = forms.BooleanField(initial=False, widget=forms.CheckboxInput)
+    no_colors = forms.BooleanField(
+        label="No colors", initial=False, widget=forms.CheckboxInput(), required=False
+    )
 
     resume_template_sections = {
         k: " | ".join(map(lambda s: s.capitalize(), v))

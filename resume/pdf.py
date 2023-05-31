@@ -17,7 +17,7 @@ class ResumeSections(models.TextChoices):
     # BULLETS = "bullets"
     EDUCATION = "education"
     SKILLS = "skills"
-    AWARDS = "awards"
+    CERTIFICATIONS = "certifications"
 
 
 class ResumeCoreTemplates(models.TextChoices):
@@ -45,14 +45,12 @@ RESUME_TEMPLATE_SECTIONS = {
     ResumeCoreTemplates.STANDARD: [
         ResumeSections.OVERVIEW,
         ResumeSections.EDUCATION,
-        ResumeSections.SKILLS,
-        ResumeSections.AWARDS,
+        ResumeSections.CERTIFICATIONS,
     ],
     ResumeCoreTemplates.CORAL: [
-        ResumeSections.OVERVIEW,
         ResumeSections.EDUCATION,
         ResumeSections.SKILLS,
-        ResumeSections.AWARDS,
+        ResumeSections.CERTIFICATIONS,
     ],
     ResumeCoreTemplates.ARIAL: [
         ResumeSections.OVERVIEW,
@@ -62,19 +60,18 @@ RESUME_TEMPLATE_SECTIONS = {
         ResumeSections.OVERVIEW,
         ResumeSections.EDUCATION,
         ResumeSections.SKILLS,
-        ResumeSections.AWARDS,
+        ResumeSections.CERTIFICATIONS,
     ],
     ResumeCoreTemplates.SWISS: [
-        ResumeSections.OVERVIEW,
         ResumeSections.EDUCATION,
         ResumeSections.SKILLS,
-        ResumeSections.AWARDS,
+        ResumeSections.CERTIFICATIONS,
     ],
     ResumeCoreTemplates.SERIFF: [
         ResumeSections.OVERVIEW,
         ResumeSections.EDUCATION,
         ResumeSections.SKILLS,
-        ResumeSections.AWARDS,
+        ResumeSections.CERTIFICATIONS,
     ],
 }
 

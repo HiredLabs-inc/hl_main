@@ -65,10 +65,20 @@
         {% endif %}
     </div>
     <div class="col-4">
+        {% if "skills" in form.sections.value %}
+        <div class="mb-4">
+                <h4 class="blue">Skills</h3>
+                {% for skill in skills %}
+                <div class=" text-muted ">{{skill}}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
         <!-- Awards  -->
-        {% if "awards" in form.sections.value and awards %}
+        {% if "certifications" in form.sections.value and certifications %}
             <h4 class="blue ">Awards</h4>
-            <p>{{awards}}</p>
+            {% for cert in certifications %}
+            <div class="text-muted">{{cert}}</div>
+            {% endfor %}
         {% endif %}
     </div>
 </div>

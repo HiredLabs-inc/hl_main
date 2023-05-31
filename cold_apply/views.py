@@ -532,10 +532,18 @@ def configure_tailored_resume_view(request, job_pk):
     skills = Skill.objects.filter(
         bullet__experience__participant=job.participant
     ).distinct()
+    certifications = CertProjectActivity.objects.filter(participant=job.participant)
     if request.method == "POST":
-        form = ResumeConfigForm(request.POST, experiences=experiences, skills=skills)
+        form = ResumeConfigForm(
+            request.POST,
+            experiences=experiences,
+            skills=skills,
+            certifications=certifications,
+        )
     else:
-        form = ResumeConfigForm(experiences=experiences, skills=skills)
+        form = ResumeConfigForm(
+            experiences=experiences, skills=skills, certifications=certifications
+        )
     return render(
         request,
         "cold_apply/configure_tailored_resume.html",
@@ -590,9 +598,14 @@ def tailored_resume_view(request, job_pk):
     skills = Skill.objects.filter(
         bullet__experience__participant=job.participant
     ).distinct()
-    awards = CertProjectActivity.objects.filter()
+    certifications = CertProjectActivity.objects.filter(participant=job.participant)
 
-    form = ResumeConfigForm(request.POST, skills=skills, experiences=experiences)
+    form = ResumeConfigForm(
+        request.POST,
+        skills=skills,
+        experiences=experiences,
+        certifications=certifications,
+    )
 
     if form.is_valid():
         bullets_content = form.cleaned_data["bullets_content"]
@@ -633,15 +646,21 @@ def tailored_resume_view(request, job_pk):
             skills = (
                 Skill.objects.filter(
                     bullet__experience__participant=job.participant,
+                    id__in=form.cleaned_data["skills"],
                 )
                 # exclude skills being rendered in the main bullets
-                .exclude(
-                    id__in=form.cleaned_data["skills"],
-                ).distinct()
+                .distinct()
             )
 
             context["skills_with_bullets"] = group_bullets_by_skill(
                 weighted_bullets, skills
+            )
+
+            # exclude skills being rendered in the main bullets
+            skills = (
+                Skill.objects.filter(bullet__experience__participant=job.participant)
+                .exclude(id__in=skills)
+                .distinct()
             )
 
         context.update(
@@ -655,6 +674,7 @@ def tailored_resume_view(request, job_pk):
                 "now": timezone.now(),
                 "form": form,
                 "skills": skills,
+                "certifications": certifications,
             }
         )
         resume_template = f"resume/resume_{form.cleaned_data['resume_template']}.html"

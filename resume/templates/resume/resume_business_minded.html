@@ -22,7 +22,6 @@
             <br>
         {% endif %}
 
-        {% if "bullets" in form.sections.value %}
     {% if bullets_content == "chronological" %}
         <h5 class="fw-bold">Professional Experience</h5>
         {% for experience in chronological_experiences %}
@@ -58,7 +57,6 @@
                 {% endfor %}
             </ul>
         {% endfor %}
-    {% endif %}
     {% endif %}
 
     <div>

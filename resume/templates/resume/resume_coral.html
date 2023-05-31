@@ -23,21 +23,23 @@
             <div class="mb-4 fs-5">{{job.participant.email}}</div>
         </div>
     </div>
-    <!-- Overview  -->
-    {% if "overview" in form.sections.value %}
+    <!-- Skills  -->
+    {% if "skills" in form.sections.value %}
     <div class="row my-4">
         <div class="col">
-            <h3 class="playfair mb-4 accent fw-bold">Profile</h3>
-            <div class="text-muted">{{overview.text}}</div>
+            <h3 class="playfair mb-4  accent fw-bold">Skills</h3>
+            <ul>
+            {% for skill in skills %}
+                <li>{{skill}}</li>
+            {% endfor %}
+            </ul>
         </div>
     </div>
     {% endif %}
 
     <!-- Bullets  -->
-    {% if "bullets" in form.sections.value %}
     <div  class="row my-4">
         <div class="col">
-
             {% if bullets_content == "skills" %}
             <h3 class="playfair mb-4  accent fw-bold">Skills</h3>
             {% for skill in skills_with_bullets %}
@@ -62,7 +64,6 @@
             {% endif %}
         </div>
     </div>
-    {% endif %}
 
     <!-- Education  -->
     {% if "education" in form.sections.value and education %}
@@ -77,7 +78,7 @@
     {% endif %}
 
     <!-- Awards  -->
-    {% if "awards" in form.sections.value and awards %}
+    {% if "certifications" in form.sections.value and certifications %}
     <div  class="row my-4">
         <div class="col">
             <h3 class="playfair mb-4">Awards</h3>

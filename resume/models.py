@@ -86,10 +86,19 @@ class Bullet(models.Model):
 
 
 class Education(models.Model):
+    class EducationStatus(models.TextChoices):
+        COMPLETED = "completed", "Coursework Completed"
+        IN_PROGRESS = "in_progress", "In Progress"
+
     org = models.ForeignKey(Organization, on_delete=models.CASCADE)
     degree = models.ForeignKey(Degree, on_delete=models.CASCADE)
     concentration = models.ForeignKey(Concentration, on_delete=models.CASCADE)
     participant = models.ForeignKey("cold_apply.Participant", on_delete=models.CASCADE)
+    status = models.CharField(
+        choices=EducationStatus.choices,
+        default=EducationStatus.COMPLETED,
+        max_length=50,
+    )
 
     def __str__(self):
         return "{}: {}, {}".format(self.org, self.degree, self.concentration)
@@ -106,7 +115,9 @@ class CertProjectActivity(models.Model):
     title = models.CharField(max_length=250)
     description = models.TextField()
     variety = models.CharField(max_length=20, choices=OPTIONS)
-    participant = models.ForeignKey("cold_apply.Participant", on_delete=models.CASCADE)
+    participant = models.ForeignKey(
+        "cold_apply.Participant", on_delete=models.CASCADE, null=True
+    )
 
     def __str__(self):
         return "{}: {}, {}".format(self.org, self.title, self.description)

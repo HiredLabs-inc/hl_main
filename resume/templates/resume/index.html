@@ -41,7 +41,6 @@
 
 {% block work %}
 <div id="work">
-    {% if "bullets" in form.sections.value %}
     {% if bullets_content == "chronological" %}
         <h3>Professional Experience</h3>
         <a href="{% url 'cold_apply:create_experience' pk=participant.id %}" target="_blank">Add Work Experience</a>
@@ -78,7 +77,6 @@
                 {% endfor %}
             </ul>
         {% endfor %}
-    {% endif %}
     {% endif %}
     
     {% if "education" in form.education.value %}

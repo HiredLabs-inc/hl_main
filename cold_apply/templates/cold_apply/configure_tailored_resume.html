@@ -1,16 +1,14 @@
 {% extends 'staff.html' %}
 {% load static %}
 {% load form_helpers %}
-{% comment %} {
-    {% for value, label in form.resume_template.field.choices %}
-        {{value}}:'{% static 'images/resume_previews/resume_'|add:value|add:'.png' %}',
-    {% endfor %}
-} {% endcomment %}
+
 {% block content %}
+
 <div class="pt-4 pb-5" >
 <h3 class="mb-2">Configure Tailored Resume Options</h3>
 <p>Select resume template, which sections and bullet points you want to include and any additional template specific format options.</p>
 <hr>
+{% comment %} sections= {% endcomment %}
 <h5 class="fw-bolder mb-4">1. Resume Template</h5>
 <form action="{% url 'cold_apply:tailored_resume' job.id %}" method="post" 
 x-data="{ 
@@ -22,13 +20,14 @@ x-data="{
             {{value}}:'{% static 'images/resume_previews/resume_'|add:value|add:'.png' %}',
         {% endfor %}    
     },
-    resume_template_sections   
-
+    resume_template_sections,
+    sections:[]
 }
 "
 x-init="
 resume_template=$el['resume_template'].value; 
-bullets_content=$el['bullets_content'].value
+bullets_content=$el['bullets_content'].value;
+sections=Array.from(document.querySelectorAll('input[name=\'sections\']:checked')).map(s => s.value)
 ">
     {% csrf_token %}
 <div class="mb-4 row">
@@ -66,11 +65,18 @@ bullets_content=$el['bullets_content'].value
 <div class="mb-4">
     <h5 class="fw-bolder mb-4">2. Select Template Sections</h5>
     <p>Select which sections you wish to include from the final resume. </p>
-    <div>
+    <div> 
         {% for choice in form.sections %}
         <div x-show="resume_template_sections[resume_template].includes('{{choice.data.value}}')">
             <label for="{{choice.id_for_label}}">
-                {{choice.tag}}
+                {{choice.attrs}}
+                <input type="checkbox" 
+                        name="sections" 
+                        id="id_sections_{{forloop.counter0}}" 
+                        value="{{choice.data.value}}" 
+                        {% if choice.data.attrs.checked %}checked{% endif %}
+                        x-model="sections"
+                >
                 {{choice.choice_label}}
             </label>
         </div>
@@ -83,7 +89,8 @@ bullets_content=$el['bullets_content'].value
     
 </div>
 <hr>
-<h5 class="fw-bolder mb-4">3. Bullet Points Content</h5>
+<h5 class="fw-bolder">3. Bullet Points Content</h5>
+<p>Select what the main body of the resume will contain.</p>
 <div class="mb-4 row" >
     <div class="col-3">
         {% include 'inputs/alpine_list_radio_select.html' with form_field=form.bullets_content alpine_selected_var_name='bullets_content' %}
@@ -108,6 +115,7 @@ bullets_content=$el['bullets_content'].value
         </div>
     </div>
     <div class="col mt-4">
+        
         <p class="fw-bolder">3.1 Configure specific skills or experiences</p>
         <div x-show="bullets_content==='chronological'">
             <p>Experiences Found: {{form.experiences.field.queryset.count}} (<a href="{% url 'cold_apply:participant_experience_list' job.participant.id %}">configure experience</a>)</p>
@@ -124,6 +132,16 @@ bullets_content=$el['bullets_content'].value
             </div>
             
         </div>
+        <template x-if="sections.includes('certifications')">
+            <div class="mt-4">
+                <p class="fw-bolder">3.2 Configure certifications</p>
+                <div>
+                    {{form.certifications}}
+                </div>
+            </div>
+            
+        </template>
+        
     </div>
     </div>
     <input type="hidden" name="preview" x-model="preview" id="id_preview" >
@@ -131,6 +149,11 @@ bullets_content=$el['bullets_content'].value
     <div class="rol">
         <div class="col">
             <h5 class="fw-semibold">4. Select Output</h5>
+            <label for="id_no_colors">
+                {{form.no_colors}}
+                No colors
+            </label>
+            
             <p>Preview will display bullet weightings and allow inline editting of text content.</p>
             <button class="btn btn-primary" type="submit" :disabled="bullets_content === 'None'">Generate PDF Resume</button>
             <button class="btn btn-secondary" @click="preview='True'" type="submit">Preview Content</button>

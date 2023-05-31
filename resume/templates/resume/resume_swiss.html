@@ -17,21 +17,22 @@
         </div>
     </div>
     <!-- Overview  -->
-    {% if "overview" in form.sections.value %}
+    {% if "skills" in form.sections.value %}
     <div class="row my-4">
         <div class="col-4">
             <div style="width:20px; border-top:3px solid black;" class="mb-3"></div>
-            <h6  class="fw-bolder">Profile</h6>
+            <h6  class="fw-bolder">Skils</h6>
         </div>
         <div class="col-8">
             <div style="width:100%; border-top:3px solid black;" class="mb-3"></div>
-            {{overview.text}}
+            {% for skill in skills %}
+            <div>{{skill}}</div>
+            {% endfor %}
         </div>
     </div>
     {% endif %}
 
     <!-- Bullets  -->
-    {% if "bullets" in form.sections.value %}
     <div  class="row my-4">
         <div class="col-4">
             <div style="width:20px; border-top:3px solid black;" class="mb-3"></div>
@@ -68,7 +69,6 @@
             
         </div>
     </div>
-    {% endif %}
 
     <!-- Education  -->
     {% if "education" in form.sections.value and education %}
@@ -87,7 +87,7 @@
     {% endif %}
 
     <!-- Awards  -->
-    {% if "awards" in form.sections.value and awards %}
+    {% if "certifications" in form.sections.value and certifications %}
     <div  class="row my-4">
         <div class="col-4">
             <div style="width:20px; border-top:3px solid black;" class="mb-3"></div>
@@ -95,7 +95,9 @@
         </div>
         <div class="col-8">
             <div style="width:100%; border-top:3px solid black;" class="mb-3"></div>
-
+            {% for cert in certifications %}
+            <div>{{cert}}</div>
+            {% endfor %}
         </div>
     </div>
     {% endif %}

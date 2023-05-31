@@ -15,8 +15,6 @@
     </div>
          
     {% endif %}
-
-    {% if "bullets" in form.sections.value %}
     {% if bullets_content == "chronological" %}
         <div class="fs-6 fw-bolder text-center">Professional Experience</div>
         {% for experience in chronological_experiences %}
@@ -59,7 +57,6 @@
             </ul>
         {% endfor %}
     {% endif %}
-    {% endif %}
 
     {% if "education" in form.sections.value %}
     <div class="fs-6 fw-bolder text-center">Education</div>
@@ -71,6 +68,19 @@
     </ul>
     {% else %}
     <p>No education entered </p>
+    {% endif %}
+    {% endif %}
+
+    {% if "certifications" in form.sections.value %}
+    <div class="fs-6 fw-bolder text-center">Awards</div>
+    {% if certifications %}
+    <ul>
+        {% for cert in certifications %}
+           <li> {{cert}}</li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>No certifications entered </p>
     {% endif %}
     {% endif %}
 

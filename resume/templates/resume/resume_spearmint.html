@@ -27,7 +27,6 @@
     {% endif %}
 
     <!-- Bullets  -->
-    {% if "bullets" in form.sections.value %}
     <div  class="row my-4">
         <div class="col">
 
@@ -55,7 +54,6 @@
             {% endif %}
         </div>
     </div>
-    {% endif %}
 
     <!-- Education  -->
     {% if "education" in form.sections.value and education %}
@@ -70,7 +68,7 @@
     {% endif %}
 
     <!-- Awards  -->
-    {% if "awards" in form.sections.value and awards %}
+    {% if "certifications" in form.sections.value and certifications %}
     <div  class="row my-4">
         <div class="col">
             <h4 class="spearmint">Awards</h4>
