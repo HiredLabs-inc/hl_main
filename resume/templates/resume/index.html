@@ -42,7 +42,7 @@
 {% block work %}
 <div id="work">
     {% if "bullets" in form.sections.value %}
-    {% if template_format == "chronological" %}
+    {% if bullets_content == "chronological" %}
         <h3>Professional Experience</h3>
         <a href="{% url 'cold_apply:create_experience' pk=participant.id %}" target="_blank">Add Work Experience</a>
         {% for experience in chronological_experiences %}
@@ -68,7 +68,7 @@
             <p>No experience found. Either you haven't had a job, or you haven't entered any work experience into our
                 system.</p>
         {% endif %}
-    {% elif template_format == "skills" %}
+    {% elif bullets_content == "skills" %}
         <h3>Professional Skills</h3>
         {% for skill in skills_with_bullets %}
             <h5>{{skill.obj}}</h5>

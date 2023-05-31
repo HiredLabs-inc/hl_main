@@ -31,15 +31,15 @@
     <div  class="row my-4">
         <div class="col-4  text-end text-muted">
             <h6 class="fw-bolder">
-                {% if template_format == "skills" %}
+                {% if bullets_content == "skills" %}
                     Skills
-                {% elif template_format == "chronological" %}
+                {% elif bullets_content == "chronological" %}
                     Experience
                 {% endif %}
             </h6>
         </div>
         <div class="col-8">
-            {% if template_format == "skills" %}
+            {% if bullets_content == "skills" %}
             {% for skill in skills_with_bullets %}
                 <h6 class="fw-bolder">{{skill.obj}}</h6>
                 <ul>
@@ -48,7 +48,7 @@
                     {% endfor %}
                 </ul>
             {% endfor %}
-            {% elif template_format == "chronological" %}
+            {% elif bullets_content == "chronological" %}
                 {% for experience in chronological_experiences %}
                     <h6> <span class="fw-bolder">{{experience.obj.position}}</span> / {{experience.obj.org}}</h6>
                     <p class="text-muted">{{ experience.obj.start_date|date }} - {{experience.obj.end_date | date|default:"Present"}}</p>

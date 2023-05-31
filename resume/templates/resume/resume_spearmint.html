@@ -31,7 +31,7 @@
     <div  class="row my-4">
         <div class="col">
 
-            {% if template_format == "skills" %}
+            {% if bullets_content == "skills" %}
             <h4 class="spearmint">Skills</h4>
             {% for skill in skills_with_bullets %}
                 <h4 class="fw-bolder">{{skill.obj}}</h4>
@@ -41,7 +41,7 @@
                     {% endfor %}
                 </ul>
             {% endfor %}
-            {% elif template_format == "chronological" %}
+            {% elif bullets_content == "chronological" %}
             <h4 class="spearmint">Experience</h4>
             {% for experience in chronological_experiences %}
                 <h6>{{experience.obj.org}} -  <span class="text-muted fst-italic">{{experience.obj.position}}</span></h6>

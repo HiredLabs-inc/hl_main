@@ -6,9 +6,7 @@ class Overview(models.Model):
     title = models.ForeignKey(
         "Position", on_delete=models.CASCADE, default=None, null=True
     )
-    participant = models.ForeignKey(
-        "cold_apply.Participant", on_delete=models.CASCADE
-    )
+    participant = models.ForeignKey("cold_apply.Participant", on_delete=models.CASCADE)
 
     def __str__(self):
         return self.title.title
@@ -65,15 +63,13 @@ class Experience(models.Model):
     end_date = models.DateField(null=True, blank=True)
     org = models.ForeignKey(Organization, on_delete=models.CASCADE)
     position = models.ForeignKey(Position, on_delete=models.CASCADE)
-    participant = models.ForeignKey(
-        "cold_apply.Participant", on_delete=models.CASCADE
-    )
+    participant = models.ForeignKey("cold_apply.Participant", on_delete=models.CASCADE)
 
     def __str__(self):
         return f"{self.org}: {self.position}, {self.start_date} - {self.end_date or 'Present'}"
-    
+
     class Meta:
-        ordering = ['-start_date']
+        ordering = ["-start_date"]
 
 
 class Bullet(models.Model):
@@ -93,9 +89,7 @@ class Education(models.Model):
     org = models.ForeignKey(Organization, on_delete=models.CASCADE)
     degree = models.ForeignKey(Degree, on_delete=models.CASCADE)
     concentration = models.ForeignKey(Concentration, on_delete=models.CASCADE)
-    participant = models.ForeignKey(
-        "cold_apply.Participant", on_delete=models.CASCADE
-    )
+    participant = models.ForeignKey("cold_apply.Participant", on_delete=models.CASCADE)
 
     def __str__(self):
         return "{}: {}, {}".format(self.org, self.degree, self.concentration)
@@ -106,11 +100,13 @@ class CertProjectActivity(models.Model):
         ("Certification", "Certification"),
         ("Project", "Project"),
         ("Activity", "Activity"),
+        ("Award", "Award"),
     ]
     org = models.ForeignKey(Organization, on_delete=models.CASCADE)
     title = models.CharField(max_length=250)
     description = models.TextField()
     variety = models.CharField(max_length=20, choices=OPTIONS)
+    participant = models.ForeignKey("cold_apply.Participant", on_delete=models.CASCADE)
 
     def __str__(self):
         return "{}: {}, {}".format(self.org, self.title, self.description)

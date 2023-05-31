@@ -21,13 +21,20 @@ from django.urls import include, path
 from userprofile import views as userprofile_views
 
 urlpatterns = [
-    path('admin/', admin.site.urls, name='admin'),
-    path('', userprofile_views.home, name='home'),
-    path('about/', userprofile_views.about, name='about'),
-    path('staff/', userprofile_views.staff, name='staff'),
-    path('userprofile/', include('userprofile.urls')),
-    path('cold_apply/', include('cold_apply.urls')),
-    path('resume/', include('resume.urls')),
-    path('releases/', include('releases.urls')),
-    path('rates/', include('rates.urls')),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) # this only works in development
+    path("admin/", admin.site.urls, name="admin"),
+    path("", userprofile_views.home, name="home"),
+    path("about/", userprofile_views.about, name="about"),
+    path("staff/", userprofile_views.staff, name="staff"),
+    path("userprofile/", include("userprofile.urls")),
+    path("cold_apply/", include("cold_apply.urls")),
+    path("resume/", include("resume.urls")),
+    path("releases/", include("releases.urls")),
+    path("rates/", include("rates.urls")),
+] + static(
+    settings.MEDIA_URL, document_root=settings.MEDIA_ROOT
+)  # this only works in development
+
+if settings.DEBUG:
+    urlpatterns.append(
+        path("__debug__/", include("debug_toolbar.urls")),
+    )

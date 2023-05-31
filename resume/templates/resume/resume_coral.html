@@ -38,7 +38,7 @@
     <div  class="row my-4">
         <div class="col">
 
-            {% if template_format == "skills" %}
+            {% if bullets_content == "skills" %}
             <h3 class="playfair mb-4  accent fw-bold">Skills</h3>
             {% for skill in skills_with_bullets %}
                 <h4 class="fw-bolder accent">{{skill.obj}}</h4>
@@ -48,7 +48,7 @@
                     {% endfor %}
                 </ul>
             {% endfor %}
-            {% elif template_format == "chronological" %}
+            {% elif bullets_content == "chronological" %}
             <h3 class="playfair mb-4  accent fw-bold">Experience</h3>
             {% for experience in chronological_experiences %}
                 <h4 class="playfair"><span class="fw-bold">{{experience.obj.org}}</span> -  <span class="text-muted fst-italic ">{{experience.obj.position}}</span></h4>
@@ -105,13 +105,17 @@
 
 
     }
-    .accent {
-        color: #f75d5d
-    }
+   
     ul {
         padding-left: 5rem;
     }
 
 </style>
 {% endblock styles %}
+
+{% block colors %}
+.accent {
+    color: #f75d5d
+}
+{% endblock colors %}
 

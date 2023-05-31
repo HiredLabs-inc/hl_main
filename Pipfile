@@ -21,6 +21,7 @@ django-q = "*"
 fpdf = "*"
 pytest-django = "*"
 playwright = "*"
+django-debug-toolbar = "*"
 
 [dev-packages]
 pytest = "*"

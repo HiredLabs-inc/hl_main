@@ -37,7 +37,7 @@
     <div  class="row my-4">
         <div class="col">
 
-            {% if template_format == "skills" %}
+            {% if bullets_content == "skills" %}
             <h3 class="oswald mb-4">Skills</h3>
             {% for skill in skills_with_bullets %}
                 <h4 class="fw-bolder accent">{{skill.obj}}</h4>
@@ -47,7 +47,7 @@
                     {% endfor %}
                 </ul>
             {% endfor %}
-            {% elif template_format == "chronological" %}
+            {% elif bullets_content == "chronological" %}
             <h3 class="oswald mb-4">Experience</h3>
             {% for experience in chronological_experiences %}
                 <h4><span class="accent fw-bold">{{experience.obj.org}}</span> -  <span class="text-muted fst-italic">{{experience.obj.position}}</span></h4>
@@ -102,9 +102,7 @@
     .oswald {
         font-family: 'Oswald', sans-serif;
     }
-    .accent {
-        color: #e91d63
-    }
+    
     ul {
         padding-left: 5rem;
     }
@@ -112,3 +110,10 @@
 </style>
 {% endblock styles %}
 
+
+
+{% block colors %}
+.accent {
+    color: #e91d63
+}
+{% endblock colors %}

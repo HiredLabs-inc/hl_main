@@ -1,22 +1,85 @@
-from playwright.sync_api import sync_playwright
-from django.template.loader import render_to_string
+import json
+
 from django.db import models
+from django.template.loader import render_to_string
+from playwright.sync_api import sync_playwright
 
 
-class ResumeTemplates(models.TextChoices):
+class ResumeFormatChoices(models.TextChoices):
+    CHRONOLOGICAL = "chronological", "Chronological Work Experience"
+    SKILLS = "skills", "Top Skills"
+
+
+class ResumeSections(models.TextChoices):
+    """Sections that can be configured in a resume"""
+
+    OVERVIEW = "overview"
+    # BULLETS = "bullets"
+    EDUCATION = "education"
+    SKILLS = "skills"
+    AWARDS = "awards"
+
+
+class ResumeCoreTemplates(models.TextChoices):
     """Values correspond to resume/templates/resume/resume_{choice_value}.html"""
 
     STANDARD = "standard"
+    CORAL = "coral"
+    ARIAL = "arial"
+    MODERN_WRITER = "modern_writer"
     SWISS = "swiss"
     SERIFF = "seriff"
+
+
+class ResumeExploratoryTemplates(models.TextChoices):
+    """Values correspond to resume/templates/resume/resume_{choice_value}.html"""
+
     SIMPLE_RED = "simple_red"
     SPEARMINT = "spearmint"
     STEELY = "steely"
-    ARIAL = "arial"
-    CORAL = "coral"
-    MODERN_WRITER = "modern_writer"
     NO_NONSENSE = "no_nonsense"
     BUSINESS_MINDED = "business_minded"
+
+
+RESUME_TEMPLATE_SECTIONS = {
+    ResumeCoreTemplates.STANDARD: [
+        ResumeSections.OVERVIEW,
+        ResumeSections.EDUCATION,
+        ResumeSections.SKILLS,
+        ResumeSections.AWARDS,
+    ],
+    ResumeCoreTemplates.CORAL: [
+        ResumeSections.OVERVIEW,
+        ResumeSections.EDUCATION,
+        ResumeSections.SKILLS,
+        ResumeSections.AWARDS,
+    ],
+    ResumeCoreTemplates.ARIAL: [
+        ResumeSections.OVERVIEW,
+        ResumeSections.EDUCATION,
+    ],
+    ResumeCoreTemplates.MODERN_WRITER: [
+        ResumeSections.OVERVIEW,
+        ResumeSections.EDUCATION,
+        ResumeSections.SKILLS,
+        ResumeSections.AWARDS,
+    ],
+    ResumeCoreTemplates.SWISS: [
+        ResumeSections.OVERVIEW,
+        ResumeSections.EDUCATION,
+        ResumeSections.SKILLS,
+        ResumeSections.AWARDS,
+    ],
+    ResumeCoreTemplates.SERIFF: [
+        ResumeSections.OVERVIEW,
+        ResumeSections.EDUCATION,
+        ResumeSections.SKILLS,
+        ResumeSections.AWARDS,
+    ],
+}
+
+
+RESUME_TEMPLATE_SECTIONS_JSON = json.dumps(RESUME_TEMPLATE_SECTIONS)
 
 
 def write_template_to_pdf(request, template_name, context):

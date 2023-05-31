@@ -28,15 +28,15 @@
     <div  class="row my-4  border-top border-2 pt-2">
         <div class="col-3 p-0">
             <h5 class="fw-bolder accent">
-                {% if template_format == "skills" %}
+                {% if bullets_content == "skills" %}
                     Skills
-                {% elif template_format == "chronological" %}
+                {% elif bullets_content == "chronological" %}
                     Experience
                 {% endif %}
             </h4>
         </div>
         <div class="col-9">
-            {% if template_format == "skills" %}
+            {% if bullets_content == "skills" %}
             {% for skill in skills_with_bullets %}
                 <h6 class="fw-bolder">{{skill.obj}}</h6>
                 <ul>
@@ -45,7 +45,7 @@
                     {% endfor %}
                 </ul>
             {% endfor %}
-            {% elif template_format == "chronological" %}
+            {% elif bullets_content == "chronological" %}
                 {% for experience in chronological_experiences %}
                     <div class="fs-6"><span class="fw-bold">{{experience.obj.position}}</span>- <span class="fst-italic fs-6">{{ experience.obj.start_date|date }} - {{experience.obj.end_date | date|default:"Present"}}</span> </div>
                     <div class="text-muted mb-2">{{experience.obj.org}}</div>
@@ -82,7 +82,7 @@
             <h6 class="fw-bolder">Awards</h6>
         </div>
         <div class="col-9">
-
+            
         </div>
     </div>
     {% endif %}
@@ -99,11 +99,20 @@
             font-size: 9pt
         }
         
+      
+    </style>
+{% endblock styles %}
+{% block colors %}
+    <style>
         .accent {
             color: #4c6685
         }
     </style>
-    {% endblock styles %}
+
+{% endblock colors %}
+
+
+
 
 
 

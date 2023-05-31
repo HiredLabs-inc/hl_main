@@ -1,5 +1,6 @@
 {% extends 'staff.html' %}
 {% load static %}
+{% load form_helpers %}
 {% comment %} {
     {% for value, label in form.resume_template.field.choices %}
         {{value}}:'{% static 'images/resume_previews/resume_'|add:value|add:'.png' %}',
@@ -13,22 +14,43 @@
 <h5 class="fw-bolder mb-4">1. Resume Template</h5>
 <form action="{% url 'cold_apply:tailored_resume' job.id %}" method="post" 
 x-data="{ 
-    template_format: '',
+    bullets_content: '',
     resume_template: '',
     preview: '{{form.preview.value}}',
     preview_img_paths: {
         {% for value, label in form.resume_template.field.choices %}
             {{value}}:'{% static 'images/resume_previews/resume_'|add:value|add:'.png' %}',
         {% endfor %}    
-    }
+    },
+    resume_template_sections   
 
 }
 "
-x-init="resume_template=$el['resume_template'].value; template_format=$el['template_format'].value">
+x-init="
+resume_template=$el['resume_template'].value; 
+bullets_content=$el['bullets_content'].value
+">
     {% csrf_token %}
 <div class="mb-4 row">
     <div class="col-3">
-    {% include 'inputs/list_radio_select.html' with form_field=form.resume_template alpine_selected_var_name='resume_template' %}
+        <ul class="list-group" style="cursor: pointer;">
+            {% for choice_value, choice_label in form.resume_template.field.choices  %}
+            <li class="list-group-item  list-group-item-action" 
+            @click="resume_template='{{choice_value}}'" 
+            :class="{'active': resume_template=='{{choice_value}}'}" style="cursor: pointer;">
+              <label for="{{ form.resume_template.auto_id }}_{{ choice_value }}"  style="cursor: pointer;">
+                  <input   type="radio" id="{{ form.resume_template.auto_id }}_{{ choice_value }}" name="{{ form.resume_template.html_name }}" value="{{ choice_value }}"
+              
+                  {% if choice_value == form.resume_template.value %}checked{% endif  %}  x-model="resume_template"  style="cursor: pointer;">
+             
+                  {{choice_label}}
+                  <div>
+                    <small :class="resume_template=='{{choice_value}}' ? 'text-white': 'text-muted'">{{form.resume_template_sections|dict_key:choice_value}}</small>
+                  </div>
+              </label>
+          </li>
+          {% endfor %}
+        </ul>
 
 </div>
         
@@ -44,27 +66,39 @@ x-init="resume_template=$el['resume_template'].value; template_format=$el['templ
 <div class="mb-4">
     <h5 class="fw-bolder mb-4">2. Select Template Sections</h5>
     <p>Select which sections you wish to include from the final resume. </p>
-    {{form.sections}}
+    <div>
+        {% for choice in form.sections %}
+        <div x-show="resume_template_sections[resume_template].includes('{{choice.data.value}}')">
+            <label for="{{choice.id_for_label}}">
+                {{choice.tag}}
+                {{choice.choice_label}}
+            </label>
+        </div>
+        
+            
+        {% endfor %}
+    </div>
+    {% comment %} {{form.sections|add_wrapper_attributes:"x-show:"}} {% endcomment %}
     <p class="text-danger fw-semibold mt-3">Removing too many sections may break the resume layout.</p>
     
 </div>
 <hr>
-<h5 class="fw-bolder mb-4">3. Template Format</h5>
+<h5 class="fw-bolder mb-4">3. Bullet Points Content</h5>
 <div class="mb-4 row" >
     <div class="col-3">
-        {% include 'inputs/list_radio_select.html' with form_field=form.template_format alpine_selected_var_name='template_format' %}
+        {% include 'inputs/alpine_list_radio_select.html' with form_field=form.bullets_content alpine_selected_var_name='bullets_content' %}
     </div>
     <div class="col-9 border rounded pt-2">
-        <div x-show="template_format=='chronological'">
-            <p class="fw-bolder mb-2">Chronological</p>
+        <div x-show="bullets_content=='chronological'">
+            <p class="fw-bolder mb-2">Chronological Experience</p>
             <p>
             Resume will list experiences in chronological order with a list of bullet point details under each.
             </p>
             
             <p>Bullet points are sorted according to weighting of relevance to the job's description.</p>
         </div>
-        <div x-show="template_format=='skills'">
-            <p class="fw-bolder mb-2">Skills</p>
+        <div x-show="bullets_content=='skills'">
+            <p class="fw-bolder mb-2">Top Skills</p>
             <p>
                 Resume will list applicant's skills as section headings, bullet points that have been tagged as demonstrating a skill will be listed below
                 each skill heading. 
@@ -75,14 +109,14 @@ x-init="resume_template=$el['resume_template'].value; template_format=$el['templ
     </div>
     <div class="col mt-4">
         <p class="fw-bolder">3.1 Configure specific skills or experiences</p>
-        <div x-show="template_format==='chronological'">
+        <div x-show="bullets_content==='chronological'">
             <p>Experiences Found: {{form.experiences.field.queryset.count}} (<a href="{% url 'cold_apply:participant_experience_list' job.participant.id %}">configure experience</a>)</p>
             <div>
                 {{form.experiences}}
             </div>
             
         </div>
-        <div x-show="template_format==='skills'">
+        <div x-show="bullets_content==='skills'">
             <p>Skills Found: {{form.skills.field.queryset.count}} (<a href="{% url 'cold_apply:participant_experience_by_skill_list' job.participant.id %}">configure skills</a>)</p>
             
             <div>
@@ -98,7 +132,7 @@ x-init="resume_template=$el['resume_template'].value; template_format=$el['templ
         <div class="col">
             <h5 class="fw-semibold">4. Select Output</h5>
             <p>Preview will display bullet weightings and allow inline editting of text content.</p>
-            <button class="btn btn-primary" type="submit" :disabled="template_format === 'None'">Generate PDF Resume</button>
+            <button class="btn btn-primary" type="submit" :disabled="bullets_content === 'None'">Generate PDF Resume</button>
             <button class="btn btn-secondary" @click="preview='True'" type="submit">Preview Content</button>
         </div>
     </div>
@@ -106,4 +140,7 @@ x-init="resume_template=$el['resume_template'].value; template_format=$el['templ
 
 </form>
 </div>
+<script>
+    const resume_template_sections = JSON.parse('{{resume_template_sections_json|safe}}')
+</script>
 {% endblock content %}

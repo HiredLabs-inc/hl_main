@@ -1,61 +1,62 @@
 from typing import Any, Dict
+
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Count, Q
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, render, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
-from django.views.generic import (
-    ListView,
-    DetailView,
-    CreateView,
-    UpdateView,
-    TemplateView,
-)
 from django.views.decorators.http import require_http_methods
-from playwright.sync_api import sync_playwright
+from django.views.generic import (
+    CreateView,
+    DetailView,
+    ListView,
+    TemplateView,
+    UpdateView,
+)
 
 from cold_apply.resume_formatting import (
     group_bullets_by_experience,
     group_bullets_by_skill,
 )
 from hl_main.mixins import HtmxViewMixin
-
 from resume.models import (
-    Organization,
-    Position,
-    Experience,
-    Overview,
     Bullet,
-    Education,
+    CertProjectActivity,
     Concentration,
+    Education,
+    Experience,
+    Organization,
+    Overview,
+    Position,
 )
-from resume.pdf import write_template_to_pdf
+from resume.pdf import RESUME_TEMPLATE_SECTIONS_JSON, write_template_to_pdf
+
 from .forms import (
-    BulletForm,
-    ParticipantForm,
-    InteractionForm,
-    ExperienceForm,
     ApplicantForm,
+    BulletForm,
+    ExperienceForm,
+    InteractionForm,
+    ParticipantForm,
     ResumeConfigForm,
 )
 from .models import (
-    Participant,
+    Applicant,
+    BulletKeyword,
     Job,
-    Phase,
     KeywordAnalysis,
+    Participant,
+    Phase,
     Skill,
     WeightedBullet,
-    BulletKeyword,
-    Applicant,
 )
 from .static.scripts.keyword_analyzer.keyword_analyzer import (
     analyze,
     hook_after_jd_analysis,
 )
-from .static.scripts.resume_writer.bullet_weighter import weigh, hook_after_weighting
+from .static.scripts.resume_writer.bullet_weighter import hook_after_weighting, weigh
 from .static.scripts.resume_writer.file_writer import (
     write_chronological_resume,
     write_skills_resume,
@@ -538,7 +539,11 @@ def configure_tailored_resume_view(request, job_pk):
     return render(
         request,
         "cold_apply/configure_tailored_resume.html",
-        context={"form": form, "job": job},
+        context={
+            "form": form,
+            "job": job,
+            "resume_template_sections_json": RESUME_TEMPLATE_SECTIONS_JSON,
+        },
     )
 
 
@@ -585,10 +590,12 @@ def tailored_resume_view(request, job_pk):
     skills = Skill.objects.filter(
         bullet__experience__participant=job.participant
     ).distinct()
+    awards = CertProjectActivity.objects.filter()
 
     form = ResumeConfigForm(request.POST, skills=skills, experiences=experiences)
+
     if form.is_valid():
-        template_format = form.cleaned_data["template_format"]
+        bullets_content = form.cleaned_data["bullets_content"]
 
         # delete existing weightings
         WeightedBullet.objects.filter(participant=job.participant).delete()
@@ -603,7 +610,7 @@ def tailored_resume_view(request, job_pk):
 
         context = {}
 
-        if template_format == "chronological":
+        if bullets_content == "chronological":
             bullets = bullets.filter(experience_id__in=form.cleaned_data["experiences"])
 
             weighted_bullets = weigh_bullets(bullets, job, keywords)
@@ -615,8 +622,7 @@ def tailored_resume_view(request, job_pk):
                 weighted_bullets
             )
 
-
-        elif template_format == "skills":
+        elif bullets_content == "skills":
             weighted_bullets = weigh_bullets(bullets, job, keywords)
             weighted_bullets = list(
                 weighted_bullets.select_related("bullet").prefetch_related(
@@ -624,7 +630,15 @@ def tailored_resume_view(request, job_pk):
                 )
             )
 
-            skills = Skill.objects.filter(id__in=form.cleaned_data["skills"]).distinct()
+            skills = (
+                Skill.objects.filter(
+                    bullet__experience__participant=job.participant,
+                )
+                # exclude skills being rendered in the main bullets
+                .exclude(
+                    id__in=form.cleaned_data["skills"],
+                ).distinct()
+            )
 
             context["skills_with_bullets"] = group_bullets_by_skill(
                 weighted_bullets, skills
@@ -632,7 +646,7 @@ def tailored_resume_view(request, job_pk):
 
         context.update(
             {
-                "template_format": template_format,
+                "bullets_content": bullets_content,
                 "job": job,
                 "title": job.title,
                 "overview": overview,
@@ -653,6 +667,7 @@ def tailored_resume_view(request, job_pk):
         # response['Content-Disposition'] = 'attachment; filename=test.pdf'
         return response
     print(form.errors)
+
 
 class OverviewCreateView(LoginRequiredMixin, CreateView):
     model = Overview

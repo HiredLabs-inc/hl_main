@@ -1,23 +1,22 @@
 from django.contrib.auth.models import User
 from django.db import models
 
-from resume.models import (
-    Organization,
-    Position,
-    Bullet,
-)
-
 from rates.models import Country
-
+from resume.models import Bullet, Organization, Position
 
 # Create your models here.
 
 
 class Participant(models.Model):
+    first_name = models.CharField(max_length=100, blank=True)
+    last_name = models.CharField(max_length=100, blank=True)
     name = models.CharField(max_length=100)
     email = models.EmailField()
     phone = models.CharField(max_length=20, blank=True, null=True)
     dnc = models.BooleanField(default=False)
+    location = models.ForeignKey(
+        "Location", null=True, on_delete=models.SET_NULL
+    )  # drop null later?
     uploaded_resume = models.FileField(upload_to="uploads/", blank=True, null=True)
     uploaded_resume_title = models.CharField(max_length=100, blank=True, null=True)
     veteran = models.BooleanField(default=False)
@@ -34,18 +33,8 @@ class Participant(models.Model):
         User, on_delete=models.SET_NULL, related_name="updated_by", null=True
     )
 
-
     def __str__(self):
         return f"{self.name}: {self.email}"
-    
-    @property
-    def first_name(self):
-        return self.name.split(' ')[0]
-    
-    @property
-    def last_name(self):
-        return self.name.split(' ')[1]
-
 
     class Meta:
         verbose_name_plural = "Participants"
@@ -202,14 +191,14 @@ class WeightedBullet(models.Model):
 
     def __str__(self):
         return f"{self.participant.name}: {self.position.title} {self.bullet.text} ({self.weight})"
-    
+
     @property
     def weight_display(self):
         return f"({self.weight})"
 
     class Meta:
         verbose_name_plural = "Weighted Bullets"
-        ordering = ['-weight']
+        ordering = ["-weight"]
 
 
 class BulletKeyword(models.Model):

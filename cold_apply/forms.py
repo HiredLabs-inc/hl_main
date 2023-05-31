@@ -1,12 +1,14 @@
-from typing import Any, Mapping, Optional, Type, Union
 from django import forms
-from django.db import models
-from django.forms.utils import ErrorList
 
 from resume.models import Bullet, Experience
-from resume.pdf import ResumeTemplates
+from resume.pdf import (
+    RESUME_TEMPLATE_SECTIONS,
+    ResumeCoreTemplates,
+    ResumeFormatChoices,
+    ResumeSections,
+)
 
-from .models import Participant, Interaction, Applicant, Skill
+from .models import Applicant, Interaction, Participant, Skill
 
 
 class ParticipantForm(forms.ModelForm):
@@ -145,18 +147,6 @@ class BulletForm(forms.ModelForm):
         fields = ["text", "skills"]
 
 
-class ResumeFormatChoices(models.TextChoices):
-    CHRONOLOGICAL = "chronological"
-    SKILLS = "skills"
-
-
-class ResumeSections(models.TextChoices):
-    OVERVIEW = "overview"
-    BULLETS = "bullets"
-    EDUCATION = "education"
-    AWARDS = "awards"
-
-
 class ResumeConfigForm(forms.Form):
     """
     Allows user to configure the tailored resume output
@@ -184,22 +174,30 @@ class ResumeConfigForm(forms.Form):
     )
     sections = forms.MultipleChoiceField(
         choices=ResumeSections.choices,
-        # set everything on to begin with
-        initial=[ResumeSections.OVERVIEW, ResumeSections.BULLETS, ResumeSections.EDUCATION],
+        initial=[
+            ResumeSections.OVERVIEW,
+            ResumeSections.EDUCATION,
+        ],
         widget=forms.CheckboxSelectMultiple,
     )
-    template_format = forms.ChoiceField(
+    bullets_content = forms.ChoiceField(
         choices=ResumeFormatChoices.choices,
         widget=forms.RadioSelect,
         initial=ResumeFormatChoices.CHRONOLOGICAL,
     )
     resume_template = forms.ChoiceField(
-        choices=ResumeTemplates.choices,
-        initial=ResumeTemplates.STANDARD,
-        widget=forms.RadioSelect
+        choices=ResumeCoreTemplates.choices,
+        initial=ResumeCoreTemplates.STANDARD,
+        widget=forms.RadioSelect,
     )
     preview = forms.BooleanField(
         initial=False,
         required=False,
         widget=forms.HiddenInput,
     )
+    no_colors = forms.BooleanField(initial=False, widget=forms.CheckboxInput)
+
+    resume_template_sections = {
+        k: " | ".join(map(lambda s: s.capitalize(), v))
+        for k, v in RESUME_TEMPLATE_SECTIONS.items()
+    }

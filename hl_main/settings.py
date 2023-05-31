@@ -45,7 +45,11 @@ INSTALLED_APPS = [
     'resume.apps.ResumeConfig',
     'userprofile.apps.UserprofileConfig',
     'django_q',
+    
 ]
+
+if DEBUG:
+    INSTALLED_APPS.append('debug_toolbar')
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -56,6 +60,12 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+if DEBUG:
+    MIDDLEWARE.append("debug_toolbar.middleware.DebugToolbarMiddleware")
+
+# for django_debug_toolbar
+INTERNAL_IPS = ["127.0.0.1"]
 
 ROOT_URLCONF = 'hl_main.urls'
 

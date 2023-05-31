@@ -35,6 +35,9 @@
     </style>
     {% block styles %}
     {% endblock styles %}
+    {% if form.no_color.value is True %}
+        {% block colors %}{% endblock colors %}
+    {% endif %}
 
     {% if form.preview.value == 'True' %}
     <div class="px-5">

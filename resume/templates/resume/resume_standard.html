@@ -17,7 +17,7 @@
     {% endif %}
 
     {% if "bullets" in form.sections.value %}
-    {% if template_format == "chronological" %}
+    {% if bullets_content == "chronological" %}
         <div class="fs-6 fw-bolder text-center">Professional Experience</div>
         {% for experience in chronological_experiences %}
             <div>
@@ -48,7 +48,7 @@
             <p>No experience found. Either you haven't had a job, or you haven't entered any work experience into our
                 system.</p>
         {% endif %}
-    {% elif template_format == "skills" %}
+    {% elif bullets_content == "skills" %}
         <div class="fs-5 fw-bolder">Professional Skills</div>
         {% for skill in skills_with_bullets %}
             <h5>{{skill.obj}}</h5>
