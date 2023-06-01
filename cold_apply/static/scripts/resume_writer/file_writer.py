@@ -17,13 +17,9 @@
 
 import os
 from cold_apply.forms import ResumeSections
-from cold_apply.static.scripts.resume_writer import vars
-import time
-from datetime import date
-import pandas as pd
 
-from fpdf import FPDF
 from django.conf import settings
+from fpdf import FPDF
 
 
 class PDF(FPDF):

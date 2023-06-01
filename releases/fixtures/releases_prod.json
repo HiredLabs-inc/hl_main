@@ -89,5 +89,18 @@
       "patch": 4,
       "date": "2023-05-09T12:59:00Z"
     }
+  },
+  {
+  "model": "releases.release",
+    "pk": 8,
+    "fields": {
+      "title": "Database Restructuring",
+      "author": 1,
+      "app": 1,
+      "major": 2,
+      "minor": 0,
+      "patch": 0,
+      "date": "2023-05-31T12:59:00Z"
+    }
   }
 ]
