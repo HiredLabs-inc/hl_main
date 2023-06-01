@@ -145,7 +145,7 @@ class PDF(FPDF):
             ed_counter = 0
             for edu in context["education"]:
                 ed_counter += 1
-                formatted = f"{edu.education.degree.abbr} in {edu.education.concentration} - {edu.education.org.name}"
+                formatted = f"{edu.degree.abbr} in {edu.concentration} - {edu.org.name}"
                 if ed_count == 1:
                     alignment = "C"
                     line = 1
