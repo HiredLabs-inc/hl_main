@@ -2,6 +2,7 @@ from django.contrib import admin
 
 # Register your models here.
 from .models import (
+    Location,
     Participant,
     Interaction,
     Job,
@@ -153,6 +154,11 @@ class KeywordAnalysisAdmin(admin.ModelAdmin):
 
 @admin.register(Skill)
 class SkillAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(Location)
+class LocationAdmin(admin.ModelAdmin):
     pass
 
 

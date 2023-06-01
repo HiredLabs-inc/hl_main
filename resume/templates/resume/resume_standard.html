@@ -5,7 +5,8 @@
     <header>
         <div class="text-center">
             <h1>{{ participant.name }}</h1>
-            <p>{{ participant.email }} | {{ participant.phone }}</p>
+            <div>{{ participant.email }} | {{ participant.phone }}</div>
+            <p>{{participant.location.city }} | {{ participant.location.state }} | {{ participant.location.country }}</p>
         </div>
     </header>
     {% if "overview" in form.sections.value %}
@@ -21,7 +22,7 @@
             <div>
                 <div class="d-flex justify-content-between">
                     <div>
-                        <div class="fs-6 fw-bolder">{{ experience.obj.position }} at </div>
+                        <div class="fs-6 fw-bolder">{{ experience.obj.position }} </div>
                         <div class="fst-italic">{{ experience.obj.org }}</div>
                     </div>
                     <div class="fst-italic">
@@ -63,7 +64,7 @@
     {% if education %}
     <ul>
         {% for edu in education %}
-           <li> {{ edu.degree.abbr }} in {{ edu.concentration }} at {{ edu.org }}</li>
+           <li> {{ edu.degree.abbr }} in {{ edu.concentration }} at {{ edu.org }} {{ edu.get_status_display }}</li>
         {% endfor %}
     </ul>
     {% else %}

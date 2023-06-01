@@ -5,10 +5,13 @@ from django.db import migrations
 
 def update_names(apps, schema_editor):
     for participant in apps.get_model("cold_apply", "Participant").objects.all():
-        first_name, last_name = participant.name.split(" ")
-        participant.first_name = first_name
-        participant.last_name = last_name
-        participant.save()
+        try:
+            first_name, last_name = participant.name.split(" ")
+            participant.first_name = first_name
+            participant.last_name = last_name
+            participant.save()
+        except ValueError:
+            pass
 
 
 class Migration(migrations.Migration):

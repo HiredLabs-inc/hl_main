@@ -16,12 +16,14 @@
         <h5>{{job.participant.experience_set.first.position  }}</h5>
         <!-- Overview  -->
         {% if "overview" in form.sections.value %}
-        <div class="">{{overview.text}}</div>
+        <div class="text-muted">{{overview.text}}</div>
         {% endif %}
     </div>
     <div class="col-4 ">
-        <div>{{job.participant.phone}}</div>
-        <div>{{job.participant.email}}</div>
+        <div>{{participant.location.city}}</div>
+        <div>{{participant.location.state}}</div>
+        <div class="fw-bolder">{{job.participant.phone}}</div>
+        <div class="fw-bolder">{{job.participant.email}}</div>
     </div>
 </div>
 <div class="row">
@@ -29,10 +31,10 @@
         {% if bullets_content == "skills" %}
         <div class="row">
             <div class="col">
-                <h4 class="blue ">Skills</h4>
+                <h4 class="blue mb-3 fw-bold">Skills</h4>
                 {% for skill in skills_with_bullets %}
                 <h4 class="fw-bolder">{{skill.obj}}</h4>
-                <ul  class="list-unstyled">
+                <ul  class="list-unstyled mb-3">
                     {% for weighted_bullet in skill.bullets %}
                     {% include 'resume/partials/weighted_bullet.html' %}
                 {% endfor %}
@@ -41,11 +43,11 @@
         </div>
         {% endfor %}
         {% elif bullets_content == "chronological" %}
-        <h4 class="blue mb-4">Experience</h4>
+        <h4 class="blue mb-3 fw-bold">Experience</h4>
         {% for experience in chronological_experiences %}
             <div class="fs-5"><span class="fw-bold">{{experience.obj.org}}</span> -  <span class="fst-italic">{{experience.obj.position}}</span></div>
-            <div class="text-muted ">{{ experience.obj.start_date|date }} - {{experience.obj.end_date | date|default:"Present"}}</div>
-            <ul  class="list-unstyled text-muted mb-5">
+            <div class="text-muted  mb-2">{{ experience.obj.start_date|date }} - {{experience.obj.end_date | date|default:"Present"}}</div>
+            <ul  class="list-unstyled text-muted mb-3">
                 {% for weighted_bullet in experience.bullets %}
                         {% include 'resume/partials/weighted_bullet.html' %}
                 {% endfor %}
@@ -56,9 +58,9 @@
         {% if "education" in form.sections.value and education %}
         <div  class="row my-4">
             <div class="col">
-                <h4 class="blue ">Education</h4>
+                <h4 class="blue  fw-bold mb-3">Education</h4>
                 {% for edu in education %}
-                    <h6>{{ edu.org }} - <span class="text-muted fst-italic">{{ edu.degree.abbr }} in {{ edu.concentration }}</span></h6>
+                    <h6>{{ edu.org }} - <span class="text-muted fst-italic">{{ edu.degree.abbr }} in {{ edu.concentration }} {{ edu.get_status_display }}</span></h6>
                 {% endfor %}
             </div>
         </div>
@@ -67,15 +69,15 @@
     <div class="col-4">
         {% if "skills" in form.sections.value %}
         <div class="mb-4">
-                <h4 class="blue">Skills</h3>
+                <h4 class="blue  fw-bold mb-3">Skills</h3>
                 {% for skill in skills %}
-                <div class=" text-muted ">{{skill}}</div>
+                <div class=" text-muted mb-2">{{skill}}</div>
                 {% endfor %}
             </div>
         {% endif %}
         <!-- Awards  -->
         {% if "certifications" in form.sections.value and certifications %}
-            <h4 class="blue ">Awards</h4>
+            <h4 class="blue fw-bold mb-3">Awards</h4>
             {% for cert in certifications %}
             <div class="text-muted">{{cert}}</div>
             {% endfor %}
@@ -104,9 +106,11 @@
 </style>
 {% endblock styles %}
 {% block colors %}
+<style>
 .blue {
     color: #2079c7
 }
+</style>
 {% endblock colors %}
 
 

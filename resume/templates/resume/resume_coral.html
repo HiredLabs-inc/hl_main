@@ -17,10 +17,12 @@
     <div  class="row mb-4">
         <div class="col">
             <h1 class="accent fw-bold  playfair">Hello</h1>
-            <h1 class=" playfair">I'm {{job.participant.name}}</h1>
+            <h1 class=" playfair">I'm {{participant.name}}</h1>
 
-            <div class="fs-5">{{job.participant.phone}}</div>
-            <div class="mb-4 fs-5">{{job.participant.email}}</div>
+            <div class="fs-5">{{participant.location.city}} </div>
+            <div class="fs-5">{{participant.location.state}} </div>
+            <div class="fs-5">{{participant.phone}}</div>
+            <div class="mb-4 fs-5">{{participant.email}}</div>
         </div>
     </div>
     <!-- Skills  -->
@@ -71,7 +73,7 @@
         <div class="col">
             <h3 class="playfair mb-4  accent fw-bold">Education</h3>
             {% for edu in education %}
-                <h4  class="playfair"><span class="fw-bold">{{ edu.org }}</span> - <span class="text-muted fst-italic">{{ edu.degree.abbr }} in {{ edu.concentration }}</span></h4>
+                <h4  class="playfair"><span class="fw-bold">{{ edu.org }}</span> - <span class="text-muted fst-italic">{{ edu.degree.abbr }} in {{ edu.concentration }} {{ edu.get_status_display }}</span></h4>
             {% endfor %}
         </div>
     </div>
@@ -115,8 +117,10 @@
 {% endblock styles %}
 
 {% block colors %}
+<style>
 .accent {
     color: #f75d5d
 }
+</style>
 {% endblock colors %}
 

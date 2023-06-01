@@ -100,6 +100,9 @@ class Education(models.Model):
         max_length=50,
     )
 
+    def get_status_display(self):
+        return f"(in progress)" if self.status == self.EducationStatus.COMPLETED else ""
+
     def __str__(self):
         return "{}: {}, {}".format(self.org, self.degree, self.concentration)
 

@@ -16,6 +16,8 @@
 
     <div  class="row mb-4 oswald">
         <div class="col">
+            <div class="text-muted fs-5">{{participant.location.city}}</div>
+            <div class="text-muted fs-5">{{participant.location.state}}</div>
             <div class="accent fs-5">{{job.participant.phone}}</div>
             <div class="accent mb-4 fs-5">{{job.participant.email}}</div>
             <h1>{{job.participant.name}}</h1>
@@ -113,7 +115,9 @@
 
 
 {% block colors %}
+<style>
 .accent {
     color: #e91d63
 }
+</style>
 {% endblock colors %}

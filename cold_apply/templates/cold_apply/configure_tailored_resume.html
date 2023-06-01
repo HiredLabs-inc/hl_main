@@ -110,7 +110,15 @@ sections=Array.from(document.querySelectorAll('input[name=\'sections\']:checked'
                 Resume will list applicant's skills as section headings, bullet points that have been tagged as demonstrating a skill will be listed below
                 each skill heading. 
             </p>
-            <p>Bullet points are sorted according to weighting of relevance to the job's description. If a bullet point is tagged as multiple skills, it will only be shown once under the first skill found.</p>
+            <p>Bullet points are sorted according to weighting of relevance to the job's description. If a bullet point is tagged as multiple skills, it will only be shown once under the first skill found.
+                
+            </p>
+            <p> 
+                <strong>If you have also selected the seperate "skills" section in your chosen template, this will only contain skills that have no been listed here in the main content section to 
+                    avoid duplication.
+                </strong>
+            </p>
+
             
         </div>
     </div>
@@ -148,13 +156,15 @@ sections=Array.from(document.querySelectorAll('input[name=\'sections\']:checked'
     <hr>
     <div class="rol">
         <div class="col">
-            <h5 class="fw-semibold">4. Select Output</h5>
-            <label for="id_no_colors">
-                {{form.no_colors}}
-                No colors
-            </label>
+            <h5 class="fw-semibold">4. Select Output Format</h5>
+            <div class="mb-3">
+                <label for="id_no_colors">
+                    {{form.no_colors}}
+                    No colors
+                </label>
+            </div>
             
-            <p>Preview will display bullet weightings and allow inline editting of text content.</p>
+            <p><strong>"Preview Content"</strong> will display bullet weightings and allow inline editting of text content.</p>
             <button class="btn btn-primary" type="submit" :disabled="bullets_content === 'None'">Generate PDF Resume</button>
             <button class="btn btn-secondary" @click="preview='True'" type="submit">Preview Content</button>
         </div>

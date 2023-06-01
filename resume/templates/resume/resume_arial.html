@@ -9,6 +9,7 @@
             <h2 class="fw-bold accent">{{job.participant.name}}</h2>
             <h5>{{job.participant.experience_set.first.position  }}</h5>
             <div>{{job.participant.phone}} / {{job.participant.email}}</div>
+            <div>{{participant.location.city}}, {{participant.location.state}}</div>
         </div>
     </div>
     <!-- Overview  -->
@@ -68,7 +69,7 @@
         </div>
         <div class="col-9">
         {% for edu in education %}
-            <h6 ><span class="fw-bolder">{{ edu.org }}</span> / {{ edu.degree.abbr }} in {{ edu.concentration }}</h6>
+            <h6 ><span class="fw-bolder">{{ edu.org }}</span> / {{ edu.degree.abbr }} in {{ edu.concentration }} {{ edu.get_status_display }}</h6>
         {% endfor %}
         </div>
     </div>

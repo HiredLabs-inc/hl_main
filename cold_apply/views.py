@@ -587,9 +587,12 @@ def weigh_bullets(bullets, job, keywords):
 @require_http_methods(["POST"])
 def tailored_resume_view(request, job_pk):
     job = get_object_or_404(
-        Job.objects.select_related("title", "participant").prefetch_related(
-            "keywordanalysis_set"
-        ),
+        Job.objects.select_related(
+            "title",
+            "participant",
+            "participant__location__country",
+            "participant__location__state",
+        ).prefetch_related("keywordanalysis_set"),
         pk=job_pk,
     )
     job.participant.experience_set.first()

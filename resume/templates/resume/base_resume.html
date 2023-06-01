@@ -35,7 +35,8 @@
     </style>
     {% block styles %}
     {% endblock styles %}
-    {% if form.no_color.value is True %}
+    
+    {% if form.no_colors.value is False %}
         {% block colors %}{% endblock colors %}
     {% endif %}
 

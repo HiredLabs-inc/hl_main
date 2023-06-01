@@ -6,14 +6,17 @@
     <!-- Name  -->
     <div  class="row mb-4">
         <div class="col-4">
-            <h3 class="fw-bold">{{job.participant.name}}</h3>
-            <p>{{job.participant.experience_set.first.position  }}</p>
+            <h3 class="fw-bold mb-0">{{job.participant.first_name}}</h3>
+            <h3 class="fw-bold mb-4">{{job.participant.last_name}}</h3>
+            <h5 class="accent fw-bold">{{job.participant.experience_set.first.position  }}</h5>
         </div>
         <div class="col-8">
             <div style="width:100%; border-top:3px solid black;" class="mb-3"></div>
-            <h6 class="fw-bolder">{{job.participant.name}}</h6>
-            <div>{{job.participant.phone}}</div>
-            <div>{{job.participant.email}}</div>
+            <h6 class="fw-bolder mb-0">{{job.participant.first_name}} {{job.participant.last_name}}</h6>
+            <div>{{participant.location.city}}</div>
+            <p>{{participant.location.state}}</p>
+            <div  class="accent">{{job.participant.phone}}</div>
+            <div  class="accent">{{job.participant.email}}</div>
         </div>
     </div>
     <!-- Overview  -->
@@ -80,7 +83,7 @@
         <div class="col-8">
             <div style="width:100%; border-top:3px solid black;" class="mb-3"></div>
         {% for edu in education %}
-            <h6 ><span class="fw-bolder">{{ edu.org }}</span> / {{ edu.degree.abbr }} in {{ edu.concentration }}</h6>
+            <h6 ><span class="fw-bolder">{{ edu.org }}</span> / {{ edu.degree.abbr }} in {{ edu.concentration }} {{ edu.get_status_display }} </h6>
         {% endfor %}
         </div>
     </div>
@@ -109,3 +112,11 @@
 
 
 
+{% block colors %}
+<style>
+    .accent {
+        color: #f2511b;
+    }
+</style>
+
+{% endblock colors %}
