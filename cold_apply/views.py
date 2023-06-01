@@ -526,6 +526,7 @@ def delete_bullet(request, pk):
     )
 
 
+@login_required
 def configure_tailored_resume_view(request, job_pk):
     job = get_object_or_404(Job.objects.select_related("participant"), pk=job_pk)
     experiences = Experience.objects.filter(participant=job.participant)
@@ -689,7 +690,9 @@ def tailored_resume_view(request, job_pk):
         response = HttpResponse(pdf_content, content_type="application/pdf")
         # response['Content-Disposition'] = 'attachment; filename=test.pdf'
         return response
-    print(form.errors)
+
+    # shouldn't get here but just rerender the config page if the form is invalid
+    return configure_tailored_resume_view(request, job.pk)
 
 
 class OverviewCreateView(LoginRequiredMixin, CreateView):
