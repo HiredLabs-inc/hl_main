@@ -16,7 +16,9 @@
             <h5>{{job.participant.experience_set.first.position  }}</h5>
             <!-- Overview  -->
             {% if "overview" in form.sections.value %}
-            <div class="text-muted">{{overview.text}}</div>
+            <div class="text-muted">
+                {% include 'resume/partials/overview.html' %}
+            </div>
             {% endif %}
         </div>
         <div class="col-4 ">

@@ -1,0 +1,22 @@
+{% if overview  %}
+<div id="overview-container">
+    <div id="overview" class=" mb-3">
+        {% if form.preview.value == 'True' %}
+            {% include 'cold_apply/partials/overview_detail.html' %}
+        {% else %}
+            {{overview.text}}
+        {% endif %}
+    </div>
+</div>
+{% elif form.preview.value == 'True' %}  
+    <div id="overview-container">
+        <div id="overview">
+            <p>No overview found</p>
+        </div>
+        <a href="{% url 'cold_apply:create_overview' participant.id job.title_id %}"
+            hx-get="{% url 'cold_apply:create_overview' participant.id job.title_id %}"
+            hx-target="#overview">
+            Add Overview
+        </a>
+    </div>
+{% endif %}

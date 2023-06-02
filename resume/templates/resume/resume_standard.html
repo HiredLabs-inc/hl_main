@@ -6,14 +6,15 @@
         <div class="text-center">
             <h1>{{ participant.name }}</h1>
             <div>{{ participant.email }} | {{ participant.phone }}</div>
-            <p>{{participant.city}} | {{participant.state.abbreviation}}</p>
+            <p>{{participant.location.city}} | {{participant.location.state.abbreviation}}</p>
         </div>
     </header>
     {% if "overview" in form.sections.value %}
-    <div class="fs-6 fw-bolder">Overview</div>
-    <div id="overview" class=" mb-3">
-        {{overview.text}}
-    </div>
+        <div class="fs-6 fw-bolder">Overview</div>
+        {% include 'resume/partials/overview.html' %}
+
+    
+    
          
     {% endif %}
     {% if bullets_content == "chronological" %}

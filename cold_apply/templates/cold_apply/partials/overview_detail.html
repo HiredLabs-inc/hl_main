@@ -1,0 +1,19 @@
+<div id="overview">
+    {{overview.text}} 
+    <a href="{% url 'cold_apply:update_overview' overview.id %}"
+    hx-get="{% url 'cold_apply:update_overview' overview.id %}"
+    hx-target="closest div"
+    hx-swap="outerHTML"
+    >
+        [edit]
+    </a>
+    <a hx-confirm="Delete overview?" 
+       href="{% url 'cold_apply:delete_overview' overview.id %}" 
+       hx-swap="innerHTML show:no-scroll"
+       hx-post="{% url 'cold_apply:delete_overview' overview.id %}"
+    >
+        [delete]
+    </a>
+
+
+</div>

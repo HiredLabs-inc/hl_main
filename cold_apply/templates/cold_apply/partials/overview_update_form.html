@@ -1,0 +1,12 @@
+{% load form_helpers %}
+<form action="{% url 'cold_apply:update_overview' overview.id %}"
+      hx-post="{% url 'cold_apply:update_overview' overview.id %}"
+      method="post"
+      >
+      {% csrf_token %}
+      {{form.text|input_class:"w-100"|input_styles:"height:100px"}}
+      {{form.errors}}
+      
+    <button type="submit">Update Overview</button>
+    <button type="button" hx-get="{% url 'cold_apply:overview_detail' overview.id %}" hx-target="closest form" hx-swap="outerHTML">Cancel</button>
+</form>

@@ -1,4 +1,5 @@
 from django.db import models
+from django.urls import reverse
 
 
 class Overview(models.Model):
@@ -7,6 +8,9 @@ class Overview(models.Model):
         "Position", on_delete=models.CASCADE, default=None, null=True
     )
     participant = models.ForeignKey("cold_apply.Participant", on_delete=models.CASCADE)
+
+    def get_absolute_url(self):
+        return reverse("cold_apply:overview_detail", kwargs={"pk": self.pk})
 
     def __str__(self):
         return self.title.title

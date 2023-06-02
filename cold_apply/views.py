@@ -1,3 +1,4 @@
+from ast import Delete
 import re
 from typing import Any, Dict
 
@@ -17,6 +18,7 @@ from django.views.generic import (
     ListView,
     TemplateView,
     UpdateView,
+    DeleteView,
 )
 from requests import head
 
@@ -686,6 +688,7 @@ def tailored_resume_view(request, job_pk):
             cert_section_title = (
                 ", ".join(cert_varities[:-1]) + " & " + cert_varities[-1]
             )
+            context["cert_section_title"] = cert_section_title
 
         context.update(
             {
@@ -699,7 +702,6 @@ def tailored_resume_view(request, job_pk):
                 "form": form,
                 "skills": skills,
                 "certifications": certifications,
-                "cert_section_title": cert_section_title,
             }
         )
         resume_template = f"resume/resume_{form.cleaned_data['resume_template']}.html"
@@ -716,57 +718,53 @@ def tailored_resume_view(request, job_pk):
     return configure_tailored_resume_view(request, job.pk)
 
 
-class OverviewCreateView(LoginRequiredMixin, CreateView):
+class OverviewDetailView(HtmxViewMixin, LoginRequiredMixin, DetailView):
     model = Overview
+    htmx_template = "cold_apply/partials/overview_detail.html"
+    template_name = "cold_apply/overview_detail.html"
+    context_object_name = "overview"
+
+
+class OverviewCreateView(HtmxViewMixin, LoginRequiredMixin, CreateView):
+    model = Overview
+    fields = ["text"]
     template_name = "cold_apply/overview_create.html"
-    fields = ["text"]
+    htmx_template = "cold_apply/partials/overview_create_form.html"
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["participant"] = Participant.objects.get(id=self.kwargs["pk"])
-        context["position"] = Position.objects.get(id=self.kwargs["position_pk"])
-        context["now"] = timezone.now()
-
-        return context
+    def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
+        return {
+            "participant": Participant.objects.get(id=self.kwargs["pk"]),
+            "position": Position.objects.get(id=self.kwargs["position_pk"]),
+            **super().get_context_data(**kwargs),
+        }
 
     def form_valid(self, form):
-        if form.is_valid():
-            overview = form.save(commit=False)
-            overview.participant = Participant.objects.get(id=self.kwargs["pk"])
-            overview.title = Position.objects.get(id=self.kwargs["position_pk"])
-            overview.save()
-            return redirect(
-                reverse(
-                    "cold_apply:index",
-                    # kwargs={"pk": self.kwargs["pk"], "overview_pk": overview.id},
-                )
-            )
-        else:
-            print(form.errors)
+        form.instance.participant_id = self.kwargs["pk"]
+        form.instance.title_id = self.kwargs["position_pk"]
         return super().form_valid(form)
 
 
-class OverviewUpdateView(LoginRequiredMixin, UpdateView):
+class OverviewUpdateView(HtmxViewMixin, LoginRequiredMixin, UpdateView):
     model = Overview
-    template_name = "cold_apply/participant_update.html"
     fields = ["text"]
+    template_name = "cold_apply/overview_update.html"
+    htmx_template = "cold_apply/partials/overview_update_form.html"
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["position"] = Position.objects.get(id=self.kwargs["position_pk"])
-        context["now"] = timezone.now()
 
-        return context
+class OverviewDeleteView(HtmxViewMixin, LoginRequiredMixin, DeleteView):
+    model = Overview
+    template_name = "cold_apply/overview_delete.html"
+    refresh_on_save = True
 
-    def form_valid(self, form):
-        if form.is_valid():
-            overview = form.save(commit=False)
-            overview.title = Position.objects.get(id=self.kwargs["position_pk"])
-            overview.save()
-            return redirect(reverse("cold_apply:confirm_update_overview"))
-        else:
-            print(form.errors)
-        return super().form_valid(form)
+    def get_success_url(self) -> str:
+        return reverse(
+            "cold_apply:configure_tailored_resume",
+            args=[
+                self.object.participant.job_set.filter(title=self.object.title)
+                .first()
+                .id
+            ],
+        )
 
 
 class ExperienceCreateView(LoginRequiredMixin, CreateView):

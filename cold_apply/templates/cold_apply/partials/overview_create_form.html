@@ -1,0 +1,15 @@
+{% load form_helpers %}
+
+<form action="{% url 'cold_apply:create_overview' participant.id position.id %}"
+      method="post"
+      hx-target="#overview-container"
+      hx-post="{% url 'cold_apply:create_overview' participant.id position.id %}"
+      
+      >
+      {% csrf_token %}
+
+    {{form.text|input_class:"w-100"|input_styles:"height:100px"}}
+    
+    <button type="submit">Add Overview</button>
+    <button type="button" hx-on="click: this.closest('form').remove()">Cancel</button>
+</form>

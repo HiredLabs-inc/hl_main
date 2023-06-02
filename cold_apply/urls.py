@@ -6,6 +6,8 @@ from .views import (
     LocationDetailView,
     LocationListView,
     LocationUpdateView,
+    OverviewDeleteView,
+    OverviewDetailView,
     ParticipantExperienceBySkillListView,
     ParticipantExperienceListView,
     ParticipantListView,
@@ -229,6 +231,7 @@ urlpatterns += [
 
 # Overviews CRUD
 urlpatterns += [
+    path("overviews/<int:pk>/", OverviewDetailView.as_view(), name="overview_detail"),
     path(
         "participant/<int:pk>/title/<int:position_pk>/add_overview/",
         OverviewCreateView.as_view(),
@@ -240,7 +243,7 @@ urlpatterns += [
         name="confirm_add_overview",
     ),
     path(
-        "title/<int:position_pk>/overviews/<int:pk>/update/",
+        "overviews/<int:pk>/update/",
         OverviewUpdateView.as_view(),
         name="update_overview",
     ),
@@ -248,6 +251,11 @@ urlpatterns += [
         "overviews/confirm_update/",
         ConfirmCreateView.as_view(),
         name="confirm_update_overview",
+    ),
+    path(
+        "overviews/<int:pk>/delete/",
+        OverviewDeleteView.as_view(),
+        name="delete_overview",
     ),
 ]
 

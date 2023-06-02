@@ -17,7 +17,7 @@
     {% block head %}
     {% endblock head %}
 </head>
-<body x-data="">
+<body x-data=""  hx-headers='{"X-CSRFToken": "{{csrf_token}}"}'>
     {% block content %}
     {% endblock content %}
     <style>

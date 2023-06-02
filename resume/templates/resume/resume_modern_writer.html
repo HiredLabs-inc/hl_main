@@ -29,7 +29,9 @@
     <div class="row my-4">
         <div class="col">
             <h3 class="oswald mb-4">Profile</h3>
-            <div class="text-muted">{{overview.text}}</div>
+            <div class="text-muted">
+                {% include 'resume/partials/overview.html' %}
+            </div>
         </div>
     </div>
     {% endif %}
