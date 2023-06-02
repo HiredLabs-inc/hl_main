@@ -1,0 +1,13 @@
+
+{% extends 'staff.html' %}
+
+{% block content %}
+    <h3>Update Location</h3>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <input class="btn btn-primary" type="submit" value="Update">
+    </form>
+    
+{% endblock %}
+

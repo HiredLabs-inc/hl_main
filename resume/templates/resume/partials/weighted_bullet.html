@@ -1,7 +1,7 @@
 {% if form.preview.value == 'True' %}
-    {% include 'cold_apply/partials/bullet_detail_li.html' with bullet=weighted_bullet.bullet extra_text=weighted_bullet.weight_display %}
+    {% include 'cold_apply/partials/bullet_detail_li.html' with bullet=weighted_bullet.bullet extra_text=weighted_bullet.weight_display show_experience_subtext=experience_subtext %}
 {% else %}
-    <li>{{weighted_bullet.bullet.text}}</li>
+    <li>{{weighted_bullet.bullet.text}} {% if experience_subtext is True %}<small class="text-muted">({{weighted_bullet.bullet.experience}})</small>{% endif %} </li>
 {% endif %}
 
 

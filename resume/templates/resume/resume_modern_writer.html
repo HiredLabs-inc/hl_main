@@ -17,7 +17,7 @@
     <div  class="row mb-4 oswald">
         <div class="col">
             <div class="text-muted fs-5">{{participant.location.city}}</div>
-            <div class="text-muted fs-5">{{participant.location.state}}</div>
+            <div class="text-muted fs-5">{{participant.location.state.abbreviation}}</div>
             <div class="accent fs-5">{{job.participant.phone}}</div>
             <div class="accent mb-4 fs-5">{{job.participant.email}}</div>
             <h1>{{job.participant.name}}</h1>
@@ -34,6 +34,20 @@
     </div>
     {% endif %}
 
+    <!-- Skills  -->
+    {% if "skills" in form.sections.value %}
+    <div class="row my-4">
+        <div class="col">
+            <h3 class="oswald mb-4">
+                Skills
+            </h3>
+            {% for skill in skills %}
+            <div class="mb-2">{{skill}}</div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Bullets  -->
     <div  class="row my-4">
         <div class="col">
@@ -44,7 +58,7 @@
                 <h4 class="fw-bolder accent">{{skill.obj}}</h4>
                 <ul  class="text-muted ">
                     {% for weighted_bullet in skill.bullets %}
-                        {% include 'resume/partials/weighted_bullet.html' %}
+                    {% include 'resume/partials/weighted_bullet.html'  with experience_subtext=True %}
                     {% endfor %}
                 </ul>
             {% endfor %}
@@ -79,9 +93,18 @@
     {% if "certifications" in form.sections.value and certifications %}
     <div  class="row my-4">
         <div class="col">
-            <h3 class="oswald mb-4">Awards</h3>
+            <h3 class="oswald mb-4">{{cert_section_title}}</h3>
             {% for cert in certifications %}
-            <div>{{cert}}</div>
+            <div class="mb-2">
+                <div>
+                    <strong class="accent">{{cert.org}}:</strong> <span class="fst-italic text-muted">{{cert.title}}</span>
+                </div>
+                {% if cert.variety == "Project" %}
+                <div class="text-muted">
+                    {{cert.description}}
+                </div>
+                {% endif %}
+            </div>
             {% endfor %}
     </div>
     </div>

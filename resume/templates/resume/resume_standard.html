@@ -6,7 +6,7 @@
         <div class="text-center">
             <h1>{{ participant.name }}</h1>
             <div>{{ participant.email }} | {{ participant.phone }}</div>
-            <p>{{participant.location.city }} | {{ participant.location.state }} | {{ participant.location.country }}</p>
+            <p>{{participant.city}} | {{participant.state.abbreviation}}</p>
         </div>
     </header>
     {% if "overview" in form.sections.value %}
@@ -17,12 +17,12 @@
          
     {% endif %}
     {% if bullets_content == "chronological" %}
-        <div class="fs-6 fw-bolder text-center">Professional Experience</div>
+        <div class="fs-6 fw-bolder text-center mb-2 mt-3">Professional Experience</div>
         {% for experience in chronological_experiences %}
             <div>
                 <div class="d-flex justify-content-between">
                     <div>
-                        <div class="fs-6 fw-bolder">{{ experience.obj.position }} </div>
+                        <div class="fs-6 fw-semibold">{{ experience.obj.position }} </div>
                         <div class="fst-italic">{{ experience.obj.org }}</div>
                     </div>
                     <div class="fst-italic">
@@ -48,19 +48,19 @@
                 system.</p>
         {% endif %}
     {% elif bullets_content == "skills" %}
-        <div class="fs-5 fw-bolder">Professional Skills</div>
+        <div class="fs-6 fw-bolder text-center  mb-2 mt-3">Professional Skills</div>
         {% for skill in skills_with_bullets %}
-            <h5>{{skill.obj}}</h5>
+            <div class="fs-6 fw-semibold">{{skill.obj}}</div>
             <ul>
                 {% for weighted_bullet in skill.bullets %}
-                    {% include 'resume/partials/weighted_bullet.html' %}
+                    {% include 'resume/partials/weighted_bullet.html'  with experience_subtext=True %}
                 {% endfor %}
             </ul>
         {% endfor %}
     {% endif %}
 
     {% if "education" in form.sections.value %}
-    <div class="fs-6 fw-bolder text-center">Education</div>
+    <div class="fs-6 fw-bolder text-center  mb-2 mt-3">Education</div>
     {% if education %}
     <ul>
         {% for edu in education %}
@@ -73,11 +73,13 @@
     {% endif %}
 
     {% if "certifications" in form.sections.value %}
-    <div class="fs-6 fw-bolder text-center">Awards</div>
+    <div class="fs-6 fw-bolder text-center  mb-2 mt-3">{{cert_section_title}}</div>
     {% if certifications %}
     <ul>
         {% for cert in certifications %}
-           <li> {{cert}}</li>
+        <li>
+            {% include 'resume/partials/cert_proj_activ.html' %}
+        </li>
         {% endfor %}
     </ul>
     {% else %}

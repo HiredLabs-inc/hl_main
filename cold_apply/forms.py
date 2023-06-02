@@ -8,7 +8,7 @@ from resume.pdf import (
     ResumeSections,
 )
 
-from .models import Applicant, Interaction, Participant, Skill
+from .models import Applicant, Interaction, Location, Participant, Skill
 
 
 class ParticipantForm(forms.ModelForm):
@@ -23,6 +23,7 @@ class ParticipantForm(forms.ModelForm):
             "uploaded_resume",
             "uploaded_resume_title",
             "current_step",
+            "location",
         ]
 
 
@@ -158,11 +159,9 @@ class ResumeConfigForm(forms.Form):
         certifications = kwargs.pop("certifications")
         super().__init__(*args, **kwargs)
         self.fields["experiences"].queryset = experiences
-        self.fields["experiences"].initial = experiences
         self.fields["skills"].queryset = skills
-        self.fields["skills"].initial = skills
+        self.fields["extra_skills"].queryset = skills
         self.fields["certifications"].queryset = certifications
-        self.fields["certifications"].initial = certifications
 
     # queryset for choices passed into constructor eg ResumeConfigForm(experiences=Experiences.objects.filter(...))
     experiences = forms.ModelMultipleChoiceField(
@@ -170,7 +169,14 @@ class ResumeConfigForm(forms.Form):
         widget=forms.CheckboxSelectMultiple,
         required=False,
     )
+    # for main bullet section
     skills = forms.ModelMultipleChoiceField(
+        queryset=Skill.objects.none(),
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
+    )
+    # for extra skills section
+    extra_skills = forms.ModelMultipleChoiceField(
         queryset=Skill.objects.none(),
         widget=forms.CheckboxSelectMultiple,
         required=False,

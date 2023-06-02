@@ -1,0 +1,11 @@
+<div class="mb-2">
+    <div>
+        <strong>{{cert.org}}:</strong> <span class="fst-italic">{{cert.title}}</span>
+    </div>
+    {% if cert.variety == "Project" %}
+    <div>
+        {{cert.description}}
+    </div>
+    {% endif %}
+</div>
+

@@ -9,7 +9,7 @@
             <h2 class="fw-bold accent">{{job.participant.name}}</h2>
             <h5>{{job.participant.experience_set.first.position  }}</h5>
             <div>{{job.participant.phone}} / {{job.participant.email}}</div>
-            <div>{{participant.location.city}}, {{participant.location.state}}</div>
+            <div>{{participant.location.city}}, {{participant.location.state.abbreviation}}</div>
         </div>
     </div>
     <!-- Overview  -->
@@ -42,7 +42,7 @@
                 <h6 class="fw-bolder">{{skill.obj}}</h6>
                 <ul>
                     {% for weighted_bullet in skill.bullets %}
-                        {% include 'resume/partials/weighted_bullet.html' %}
+                        {% include 'resume/partials/weighted_bullet.html'  with experience_subtext=True %}
                     {% endfor %}
                 </ul>
             {% endfor %}
@@ -74,20 +74,6 @@
         </div>
     </div>
     {% endif %}
-
-    <!-- Awards  -->
-    {% if "certifications" in form.sections.value and certifications %}
-    <div  class="row my-4  border-top border-2  pt-2">
-        <div class="col-3 p-0">
-            <h6 class="fw-bolder">Awards</h6>
-        </div>
-        <div class="col-9">
-
-        </div>
-    </div>
-    {% endif %}
-    
-
 </div>
 
 {% endblock content %}

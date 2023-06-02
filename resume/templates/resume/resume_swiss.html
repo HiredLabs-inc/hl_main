@@ -14,7 +14,7 @@
             <div style="width:100%; border-top:3px solid black;" class="mb-3"></div>
             <h6 class="fw-bolder mb-0">{{job.participant.first_name}} {{job.participant.last_name}}</h6>
             <div>{{participant.location.city}}</div>
-            <p>{{participant.location.state}}</p>
+            <p>{{participant.location.state.abbreviation}}</p>
             <div  class="accent">{{job.participant.phone}}</div>
             <div  class="accent">{{job.participant.email}}</div>
         </div>
@@ -24,7 +24,7 @@
     <div class="row my-4">
         <div class="col-4">
             <div style="width:20px; border-top:3px solid black;" class="mb-3"></div>
-            <h6  class="fw-bolder">Skils</h6>
+            <h6  class="fw-bolder">Skills</h6>
         </div>
         <div class="col-8">
             <div style="width:100%; border-top:3px solid black;" class="mb-3"></div>
@@ -54,7 +54,7 @@
                 <h6 class="fw-bolder">{{skill.obj}}</h6>
                 <ul>
                     {% for weighted_bullet in skill.bullets %}
-                        {% include 'resume/partials/weighted_bullet.html' %}
+                        {% include 'resume/partials/weighted_bullet.html'  with experience_subtext=True %}
                     {% endfor %}
                 </ul>
             {% endfor %}
@@ -99,7 +99,7 @@
         <div class="col-8">
             <div style="width:100%; border-top:3px solid black;" class="mb-3"></div>
             {% for cert in certifications %}
-            <div>{{cert}}</div>
+                {% include 'resume/partials/cert_proj_activ.html' %}
             {% endfor %}
         </div>
     </div>

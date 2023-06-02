@@ -21,13 +21,17 @@ x-data="{
         {% endfor %}    
     },
     resume_template_sections,
-    sections:[]
+    sections:[],
+    skills:[],
+    extra_skills: []
 }
 "
 x-init="
 resume_template=$el['resume_template'].value; 
 bullets_content=$el['bullets_content'].value;
-sections=Array.from(document.querySelectorAll('input[name=\'sections\']:checked')).map(s => s.value)
+sections=Array.from(document.querySelectorAll('input[name=\'sections\']:checked')).map(s => s.value);
+skills=Array.from(document.querySelectorAll('input[name=\'skills\']:checked')).map(s => s.value)
+extra_skills=Array.from(document.querySelectorAll('input[name=\'extra_skills\']:checked')).map(s => s.value)
 ">
     {% csrf_token %}
 <div class="mb-4 row">
@@ -38,9 +42,14 @@ sections=Array.from(document.querySelectorAll('input[name=\'sections\']:checked'
             @click="resume_template='{{choice_value}}'" 
             :class="{'active': resume_template=='{{choice_value}}'}" style="cursor: pointer;">
               <label for="{{ form.resume_template.auto_id }}_{{ choice_value }}"  style="cursor: pointer;">
-                  <input   type="radio" id="{{ form.resume_template.auto_id }}_{{ choice_value }}" name="{{ form.resume_template.html_name }}" value="{{ choice_value }}"
-              
-                  {% if choice_value == form.resume_template.value %}checked{% endif  %}  x-model="resume_template"  style="cursor: pointer;">
+                  <input   
+                  type="radio" 
+                  id="{{ form.resume_template.auto_id }}_{{ choice_value }}" 
+                  name="{{ form.resume_template.html_name }}" 
+                  value="{{ choice_value }}"
+                  {% if choice_value == form.resume_template.value %}checked{% endif  %}  
+                  x-model="resume_template"  
+                  style="cursor: pointer;">
              
                   {{choice_label}}
                   <div>
@@ -124,7 +133,7 @@ sections=Array.from(document.querySelectorAll('input[name=\'sections\']:checked'
     </div>
     <div class="col mt-4">
         
-        <p class="fw-bolder">3.1 Configure specific skills or experiences</p>
+        <p class="fw-bolder"  style="font-size: 1.1rem;">3.1 Configure specific skills or experiences</p>
         <div x-show="bullets_content==='chronological'">
             <p>Experiences Found: {{form.experiences.field.queryset.count}} (<a href="{% url 'cold_apply:participant_experience_list' job.participant.id %}">configure experience</a>)</p>
             <div>
@@ -136,19 +145,42 @@ sections=Array.from(document.querySelectorAll('input[name=\'sections\']:checked'
             <p>Skills Found: {{form.skills.field.queryset.count}} (<a href="{% url 'cold_apply:participant_experience_by_skill_list' job.participant.id %}">configure skills</a>)</p>
             
             <div>
-                {{form.skills}}
+                {{form.skills|add_attributes:"x-model:skills,@change:()=>extra_skills=extra_skills.filter(s => !skills.includes(s))"}}
             </div>
             
         </div>
-        <template x-if="sections.includes('certifications')">
-            <div class="mt-4">
-                <p class="fw-bolder">3.2 Configure certifications</p>
+            <div class="mt-4" x-show="['skills', 'certifications'].some(s => sections.includes(s))">
+                <p class="fw-bolder" style="font-size: 1.1rem;">3.2 Configure extra sections</p>
+                <div class="row">
+                    <div x-show="sections.includes('certifications')" class="mb-3">
+                        <p  class="fw-semibold mb-2">Awards and Certifications</p>
+                        {{form.certifications}}
+                    </div>
+                    <div x-show="sections.includes('skills')"  class="mb-3">
+                        <p class="fw-semibold mb-2">Extra Skills</p>
+                        {% for choice in form.extra_skills %}
+                            <div x-show="!skills.includes('{{choice.data.value}}')">
+                            
+                                <label for="{{choice.id_for_label}}">
+                                    <input type="checkbox" 
+                                            name="extra_skills" 
+                                            id="id_extra_skills_{{forloop.counter0}}" 
+                                            value="{{choice.data.value}}" 
+                                            {% if choice.data.attrs.checked %}checked{% endif %}
+                                            x-model="extra_skills"
+                                    >
+                                    {{choice.choice_label}}
+                                </label>
+                            </div>   
+                        {% comment %} </template> {% endcomment %}
+                        {% endfor %}
+                    </div>
+                </div>
                 <div>
-                    {{form.certifications}}
+                    
                 </div>
             </div>
             
-        </template>
         
     </div>
     </div>
@@ -156,7 +188,7 @@ sections=Array.from(document.querySelectorAll('input[name=\'sections\']:checked'
     <hr>
     <div class="rol">
         <div class="col">
-            <h5 class="fw-semibold">4. Select Output Format</h5>
+            <h5 class="fw-bold">4. Select Output Format</h5>
             <div class="mb-3">
                 <label for="id_no_colors">
                     {{form.no_colors}}

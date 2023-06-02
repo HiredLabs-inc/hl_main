@@ -6,21 +6,15 @@
     <h1>Participant Experiences</h1>
     <h6>Participant: {{ participant.name }}</h6>
     <p class="text-muted">Data retrieved on {{ now|date }} at {{ now|time }} {{ TIME_ZONE }}</p>
-
-    <div class="mb-4">
-        <div>
-            Layout:
-        </div>
-        <div>
-            <span class="fw-bolder">Chronological</span> | <a href="{% url 'cold_apply:participant_experience_by_skill_list' participant.id %}">By Skill</a>
-        </div>
-    </div>
 {% endblock %}
 
 
 
 {% block content %}
     <h3>Professional Experience</h3>
+    <div class="mb-4">
+        <a href="{% url 'cold_apply:participant_experience_by_skill_list' participant.id %}">Tag Bullet Skills</a>
+    </div>
     {% if experiences %}
         {% for exp in experiences %}
         <div class="mb-4">
@@ -36,7 +30,7 @@
             <a href="{% url 'cold_apply:update_experience' pk=exp.id %}"
                target="_blank">Update Experience</a>
             <br>
-            <a href="{% url 'cold_apply:delete_experience' exp.id %}">Delete Experience</a>
+            <a href="{% url 'cold_apply:delete_experience' exp.id %}" onclick="return confirm('Delete experience?')">Delete Experience</a>
             {%  if bullets %}
                 <ul id="bullets_list_{{exp.id}}">
                 {%  for bullet in bullets %}
@@ -67,22 +61,22 @@
             <a href="{% url 'cold_apply:update_education' edu.id %}"
                target="_blank">Update Education</a>
         <br>
-            <a href="{% url 'cold_apply:delete_education' edu.id %}">Delete Education</a>
+            <a href="{% url 'cold_apply:delete_education' edu.id %}" onclick="return confirm('Delete education?')">Delete Education</a>
             </p>
     {% endfor %}
         {% else %}
         <p>No Education Entered</p>
     {% endif %}
-    <a class="btn btn-primary" href="{% url 'cold_apply:create_experience' participant.id %}" target="_blank">Add Experience</a>
-    <a class="btn btn-primary" href="{% url 'cold_apply:create_education' participant.id %}" target="_blank">Add Education</a>
-    <a class="btn btn-primary" onclick=closeWindow()>Close this Tab</a>
+    <div class="pb-4">
+        <a class="btn btn-primary" href="{% url 'cold_apply:create_experience' participant.id %}" target="_blank">Add Experience</a>
+        <a class="btn btn-primary" href="{% url 'cold_apply:create_education' participant.id %}" target="_blank">Add Education</a>
+    </div>
+
+    <div class="row pb-4" >
+        <h3>Navigation</h3>
+        <div class="col">
+            <a class="btn btn-primary" href="{% url 'cold_apply:participant_detail' participant.id %}">Back to Participant</a>
+        </div>
+    </div>
 {% endblock %}
 
-{% block scripts %}
-
-    <script type="text/javascript">
-        function closeWindow() {
-            window.close();
-        }
-    </script>
-{% endblock %}

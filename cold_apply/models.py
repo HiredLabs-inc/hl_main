@@ -1,5 +1,7 @@
+from enum import unique
 from django.contrib.auth.models import User
 from django.db import models
+from django.urls import reverse
 
 from rates.models import Country
 from resume.models import Bullet, Organization, Position
@@ -257,10 +259,16 @@ class Location(models.Model):
     country = models.ForeignKey(Country, on_delete=models.SET_NULL, null=True)
 
     def __str__(self):
-        return f"{self.city}, {self.state.name}, {self.country.name}"
+        if not self.country.name == "United States":
+            return f"{self.city}, {self.state.name} - {self.country.name}"
+        return f"{self.city}, {self.state.abbreviation}"
 
     class Meta:
         verbose_name_plural = "Locations"
+        unique_together = ["city", "state", "country"]
+
+    def get_absolute_url(self):
+        return reverse("cold_apply:location_detail", kwargs={"pk": self.pk})
 
 
 class Applicant(models.Model):

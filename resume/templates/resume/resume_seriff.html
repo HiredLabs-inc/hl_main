@@ -10,80 +10,83 @@
 
 <!-- Name  -->
 <div class="p-4">
-<div class="row mb-4">
-    <div class="col-8">
-        <h2 class="fw-bold">{{job.participant.name}}</h2>
-        <h5>{{job.participant.experience_set.first.position  }}</h5>
-        <!-- Overview  -->
-        {% if "overview" in form.sections.value %}
-        <div class="text-muted">{{overview.text}}</div>
-        {% endif %}
-    </div>
-    <div class="col-4 ">
-        <div>{{participant.location.city}}</div>
-        <div>{{participant.location.state}}</div>
-        <div class="fw-bolder">{{job.participant.phone}}</div>
-        <div class="fw-bolder">{{job.participant.email}}</div>
-    </div>
-</div>
-<div class="row">
-    <div class="col-8">
-        {% if bullets_content == "skills" %}
-        <div class="row">
-            <div class="col">
-                <h4 class="blue mb-3 fw-bold">Skills</h4>
-                {% for skill in skills_with_bullets %}
-                <h4 class="fw-bolder">{{skill.obj}}</h4>
-                <ul  class="list-unstyled mb-3">
-                    {% for weighted_bullet in skill.bullets %}
-                    {% include 'resume/partials/weighted_bullet.html' %}
-                {% endfor %}
-                </ul>
-            </div>
+    <div class="row mb-4">
+        <div class="col-8">
+            <h2 class="fw-bold">{{job.participant.name}}</h2>
+            <h5>{{job.participant.experience_set.first.position  }}</h5>
+            <!-- Overview  -->
+            {% if "overview" in form.sections.value %}
+            <div class="text-muted">{{overview.text}}</div>
+            {% endif %}
         </div>
-        {% endfor %}
-        {% elif bullets_content == "chronological" %}
-        <h4 class="blue mb-3 fw-bold">Experience</h4>
-        {% for experience in chronological_experiences %}
-            <div class="fs-5"><span class="fw-bold">{{experience.obj.org}}</span> -  <span class="fst-italic">{{experience.obj.position}}</span></div>
-            <div class="text-muted  mb-2">{{ experience.obj.start_date|date }} - {{experience.obj.end_date | date|default:"Present"}}</div>
-            <ul  class="list-unstyled text-muted mb-3">
-                {% for weighted_bullet in experience.bullets %}
-                        {% include 'resume/partials/weighted_bullet.html' %}
-                {% endfor %}
-            </ul>
-        {% endfor %}
-        {% endif %}
-        <!-- Education  -->
-        {% if "education" in form.sections.value and education %}
-        <div  class="row my-4">
-            <div class="col">
-                <h4 class="blue  fw-bold mb-3">Education</h4>
-                {% for edu in education %}
-                    <h6>{{ edu.org }} - <span class="text-muted fst-italic">{{ edu.degree.abbr }} in {{ edu.concentration }} {{ edu.get_status_display }}</span></h6>
-                {% endfor %}
-            </div>
+        <div class="col-4 ">
+            <div>{{participant.location.city}}</div>
+            <div>{{participant.location.state.abbreviation}}</div>
+            <div class="fw-bolder">{{job.participant.phone}}</div>
+            <div class="fw-bolder">{{job.participant.email}}</div>
         </div>
-        {% endif %}
     </div>
-    <div class="col-4">
-        {% if "skills" in form.sections.value %}
-        <div class="mb-4">
-                <h4 class="blue  fw-bold mb-3">Skills</h3>
-                {% for skill in skills %}
-                <div class=" text-muted mb-2">{{skill}}</div>
-                {% endfor %}
-            </div>
-        {% endif %}
-        <!-- Awards  -->
-        {% if "certifications" in form.sections.value and certifications %}
-            <h4 class="blue fw-bold mb-3">Awards</h4>
-            {% for cert in certifications %}
-            <div class="text-muted">{{cert}}</div>
+    <div class="row">
+        <div class="col-8">
+            <div class="mb-5">
+            {% if bullets_content == "skills" %}
+                    <h4 class="blue mb-3 fw-bold">Skills</h4>
+                    {% for skill in skills_with_bullets %}
+                    <h4 class="fw-bolder mb-3">{{skill.obj}}</h4>
+                    <ul  class="list-unstyled mb-4 ">
+                        {% for weighted_bullet in skill.bullets %}
+                        <div class="mb-2">
+                            {% include 'resume/partials/weighted_bullet.html'  with experience_subtext=True %}
+                        </div>
+                    {% endfor %}
+                    </ul>
             {% endfor %}
-        {% endif %}
+            {% elif bullets_content == "chronological" %}
+            <h4 class="blue mb-3 fw-bold">Experience</h4>
+            {% for experience in chronological_experiences %}
+                <div class="fs-5"><span class="fw-bold">{{experience.obj.org}}</span> -  <span class="fst-italic">{{experience.obj.position}}</span></div>
+                <div class="text-muted  mb-3">{{ experience.obj.start_date|date }} - {{experience.obj.end_date | date|default:"Present"}}</div>
+                <ul  class="list-unstyled text-muted mb-4">
+                    {% for weighted_bullet in experience.bullets %}
+                    <div class="mb-2">
+                            {% include 'resume/partials/weighted_bullet.html' %}
+                    </div>
+                    {% endfor %}
+                </ul>
+            {% endfor %}
+            {% endif %}
+            </div>
+            <!-- Education  -->
+            {% if "education" in form.sections.value and education %}
+                    <h4 class="blue  fw-bold mb-3">Education</h4>
+                    {% for edu in education %}
+                        <h6>{{ edu.org }} - <span class="text-muted fst-italic">{{ edu.degree.abbr }} in {{ edu.concentration }} {{ edu.get_status_display }}</span></h6>
+                    {% endfor %}
+            {% endif %}
+        </div>
+        <div class="col-4">
+            {% if "skills" in form.sections.value %}
+            <div class="mb-5">
+                    <h4 class="blue  fw-bold mb-3">Skills</h3>
+                    {% for skill in skills %}
+                    <div class=" text-muted mb-2">{{skill}}</div>
+                    {% endfor %}
+            </div>
+            {% endif %}
+            <!-- Awards  -->
+            {% if "certifications" in form.sections.value and certifications %}
+                <h4 class="blue fw-bold mb-3 ">{{cert_section_title}}</h4>
+                {% for cert in certifications %}
+
+                    <div class="text-muted">
+                        <div class="mb-3">
+                        {% include 'resume/partials/cert_proj_activ.html' %}
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
     </div>
-</div>
 </div>
 
 

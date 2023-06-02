@@ -101,7 +101,9 @@ class Education(models.Model):
     )
 
     def get_status_display(self):
-        return f"(in progress)" if self.status == self.EducationStatus.COMPLETED else ""
+        return (
+            f"(in progress)" if self.status == self.EducationStatus.IN_PROGRESS else ""
+        )
 
     def __str__(self):
         return "{}: {}, {}".format(self.org, self.degree, self.concentration)
@@ -123,7 +125,7 @@ class CertProjectActivity(models.Model):
     )
 
     def __str__(self):
-        return "{}: {}, {}".format(self.org, self.title, self.description)
+        return f"{self.org}: {self.title}"
 
 
 class LanguageFATS(models.Model):

@@ -1,3 +1,4 @@
+import re
 from typing import Any, Dict
 
 from django.contrib.auth.decorators import login_required
@@ -5,6 +6,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Count, Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.template.defaultfilters import pluralize
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
@@ -16,12 +18,14 @@ from django.views.generic import (
     TemplateView,
     UpdateView,
 )
+from requests import head
 
 from cold_apply.resume_formatting import (
     group_bullets_by_experience,
     group_bullets_by_skill,
 )
 from hl_main.mixins import HtmxViewMixin
+from rates.models import Country
 from resume.models import (
     Bullet,
     CertProjectActivity,
@@ -47,6 +51,7 @@ from .models import (
     BulletKeyword,
     Job,
     KeywordAnalysis,
+    Location,
     Participant,
     Phase,
     Skill,
@@ -415,6 +420,7 @@ class ParticipantExperienceBySkillListView(LoginRequiredMixin, ListView):
             "uncategorised_bullets": Bullet.objects.filter(
                 experience__participant_id=self.kwargs["pk"], skills__isnull=True
             ),
+            "now": timezone.now(),
         }
 
     def get_queryset(self):
@@ -521,6 +527,9 @@ def delete_bullet(request, pk):
     bullet = Bullet.objects.select_related("experience").get(id=pk)
     participant_id = bullet.experience.participant_id
     bullet.delete()
+    if "Hx-Request" in request.headers:
+        response = HttpResponse(status=204, headers={"Hx-Refresh": "true"})
+        return response
     return redirect(
         reverse("cold_apply:participant_experience_list", kwargs={"pk": participant_id})
     )
@@ -642,7 +651,7 @@ def tailored_resume_view(request, job_pk):
         elif bullets_content == "skills":
             weighted_bullets = weigh_bullets(bullets, job, keywords)
             weighted_bullets = list(
-                weighted_bullets.select_related("bullet").prefetch_related(
+                weighted_bullets.select_related("bullet__experience").prefetch_related(
                     "bullet__skills"
                 )
             )
@@ -661,10 +670,21 @@ def tailored_resume_view(request, job_pk):
             )
 
             # exclude skills being rendered in the main bullets
-            skills = (
-                Skill.objects.filter(bullet__experience__participant=job.participant)
-                .exclude(id__in=skills)
-                .distinct()
+            skills = Skill.objects.filter(
+                id__in=form.cleaned_data["extra_skills"],
+            )
+
+        cert_varities = list(
+            certifications.values_list("variety", flat=True).distinct()
+        )
+
+        if cert_varities:
+            cert_varities = [
+                "Activities" if cert == "Activity" else f"{cert}s"
+                for cert in sorted(cert_varities)
+            ]
+            cert_section_title = (
+                ", ".join(cert_varities[:-1]) + " & " + cert_varities[-1]
             )
 
         context.update(
@@ -679,6 +699,7 @@ def tailored_resume_view(request, job_pk):
                 "form": form,
                 "skills": skills,
                 "certifications": certifications,
+                "cert_section_title": cert_section_title,
             }
         )
         resume_template = f"resume/resume_{form.cleaned_data['resume_template']}.html"
@@ -917,3 +938,30 @@ class ApplicantListView(LoginRequiredMixin, ListView):
 
 
 # TODO View applicant details using generic DetailView (login required)
+
+
+class LocationCreateView(LoginRequiredMixin, CreateView):
+    fields = ["city", "state", "country"]
+    model = Location
+    template_name = "cold_apply/location_create.html"
+
+    def get_initial(self) -> Dict[str, Any]:
+        return {"country": Country.objects.get(name="United States")}
+
+
+class LocationUpdateView(LoginRequiredMixin, UpdateView):
+    fields = ["city", "state", "country"]
+    model = Location
+    template_name = "cold_apply/location_update.html"
+
+
+class LocationDetailView(LoginRequiredMixin, DetailView):
+    fields = ["city", "state", "country"]
+    model = Location
+    template_name = "cold_apply/location_detail.html"
+
+
+class LocationListView(LoginRequiredMixin, ListView):
+    model = Location
+    template_name = "cold_apply/location_list.html"
+    context_object_name = "locations"

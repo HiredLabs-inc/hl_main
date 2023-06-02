@@ -4,9 +4,14 @@
     <form class="post-form" method="post" enctype="multipart/form-data">
         {% csrf_token %}
         {{ form.as_p }}
-        <input class="btn btn-primary" type="submit" value="Save">
+        <div  class="mb-3" >
+        <a href="{% url 'cold_apply:create_location' %}">Add new location</a>
+        </div>
+        <div>
+            <input class="btn btn-primary" type="submit" value="Save">
+            <a class="btn btn-primary" onclick=closeWindow()>Cancel</a>
+        </div>
     </form>
-    <a class="btn btn-primary" onclick=closeWindow()>Cancel</a>
 {% endblock %}
 
 {% block scripts %}

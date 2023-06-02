@@ -1,0 +1,17 @@
+
+{% extends 'staff.html' %}
+
+{% block content %}
+    <h3>Location Detail</h3>
+    <div>{{location.city}}</div>
+    <div>{{location.state}}</div>
+    <div>{{location.country}}</div>
+    <div>
+        <a class="btn btn-primary" href="{% url 'cold_apply:update_location' location.id %}">Update</a>
+        <a class="btn btn-primary" href="{% url 'cold_apply:location_list'  %}">See All Locations </a>
+
+    </div>
+    
+    
+{% endblock %}
+

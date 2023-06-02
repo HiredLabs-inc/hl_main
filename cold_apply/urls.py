@@ -2,6 +2,10 @@ from django.urls import path
 
 from .views import (
     BulletDetailView,
+    LocationCreateView,
+    LocationDetailView,
+    LocationListView,
+    LocationUpdateView,
     ParticipantExperienceBySkillListView,
     ParticipantExperienceListView,
     ParticipantListView,
@@ -256,4 +260,16 @@ urlpatterns += [
         name="confirm_create_applicant",
     ),
     path("applicants/", ApplicantListView.as_view(), name="applicant_list"),
+]
+
+# Locations CRUD
+urlpatterns += [
+    path("locations/create/", LocationCreateView.as_view(), name="create_location"),
+    path(
+        "locations/<int:pk>/update",
+        LocationUpdateView.as_view(),
+        name="update_location",
+    ),
+    path("locations/<int:pk>/", LocationDetailView.as_view(), name="location_detail"),
+    path("locations", LocationListView.as_view(), name="location_list"),
 ]

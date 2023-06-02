@@ -6,22 +6,22 @@
     <h1>Participant Experiences</h1>
     <h6>Participant: {{ participant.name }}</h6>
     <p class="text-muted">Data retrieved on {{ now|date }} at {{ now|time }} {{ TIME_ZONE }}</p>
-
-    <div class="mb-4">
-        <div>
-            Layout:
-        </div>
-        <div>
-            <a href="{% url 'cold_apply:participant_experience_list' participant.id %}">Chronological</a> | <span class="fw-bolder">By Skill</span>
-        </div>
-    </div>
 {% endblock %}
 
 
 
 {% block content %}
-    <h3>Skills</h3>
-        
+    <h3>Skill Tags</h3>
+    <div class="mb-4"> 
+        <a href="{% url 'cold_apply:participant_experience_list' participant.id %}">Back To Experiences</a>
+    </div>
+    <div class="alert alert-primary" role="alert" class="mb-3">
+        Use this page to tag work experience bullet points with specific skills. These tagged skills can then be used in
+        resume templates to group bullet points by skills rather than by experience. Uncategorized bullets points are displayed at
+        the bottom of the page. Any uncategorized bullets will not be displayed in resume templates if the <strong>Top Skills</strong> option 
+        is selected on the configuration page when generating a resume.
+    </div>
+   
     {% for skill in skills%} 
         <div class="mb-4">
             <h5>{{skill}} ({{skill.bullet_set.count}})</h5>
@@ -44,5 +44,19 @@
         </ul>
     </div>
     {% endif %}
+    <div class="pb-4">
+        
+    </div>
+    <div class="row pb-4" >
+        <h3>Navigation</h3>
+        <div class="col d-flex">
+            <div class="me-3">
+                <a href="{% url 'cold_apply:participant_experience_list' participant.id %}" class="btn btn-primary">Back to Experiences</a>
+            </div>
+            <div>
+                <a class="btn btn-primary" href="{% url 'cold_apply:participant_detail' participant.id %}">Back to Participant</a>
+            </div>
+        </div>
+    </div>
    
 {% endblock %}

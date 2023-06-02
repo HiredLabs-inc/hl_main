@@ -1,10 +1,16 @@
 {% extends 'staff.html' %}
 
 {% block content %}
+<div class="py-4">
+<h3>Create New Participant</h3>
     <form class="post-form" method="post" enctype="multipart/form-data">
         {% csrf_token %}
         {{ form.as_p }}
-        <input class="btn btn-primary" type="submit" value="Save">
+        <a href="{% url 'cold_apply:create_location' %}">Add new location</a>
+        <div>
+            <input class="btn btn-primary" type="submit" value="Save">
+            <a class="btn btn-primary" href="{% url 'cold_apply:index' %}">Cancel</a>
+        </div>
     </form>
-    <a class="btn btn-primary" href="{% url 'cold_apply:index' %}">Cancel</a>
+</div>
 {% endblock %}
