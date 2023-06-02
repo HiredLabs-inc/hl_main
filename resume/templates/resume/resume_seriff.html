@@ -31,8 +31,8 @@
     <div class="row">
         <div class="col-8">
             <div class="mb-5">
+            <h4 class="blue mb-3 fw-bold">Experience</h4>
             {% if bullets_content == "skills" %}
-                    <h4 class="blue mb-3 fw-bold">Skills</h4>
                     {% for skill in skills_with_bullets %}
                     <h4 class="fw-bolder mb-3">{{skill.obj}}</h4>
                     <ul  class="list-unstyled mb-4 ">
@@ -44,7 +44,7 @@
                     </ul>
             {% endfor %}
             {% elif bullets_content == "chronological" %}
-            <h4 class="blue mb-3 fw-bold">Experience</h4>
+            
             {% for experience in chronological_experiences %}
                 <div class="fs-5"><span class="fw-bold">{{experience.obj.org}}</span> -  <span class="fst-italic">{{experience.obj.position}}</span></div>
                 <div class="text-muted  mb-3">{{ experience.obj.start_date|date }} - {{experience.obj.end_date | date|default:"Present"}}</div>
@@ -62,7 +62,7 @@
             {% if "education" in form.sections.value and education %}
                     <h4 class="blue  fw-bold mb-3">Education</h4>
                     {% for edu in education %}
-                        <h6>{{ edu.org }} - <span class="text-muted fst-italic">{{ edu.degree.abbr }} in {{ edu.concentration }} {{ edu.get_status_display }}</span></h6>
+                        <h6><span class="fw-bold">{{ edu.org }}</span> - <span class="text-muted fst-italic">{{ edu.degree.abbr }} in {{ edu.concentration }} {{ edu.get_status_display }}</span></h6>
                     {% endfor %}
             {% endif %}
         </div>

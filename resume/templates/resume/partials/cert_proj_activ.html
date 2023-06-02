@@ -1,9 +1,9 @@
 <div class="mb-2">
-    <div>
-        <strong>{{cert.org}}:</strong> <span class="fst-italic">{{cert.title}}</span>
-    </div>
+    <h6>
+        <span class="fw-bold">{{cert.org}}</span> <span class="fst-italic"> - {{cert.title}}</span>
+    </h6>
     {% if cert.variety == "Project" %}
-    <div>
+    <div class="">
         {{cert.description}}
     </div>
     {% endif %}

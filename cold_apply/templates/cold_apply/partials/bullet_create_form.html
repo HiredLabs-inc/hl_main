@@ -1,15 +1,30 @@
 {% load form_helpers %}
 
-<form action="{% url 'cold_apply:create_bullet' experience_pk=experience.id %}"
+<form action="{% url 'cold_apply:create_bullet' participant.id %}"
       method="post"
       hx-target="this"
-      hx-post="{% url 'cold_apply:create_bullet' experience_pk=experience.id %}"
-      
+      hx-post="{% url 'cold_apply:create_bullet' participant.id %}"
+      class="border py-2 px-3 rounded"
       >
       {% csrf_token %}
 
-    {{form.text|input_class:"w-100"|input_styles:"height:100px"}}
-    {{form.skills}}
-    <button type="submit">Add Bullet</button>
-    <button type="button" hx-on="click: this.closest('form').remove()">Cancel</button>
+      <div class="mb-3">
+        <div class="fw-semibold">
+          Text
+        </div>
+      {{form.text|input_class:"w-100"|input_styles:"height:100px"}}
+    </div>
+      
+      <div class="my-3">
+        <div class="fw-semibold">Experience</div>
+        {{form.experience}}
+      </div>
+      
+      <div class="my-3">
+        <div class="fw-semibold">Skills</div>
+        {{form.skills}}
+      </div>
+    
+    <button  class="btn btn-primary" type="submit">Add Bullet</button>
+    <button class="btn btn-outline-primary" type="button" hx-on="click: this.closest('form').remove()">Cancel</button>
 </form>

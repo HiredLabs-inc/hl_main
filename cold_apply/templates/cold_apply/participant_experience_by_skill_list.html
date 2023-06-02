@@ -6,15 +6,22 @@
     <h1>Participant Experiences</h1>
     <h6>Participant: {{ participant.name }}</h6>
     <p class="text-muted">Data retrieved on {{ now|date }} at {{ now|time }} {{ TIME_ZONE }}</p>
+
+    <div class="mb-4">
+        <div>
+            Layout:
+        </div>
+        <div>
+            <a href="{% url 'cold_apply:participant_experience_list' participant.id %}">Chronological</a> | <span class="fw-bolder">By Skill</span>
+        </div>
+    </div>
 {% endblock %}
 
 
 
 {% block content %}
-    <h3>Skill Tags</h3>
-    <div class="mb-4"> 
-        <a href="{% url 'cold_apply:participant_experience_list' participant.id %}">Back To Experiences</a>
-    </div>
+    <h3>Experience by Skill</h3>
+    
     <div class="alert alert-primary" role="alert" class="mb-3">
         Use this page to tag work experience bullet points with specific skills. These tagged skills can then be used in
         resume templates to group bullet points by skills rather than by experience. Uncategorized bullets points are displayed at
@@ -30,7 +37,15 @@
                 {% include 'cold_apply/partials/bullet_detail_li.html' with show_experience_subtext=True %}
             {% endfor %}
             </ul>
+            <div id="create_bullet_form_{{skill.id}}"></div>
+
+            <a href="{% url 'cold_apply:create_bullet' participant.id %}?skills={{skill.id}}" 
+               hx-get="{% url 'cold_apply:create_bullet' participant.id %}?skills={{skill.id}}" 
+               hx-target="#create_bullet_form_{{skill.id}}"
+               class="button"
+               >Add Bullet</a>
         </div>
+
 
 
     {% endfor %}

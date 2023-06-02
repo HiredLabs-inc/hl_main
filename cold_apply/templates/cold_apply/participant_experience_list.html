@@ -6,15 +6,20 @@
     <h1>Participant Experiences</h1>
     <h6>Participant: {{ participant.name }}</h6>
     <p class="text-muted">Data retrieved on {{ now|date }} at {{ now|time }} {{ TIME_ZONE }}</p>
+    <div class="mb-4">
+        <div>
+            Layout:
+        </div>
+        <div>
+            <span class="fw-bolder">Chronological</span> | <a href="{% url 'cold_apply:participant_experience_by_skill_list' participant.id %}">By Skill</a>
+        </div>
+    </div>
 {% endblock %}
 
 
 
 {% block content %}
-    <h3>Professional Experience</h3>
-    <div class="mb-4">
-        <a href="{% url 'cold_apply:participant_experience_by_skill_list' participant.id %}">Tag Bullet Skills</a>
-    </div>
+    <h3>Chronological Experience</h3>
     {% if experiences %}
         {% for exp in experiences %}
         <div class="mb-4">
@@ -43,8 +48,8 @@
             </p>
             <div id="create_bullet_form_{{exp.id}}"></div>
 
-            <a href="{% url 'cold_apply:create_bullet' experience_pk=exp.id %}" 
-               hx-get="{% url 'cold_apply:create_bullet' experience_pk=exp.id %}" 
+            <a href="{% url 'cold_apply:create_bullet' participant.id %}?experience={{exp.id}}" 
+               hx-get="{% url 'cold_apply:create_bullet' participant.id %}?experience={{exp.id}}" 
                hx-target="#create_bullet_form_{{exp.id}}"
                class="button"
                >Add Bullet</a>

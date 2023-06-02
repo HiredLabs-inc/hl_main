@@ -1,11 +1,13 @@
 from ast import Delete
 import re
-from typing import Any, Dict
+from typing import Any, Dict, Optional, Type
+from django import forms
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Count, Q
-from django.http import HttpResponse
+from django.forms.models import BaseModelForm
+from django.http import HttpResponse, QueryDict
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.defaultfilters import pluralize
 from django.template.loader import render_to_string
@@ -545,6 +547,7 @@ def configure_tailored_resume_view(request, job_pk):
         bullet__experience__participant=job.participant
     ).distinct()
     certifications = CertProjectActivity.objects.filter(participant=job.participant)
+
     if request.method == "POST":
         form = ResumeConfigForm(
             request.POST,
@@ -554,8 +557,12 @@ def configure_tailored_resume_view(request, job_pk):
         )
     else:
         form = ResumeConfigForm(
-            experiences=experiences, skills=skills, certifications=certifications
+            request.GET or None,
+            experiences=experiences,
+            skills=skills,
+            certifications=certifications,
         )
+    # request.GET = QueryDict()
     return render(
         request,
         "cold_apply/configure_tailored_resume.html",
@@ -596,7 +603,7 @@ def weigh_bullets(bullets, job, keywords):
 
 
 @login_required
-@require_http_methods(["POST"])
+@require_http_methods(["GET"])
 def tailored_resume_view(request, job_pk):
     job = get_object_or_404(
         Job.objects.select_related(
@@ -616,7 +623,7 @@ def tailored_resume_view(request, job_pk):
     certifications = CertProjectActivity.objects.filter(participant=job.participant)
 
     form = ResumeConfigForm(
-        request.POST,
+        request.GET,
         skills=skills,
         experiences=experiences,
         certifications=certifications,
@@ -635,6 +642,7 @@ def tailored_resume_view(request, job_pk):
             participant=job.participant, title=job.title
         ).first()
         education = Education.objects.filter(participant=job.participant)
+        certifications = form.cleaned_data["certifications"]
 
         context = {}
 
@@ -671,11 +679,6 @@ def tailored_resume_view(request, job_pk):
                 weighted_bullets, skills
             )
 
-            # exclude skills being rendered in the main bullets
-            skills = Skill.objects.filter(
-                id__in=form.cleaned_data["extra_skills"],
-            )
-
         cert_varities = list(
             certifications.values_list("variety", flat=True).distinct()
         )
@@ -685,9 +688,12 @@ def tailored_resume_view(request, job_pk):
                 "Activities" if cert == "Activity" else f"{cert}s"
                 for cert in sorted(cert_varities)
             ]
-            cert_section_title = (
-                ", ".join(cert_varities[:-1]) + " & " + cert_varities[-1]
-            )
+            if len(cert_varities) == 1:
+                cert_section_title = cert_varities[0]
+            else:
+                cert_section_title = (
+                    ", ".join(cert_varities[:-1]) + " & " + cert_varities[-1]
+                )
             context["cert_section_title"] = cert_section_title
 
         context.update(
@@ -700,7 +706,7 @@ def tailored_resume_view(request, job_pk):
                 "education": education,
                 "now": timezone.now(),
                 "form": form,
-                "skills": skills,
+                "skills": form.cleaned_data["extra_skills"],
                 "certifications": certifications,
             }
         )
@@ -818,47 +824,58 @@ class ExperienceUpdateView(LoginRequiredMixin, UpdateView):
 # TODO: ExperienceDetailView
 
 
+class ParticipantBulletCreateView(HtmxViewMixin, LoginRequiredMixin, CreateView):
+    """ "For creating bullets for a participant with an experience dropdown box"""
+
+    fields = ["text", "skills", "experience"]
+
+    def get_form(self, form_class):
+        form = super().get_form(form_class)
+        form.fields["experience"].queryset = Experience.objects.filter(
+            participant_id=self.kwargs["pk"]
+        )
+        return form
+
+    def form_valid(self, form):
+        form.instance.type = "Work"
+        return super().form_valid(form)
+
+
 class BulletCreateView(HtmxViewMixin, LoginRequiredMixin, CreateView):
+    """For creating bullets when the experience id is known"""
+
     model = Bullet
     template_name = "cold_apply/bullet_create.html"
     htmx_template = "cold_apply/partials/bullet_create_form.html"
     form_class = BulletForm
+    refresh_on_save = True
+
+    def get_initial(self) -> Dict[str, Any]:
+        experience_id = self.request.GET.get("experience")
+        skills = self.request.GET.get("skills")
+        return {
+            **super().get_initial(),
+            "experience": experience_id,
+            "skills": skills,
+        }
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        form.fields["experience"].queryset = Experience.objects.filter(
+            participant=self.kwargs["pk"]
+        )
+        print(form.initial)
+
+        return form
+
+    def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
+        return {
+            **super().get_context_data(**kwargs),
+            "participant": Participant.objects.get(id=self.kwargs["pk"]),
+        }
 
     def get_success_url(self) -> str:
         return reverse("cold_apply:bullet_detail", kwargs={"pk": self.object.id})
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        experience = Experience.objects.get(id=self.kwargs["experience_pk"])
-        context["experience"] = experience
-        context["now"] = timezone.now()
-
-        return context
-
-    def form_valid(self, form):
-        form.instance.experience = Experience.objects.get(
-            id=self.kwargs["experience_pk"]
-        )
-        form.instance.type = "Work"
-        response = super().form_valid(form)
-
-        if "Hx-Request" in self.request.headers:
-            # already on the experience list page so just
-            # refresh on successful create to update the list
-            return HttpResponse(
-                headers={
-                    "HX-Refresh": "true",
-                    # Could use HX-Redirect as it does the same but it causes a scroll to top
-                    # so HX-Refresh looks better, use HX-Redirect if
-                    # you need full page reload navigation to somewhere else e.g:
-                    # "HX-Redirect": reverse(
-                    #     "cold_apply:participant_experience_list",
-                    #     kwargs={"pk": self.object.experience.participant_id},
-                    # )
-                }
-            )
-
-        return response
 
 
 class BulletUpdateView(HtmxViewMixin, LoginRequiredMixin, UpdateView):
@@ -868,12 +885,22 @@ class BulletUpdateView(HtmxViewMixin, LoginRequiredMixin, UpdateView):
     refresh_on_save = True
     form_class = BulletForm
 
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        form.fields["experience"].queryset = Experience.objects.filter(
+            participant=self.object.experience.participant_id
+        )
+        return form
+
     def get_success_url(self) -> str:
         return reverse("cold_apply:bullet_detail", kwargs={"pk": self.object.id})
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["experience"] = self.object.experience
+        if self.kwargs.get("experience_pk"):
+            experience = Experience.objects.get(id=self.kwargs["experience_pk"])
+            context["experience"] = experience
+
         context["now"] = timezone.now()
 
         return context

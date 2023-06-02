@@ -115,7 +115,7 @@ class TailoredResumeViewTestCase(TestCase):
             # "certifications": [self.certification.pk],
             # Add other form fields here with their respective values
         }
-        response = self.client.post(self.url, data)
+        response = self.client.get(self.url, data)
 
         self.assertTemplateUsed(
             response, f"resume/resume_{ResumeCoreTemplates.STANDARD}.html"
@@ -138,7 +138,7 @@ class TailoredResumeViewTestCase(TestCase):
             # "certifications": [self.certification.pk],
             # Add other form fields here with their respective values
         }
-        response = self.client.post(self.url, data)
+        response = self.client.get(self.url, data)
         self.assertTemplateUsed(
             response, f"resume/resume_{ResumeCoreTemplates.STANDARD}.html"
         )
@@ -151,7 +151,7 @@ class TailoredResumeViewTestCase(TestCase):
         data = {
             # Provide invalid form data here
         }
-        response = self.client.post(self.url, data)
+        response = self.client.get(self.url, data)
 
         self.assertEqual(response.status_code, 200)
         self.assertFormError(
@@ -180,7 +180,7 @@ class TailoredResumeViewTestCase(TestCase):
             ).values_list("id", flat=True),
         }
 
-        response = self.client.post(self.url, data)
+        response = self.client.get(self.url, data)
         self.assertQuerysetEqual(
             response.context["skills"].order_by("id"),
             Skill.objects.filter(id__in=extra_skills).order_by("id"),

@@ -1,3 +1,4 @@
+from urllib.parse import urlencode
 from django import template
 
 register = template.Library()
@@ -56,3 +57,8 @@ def add_attributes(bound_field, attrs):
 def dict_key(d, k):
     """Returns the given key from a dictionary."""
     return d.get(k)
+
+
+@register.filter()
+def urlencode_dict(query_params):
+    return urlencode(dict(query_params), doseq=True)

@@ -7,6 +7,16 @@ body {
   margin-bottom: 60px;
 }
 
+.anchor-tag {
+  color: blue;
+  /* Sets the link color */
+  text-decoration: underline;
+  /* Adds an underline to the link */
+  cursor: pointer;
+  /* Changes the cursor to a pointer on hover */
+}
+
+
 .footer {
   position: absolute;
   bottom: 0;

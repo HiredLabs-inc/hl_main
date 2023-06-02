@@ -42,13 +42,14 @@
 
     {% if form.preview.value == 'True' %}
     <div class="px-5">
-        <form method="post" @submit.prevent="$el['preview'].value='False'; $el.submit()">
+
+        <form method="get" @submit.prevent="$el['preview'].value='False'; $el.submit()" id="resume_config_form">
             {% csrf_token %}
             <div class="d-none">
             {{form.as_p}}
             </div>
 
-            <button class="btn btn-secondary" onclick="history.back()">Back to Configuration</button>
+            <button class="btn btn-secondary" @click="form=document.getElementById('resume_config_form');form.action='{% url 'cold_apply:configure_tailored_resume' job.id %}'; form.submit()" >Back to Configuration</button>
             <button class="btn btn-primary" type="submit">Generate PDF</button>
         </form>
         

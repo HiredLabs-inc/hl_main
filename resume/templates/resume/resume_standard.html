@@ -10,15 +10,15 @@
         </div>
     </header>
     {% if "overview" in form.sections.value %}
-        <div class="fs-6 fw-bolder">Overview</div>
+        <div class="fs-6 fw-bolder text-center">Overview</div>
         {% include 'resume/partials/overview.html' %}
 
     
     
          
     {% endif %}
+    <div class="fs-6 fw-bolder text-center  mb-2 mt-3">Professional Experience</div>
     {% if bullets_content == "chronological" %}
-        <div class="fs-6 fw-bolder text-center mb-2 mt-3">Professional Experience</div>
         {% for experience in chronological_experiences %}
             <div>
                 <div class="d-flex justify-content-between">
@@ -49,7 +49,7 @@
                 system.</p>
         {% endif %}
     {% elif bullets_content == "skills" %}
-        <div class="fs-6 fw-bolder text-center  mb-2 mt-3">Professional Skills</div>
+        
         {% for skill in skills_with_bullets %}
             <div class="fs-6 fw-semibold">{{skill.obj}}</div>
             <ul>
@@ -79,7 +79,10 @@
     <ul>
         {% for cert in certifications %}
         <li>
-            {% include 'resume/partials/cert_proj_activ.html' %}
+            <div><span>{{cert.org}}<span> - {{cert.title}}</div>
+            {% if cert.variety == "Project" %}
+            <div>{{cert.description}}</div>
+            {% endif %}
         </li>
         {% endfor %}
     </ul>

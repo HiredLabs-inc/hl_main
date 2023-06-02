@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 {% load static %}
+{% load form_helpers %}
 {% get_static_prefix as STATIC_PREFIX %}
 {% get_media_prefix as MEDIA_PREFIX %}
 
@@ -108,8 +109,21 @@
         {% endblock %}
         {% block skills %}
         {% endblock %}
+        {% block resume_checkout_navigation %}
+            {% if request.GET.checkout is not None %}
+            
+                <div>
+                
+                    <a href="{{request.GET.checkout}}?{{request.GET|urlencode_dict}}" class="btn btn-primary">Back to Resume Configuration</a>
+                </div>
+            {% endif %}
+        {% endblock resume_checkout_navigation %}
+        
+        
+        
     </div>
     {% endblock %}
+    
 </body>
 
 {% block footer %}

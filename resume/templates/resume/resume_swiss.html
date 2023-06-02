@@ -40,11 +40,7 @@
         <div class="col-4">
             <div style="width:20px; border-top:3px solid black;" class="mb-3"></div>
             <h6 class="fw-bolder">
-                {% if bullets_content == "skills" %}
-                    Skills
-                {% elif bullets_content == "chronological" %}
-                    Experience
-                {% endif %}
+                Experience
             </h6>
         </div>
         <div class="col-8">
@@ -99,7 +95,16 @@
         <div class="col-8">
             <div style="width:100%; border-top:3px solid black;" class="mb-3"></div>
             {% for cert in certifications %}
-                {% include 'resume/partials/cert_proj_activ.html' %}
+                <div class="mb-2">
+                    <h6 class="fs-6">
+                        <span class="fw-bolder">{{cert.org}}</span><span> / {{cert.title}}</span>
+                    </h6>
+                    {% if cert.variety == "Project" %}
+                    <div class="">
+                        {{cert.description}}
+                    </div>
+                    {% endif %}
+                </div>
             {% endfor %}
         </div>
     </div>

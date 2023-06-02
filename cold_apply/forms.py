@@ -1,3 +1,4 @@
+from typing import Any, Dict
 from django import forms
 
 from resume.models import Bullet, CertProjectActivity, Experience
@@ -142,10 +143,21 @@ class BulletForm(forms.ModelForm):
         widget=forms.CheckboxSelectMultiple(),
         required=False,
     )
+    experience = forms.ModelChoiceField(
+        queryset=Experience.objects.none(), empty_label=None
+    )
+
+    def clean(self) -> Dict[str, Any]:
+        if (
+            self.cleaned_data["experience"] is None
+            and self.cleaned_data["skills"] is None
+        ):
+            raise forms.ValidationError("Experience or Skills are required")
+        return super().clean()
 
     class Meta:
         model = Bullet
-        fields = ["text", "skills"]
+        fields = ["text", "skills", "experience"]
 
 
 class ResumeConfigForm(forms.Form):

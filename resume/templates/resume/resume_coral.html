@@ -42,8 +42,8 @@
     <!-- Bullets  -->
     <div  class="row my-4">
         <div class="col">
+            <h3 class="playfair mb-4  accent fw-bold">Experience</h3>
             {% if bullets_content == "skills" %}
-            <h3 class="playfair mb-4  accent fw-bold">Skills</h3>
             {% for skill in skills_with_bullets %}
                 <h4 class="fw-bolder accent">{{skill.obj}}</h4>
                 <ul  class="text-muted ">
@@ -53,7 +53,7 @@
                 </ul>
             {% endfor %}
             {% elif bullets_content == "chronological" %}
-            <h3 class="playfair mb-4  accent fw-bold">Experience</h3>
+            
             {% for experience in chronological_experiences %}
                 <h4 class="playfair"><span class="fw-bold">{{experience.obj.org}}</span> -  <span class="text-muted fst-italic ">{{experience.obj.position}}</span></h4>
                 <p class="text-muted">{{ experience.obj.start_date|date }} - {{experience.obj.end_date | date|default:"Present"}}</p>
@@ -85,10 +85,10 @@
         <div class="col">
             <h3 class="playfair mb-4  accent fw-bold">{{cert_section_title}}</h3>
             {% for cert in certifications %}
-            <div class="mb-2">
-                <div>
-                    <strong>{{cert.org}}:</strong> <span class="fst-italic text-muted">{{cert.title}}</span>
-                </div>
+            <div class="mb-3">
+                <h4 class="playfair">
+                    <span class="fw-bold">{{cert.org}}</span> <span class="fst-italic text-muted"> - {{cert.title}}</span>
+                </h4>
                 {% if cert.variety == "Project" %}
                 <div class="text-muted">
                     {{cert.description}}

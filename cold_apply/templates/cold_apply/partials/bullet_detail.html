@@ -1,0 +1,10 @@
+{{ bullet.text }}
+{% if show_skill_badges %}
+    {% for skill in bullet.skills.all %}
+    <small class="badge rounded-pill text-bg-success">{{skill}}</small>
+    {% endfor %}
+{% endif %}
+{% if show_experience_subtext %}
+    <small class="text-muted">({{bullet.experience}})</small>
+{% endif %}
+{{extra_text}}

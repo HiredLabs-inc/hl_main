@@ -10,30 +10,34 @@
 <hr>
 {% comment %} sections= {% endcomment %}
 <h5 class="fw-bolder mb-4">1. Resume Template</h5>
-<form action="{% url 'cold_apply:tailored_resume' job.id %}" method="post" 
-x-data="{ 
-    bullets_content: '',
-    resume_template: '',
-    preview: '{{form.preview.value}}',
-    preview_img_paths: {
-        {% for value, label in form.resume_template.field.choices %}
-            {{value}}:'{% static 'images/resume_previews/resume_'|add:value|add:'.png' %}',
-        {% endfor %}    
-    },
-    resume_template_sections,
-    sections:[],
-    skills:[],
-    extra_skills: []
-}
-"
-x-init="
-resume_template=$el['resume_template'].value; 
-bullets_content=$el['bullets_content'].value;
-sections=Array.from(document.querySelectorAll('input[name=\'sections\']:checked')).map(s => s.value);
-skills=Array.from(document.querySelectorAll('input[name=\'skills\']:checked')).map(s => s.value)
-extra_skills=Array.from(document.querySelectorAll('input[name=\'extra_skills\']:checked')).map(s => s.value)
-">
-    {% csrf_token %}
+<form action="{% url 'cold_apply:tailored_resume' job.id %}" method="get" 
+    id="resume_form"
+    x-data="{ 
+        bullets_content: '',
+        resume_template: '',
+        preview: '{{form.preview.value}}',
+        preview_img_paths: {
+            {% for value, label in form.resume_template.field.choices %}
+                {{value}}:'{% static 'images/resume_previews/resume_'|add:value|add:'.png' %}',
+            {% endfor %}    
+        },
+        resume_template_sections,
+        sections:[],
+        skills:[],
+        extra_skills: []
+    }
+    "
+    x-init="
+        resume_template=$el['resume_template'].value; 
+        bullets_content=$el['bullets_content'].value;
+        sections=Array.from(document.querySelectorAll('input[name=\'sections\']:checked')).map(s => s.value);
+        skills=Array.from(document.querySelectorAll('input[name=\'skills\']:checked')).map(s => s.value);
+        extra_skills=Array.from(document.querySelectorAll('input[name=\'extra_skills\']:checked')).map(s => s.value);
+        window.history.pushState({}, '', window.location.pathname);
+    "
+>
+{% csrf_token %}
+<input type="hidden" name="checkout" value="{{request.path}}">
 <div class="mb-4 row">
     <div class="col-3">
         <ul class="list-group" style="cursor: pointer;">
@@ -135,14 +139,22 @@ extra_skills=Array.from(document.querySelectorAll('input[name=\'extra_skills\']:
         
         <p class="fw-bolder"  style="font-size: 1.1rem;">3.1 Configure specific skills or experiences</p>
         <div x-show="bullets_content==='chronological'">
-            <p>Experiences Found: {{form.experiences.field.queryset.count}} (<a href="{% url 'cold_apply:participant_experience_list' job.participant.id %}">configure experience</a>)</p>
+            <p>Experiences Found: {{form.experiences.field.queryset.count}} 
+                (<a href="#" @click.prevent="const form = document.getElementById('resume_form'); 
+                            form.action='{% url 'cold_apply:participant_experience_list' job.participant.id %}'; 
+                            form.submit()"
+                >configure experiences</a>)</p>
             <div>
                 {{form.experiences}}
             </div>
             
         </div>
         <div x-show="bullets_content==='skills'">
-            <p>Skills Found: {{form.skills.field.queryset.count}} (<a href="{% url 'cold_apply:participant_experience_by_skill_list' job.participant.id %}">configure skills</a>)</p>
+            <p>Skills Found: {{form.skills.field.queryset.count}} 
+                (<a href="#" @click.prevent="const form = document.getElementById('resume_form'); 
+                            form.action='{% url 'cold_apply:participant_experience_by_skill_list' job.participant.id %}'; 
+                            form.submit()"
+                >configure skills</a>)</p>
             
             <div>
                 {{form.skills|add_attributes:"x-model:skills,@change:()=>extra_skills=extra_skills.filter(s => !skills.includes(s))"}}
@@ -172,7 +184,6 @@ extra_skills=Array.from(document.querySelectorAll('input[name=\'extra_skills\']:
                                     {{choice.choice_label}}
                                 </label>
                             </div>   
-                        {% comment %} </template> {% endcomment %}
                         {% endfor %}
                     </div>
                 </div>
@@ -196,7 +207,7 @@ extra_skills=Array.from(document.querySelectorAll('input[name=\'extra_skills\']:
                 </label>
             </div>
             
-            <p><strong>"Preview Content"</strong> will display bullet weightings and allow inline editting of text content.</p>
+            <p><strong>Preview Content</strong> will display bullet weightings and allow inline editting of text content.</p>
             <button class="btn btn-primary" type="submit" :disabled="bullets_content === 'None'">Generate PDF Resume</button>
             <button class="btn btn-secondary" @click="preview='True'" type="submit">Preview Content</button>
         </div>
@@ -209,3 +220,5 @@ extra_skills=Array.from(document.querySelectorAll('input[name=\'extra_skills\']:
     const resume_template_sections = JSON.parse('{{resume_template_sections_json|safe}}')
 </script>
 {% endblock content %}
+{% block resume_checkout_navigation %}
+{% endblock resume_checkout_navigation %}

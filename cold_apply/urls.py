@@ -8,6 +8,8 @@ from .views import (
     LocationUpdateView,
     OverviewDeleteView,
     OverviewDetailView,
+    ParticipantBulletCreateView,
+    BulletCreateView,
     ParticipantExperienceBySkillListView,
     ParticipantExperienceListView,
     ParticipantListView,
@@ -212,7 +214,7 @@ urlpatterns += [
 # Bullets CRUD
 urlpatterns += [
     path(
-        "experience/<int:experience_pk>/add_bullet/",
+        "participant/<int:pk>/add_bullet/",
         BulletCreateView.as_view(),
         name="create_bullet",
     ),
