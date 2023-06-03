@@ -182,23 +182,34 @@ class ParticipantDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
+class ParticipantUpdateView(LoginRequiredMixin, UpdateView):
+    model = Participant
+    form = ParticipantForm
+    template_name = "cold_apply/participant_update.html"
+    fields = ParticipantForm.Meta.fields
+
+    def form_valid(self, form):
+        form.instance.updated_by = self.request.user
+        return super().form_valid(form)
+
+
 # Update Participant
-@login_required
-def update_participant(request, pk):
-    participant = Participant.objects.get(id=pk)
-    if request.method == "POST":
-        form = ParticipantForm(request.POST, request.FILES, instance=participant)
-        if form.is_valid():
-            participant = form.save(commit=False)
-            participant.updated_by = request.user
-            participant.save()
-            return redirect(reverse("cold_apply:confirm_update_participant"))
-        else:
-            print(form.errors)
-    else:
-        form = ParticipantForm(instance=participant)
-    context = {"form": form}
-    return render(request, "cold_apply/participant_update.html", context)
+# @login_required
+# def update_participant(request, pk):
+#     participant = Participant.objects.get(id=pk)
+#     if request.method == "POST":
+#         form = ParticipantForm(request.POST, request.FILES, instance=participant)
+#         if form.is_valid():
+#             participant = form.save(commit=False)
+#             participant.updated_by = request.user
+#             participant.save()
+#             return redirect(reverse("cold_apply:confirm_update_participant"))
+#         else:
+#             print(form.errors)
+#     else:
+#         form = ParticipantForm(instance=participant)
+#     context = {"form": form}
+#     return render(request, "cold_apply/participant_update.html", context)
 
 
 # Organizations
@@ -720,8 +731,7 @@ def tailored_resume_view(request, job_pk):
         # response['Content-Disposition'] = 'attachment; filename=test.pdf'
         return response
 
-    # shouldn't get here but just rerender the config page if the form is invalid
-    return configure_tailored_resume_view(request, job.pk)
+    return redirect(reverse("cold_apply:configure_tailored_resume", args=[job.pk]))
 
 
 class OverviewDetailView(HtmxViewMixin, LoginRequiredMixin, DetailView):
@@ -965,10 +975,13 @@ class ApplicantListView(LoginRequiredMixin, ListView):
 # TODO View applicant details using generic DetailView (login required)
 
 
-class LocationCreateView(LoginRequiredMixin, CreateView):
+class LocationCreateView(HtmxViewMixin, LoginRequiredMixin, CreateView):
     fields = ["city", "state", "country"]
     model = Location
     template_name = "cold_apply/location_create.html"
+    htmx_template = "cold_apply/modals/location_create_modal.html"
+    empty_response_on_save = True
+    refresh_on_save = True
 
     def get_initial(self) -> Dict[str, Any]:
         return {"country": Country.objects.get(name="United States")}

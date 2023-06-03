@@ -35,6 +35,9 @@ class Participant(models.Model):
         User, on_delete=models.SET_NULL, related_name="updated_by", null=True
     )
 
+    def get_absolute_url(self):
+        return reverse("cold_apply:participant_detail", kwargs={"pk": self.pk})
+
     def __str__(self):
         return f"{self.name}: {self.email}"
 

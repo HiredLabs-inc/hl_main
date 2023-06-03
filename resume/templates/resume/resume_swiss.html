@@ -53,6 +53,7 @@
                         {% include 'resume/partials/weighted_bullet.html'  with experience_subtext=True %}
                     {% endfor %}
                 </ul>
+                {% include 'resume/partials/bullet_skill_create_form.html' %}
             {% endfor %}
             {% elif bullets_content == "chronological" %}
                 {% for experience in chronological_experiences %}
@@ -63,6 +64,7 @@
                             {% include 'resume/partials/weighted_bullet.html' %}
                         {% endfor %}
                     </ul>
+                    {% include 'resume/partials/bullet_experience_create_form.html' %}
                 {% endfor %}
             {% endif %}
             

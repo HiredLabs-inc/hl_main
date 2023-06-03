@@ -1,0 +1,14 @@
+<form hx-post="{% url 'cold_apply:create_location' %}" class="modal-content">
+    {% csrf_token %}
+    <div class="modal-header">
+        <h5 class="modal-title">Create Location</h5>
+    </div>
+    <div class="modal-body">
+        {{ form.as_p }}
+    </div>
+    <div class="modal-footer">
+        <button class="btn btn-outline-primary" type="button" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" type="submit">Create</button>
+    </div>
+</form>
+  

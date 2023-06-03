@@ -1,0 +1,20 @@
+<div class="modal fade" id="modal-container" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true" x-data="{modal: new bootstrap.Modal($el)}">
+    <div id="modal" class="modal-dialog" hx-target="this"
+        @htmx:after-swap.camel="$event.detail.xhr.status === 200 ? modal.show():''"
+        @htmx:before-swap.camel="$event.detail.xhr.status === 204 ? modal.close(): ''"
+        >
+        <div class="modal-content">
+        <div class="modal-header">
+            <h1 class="modal-title fs-5" id="exampleModalLabel">Modal title</h1>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            ...
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary">Save changes</button>
+        </div>
+        </div>
+    </div>
+</div>

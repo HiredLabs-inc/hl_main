@@ -5,7 +5,10 @@
         {% csrf_token %}
         {{ form.as_p }}
         <div  class="mb-3" >
-        <a href="{% url 'cold_apply:create_location' %}">Add new location</a>
+        {% url 'cold_apply:create_location' as create_location_url %}
+        <a href="{{create_location_url}}" 
+        hx-get="{{create_location_url}}"
+        hx-target="#modal">Add new location</a>
         </div>
         <div>
             <input class="btn btn-primary" type="submit" value="Save">

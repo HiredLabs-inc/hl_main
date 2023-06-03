@@ -42,6 +42,7 @@
                         </div>
                     {% endfor %}
                     </ul>
+                    {% include 'resume/partials/bullet_skill_create_form.html' %}
             {% endfor %}
             {% elif bullets_content == "chronological" %}
             
@@ -55,6 +56,7 @@
                     </div>
                     {% endfor %}
                 </ul>
+                {% include 'resume/partials/bullet_experience_create_form.html' %}
             {% endfor %}
             {% endif %}
             </div>

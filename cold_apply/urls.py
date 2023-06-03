@@ -8,11 +8,11 @@ from .views import (
     LocationUpdateView,
     OverviewDeleteView,
     OverviewDetailView,
-    ParticipantBulletCreateView,
     BulletCreateView,
     ParticipantExperienceBySkillListView,
     ParticipantExperienceListView,
     ParticipantListView,
+    ParticipantUpdateView,
     PhaseListView,
     ParticipantDetailView,
     JobDetailView,
@@ -28,7 +28,6 @@ from .views import (
     refresh_keywords,
     create_participant,
     tailored_resume_view,
-    update_participant,
     ExperienceCreateView,
     BulletCreateView,
     OverviewCreateView,
@@ -63,7 +62,9 @@ urlpatterns += [
         name="participant_detail",
     ),
     path(
-        "participants/<int:pk>/update/", update_participant, name="update_participant"
+        "participants/<int:pk>/update/",
+        ParticipantUpdateView.as_view(),
+        name="update_participant",
     ),
     path(
         "participants/confirm_update/",
@@ -281,5 +282,5 @@ urlpatterns += [
         name="update_location",
     ),
     path("locations/<int:pk>/", LocationDetailView.as_view(), name="location_detail"),
-    path("locations", LocationListView.as_view(), name="location_list"),
+    path("locations/", LocationListView.as_view(), name="location_list"),
 ]

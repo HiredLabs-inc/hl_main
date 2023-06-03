@@ -1,0 +1,9 @@
+{% if form.preview.value == 'True' %}
+<div id="create_bullet_form_{{skill.obj.id}}"></div>
+
+<a href="{% url 'cold_apply:create_bullet' participant.id %}?skills={{skill.obj.id}}" 
+    hx-get="{% url 'cold_apply:create_bullet' participant.id %}?skills={{skill.obj.id}}" 
+    hx-target="#create_bullet_form_{{skill.obj.id}}"
+    class="button"
+    >Add Bullet</a>
+{% endif %}

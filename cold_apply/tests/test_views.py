@@ -1,3 +1,4 @@
+from urllib.parse import urlencode
 from django.http import HttpResponse
 from django.test import TestCase
 from django.urls import reverse
@@ -31,38 +32,36 @@ class ConfigureTailoredResumeViewTest(TestCase):
         )
         self.resume_url = reverse("cold_apply:tailored_resume", args=[self.job.id])
 
-        def test_get_request(self):
-            self.client.force_login(self.user)
-            response = self.client.get(self.config_url)
+    def test_get_request(self):
+        self.client.force_login(self.user)
+        response = self.client.get(self.config_url)
 
-            self.assertEqual(response.status_code, 200)
-            self.assertTemplateUsed(
-                response, "cold_apply/configure_tailored_resume.html"
-            )
-            self.assertIsInstance(response.context["form"], ResumeConfigForm)
-            self.assertEqual(response.context["job"], self.job)
-            self.assertEqual(
-                response.context["resume_template_sections_json"],
-                RESUME_TEMPLATE_SECTIONS_JSON,
-            )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "cold_apply/configure_tailored_resume.html")
+        self.assertIsInstance(response.context["form"], ResumeConfigForm)
+        self.assertEqual(response.context["job"], self.job)
+        self.assertEqual(
+            response.context["resume_template_sections_json"],
+            RESUME_TEMPLATE_SECTIONS_JSON,
+        )
 
-            # Add assertions for other expected form errors
+        # Add assertions for other expected form errors
 
-        def test_job_not_found(self):
-            self.client.force_login(self.user)
-            url = reverse(
-                "cold_apply:configure_tailored_resume", args=[12345]
-            )  # Non-existent job ID
-            response = self.client.get(url)
+    def test_job_not_found(self):
+        self.client.force_login(self.user)
+        url = reverse(
+            "cold_apply:configure_tailored_resume", args=[12345]
+        )  # Non-existent job ID
+        response = self.client.get(url)
 
-            self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 404)
 
-        def test_view_is_login_required(self):
-            response = self.client.get(self.config_url)
-            self.assertEqual(response.status_code, 302)
-            self.assertRedirects(
-                response, reverse(settings.LOGIN_URL) + f"?next={self.config_url}"
-            )
+    def test_view_is_login_required(self):
+        response = self.client.get(self.config_url)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(
+            response, reverse(settings.LOGIN_URL) + f"?next={self.config_url}"
+        )
 
 
 class TailoredResumeViewTestCase(TestCase):
@@ -148,17 +147,11 @@ class TailoredResumeViewTestCase(TestCase):
 
     def test_post_request_invalid_form(self):
         self.client.force_login(self.user)
-        data = {
-            # Provide invalid form data here
-        }
-        response = self.client.get(self.url, data)
-
-        self.assertEqual(response.status_code, 200)
-        self.assertFormError(
-            response, "form", "bullets_content", "This field is required."
-        )
-        self.assertFormError(
-            response, "form", "resume_template", "This field is required."
+        data = {"wrong": True}
+        response = self.client.get(self.url + f"?{urlencode(data)}")
+        self.assertRedirects(
+            response,
+            reverse("cold_apply:configure_tailored_resume", args=[self.job.pk]),
         )
 
     def test_extra_skills_are_filtered(self):

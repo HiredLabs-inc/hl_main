@@ -43,14 +43,22 @@
     {% if form.preview.value == 'True' %}
     <div class="px-5">
 
-        <form method="get" @submit.prevent="$el['preview'].value='False'; $el.submit()" id="resume_config_form">
+        <form method="get">
             {% csrf_token %}
             <div class="d-none">
             {{form.as_p}}
             </div>
 
-            <button class="btn btn-secondary" @click="form=document.getElementById('resume_config_form');form.action='{% url 'cold_apply:configure_tailored_resume' job.id %}'; form.submit()" >Back to Configuration</button>
-            <button class="btn btn-primary" type="submit">Generate PDF</button>
+            <button class="btn btn-secondary" 
+                    @click.prevent="$el.form.target=''; 
+                                    $el.form.action='{% url 'cold_apply:configure_tailored_resume' job.id %}'; 
+                                    $el.form.submit()" 
+            >Back to Configuration</button>
+            <button class="btn btn-primary" 
+                    @click.prevent="$el.form['preview'].value='False'
+                                    $el.form.target='_blank'; 
+                                    $el.form.submit()"
+            >Generate PDF</button>
         </form>
         
     </div>

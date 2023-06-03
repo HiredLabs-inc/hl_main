@@ -15,7 +15,6 @@
     x-data="{ 
         bullets_content: '',
         resume_template: '',
-        preview: '{{form.preview.value}}',
         preview_img_paths: {
             {% for value, label in form.resume_template.field.choices %}
                 {{value}}:'{% static 'images/resume_previews/resume_'|add:value|add:'.png' %}',
@@ -195,7 +194,7 @@
         
     </div>
     </div>
-    <input type="hidden" name="preview" x-model="preview" id="id_preview" >
+    {{form.preview}}
     <hr>
     <div class="rol">
         <div class="col">
@@ -208,8 +207,15 @@
             </div>
             
             <p><strong>Preview Content</strong> will display bullet weightings and allow inline editting of text content.</p>
-            <button class="btn btn-primary" type="submit" :disabled="bullets_content === 'None'">Generate PDF Resume</button>
-            <button class="btn btn-secondary" @click="preview='True'" type="submit">Preview Content</button>
+            <button class="btn btn-primary" 
+                    @click.prevent="$el.form.target='_blank'; 
+                                    $el.form.submit()"  
+                    >Generate PDF Resume</button>
+            <button class="btn btn-secondary" 
+                    @click.prevent="$el.form['preview'].value='True';   
+                                    $el.form.target=''; 
+                                    $el.form.submit()">
+                    Preview Content</button>
         </div>
     </div>
    
