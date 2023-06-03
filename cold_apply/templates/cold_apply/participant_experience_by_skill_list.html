@@ -57,6 +57,12 @@
         {% include 'cold_apply/partials/bullet_detail_li.html' with show_experience_subtext=True %}
         {% endfor %}
         </ul>
+        <div id="create_bullet_form_0"></div>
+        <a href="{% url 'cold_apply:create_bullet' participant.id %}" 
+               hx-get="{% url 'cold_apply:create_bullet' participant.id %}" 
+               hx-target="#create_bullet_form_0"
+               class="button"
+               >Add Bullet</a>
     </div>
     {% endif %}
     <div class="pb-4">
