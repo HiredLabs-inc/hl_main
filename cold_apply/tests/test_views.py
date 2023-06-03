@@ -1,15 +1,23 @@
+from calendar import c
 from urllib.parse import urlencode
 from django.http import HttpResponse
 from django.test import TestCase
 from django.urls import reverse
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
+from numpy import var
 
 from cold_apply.forms import ResumeConfigForm
 from cold_apply.models import Job, Location, Participant, SkillBullet, State
 from hl_main import settings
 from cold_apply.models import Skill
-from resume.models import Bullet, CertProjectActivity, Experience, Position
+from resume.models import (
+    Bullet,
+    CertProjectActivity,
+    Experience,
+    Organization,
+    Position,
+)
 from resume.pdf import (
     RESUME_TEMPLATE_SECTIONS_JSON,
     ResumeCoreTemplates,
@@ -100,6 +108,21 @@ class TailoredResumeViewTestCase(TestCase):
             skill=skill3,
         )
 
+        self.cert1 = CertProjectActivity.objects.create(
+            org=Organization.objects.first(),
+            title="test cert 1",
+            description="test cert 1 description",
+            variety="Certification",
+            participant=self.participant,
+        )
+        self.cert2 = CertProjectActivity.objects.create(
+            org=Organization.objects.first(),
+            title="test cert 1",
+            description="test cert 1 description",
+            variety="Award",
+            participant=self.participant,
+        )
+
     def test_response_is_pdf(self):
         self.client.force_login(self.user)
         data = {
@@ -177,4 +200,32 @@ class TailoredResumeViewTestCase(TestCase):
         self.assertQuerysetEqual(
             response.context["skills"].order_by("id"),
             Skill.objects.filter(id__in=extra_skills).order_by("id"),
+        )
+
+        data["bullets_content"] = ResumeFormatChoices.CHRONOLOGICAL
+        response = self.client.get(self.url, data)
+        self.assertQuerysetEqual(
+            response.context["skills"].order_by("id"),
+            Skill.objects.filter(id__in=extra_skills).order_by("id"),
+        )
+
+    def test_certs_are_filtered(self):
+        self.client.force_login(self.user)
+        certs = [self.cert1.id]
+
+        data = {
+            "sections": [v for v, k in ResumeSections.choices],
+            "bullets_content": ResumeFormatChoices.SKILLS,
+            "resume_template": ResumeCoreTemplates.STANDARD,
+            "preview": True,
+            "certifications": certs,
+            "experiences": Experience.objects.filter(
+                participant=self.participant
+            ).values_list("id", flat=True),
+        }
+
+        response = self.client.get(self.url, data)
+        self.assertQuerysetEqual(
+            response.context["certifications"].order_by("id"),
+            CertProjectActivity.objects.filter(id__in=certs).order_by("id"),
         )
