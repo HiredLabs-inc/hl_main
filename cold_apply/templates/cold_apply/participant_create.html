@@ -6,7 +6,12 @@
     <form class="post-form" method="post" enctype="multipart/form-data">
         {% csrf_token %}
         {{ form.as_p }}
-        <a href="{% url 'cold_apply:create_location' %}">Add new location</a>
+        <div  class="mb-3" >
+            {% url 'cold_apply:create_location' as create_location_url %}
+            <a href="{{create_location_url}}" 
+            hx-get="{{create_location_url}}"
+            hx-target="#modal">Add new location</a>
+            </div>
         <div>
             <input class="btn btn-primary" type="submit" value="Save">
             <a class="btn btn-primary" href="{% url 'cold_apply:index' %}">Cancel</a>
