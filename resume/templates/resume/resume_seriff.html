@@ -12,7 +12,7 @@
 <div class="p-4">
     <div class="row mb-4">
         <div class="col-8">
-            <h2 class="fw-bold">{{job.participant.name}}</h2>
+            <h2 class="fw-bold" id="participant_name">{{job.participant.name}}</h2>
             <h5>{{job.participant.experience_set.first.position  }}</h5>
             <!-- Overview  -->
             {% if "overview" in form.sections.value %}

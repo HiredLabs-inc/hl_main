@@ -16,6 +16,7 @@
                 {% endfor %}
                 <button type="submit">Login</button>
                 <button type="button"><a style="text-decoration: none" href="{% url 'home' %}">Cancel</a></button>
+                {{form.errors}}
             </form>
         {% endif %}
     </div>

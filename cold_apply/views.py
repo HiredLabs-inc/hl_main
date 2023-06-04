@@ -187,6 +187,7 @@ class ParticipantUpdateView(LoginRequiredMixin, UpdateView):
     form = ParticipantForm
     template_name = "cold_apply/participant_update.html"
     fields = ParticipantForm.Meta.fields
+    context_object_name = "participant"
 
     def form_valid(self, form):
         form.instance.updated_by = self.request.user

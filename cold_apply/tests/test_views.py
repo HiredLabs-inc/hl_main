@@ -1,7 +1,9 @@
 from calendar import c
+import os
 from urllib.parse import urlencode
 from django.http import HttpResponse
 from django.test import TestCase
+from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.urls import reverse
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
@@ -10,6 +12,7 @@ from numpy import var
 from cold_apply.forms import ResumeConfigForm
 from cold_apply.models import Job, Location, Participant, SkillBullet, State
 from hl_main import settings
+from playwright.sync_api import Playwright, sync_playwright, expect
 from cold_apply.models import Skill
 from resume.models import (
     Bullet,
@@ -24,6 +27,90 @@ from resume.pdf import (
     ResumeFormatChoices,
     ResumeSections,
 )
+
+
+class ColdApplyBrowserTest(StaticLiveServerTestCase):
+    """Playwright end to end tests for the cold_apply app."""
+
+    fixtures = ["cold_apply/fixtures/dev_data.json"]
+
+    @classmethod
+    def setUpClass(cls):
+        # not entirely sure why this is needed as this is using
+        # the sync API, but seems to be necessary
+        os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
+        super().setUpClass()
+        cls.playwright = sync_playwright().start()
+        cls.browser = cls.playwright.chromium.launch()
+
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        cls.browser.close()
+        cls.playwright.stop()
+
+    def test_click_through_to_config_page(self):
+        """
+        - Login and navigate to the config page for a job.
+        - Checks that config page is in a popup.
+        """
+        context = self.browser.new_context()
+        page = context.new_page()
+        page.goto(f"{self.live_server_url}/userprofile/login/?next=/staff/")
+        # page.wait_for_load_state("networkidle")
+        page.locator("#id_username").click()
+        page.locator("#id_username").fill("admin")
+        page.locator("#id_password").click()
+        page.locator("#id_password").fill("admin")
+        page.get_by_role("button", name="Login").click()
+        page.get_by_role("link", name="cold_apply").click()
+
+        page.get_by_role("link", name="Jeff Stock").click()
+        page.get_by_role("link", name="Software Engineer - Early Professional").click()
+        with page.expect_popup() as page1_info:
+            page.get_by_role("link", name="Tailor Resume").click()
+        page1 = page1_info.value
+        page1.get_by_text(
+            "Hired Labs, inc.: Technical Co-founder, 2022-06-15 - Present"
+        ).click()
+        page1.get_by_text(
+            "Upwork Inc.: Program Manager, Data Analytics & Operations, 2019-12-31 - 2022-05-"
+        ).click()
+        page1.get_by_label(
+            "Upwork Inc.: Associate Program Manager, Contingent Workforce, 2018-08-01 - 2019-12-31"
+        ).check()
+        page1.get_by_role("listitem").filter(has_text="Top Skills").click()
+        page1.get_by_role("listitem").filter(
+            has_text="Seriff Overview | Education | Skills | Certifications"
+        ).locator("div").click()
+
+        page1.get_by_text("No colors").click()
+        page1.get_by_text("No colors").click()
+        page1.get_by_role("button", name="Preview Content").click()
+        assert page1.get_by_text("Jeff Stock").is_visible()
+        page1.get_by_role("button", name="Back to Configuration").click()
+
+        context.close()
+
+
+class ParticipantUpdateViewTestCase(TestCase):
+    fixtures = ["cold_apply/fixtures/dev_data.json"]
+
+    def test_view_200(self):
+        self.client.login(username="admin", password="admin")
+
+        url = reverse(
+            "cold_apply:update_participant", args=[Participant.objects.first().id]
+        )
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+        self.client.logout()
+        unauth_response = self.client.get(url)
+        self.assertRedirects(
+            unauth_response, reverse(settings.LOGIN_URL) + f"?next={url}"
+        )
 
 
 class ConfigureTailoredResumeViewTest(TestCase):
