@@ -17,6 +17,9 @@ from cold_apply.models import Skill
 from resume.models import (
     Bullet,
     CertProjectActivity,
+    Concentration,
+    Degree,
+    Education,
     Experience,
     Organization,
     Position,
@@ -36,8 +39,12 @@ class ColdApplyBrowserTest(StaticLiveServerTestCase):
 
     @classmethod
     def setUpClass(cls):
-        # not entirely sure why this is needed as this is using
-        # the sync API, but seems to be necessary
+        # playwright sync api uses an internal event loop,
+        # any calls to certain parts of django where an
+        # event loop is running will error
+        # https://docs.djangoproject.com/en/4.2/topics/async/#async-safety
+        # we're only testing so we can allow the unsafe async calls
+
         os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
         super().setUpClass()
         cls.playwright = sync_playwright().start()
@@ -57,7 +64,6 @@ class ColdApplyBrowserTest(StaticLiveServerTestCase):
         context = self.browser.new_context()
         page = context.new_page()
         page.goto(f"{self.live_server_url}/userprofile/login/?next=/staff/")
-        # page.wait_for_load_state("networkidle")
         page.locator("#id_username").click()
         page.locator("#id_username").fill("admin")
         page.locator("#id_password").click()
@@ -91,6 +97,33 @@ class ColdApplyBrowserTest(StaticLiveServerTestCase):
         page1.get_by_role("button", name="Back to Configuration").click()
 
         context.close()
+
+
+class EducationUpdateViewTestCase(TestCase):
+    fixtures = ["cold_apply/fixtures/dev_data.json"]
+
+    @classmethod
+    def setUpTestData(self):
+        self.education = Education.objects.create(
+            participant=Participant.objects.filter(name="Jeff Stock").first(),
+            org=Organization.objects.first(),
+            degree=Degree.objects.first(),
+            concentration=Concentration.objects.first(),
+        )
+
+    def test_view_200(self):
+        self.client.login(username="admin", password="admin")
+
+        url = reverse("cold_apply:update_education", args=[self.education.id])
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+        self.client.logout()
+        unauth_response = self.client.get(url)
+        self.assertRedirects(
+            unauth_response, reverse(settings.LOGIN_URL) + f"?next={url}"
+        )
 
 
 class ParticipantUpdateViewTestCase(TestCase):

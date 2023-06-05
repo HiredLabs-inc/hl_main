@@ -475,23 +475,20 @@ class EducationCreateView(LoginRequiredMixin, CreateView):
 
 class EducationUpdateView(LoginRequiredMixin, UpdateView):
     model = Education
-    template_name = "cold_apply/participant_update.html"
+    template_name = "cold_apply/education_update.html"
     fields = ["degree", "concentration", "org"]
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["now"] = timezone.now()
+        context["participant"] = self.object.participant
 
         return context
 
     def form_valid(self, form):
-        if form.is_valid():
-            education = form.save(commit=False)
-            education.save()
-            return redirect(reverse("cold_apply:confirm_update_education"))
-        else:
-            print(form.errors)
-        return super().form_valid(form)
+        education = form.save(commit=False)
+        education.save()
+        return redirect(reverse("cold_apply:confirm_update_education"))
 
 
 class ConcentrationCreateView(LoginRequiredMixin, CreateView):

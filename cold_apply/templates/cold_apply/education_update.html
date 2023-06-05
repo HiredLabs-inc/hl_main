@@ -1,15 +1,19 @@
 {% extends 'staff.html' %}
 
 {% block content %}
-    <h3>Adding New Education</h3>
+    <h3>Update Education</h3>
     <p>For: {{ participant.name }}</p>
     <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
-        <input class="btn btn-primary" type="submit" value="Save">
-        <a class="btn btn-primary" onclick="window.close()">Cancel</a>
+        <div>
+            <input class="btn btn-primary" type="submit" value="Save">
+            <a class="btn btn-primary" onclick="window.close()">Cancel</a>
+        </div>
     </form>
     <hr>
     <a class="btn btn-primary" href="{% url 'cold_apply:create_company' %}" target="_blank">Add School</a>
     <a class="btn btn-primary" href="{% url 'cold_apply:create_concentration'%}" target="_blank">Add Concentration</a>
+    
 {% endblock %}
+
