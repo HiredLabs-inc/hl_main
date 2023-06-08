@@ -25,6 +25,8 @@ from .views import (
     OrganizationUpdateView,
     configure_tailored_resume_view,
     delete_job,
+    find_new_jobs_view,
+    get_task_status_view,
     refresh_keywords,
     create_participant,
     tailored_resume_view,
@@ -117,6 +119,11 @@ urlpatterns += [
         "jobs/confirm_update/", ConfirmCreateView.as_view(), name="confirm_update_job"
     ),
     path("jobs/delete/<int:pk>/", delete_job, name="delete_job"),
+    path(
+        "jobs/find_new_jobs/<int:participant_id>",
+        find_new_jobs_view,
+        name="find_new_jobs",
+    ),
 ]
 
 # Participant Experiences CRUD
@@ -284,3 +291,7 @@ urlpatterns += [
     path("locations/<int:pk>/", LocationDetailView.as_view(), name="location_detail"),
     path("locations/", LocationListView.as_view(), name="location_list"),
 ]
+
+
+# Tasks
+urlpatterns += [path("tasks/task_status", get_task_status_view, name="task_status")]

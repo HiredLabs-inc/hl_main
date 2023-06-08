@@ -23,9 +23,9 @@ class Organization(models.Model):
         ("Activity", "Activity"),
     ]
     org_type = models.CharField(
-        max_length=20, choices=ORG_TYPES, default=None, null=True
+        max_length=20, choices=ORG_TYPES, blank=True, default="Work"
     )
-    name = models.CharField(max_length=250)
+    name = models.CharField(max_length=250, unique=True)
     website = models.CharField(max_length=100)
 
     def __str__(self):
@@ -37,7 +37,7 @@ class Organization(models.Model):
 
 
 class Position(models.Model):
-    title = models.CharField(max_length=50)
+    title = models.CharField(max_length=100, unique=True)
 
     def __str__(self):
         return f"{self.title}"

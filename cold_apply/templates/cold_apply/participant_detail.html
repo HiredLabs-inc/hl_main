@@ -1,116 +1,145 @@
 {% extends 'staff.html' %}
 
 {% block content %}
-    <div class="row pt-4">
-        <div>
-            <div class="d-flex align-items-center">
-                <h3 class="me-3">{{ object.first_name }} {{object.last_name}}</h3>
-                <div>
+<div class="row pt-4">
+    <div>
+        <div class="d-flex align-items-center">
+            <h3 class="me-3">{{ object.first_name }} {{object.last_name}}</h3>
+            <div>
                 {% if object.dnc %}
-                    <span class="badge rounded-pill text-bg-danger fs-6">Do Not Contact</span>
+                <span class="badge rounded-pill text-bg-danger fs-6">Do Not Contact</span>
                 {% else %}
-                    <span class="badge rounded-pill text-bg-success  fs-6">Contactable</span>
+                <span class="badge rounded-pill text-bg-success  fs-6">Contactable</span>
                 {% endif %}
             </div>
-            </div>
-        
+        </div>
+
         <h5>
-            {{object.location.city}}, {{object.location.state.abbreviation}} 
+            {{object.location.city}}, {{object.location.state.abbreviation}}
         </h5>
         <h5 class="sub-header">
             {% if object.veteran %}
-                Veteran
+            Veteran
             {% else %}
-                Not a Veteran
+            Not a Veteran
             {% endif %}
         </h5>
         {% if latest_experience %}
-            <h6 class="mb-0">Latest Work Experience</h6>
-            <p>{{ latest_experience.position.title }} at {{ latest_experience.org.name }}: {{ latest_experience.start_date|date }} -
-                {% if latest_experience.end_date == None %}
-                    Present
-                    {% else %}
-                    {{ latest_experience.end_date|date }}
-                    {% endif %}
-            </p>
+        <h6 class="mb-0">Latest Work Experience</h6>
+        <p>{{ latest_experience.position.title }} at {{ latest_experience.org.name }}: 
+            {{latest_experience.start_date|date }} -
+            {% if latest_experience.end_date == None %}
+            Present
             {% else %}
-                <p>No experience entered.</p>
+            {{ latest_experience.end_date|date }}
+            {% endif %}
+        </p>
+        {% else %}
+        <p>No experience entered.</p>
         {% endif %}
         <h6 class="mb-0">Highest Education</h6>
         {% if highest_edu %}
-            {{ highest_edu.first.degree.abbr }} in {{ highest_edu.first.concentration }} | {{ highest_edu.first.org }}
+        {{ highest_edu.first.degree.abbr }} in {{ highest_edu.first.concentration }} | {{ highest_edu.first.org }}
         {% else %}
-            <p>No education entered.</p>
+        <p>No education entered.</p>
         {% endif %}
         <p>
             <a href="{% url 'cold_apply:participant_experience_list' object.id %}">See All Education and Experience</a>
         </p>
         <p>Uploaded Resume: <a href="{{ MEDIA_PREFIX }}{{ object.uploaded_resume }}" target="_blank">
-            {{ object.uploaded_resume_title }}</a>
+                {{ object.uploaded_resume_title }}</a>
         </p>
         <table class="table table-striped">
             <thead>
-            <tr>
-                <th>Current Phase</th>
-                <th>Current Step</th>
-                <th>Phone</th>
-                <th>Email</th>
-            </tr>
+                <tr>
+                    <th>Current Phase</th>
+                    <th>Current Step</th>
+                    <th>Phone</th>
+                    <th>Email</th>
+                </tr>
             </thead>
             <tbody>
-            <tr>
-                <td>{{ object.current_step.phase.title }}</td>
-                <td>{{ object.current_step.title }}</td>
-                <td>{{ object.phone }}</td>
-                <td>{{ object.email }}</td>
-            </tr>
+                <tr>
+                    <td>{{ object.current_step.phase.title }}</td>
+                    <td>{{ object.current_step.title }}</td>
+                    <td>{{ object.phone }}</td>
+                    <td>{{ object.email }}</td>
+                </tr>
             </tbody>
         </table>
     </div>
-    </div>
-    
-    <div class="row">
-        <div>
+</div>
+
+<div class="row">
+    <div>
         <h4>Jobs</h4>
         <table class="table table-striped">
             <thead>
-            <tr>
-                <th>Total Jobs Found</th>
-                <th>Open Jobs</th>
-                <th>Participant Rejected Jobs</th>
-                <th colspan="2">Add Jobs</th>
-            </tr>
+                <tr>
+                    <th>Total Jobs Found</th>
+                    <th>New Jobs</th>
+                    <th>Open Jobs</th>
+                    <th>Participant Rejected Jobs</th>
+                    <th colspan="2">Add Jobs</th>
+                </tr>
             </thead>
             <tbody>
-            <tr>
-                <td>{{ totals.total }}</td>
-                <td>{{ totals.open_jobs }}</td>
-                <td>{{ totals.rejected }}</td>
-                <td><a class="btn btn-primary" href="{% url 'cold_apply:create_job' object.id %}" target="_blank">Add a
-                    Job</a></td>
+                <tr>
+                    <td>{{ jobs.count }}</td>
+                    <td>{{ jobs.new.count }}</td>
+                    <td>{{ jobs.open.count }}</td>
+                    <td>{{ jobs.rejected.count }}</td>
+                    <td><a class="btn btn-primary" href="{% url 'cold_apply:create_job' object.id %}"
+                            target="_blank">Add a
+                            Job</a></td>
 
         </table>
         <br>
         <br>
+        
+        
+        <h5 class="sub-header" id="new_jobs">New Jobs</h5>
+
+        {% if request.session.task_id %}
+        <div hx-get="{% url 'cold_apply:task_status' %}" 
+            hx-trigger="load"
+            hx-swap="outerHTML"
+            id="task-alert">
+          
+        </div>
+        {% endif %}
+        
+        {% if jobs.new %}
+            {% include 'cold_apply/partials/new_jobs_table.html' %}
+        
+        
+        {% else %}
+        <div>
+            <a href="{% url 'cold_apply:find_new_jobs' object.id %}" class="btn btn-primary">
+                Search for new jobs
+            </a>
+        </div>
+        {% endif %}
+        
         <h5 class="sub-header">Open Jobs</h5>
         <table class="table table-striped">
             <thead>
-            <tr>
-                <th>Title</th>
-                <th>Company</th>
-                <th colspan="2">Remove</th>
-            </tr>
+                <tr>
+                    <th>Title</th>
+                    <th>Company</th>
+                    <th colspan="2">Remove</th>
+                </tr>
             </thead>
             <tbody>
-            {% for job in jobs %}
+                {% for job in jobs %}
                 {% if job.status == 'Open' %}
-                    <tr>
-                        <td><a href="{% url 'cold_apply:job_detail' job.id %}">{{ job.title }}</a></td>
-                        <td>{{ job.company }}</td>
-                        <td><a class="btn btn-primary" href="{% url 'cold_apply:delete_job' job.id %}">Delete</a></td>
-                    </tr>
+                <tr>
+                    <td><a href="{% url 'cold_apply:job_detail' job.id %}">{{ job.title }}</a></td>
+                    <td>{{ job.company }}</td>
+                    <td><a class="btn btn-primary" href="{% url 'cold_apply:delete_job' job.id %}">Delete</a></td>
+                </tr>
                 {% endif %}
-            {% endfor %}
+                {% endfor %}
             </tbody>
         </table>
         <br>
@@ -118,43 +147,43 @@
         <h5 class="sub-header">Closed Jobs</h5>
         <table class="table table-striped">
             <thead>
-            <tr>
-                <th>Title</th>
-                <th>Company</th>
-                <th>Closed Reason</th>
-                <th>Remove Jobs</th>
-            </tr>
+                <tr>
+                    <th>Title</th>
+                    <th>Company</th>
+                    <th>Closed Reason</th>
+                    <th>Remove Jobs</th>
+                </tr>
             </thead>
             <tbody>
-            {% for job in jobs %}
+                {% for job in jobs %}
                 {% if job.status == 'Closed' %}
-                    <tr>
-                        <td><a href="{% url 'cold_apply:job_detail' job.id %}">{{ job.title }}</a></td>
-                        <td>{{ job.company }}</td>
-                        <td>{{ job.status_reason }}</td>
-                        <td><a class="btn btn-primary" href="{% url 'cold_apply:delete_job' job.id %}">Delete</a></td>
-                    </tr>
+                <tr>
+                    <td><a href="{% url 'cold_apply:job_detail' job.id %}">{{ job.title }}</a></td>
+                    <td>{{ job.company }}</td>
+                    <td>{{ job.status_reason }}</td>
+                    <td><a class="btn btn-primary" href="{% url 'cold_apply:delete_job' job.id %}">Delete</a></td>
+                </tr>
                 {% endif %}
-            {% endfor %}
+                {% endfor %}
             </tbody>
         </table>
     </div>
+</div>
+<br>
+<br>
+<div class="row">
+    <h3>Actions</h3>
+    <div class="col">
+        {# <a class="btn btn-primary" href="{% url 'cold_apply:participant_update' object.id %}">Update Participant#}
+            {# Info</a>#}
+        <a class="btn btn-primary" href="{% url 'cold_apply:create_job' object.id %}" target="_blank">Add a Job</a>
+        <a class="btn btn-primary" href="{% url 'cold_apply:update_participant' object.id %}">Update Participant</a>
     </div>
-    <br>
-    <br>
-    <div class="row">
-        <h3>Actions</h3>
-        <div class="col">
-            {#            <a class="btn btn-primary" href="{% url 'cold_apply:participant_update' object.id %}">Update Participant#}
-            {#                Info</a>#}
-            <a class="btn btn-primary" href="{% url 'cold_apply:create_job' object.id %}" target="_blank">Add a Job</a>
-            <a class="btn btn-primary" href="{% url 'cold_apply:update_participant' object.id %}" >Update Participant</a>
-        </div>
+</div>
+<div class="row">
+    <h3>Navigation</h3>
+    <div class="col">
+        <a class="btn btn-primary" href="{% url 'cold_apply:index' %}">Back to Pipeline</a>
     </div>
-    <div class="row">
-        <h3>Navigation</h3>
-        <div class="col">
-            <a class="btn btn-primary" href="{% url 'cold_apply:index' %}">Back to Pipeline</a>
-        </div>
-    </div>
+</div>
 {% endblock %}

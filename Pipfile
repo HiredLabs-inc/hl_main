@@ -8,7 +8,6 @@ asgiref = "*"
 django = "4.1"
 django-environ = "*"
 sqlparse = "*"
-mysqlclient = "*"
 requests = "*"
 joblib = "*"
 nltk = "*"
@@ -22,10 +21,12 @@ fpdf = "*"
 pytest-django = "*"
 playwright = "*"
 django-debug-toolbar = "*"
+mysqlclient = "*"
 
 [dev-packages]
 pytest = "*"
 pytest-dotenv = "*"
+pycodestyle = "*"
 
 [requires]
 python_version = "3.8"

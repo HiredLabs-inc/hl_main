@@ -130,3 +130,12 @@ body {
   display: inline-block;
   border-radius: 50%;
 }
+
+/* copied from tailwind */
+.grid {
+  display: grid;
+}
+
+.grid-cols-8 {
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+}

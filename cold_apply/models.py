@@ -69,9 +69,25 @@ class Interaction(models.Model):
         verbose_name_plural = "Interactions"
 
 
+class JobQuerySet(models.QuerySet):
+    def rejected(self):
+        return self.filter(status_reason="Rejected")
+
+    def open(self):
+        return self.filter(status="Open")
+
+    def closed(self):
+        return self.filter(status="Closed")
+
+    def new(self):
+        return self.filter(status="New")
+
+
 # This refers to open jobs, not to jobs a participant has already had in the past
 class Job(models.Model):
+    objects = JobQuerySet.as_manager()
     STATUSES = [
+        ("New", "New"),
         ("Open", "Open"),
         ("Closed", "Closed"),
     ]
@@ -82,6 +98,7 @@ class Job(models.Model):
         ("Cycle Complete", "Cycle Complete"),
     ]
     company = models.ForeignKey(Organization, on_delete=models.SET_NULL, null=True)
+    company_detail = models.CharField(max_length=100, blank=True)
     participant = models.ForeignKey(Participant, on_delete=models.SET_NULL, null=True)
     title = models.ForeignKey(Position, on_delete=models.SET_NULL, null=True)
     description = models.TextField()
@@ -89,7 +106,9 @@ class Job(models.Model):
     status_reason = models.CharField(
         max_length=20, choices=REASONS, blank=True, null=True
     )
-    application_link = models.URLField(blank=True, null=True)
+    source_link = models.URLField(blank=True, max_length=500)
+    application_link = models.URLField(blank=True, null=True, max_length=500)
+    application_agent = models.CharField(max_length=50, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(
         User, on_delete=models.SET_NULL, related_name="job_created_by", null=True
@@ -98,6 +117,21 @@ class Job(models.Model):
     updated_by = models.ForeignKey(
         User, on_delete=models.SET_NULL, related_name="job_updated_by", null=True
     )
+    posted_at = models.DateTimeField(null=True)
+    salary = models.CharField(max_length=100, blank=True)
+
+    # might not be able to reconcile location info to a location in the db
+    # so save original string as location_detail and try to match later
+    location_detail = models.CharField(max_length=100, blank=True)
+    location = models.ForeignKey(
+        "cold_apply.Location", on_delete=models.SET_NULL, null=True
+    )
+    # if not remote then leave blank.
+    # examples: '2 days a week in office' or 'Work from home'
+    remote = models.CharField(max_length=50, blank=True)
+
+    # the identifier for the job from the job board
+    source_id = models.CharField(max_length=200, blank=True)
 
     def __str__(self):
         return f"{self.company}: {self.title}, {self.status}: {self.participant.name}"

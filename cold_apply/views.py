@@ -1,18 +1,13 @@
-from ast import Delete
-import re
-from typing import Any, Dict, Optional, Type
-from django import forms
+from typing import Any, Dict
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import Count, Q
-from django.forms.models import BaseModelForm
-from django.http import HttpResponse, QueryDict
+from django.db.models.query import QuerySet
+from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.template.defaultfilters import pluralize
-from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
+from django_q.models import Task, OrmQ
 from django.views.decorators.http import require_http_methods
 from django.views.generic import (
     CreateView,
@@ -21,8 +16,15 @@ from django.views.generic import (
     TemplateView,
     UpdateView,
     DeleteView,
+    FormView,
 )
+from django.views.generic.edit import FormMixin
 from requests import head
+from cold_apply.jobs import (
+    get_jobs_for_participant,
+    q_get_jobs_for_participant,
+    q_test_job_task,
+)
 
 from cold_apply.resume_formatting import (
     group_bullets_by_experience,
@@ -46,7 +48,9 @@ from .forms import (
     ApplicantForm,
     BulletForm,
     ExperienceForm,
+    FindNewJobsForm,
     InteractionForm,
+    NewJobSelectionForm,
     ParticipantForm,
     ResumeConfigForm,
 )
@@ -151,29 +155,51 @@ def create_participant(request):
 
 
 # Read Participant details
-class ParticipantDetailView(LoginRequiredMixin, DetailView):
+class ParticipantDetailView(LoginRequiredMixin, FormMixin, DetailView):
     model = Participant
     template_name = "cold_apply/participant_detail.html"
     context_object_name = "participants"
-    paginate_by = 10
+    queryset = Participant.objects.prefetch_related("job_set").all()
+
+    def get_success_url(self) -> str:
+        return reverse("cold_apply:participant_detail", args=[self.object.id])
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form = self.get_form()
+        if form.is_valid():
+            return self.form_valid(form)
+        else:
+            return self.form_invalid(form)
+
+    def form_valid(self, form):
+        if isinstance(form, NewJobSelectionForm):
+            form.save()
+            self.object.job_set.filter(status="New").delete()
+            return super().form_valid(form)
+
+    def get_form_kwargs(self):
+        return {
+            **super().get_form_kwargs(),
+            "participant": self.object,
+        }
+
+    def get_form_class(self):
+        return NewJobSelectionForm
+        if self.request.GET.get("form") == "new_jobs":
+            return NewJobSelectionForm
+        return super().get_form_class()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        jobs = Job.objects.filter(participant=self.object)
-        totals = jobs.aggregate(
-            total=Count("pk"),
-            open_jobs=Count("pk", filter=Q(status="Open")),
-            closed_jobs=Count("pk", filter=Q(status="Closed")),
-            rejected=Count("pk", filter=Q(status_reason="Candidate Rejected")),
-        )
+
         latest_experience = (
             Experience.objects.filter(participant_id=self.kwargs["pk"])
             .order_by("-start_date")
             .first()
         )
         context["latest_experience"] = latest_experience
-        context["jobs"] = jobs
-        context["totals"] = totals
+        context["jobs"] = self.object.job_set.all()
         context["highest_edu"] = Education.objects.filter(
             participant_id=self.kwargs["pk"]
         )
@@ -1001,3 +1027,69 @@ class LocationListView(LoginRequiredMixin, ListView):
     model = Location
     template_name = "cold_apply/location_list.html"
     context_object_name = "locations"
+
+
+def find_new_jobs_view(request, participant_id):
+    participant = get_object_or_404(Participant, pk=participant_id)
+    if request.method == "POST":
+        form = FindNewJobsForm(request.POST)
+        if form.is_valid():
+            keywords = form.cleaned_data.get("keywords")
+            if keywords:
+                keywords = keywords.split(",")
+            # task_id = q_test_job_task(5)
+            task_id = q_get_jobs_for_participant(
+                participant,
+                form.cleaned_data["query"],
+                keywords=keywords,
+                date_posted=form.cleaned_data.get("date_posted"),
+            )
+
+            print("Task Id: ", task_id)
+            request.session["task_id"] = task_id
+
+            return redirect(
+                f"{reverse('cold_apply:participant_detail', args=[participant_id])}#new_jobs"
+            )
+    else:
+        form = FindNewJobsForm()
+
+    return render(request, "cold_apply/find_new_jobs.html", context={"form": form})
+
+
+def get_task_status_view(request):
+    task_id = request.session.get("task_id")
+    if task_id is None:
+        raise Http404("Task not found")
+
+    # seems to be a bug in django_rq
+    # these two functions are identical but
+    # result() always returns None
+    # fetch() returns the task as expected
+    # even when the task is finished
+    # print(fetch(task_id))
+    # print(result(task_id))
+
+    # have to use Task.get_task instead
+
+    task_result = Task.get_task(task_id)
+    context = {"finished_task": task_result}
+
+    if task_result:
+        request.session.pop("task_id", None)
+        # context["task_not_found"] = True
+        return HttpResponse(status=204, headers={"HX-Refresh": "true"})
+
+    elif not OrmQ.objects.all().exists():
+        # no task and nothing queued
+        # assume task_id is invalid
+        request.session.pop("task_id", None)
+        context["task_not_found"] = True
+
+    return render(
+        request,
+        "cold_apply/partials/task_status.html",
+        context=context,
+    )
+
+    return JsonResponse({"status": task.status, "result": task.result})

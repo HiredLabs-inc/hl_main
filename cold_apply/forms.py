@@ -1,5 +1,6 @@
 from typing import Any, Dict
 from django import forms
+from cold_apply.jobs import DatePostedFilter
 
 from resume.models import Bullet, CertProjectActivity, Experience
 from resume.pdf import (
@@ -9,7 +10,7 @@ from resume.pdf import (
     ResumeSections,
 )
 
-from .models import Applicant, Interaction, Location, Participant, Skill
+from .models import Applicant, Interaction, Job, Location, Participant, Skill
 
 
 class ParticipantForm(forms.ModelForm):
@@ -229,3 +230,27 @@ class ResumeConfigForm(forms.Form):
         k: " | ".join(map(lambda s: s.capitalize(), v))
         for k, v in RESUME_TEMPLATE_SECTIONS.items()
     }
+
+
+class NewJobSelectionForm(forms.Form):
+    def __init__(self, *args, **kwargs) -> None:
+        participant = kwargs.pop("participant")
+        super().__init__(*args, **kwargs)
+        self.fields["jobs"].queryset = Job.objects.filter(
+            participant=participant, status="New"
+        )
+
+    jobs = forms.ModelMultipleChoiceField(queryset=Job.objects.none(), required=False)
+
+    def save(self):
+        self.cleaned_data["jobs"].update(status="Open")
+
+
+class FindNewJobsForm(forms.Form):
+    query = forms.CharField(max_length=100)
+    keywords = forms.CharField(max_length=100, required=False)
+    date_posted = forms.ChoiceField(
+        required=True,
+        choices=DatePostedFilter.choices,
+        initial=DatePostedFilter.THREE_DAYS,
+    )

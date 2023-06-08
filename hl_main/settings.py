@@ -96,9 +96,11 @@ DATABASES = {
         "NAME": "HiredLabs",
         "USER": env("DB_USER"),
         "PASSWORD": env("DB_PASSWORD"),
-        "HOST": "localhost",
+        "HOST": "127.0.0.1",
     }
 }
+
+# SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 
 # Caching
 # https://docs.djangoproject.com/en/4.1/topics/cache/#setting-up-the-cache
