@@ -70,7 +70,7 @@ class Experience(models.Model):
     participant = models.ForeignKey("cold_apply.Participant", on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.org}: {self.position}, {self.start_date} - {self.end_date or 'Present'}"
+        return f"{self.org}: {self.position} ({self.start_date} - {self.end_date or 'Present'})"
 
     class Meta:
         ordering = ["-start_date"]
@@ -110,7 +110,7 @@ class Education(models.Model):
         )
 
     def __str__(self):
-        return "{}: {}, {}".format(self.org, self.degree, self.concentration)
+        return f"{self.org}: {self.degree} in {self.concentration} {self.get_status_display()}"
 
 
 class CertProjectActivity(models.Model):

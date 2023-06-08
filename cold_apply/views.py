@@ -202,7 +202,7 @@ class ParticipantDetailView(LoginRequiredMixin, FormMixin, DetailView):
         context["jobs"] = self.object.job_set.all()
         context["highest_edu"] = Education.objects.filter(
             participant_id=self.kwargs["pk"]
-        )
+        ).first()
         context["now"] = timezone.now()
 
         return context
@@ -1049,7 +1049,7 @@ def find_new_jobs_view(request, participant_id):
             request.session["task_id"] = task_id
 
             return redirect(
-                f"{reverse('cold_apply:participant_detail', args=[participant_id])}#new_jobs"
+                f"{reverse('cold_apply:participant_detail', args=[participant_id])}#jobs-panel-new-jobs-heading"
             )
     else:
         form = FindNewJobsForm()
@@ -1058,15 +1058,21 @@ def find_new_jobs_view(request, participant_id):
 
 
 def get_task_status_view(request):
+    """task_id is appended to request.session in another view
+    use that to retrieve the task status.
+    If the task is finished, delete the task_id from session
+    and return a Hx-Refresh trigger to refresh the current page,
+    otherwise if the task is still running, return a alert with
+    a loading spinner"""
+
     task_id = request.session.get("task_id")
     if task_id is None:
         raise Http404("Task not found")
 
     # seems to be a bug in django_rq
     # these two functions are identical but
-    # result() always returns None
+    # result() always returns None even when the task is finished
     # fetch() returns the task as expected
-    # even when the task is finished
     # print(fetch(task_id))
     # print(result(task_id))
 
@@ -1077,19 +1083,17 @@ def get_task_status_view(request):
 
     if task_result:
         request.session.pop("task_id", None)
-        # context["task_not_found"] = True
         return HttpResponse(status=204, headers={"HX-Refresh": "true"})
 
+    # this is the pending tasks queue
     elif not OrmQ.objects.all().exists():
-        # no task and nothing queued
+        # no finished task and nothing queued
         # assume task_id is invalid
         request.session.pop("task_id", None)
         context["task_not_found"] = True
 
     return render(
         request,
-        "cold_apply/partials/task_status.html",
+        "cold_apply/partials/task_job_search_status.html",
         context=context,
     )
-
-    return JsonResponse({"status": task.status, "result": task.result})

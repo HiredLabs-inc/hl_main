@@ -17,156 +17,154 @@
         <h5>
             {{object.location.city}}, {{object.location.state.abbreviation}}
         </h5>
-        <h5 class="sub-header">
+        <h5>
             {% if object.veteran %}
             Veteran
             {% else %}
             Not a Veteran
             {% endif %}
         </h5>
-        {% if latest_experience %}
-        <h6 class="mb-0">Latest Work Experience</h6>
-        <p>{{ latest_experience.position.title }} at {{ latest_experience.org.name }}: 
-            {{latest_experience.start_date|date }} -
-            {% if latest_experience.end_date == None %}
-            Present
-            {% else %}
-            {{ latest_experience.end_date|date }}
-            {% endif %}
-        </p>
-        {% else %}
-        <p>No experience entered.</p>
-        {% endif %}
-        <h6 class="mb-0">Highest Education</h6>
-        {% if highest_edu %}
-        {{ highest_edu.first.degree.abbr }} in {{ highest_edu.first.concentration }} | {{ highest_edu.first.org }}
-        {% else %}
-        <p>No education entered.</p>
-        {% endif %}
+        <p class="mb-0">{{ object.phone }}</p>
+        <p>{{ object.email }}</p>
+        <hr>
+        <div class="mb-3">
+            <h4>Summary</h4>
+            <div class="row">
+                <div class="col-3">Latest Work Experience:</div>
+                <div class="col-9 text-muted">{{ latest_experience|default:"No data"}}</div>
+            </div>   
+            <div class="row">
+                <div class="col-3">Highest Education:</div>
+                <div class="col-9 text-muted">{{highest_edu}}</div>
+            </div>   
+            <div class="row">
+                <div class="col-3">Uploaded Resume:</div>
+                <div class="col-9 text-muted"><a href="{{ MEDIA_PREFIX }}{{ object.uploaded_resume }}" target="_blank">{{ object.uploaded_resume_title }}</a></div>
+            </div>   
+            <div class="row">
+                <div class="col-3">Current Phase:</div>
+                <div class="col-9 text-muted">{{ object.current_step.phase.title }}</div>
+            </div>   
+            <div class="row">
+                <div class="col-3">Current Step:</div>
+                <div class="col-9 text-muted">{{ object.current_step.title }}</div>
+            </div>   
+        </div>
         <p>
             <a href="{% url 'cold_apply:participant_experience_list' object.id %}">See All Education and Experience</a>
         </p>
-        <p>Uploaded Resume: <a href="{{ MEDIA_PREFIX }}{{ object.uploaded_resume }}" target="_blank">
-                {{ object.uploaded_resume_title }}</a>
-        </p>
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Current Phase</th>
-                    <th>Current Step</th>
-                    <th>Phone</th>
-                    <th>Email</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>{{ object.current_step.phase.title }}</td>
-                    <td>{{ object.current_step.title }}</td>
-                    <td>{{ object.phone }}</td>
-                    <td>{{ object.email }}</td>
-                </tr>
-            </tbody>
-        </table>
     </div>
 </div>
-
+<hr>
 <div class="row">
     <div>
-        <h4>Jobs</h4>
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Total Jobs Found</th>
-                    <th>New Jobs</th>
-                    <th>Open Jobs</th>
-                    <th>Participant Rejected Jobs</th>
-                    <th colspan="2">Add Jobs</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>{{ jobs.count }}</td>
-                    <td>{{ jobs.new.count }}</td>
-                    <td>{{ jobs.open.count }}</td>
-                    <td>{{ jobs.rejected.count }}</td>
-                    <td><a class="btn btn-primary" href="{% url 'cold_apply:create_job' object.id %}"
-                            target="_blank">Add a
-                            Job</a></td>
-
-        </table>
-        <br>
-        <br>
-        
-        
-        <h5 class="sub-header" id="new_jobs">New Jobs</h5>
-
-        {% if request.session.task_id %}
-        <div hx-get="{% url 'cold_apply:task_status' %}" 
-            hx-trigger="load"
-            hx-swap="outerHTML"
-            id="task-alert">
-          
+        <div class="d-flex mb-3">
+            <h4>Jobs</h4>
+            {% if request.user.is_superuser %}
+            <div class="ms-auto me-2">
+                <a class="btn btn-primary" href="{% url 'cold_apply:create_job' object.id %}"
+                                target="_blank"><i class="bi bi-plus-lg"></i> Add a
+                                Job</a>
+            </div>
+            
+            <div>
+                <a href="{% url 'cold_apply:find_new_jobs' object.id %}" class="btn btn-primary">
+                    <i class="bi bi-search"></i> Search for new jobs 
+                </a>
+            </div>
+            {% endif %}
         </div>
-        {% endif %}
-        
-        {% if jobs.new %}
-            {% include 'cold_apply/partials/new_jobs_table.html' %}
-        
-        
-        {% else %}
-        <div>
-            <a href="{% url 'cold_apply:find_new_jobs' object.id %}" class="btn btn-primary">
-                Search for new jobs
-            </a>
-        </div>
-        {% endif %}
-        
-        <h5 class="sub-header">Open Jobs</h5>
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Title</th>
-                    <th>Company</th>
-                    <th colspan="2">Remove</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for job in jobs %}
-                {% if job.status == 'Open' %}
-                <tr>
-                    <td><a href="{% url 'cold_apply:job_detail' job.id %}">{{ job.title }}</a></td>
-                    <td>{{ job.company }}</td>
-                    <td><a class="btn btn-primary" href="{% url 'cold_apply:delete_job' job.id %}">Delete</a></td>
-                </tr>
+        <div class="border accordion accordion-flush" id="jobs-panel-accordion">
+            <div class="accordion-item"  id="new_jobs">
+              <h2 class="accordion-header" id="jobs-panel-new-jobs-heading">
+                <button class="accordion-button collapsed fw-bolder" type="button" data-bs-toggle="collapse" data-bs-target="#jobs-panel-new-jobs" aria-expanded="true" aria-controls="jobs-panel-new-jobs">
+                  New Jobs ({{ jobs.new.count }})
+                </button>
+              </h2>
+              <div id="jobs-panel-new-jobs" class="accordion-collapse collapse" aria-labelledby="jobs-panel-new-jobs-heading">
+                <div class="accordion-body">
+                {% if request.session.task_id %}
+                    <div hx-get="{% url 'cold_apply:task_status' %}" 
+                        hx-trigger="load"
+                        hx-swap="outerHTML"
+                        id="task-alert">
+                    
+                    </div>
+                {% elif jobs.new %}
+                    {% include 'cold_apply/partials/new_jobs_table.html' %}
+                {% else %}
+                
+                    No new jobs available. When new jobs are available, they will appear here and you can chose to add them to your open jobs list or remove them.
+                
                 {% endif %}
-                {% endfor %}
-            </tbody>
-        </table>
-        <br>
-        <br>
-        <h5 class="sub-header">Closed Jobs</h5>
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Title</th>
-                    <th>Company</th>
-                    <th>Closed Reason</th>
-                    <th>Remove Jobs</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for job in jobs %}
-                {% if job.status == 'Closed' %}
-                <tr>
-                    <td><a href="{% url 'cold_apply:job_detail' job.id %}">{{ job.title }}</a></td>
-                    <td>{{ job.company }}</td>
-                    <td>{{ job.status_reason }}</td>
-                    <td><a class="btn btn-primary" href="{% url 'cold_apply:delete_job' job.id %}">Delete</a></td>
-                </tr>
-                {% endif %}
-                {% endfor %}
-            </tbody>
-        </table>
+                </div>
+              </div>
+            </div>
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="jobs-panel-open-jobs-heading">
+                <button class="accordion-button  collapsed fw-bolder" type="button" data-bs-toggle="collapse" data-bs-target="#jobs-panel-open-jobs" aria-expanded="false" aria-controls="jobs-panel-open-jobs">
+                  Open Jobs ({{jobs.open.count}})
+                </button>
+              </h2>
+              <div id="jobs-panel-open-jobs" class="accordion-collapse collapse" aria-labelledby="jobs-panel-open-jobs-heading">
+                <div class="accordion-body">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Company</th>
+                                <th colspan="2">Remove</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for job in jobs %}
+                            {% if job.status == 'Open' %}
+                            <tr>
+                                <td><a href="{% url 'cold_apply:job_detail' job.id %}">{{ job.title }}</a></td>
+                                <td>{{ job.company }}</td>
+                                <td><a class="btn btn-primary" href="{% url 'cold_apply:delete_job' job.id %}">Delete</a></td>
+                            </tr>
+                            {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+              </div>
+            </div>
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="jobs-panel-closed-jobs-heading">
+                <button class="accordion-button collapsed   fw-bolder" type="button" data-bs-toggle="collapse" data-bs-target="#jobs-panel-closed-jobs" aria-expanded="false" aria-controls="jobs-panel-closed-jobs">
+                  Closed Jobs ({{jobs.closed.count}})
+                </button>
+              </h2>
+              <div id="jobs-panel-closed-jobs" class="accordion-collapse collapse" aria-labelledby="jobs-panel-closed-jobs-heading">
+                <div class="accordion-body">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Company</th>
+                                <th>Closed Reason</th>
+                                <th>Remove Jobs</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for job in jobs %}
+                            {% if job.status == 'Closed' %}
+                            <tr>
+                                <td><a href="{% url 'cold_apply:job_detail' job.id %}">{{ job.title }}</a></td>
+                                <td>{{ job.company }}</td>
+                                <td>{{ job.status_reason }}</td>
+                                <td><a class="btn btn-primary" href="{% url 'cold_apply:delete_job' job.id %}">Delete</a></td>
+                            </tr>
+                            {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+              </div>
+            </div>
+          </div>
     </div>
 </div>
 <br>
@@ -186,4 +184,16 @@
         <a class="btn btn-primary" href="{% url 'cold_apply:index' %}">Back to Pipeline</a>
     </div>
 </div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+       
+        const target = document.querySelector(window.location.hash || '#jobs-panel-open-jobs-heading')
+        if(['jobs-panel-new-jobs-heading', 'jobs-panel-open-jobs-heading', 'jobs-panel-closed-jobs-heading'].includes(target.id)) {
+            const collapseTarget = document.getElementById(target.id.replace('-heading', ''))
+            new bootstrap.Collapse(collapseTarget, {toggle: true})
+        } 
+    })
+
+</script>
 {% endblock %}
+
