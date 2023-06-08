@@ -236,14 +236,21 @@ class NewJobSelectionForm(forms.Form):
     def __init__(self, *args, **kwargs) -> None:
         participant = kwargs.pop("participant")
         super().__init__(*args, **kwargs)
-        self.fields["jobs"].queryset = Job.objects.filter(
+        self.fields["keep"].queryset = Job.objects.filter(
+            participant=participant, status="New"
+        )
+        self.fields["discard"].queryset = Job.objects.filter(
             participant=participant, status="New"
         )
 
-    jobs = forms.ModelMultipleChoiceField(queryset=Job.objects.none(), required=False)
+    keep = forms.ModelMultipleChoiceField(queryset=Job.objects.none(), required=False)
+    discard = forms.ModelMultipleChoiceField(
+        queryset=Job.objects.none(), required=False
+    )
 
     def save(self):
-        self.cleaned_data["jobs"].update(status="Open")
+        self.cleaned_data["keep"].update(status="Open")
+        self.cleaned_data["discard"].delete()
 
 
 class FindNewJobsForm(forms.Form):

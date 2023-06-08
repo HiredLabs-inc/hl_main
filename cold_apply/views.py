@@ -167,15 +167,20 @@ class ParticipantDetailView(LoginRequiredMixin, FormMixin, DetailView):
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         form = self.get_form()
+        print(form.is_valid())
         if form.is_valid():
             return self.form_valid(form)
         else:
             return self.form_invalid(form)
 
+    def form_invalid(self, form: Any) -> HttpResponse:
+        print(form.errors)
+        return super().form_invalid(form)
+
     def form_valid(self, form):
+        print(form.cleaned_data)
         if isinstance(form, NewJobSelectionForm):
             form.save()
-            self.object.job_set.filter(status="New").delete()
             return super().form_valid(form)
 
     def get_form_kwargs(self):

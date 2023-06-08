@@ -1,5 +1,5 @@
 
-<form action="?form=new_jobs" method="post" id="new-jobs-table">
+<form action="?form=new_jobs#jobs-panel-open-jobs-heading" method="post" id="new-jobs-table">
     {% csrf_token %}
     <table class="table border border-1">
         <thead>
@@ -21,12 +21,8 @@
                         @click="open= open==={{forloop.counter}} ? 0 : {{forloop.counter}}"
                         >
                         <td style="width: 20%" class="" :class="{'fw-bold': open=={{forloop.counter}}}" >
-                            <div class="d-flex justify-content-between">
-                                <div>{{job.title}}</div>
-                            <div class="pe-2">
-                                <i :class="open==={{forloop.counter}} ? 'bi-chevron-double-down' : 'bi-chevron-double-right'"></i>
-                            </div>
-                            </div>
+                           
+                                {{job.title}}
                             
                         </td>
                         <td>{{job.company_detail}}</td>
@@ -35,12 +31,33 @@
                         <td><a href="{{job.application_link|safe}}">{{job.application_agent}}</a></td>
                         <td>{{job.posted_at|date:"d/m/y"}}</td>
                         <td>{{job.created_at|date:"d/m/y"}}</td>
-                        <td>
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" x-model="checked" value="{{job.id}}" name="jobs" role="switch" id="flexSwitchCheckDefault" 
-                                    @click="$event.stopPropagation();">
-                              </div>
-                              
+                        <td x-data="{keep:false, discard: false}">
+                            <div class="d-flex">
+                                <div class="me-2">
+                                    <input type="checkbox" 
+                                        class="btn-check" 
+                                        id="job_{{job.id}}_keep" 
+                                        autocomplete="off" 
+                                        x-model="keep" 
+                                        name="keep" 
+                                        @change="keep ? discard = false : ''"
+                                        value="{{job.id}}">
+                                    <label class="btn btn-outline-success border-2" for="job_{{job.id}}_keep"><i style="font-size:1.2rem;" class=" bi bi-check-lg"></i></label>
+                                </div>
+                                <div>
+                                    <input type="checkbox"
+                                           class="btn-check" 
+                                           id="job_{{job.id}}_discard" 
+                                           autocomplete="off"
+                                           name="discard"  
+                                           x-model="discard" 
+                                           @change="discard ? keep = false: ''"
+                                           value="{{job.id}}">
+                                    <label class="btn btn-outline-danger border-2" for="job_{{job.id}}_discard"><i style="font-size:1.2rem;" class="bi bi-x-lg"></i></label>
+
+
+                                </div>
+                            </div>
                         </td>
                         
                     </tr>
