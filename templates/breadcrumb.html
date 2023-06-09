@@ -1,0 +1,5 @@
+{% if href %}
+    <li class="breadcrumb-item"><a href="{{href}}" class="text-decoration-none">{{text}}</a></li>
+{% else %}
+    <li class="breadcrumb-item active" aria-current="page" >{{text}}</li>
+{% endif %}

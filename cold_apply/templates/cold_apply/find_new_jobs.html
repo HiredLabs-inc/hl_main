@@ -1,10 +1,81 @@
 {% extends 'staff.html' %}
+{% load form_helpers %}
+
+{% block breadcrumbs %}
+    {% breadcrumb 'Pipeline' 'cold_apply:index' %}
+    {% breadcrumb participant.full_name 'cold_apply:participant_detail' participant.id %}
+    {% breadcrumb 'Job Search' %}
+    
+    
+
+{% endblock breadcrumbs %}
 
 {% block content %}
-<form action="" method="post">
-    {% csrf_token %}
-    {{form.as_p}}
-    <input type="submit" value="Submit">
-</form>
+<div class="row">
+    <div class="col-lg-6">
+        <form action="" method="post">
+            <h4>New Job Search</h4>
+            <p>Set search parameters</p>
+            
+            {% csrf_token %}
+            {% for field in form %}
+                {% include 'cold_apply/templates/form_input_template.html' %}
+            {% endfor %}
+            <div class="row">
+            <div class="col-3">
+                Search Radius
+            </div>
+                <div class="col-3">30 miles (48km)</div>
+            </div>
+            <div class="text-end">
+                <a href="{% url 'cold_apply:participant_detail' participant.id %}" class="btn btn-outline-primary">Cancel</a>
+                <input class="btn btn-primary" type="submit" value="Search">
+            </div>
+        </form>
+    </div>
+    <div class="col-lg-6">
+        <h4>Applicant Information</h4>
+        {% if applicant %}
+        <div class="row mb-2">
+            <div class="col-3">Location:</div>
+            <div class="col-9">
+                {{participant.location}}
+            </div>
+        </div>
+        <div class="row mb-2">
+            <div class="col-3">Specialist Training:</div>
+            <div class="col-9">
+                {{applicant.special_training}}
+            </div>
+        </div>
+        <div class="row mb-2">
+            <div class="col-3">Specialist Skills:</div>
+            <div class="col-9">
+                {{applicant.special_skills}}
+            </div>
+        </div>
+        <div class="row mb-2">
+            <div class="col-3">Work Preferences</div>
+            <div class="col-9">
+                {{applicant.work_preferences}}
+            </div>
+        </div>
+        <div class="row mb-2">
+            <div class="col-3">Service Branch:</div>
+            <div class="col-9">
+                {{applicant.service_branch}}
+            </div>
+        </div>
+        <div class="row mb-2">
+            <div class="col-3">Military Specialiaty:</div>
+            <div class="col-9">
+                {{applicant.military_specialiaty}}
+            </div>
+        </div>
+        {% else %}
+            <p>Application data not found.</p>
+        {% endif %}
+    </div>
+</div>
 
 {% endblock content %}

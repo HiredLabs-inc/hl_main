@@ -1,4 +1,5 @@
 from enum import unique
+
 from django.contrib.auth.models import User
 from django.db import models
 from django.urls import reverse
@@ -40,6 +41,10 @@ class Participant(models.Model):
 
     def __str__(self):
         return f"{self.name}: {self.email}"
+
+    @property
+    def full_name(self):
+        return f"{self.first_name} {self.last_name}"
 
     class Meta:
         verbose_name_plural = "Participants"
@@ -106,7 +111,6 @@ class Job(models.Model):
     status_reason = models.CharField(
         max_length=20, choices=REASONS, blank=True, null=True
     )
-    source_link = models.URLField(blank=True, max_length=500)
     application_link = models.URLField(blank=True, null=True, max_length=500)
     application_agent = models.CharField(max_length=50, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -124,7 +128,7 @@ class Job(models.Model):
     # so save original string as location_detail and try to match later
     location_detail = models.CharField(max_length=100, blank=True)
     location = models.ForeignKey(
-        "cold_apply.Location", on_delete=models.SET_NULL, null=True
+        "cold_apply.Location", on_delete=models.SET_NULL, null=True, blank=True
     )
     # if not remote then leave blank.
     # examples: '2 days a week in office' or 'Work from home'

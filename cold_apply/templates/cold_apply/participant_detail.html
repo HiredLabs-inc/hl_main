@@ -1,7 +1,14 @@
 {% extends 'staff.html' %}
+{% load breadcrumbs %}
+
+{% block breadcrumbs %}
+    
+    {% breadcrumb 'Pipeline' 'cold_apply:index' %}
+    {% breadcrumb object.full_name %}
+{% endblock breadcrumbs %}
 
 {% block content %}
-<div class="row pt-4">
+<div class="row">
     <div>
         <div class="d-flex align-items-center">
             <h3 class="me-3">{{ object.first_name }} {{object.last_name}}</h3>
@@ -130,7 +137,14 @@
                                 <td>{{ job.company }}</td>
                                 <td>{{job.location|default:job.location_detail}}</td>
                                 <td>{{job.salary}}</td>
-                                <td>{{job.status}}</td>
+                                <td  >
+                                    <form hx-post="{% url 'cold_apply:job_status_update_modal' job.id %}" hx-target="#modal">
+                                        <input type="hidden" name="status" value="Closed">
+                                        {{job.status}}
+                                        <button class="btn p-1 mb-1" type="submit"><i class="text-primary bi bi-caret-down-fill"></i></button>
+                                        
+                                    </form>
+                                </td>
                                 <td><a href="{{job.application_link|safe}}">{{job.application_agent}}</a></td>
                                 <td>{{job.posted_at|date:"d/m/y"}}</td>
                                 <td>
@@ -146,18 +160,19 @@
             </div>
             <div class="accordion-item">
               <h2 class="accordion-header" id="jobs-panel-closed-jobs-heading">
-                <button class="accordion-button fw-bolder {% if not jobs.open.count %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#jobs-panel-closed-jobs" aria-expanded="false" aria-controls="jobs-panel-closed-jobs">
+                <button class="accordion-button fw-bolder {% if not jobs.closed.count %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#jobs-panel-closed-jobs" aria-expanded="false" aria-controls="jobs-panel-closed-jobs">
                   Closed Jobs ({{jobs.closed.count}})
                 </button>
               </h2>
-              <div id="jobs-panel-closed-jobs" class="accordion-collapse collapse {% if jobs.open.count %}show{% endif %}" aria-labelledby="jobs-panel-closed-jobs-heading">
+              <div id="jobs-panel-closed-jobs" class="accordion-collapse collapse {% if jobs.closed.count %}show{% endif %}" aria-labelledby="jobs-panel-closed-jobs-heading">
                 <div class="accordion-body">
                     <table class="table table-striped">
                         <thead>
                             <tr>
                                 <th>Title</th>
                                 <th>Company</th>
-                                <td>Location</td>
+                                <th>Location</th>
+                                <th>Status</th>
                                 <th>Closed Reason</th>
                                 <th>Actions</th>
                             </tr>
@@ -169,6 +184,14 @@
                                 <td><a href="{% url 'cold_apply:job_detail' job.id %}">{{ job.title }}</a></td>
                                 <td>{{ job.company }}</td>
                                 <td>{{ job.location|default:job.location_detail }}</td>
+                                <td>
+                                    <form hx-post="{% url 'cold_apply:job_status_update_modal' job.id %}" hx-target="#modal">
+                                        <input type="hidden" name="status" value="Open">
+                                        {{job.status}}
+                                        <button class="btn p-1 mb-1" type="submit"><i class="text-primary bi bi-caret-up-fill"></i></button>
+                                        
+                                    </form>
+                                </td>
                                 <td>{{ job.status_reason }}</td>
                                 <td>
                                     {% include 'cold_apply/partials/job_actions.html' %}

@@ -37,9 +37,12 @@ class DatePostedFilter(models.Choices):
     ALL = "all"
 
 
-def get_jobs_from_google(main_query: str, chip_filters=None, limit=5):
+def get_jobs_from_google(main_query: str, chip_filters=None, limit=25):
+    limit = limit if limit < 25 else 25
+
     jobs = []
     with sync_playwright() as playwright:
+        # set headless=False to see the browser running
         browser = playwright.chromium.launch(headless=False)
 
         context = browser.new_context()
@@ -77,9 +80,7 @@ def get_jobs_from_google(main_query: str, chip_filters=None, limit=5):
             li.click()
             page.wait_for_load_state("networkidle")
             sleep(0.5)
-            parsed_url = urlparse(page.url)
 
-            # job_id = parse_qs(parsed_url.fragment).get("htidocid", [])[0]
             job_title = main_content.locator("h2.KLsYvd").first.text_content()
             job_text = main_content.locator("span.HBvzbc").first.text_content()
             job_id = main_content.locator("div.KGjGe").first.get_attribute(
@@ -88,8 +89,7 @@ def get_jobs_from_google(main_query: str, chip_filters=None, limit=5):
 
             apply_button = main_content.locator("a.pMhGee.Co68jc.j0vryd").first
             apply_link = apply_button.get_attribute("href")
-            # print(apply_button.text_content())
-            # print(apply_button.text_content().split("on")[1].strip())
+
             try:
                 apply_agent = (
                     apply_button.text_content().split(" on ")[1].strip()
@@ -98,24 +98,24 @@ def get_jobs_from_google(main_query: str, chip_filters=None, limit=5):
                 apply_agent = None
 
             # click the share button to generate the link
-            page.get_by_role("button", name="Share").click()
+            # page.get_by_role("button", name="Share").click()
             # wait for google to shorten the link
             # sleep(1)
-            link_element = page.get_by_role("textbox", name="Share link")
-            link_text = link_element.input_value()
+            # link_element = page.get_by_role("textbox", name="Share link")
+            # link_text = link_element.input_value()
+            # page.wait_for_load_state("networkidle")
+            # page.get_by_role("button", name="Close").click()
+
             company_text = main_content.locator(
                 "div.nJlQNd.sMzDkb"
             ).first.text_content()
             location_text = main_content.locator("div.sMzDkb").last.text_content()
 
             page.wait_for_load_state("networkidle")
-            page.get_by_role("button", name="Close").click()
-            page.wait_for_load_state("networkidle")
 
             job = {
                 "title": job_title,
                 "text": job_text,
-                "source_link": link_text,
                 "location": location_text,
                 "id": job_id,
                 "application_link": apply_link,
@@ -149,6 +149,7 @@ def get_jobs_from_google(main_query: str, chip_filters=None, limit=5):
                         break
 
             jobs.append(job)
+            sleep(0.5)
     return jobs
 
 
@@ -182,10 +183,9 @@ def get_chip_url_params(chip_filters: dict) -> str:
     chip_htis_url_params = ",".join(
         [f"{key};{';'.join(values)}" for key, values in chip_filters.items() if values]
     )
+    search_radius_km = 48.2802
 
-    return (
-        f"#htivrt=jobs&htichips={chip_hti_url_params}&htischips={chip_htis_url_params}"
-    )
+    return f"#htivrt=jobs&htilrad={search_radius_km}&htichips={chip_hti_url_params}&htischips={chip_htis_url_params}"
 
 
 def get_relative_time(time_posted_str):
@@ -209,7 +209,6 @@ def make_job_from_google(participant, job):
         company_detail=job.get("company_detail"),
         company=Organization.objects.get_or_create(name=job.get("company_detail"))[0],
         description=job.get("text"),
-        source_link=job.get("source_link"),
         location_detail=job.get("location", ""),
         application_link=job.get("application_link", ""),
         application_agent=job.get("application_agent", ""),
@@ -228,20 +227,28 @@ def get_jobs_for_participant(
     if date_posted == "all":
         date_posted = None
 
-    jobs = get_jobs_from_google(
+    scraped_jobs = get_jobs_from_google(
         search_query,
         {
             "date_posted": [date_posted] if date_posted else [],
             "job_family_1": keywords,
         },
     )
-
-    new_jobs = [make_job_from_google(participant, job) for job in jobs]
+    new_jobs = []
+    for job in scraped_jobs:
+        # check for duplicates on source_id
+        if not Job.objects.filter(
+            participant=participant, source_id=job["id"]
+        ).exists():
+            new_jobs.append(make_job_from_google(participant, job))
+        else:
+            print(f"Duplicate found: {job['id']}")
     print(
         f"Found {len(new_jobs)} jobs for {participant.first_name} {participant.last_name}"
     )
-    # Job.objects.filter(participant=participant, status="New").delete()
-    Job.objects.bulk_create(new_jobs)
+
+    if new_jobs:
+        Job.objects.bulk_create(new_jobs)
 
 
 def q_get_jobs_for_participant(

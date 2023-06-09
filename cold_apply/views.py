@@ -1,32 +1,36 @@
 from datetime import datetime, timedelta
 from typing import Any, Dict
-
+from django import http
+from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models.query import QuerySet
+from django.forms import models as model_forms
 from django.http import Http404, HttpResponse, JsonResponse
+from django.http.response import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import Resolver404, resolve, reverse, reverse_lazy
 from django.utils import timezone
-from django_q.models import Task, OrmQ
+
 from django.views.decorators.http import require_http_methods
 from django.views.generic import (
     CreateView,
+    DeleteView,
     DetailView,
+    FormView,
     ListView,
     TemplateView,
     UpdateView,
-    DeleteView,
-    FormView,
 )
 from django.views.generic.edit import FormMixin
+from django_q.models import OrmQ, Task
 from requests import head
+
 from cold_apply.jobs import (
     get_jobs_for_participant,
     q_get_jobs_for_participant,
     q_test_job_task,
 )
-
 from cold_apply.resume_formatting import (
     group_bullets_by_experience,
     group_bullets_by_skill,
@@ -168,14 +172,13 @@ class ParticipantDetailView(LoginRequiredMixin, FormMixin, DetailView):
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         form = self.get_form()
-        print(form.is_valid())
+
         if form.is_valid():
             return self.form_valid(form)
         else:
             return self.form_invalid(form)
 
     def form_valid(self, form):
-        print(form.cleaned_data)
         if isinstance(form, NewJobSelectionForm):
             form.save()
             return super().form_valid(form)
@@ -346,9 +349,31 @@ class JobDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
-class JobUpdateView(LoginRequiredMixin, UpdateView):
+@require_http_methods(["POST"])
+def job_status_update_modal_view(request, job_id):
+    status_form_class = model_forms.modelform_factory(Job, fields=["status"])
+    status_form = status_form_class(request.POST)
+
+    job = get_object_or_404(Job, pk=job_id)
+    if status_form.is_valid():
+        job.status = status_form.cleaned_data["status"]
+
+    form_class = model_forms.modelform_factory(Job, fields=JobUpdateView.fields)
+    form = form_class(instance=job)
+
+    return render(
+        request,
+        "cold_apply/modals/job_status_update_modal.html",
+        context={"form": form},
+    )
+
+
+class JobUpdateView(HtmxViewMixin, LoginRequiredMixin, UpdateView):
     model = Job
     template_name = "cold_apply/job_update.html"
+    empty_response_on_save = True
+    refresh_on_save = True
+
     fields = [
         "title",
         "company",
@@ -995,6 +1020,7 @@ class LocationListView(LoginRequiredMixin, ListView):
 
 def find_new_jobs_view(request, participant_id):
     participant = get_object_or_404(Participant, pk=participant_id)
+    applicant = Applicant.objects.filter(email=participant.email).first()
     if request.method == "POST":
         form = FindNewJobsForm(request.POST)
         if form.is_valid():
@@ -1019,7 +1045,11 @@ def find_new_jobs_view(request, participant_id):
     else:
         form = FindNewJobsForm()
 
-    return render(request, "cold_apply/find_new_jobs.html", context={"form": form})
+    return render(
+        request,
+        "cold_apply/find_new_jobs.html",
+        context={"form": form, "participant": participant, "applicant": applicant},
+    )
 
 
 def get_task_status_view(request):
@@ -1029,7 +1059,7 @@ def get_task_status_view(request):
     and return a Hx-Refresh trigger to refresh the current page,
     otherwise if the task is still running, return a alert with
     a loading spinner"""
-    timeout = 10
+    timeout = 90
 
     task_id = request.session.get("task_id")
     if request.session.get("task_request_time") is None:
@@ -1053,18 +1083,20 @@ def get_task_status_view(request):
     context = {"finished_task": task_result}
 
     if task_result:
-        request.session.pop("task_id", None)
-        request.session.pop("task_request_time", None)
-        return HttpResponse(status=204, headers={"HX-Refresh": "true"})
-
-    # this is the pending tasks queue
-
-    elif not OrmQ.objects.all().exists() or task_id is None or is_after_timeout:
-        # no finished task and nothing queued
-        # assume task_id is invalid
-        request.session.pop("task_id", None)
-        request.session.pop("task_request_time", None)
-        context["task_not_found"] = True
+        if task_result.success:
+            request.session.pop("task_id", None)
+            request.session.pop("task_request_time", None)
+            return HttpResponse(status=204, headers={"HX-Refresh": "true"})
+        else:
+            request.session.pop("task_id", None)
+            request.session.pop("task_request_time", None)
+            context["task_not_found"] = True
+    else:
+        # this is the pending tasks queue
+        if is_after_timeout or task_id is None:
+            request.session.pop("task_id", None)
+            request.session.pop("task_request_time", None)
+            context["task_not_found"] = True
 
     return render(
         request,

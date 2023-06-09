@@ -1,5 +1,10 @@
 {% extends 'staff.html' %}
 
+{% block breadcrumbs %}
+    {% breadcrumb 'Pipeline' 'cold_apply:index' %}
+    {% breadcrumb participant.full_name 'cold_apply:participant_detail' participant.id %}
+    {% breadcrumb 'Add New Job' %}
+{% endblock breadcrumbs %}
 
 {% block content %}
 <div class="row">

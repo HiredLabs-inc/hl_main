@@ -27,6 +27,7 @@ from .views import (
     delete_job,
     find_new_jobs_view,
     get_task_status_view,
+    job_status_update_modal_view,
     refresh_keywords,
     create_participant,
     tailored_resume_view,
@@ -123,6 +124,11 @@ urlpatterns += [
         "jobs/find_new_jobs/<int:participant_id>",
         find_new_jobs_view,
         name="find_new_jobs",
+    ),
+    path(
+        "jobs/<int:job_id>/status_update_modal",
+        job_status_update_modal_view,
+        name="job_status_update_modal",
     ),
 ]
 
