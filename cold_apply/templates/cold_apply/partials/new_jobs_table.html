@@ -11,7 +11,7 @@
                 <th>Posting</th>
                 <th>Posted At</th>
                 <th>Uploaded</th>
-                <th>Interested</th>
+                <th  class="ps-4">Interested</th>
             </tr>
         </thead>
         <tbody x-data="{open: 0, checked: []}">
@@ -31,7 +31,7 @@
                         <td><a href="{{job.application_link|safe}}">{{job.application_agent}}</a></td>
                         <td>{{job.posted_at|date:"d/m/y"}}</td>
                         <td>{{job.created_at|date:"d/m/y"}}</td>
-                        <td x-data="{keep:false, discard: false}">
+                        <td class="ps-4" x-data="{keep:false, discard: false}" @click="$event.stopPropagation()">
                             <div class="d-flex">
                                 <div class="me-2">
                                     <input type="checkbox" 
@@ -73,6 +73,6 @@
         </tbody>
     </table>
     <div class="d-flex justify-content-end">
-        <button class="btn btn-primary" type="submit">Add Selected Jobs</button>
+        <button class="btn btn-primary" type="submit">Save Selection</button>
     </div>
     </form>

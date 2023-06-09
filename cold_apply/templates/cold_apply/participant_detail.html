@@ -62,9 +62,9 @@
             <h4>Jobs</h4>
             {% if request.user.is_superuser %}
             <div class="ms-auto me-2">
-                <a class="btn btn-primary" href="{% url 'cold_apply:create_job' object.id %}"
-                                target="_blank"><i class="bi bi-plus-lg"></i> Add a
-                                Job</a>
+                <a class="btn btn-primary" href="{% url 'cold_apply:create_job' object.id %}">
+                                <i class="bi bi-plus-lg"></i>
+                                Add a Job</a>
             </div>
             
             <div>
@@ -75,13 +75,14 @@
             {% endif %}
         </div>
         <div class="border accordion accordion-flush" id="jobs-panel-accordion">
+            
             <div class="accordion-item"  id="new_jobs">
               <h2 class="accordion-header" id="jobs-panel-new-jobs-heading">
-                <button class="accordion-button collapsed fw-bolder" type="button" data-bs-toggle="collapse" data-bs-target="#jobs-panel-new-jobs" aria-expanded="true" aria-controls="jobs-panel-new-jobs">
+                <button class="accordion-button fw-bolder {% if not jobs.new.count %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#jobs-panel-new-jobs" aria-expanded="true" aria-controls="jobs-panel-new-jobs">
                   New Jobs ({{ jobs.new.count }})
                 </button>
               </h2>
-              <div id="jobs-panel-new-jobs" class="accordion-collapse collapse" aria-labelledby="jobs-panel-new-jobs-heading">
+              <div id="jobs-panel-new-jobs" class="accordion-collapse collapse {% if jobs.new.count %}show{% endif %}" aria-labelledby="jobs-panel-new-jobs-heading">
                 <div class="accordion-body">
                 {% if request.session.task_id %}
                     <div hx-get="{% url 'cold_apply:task_status' %}" 
@@ -102,18 +103,23 @@
             </div>
             <div class="accordion-item">
               <h2 class="accordion-header" id="jobs-panel-open-jobs-heading">
-                <button class="accordion-button  collapsed fw-bolder" type="button" data-bs-toggle="collapse" data-bs-target="#jobs-panel-open-jobs" aria-expanded="false" aria-controls="jobs-panel-open-jobs">
+                <button class="accordion-button  fw-bolder {% if not jobs.open.count %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#jobs-panel-open-jobs" aria-expanded="false" aria-controls="jobs-panel-open-jobs">
                   Open Jobs ({{jobs.open.count}})
                 </button>
               </h2>
-              <div id="jobs-panel-open-jobs" class="accordion-collapse collapse" aria-labelledby="jobs-panel-open-jobs-heading">
+              <div id="jobs-panel-open-jobs" class="accordion-collapse collapse {% if jobs.open.count %}show{% endif %}" aria-labelledby="jobs-panel-open-jobs-heading">
                 <div class="accordion-body">
                     <table class="table table-striped">
                         <thead>
                             <tr>
                                 <th>Title</th>
                                 <th>Company</th>
-                                <th colspan="2">Remove</th>
+                                <th>Location</th>
+                                <th>Salary</th>
+                                <th>Status</th>
+                                <th>Posting</th>
+                                <th>Posted At</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -122,7 +128,14 @@
                             <tr>
                                 <td><a href="{% url 'cold_apply:job_detail' job.id %}">{{ job.title }}</a></td>
                                 <td>{{ job.company }}</td>
-                                <td><a class="btn btn-primary" href="{% url 'cold_apply:delete_job' job.id %}">Delete</a></td>
+                                <td>{{job.location|default:job.location_detail}}</td>
+                                <td>{{job.salary}}</td>
+                                <td>{{job.status}}</td>
+                                <td><a href="{{job.application_link|safe}}">{{job.application_agent}}</a></td>
+                                <td>{{job.posted_at|date:"d/m/y"}}</td>
+                                <td>
+                                    {% include 'cold_apply/partials/job_actions.html' %}
+                                </td>
                             </tr>
                             {% endif %}
                             {% endfor %}
@@ -133,19 +146,20 @@
             </div>
             <div class="accordion-item">
               <h2 class="accordion-header" id="jobs-panel-closed-jobs-heading">
-                <button class="accordion-button collapsed   fw-bolder" type="button" data-bs-toggle="collapse" data-bs-target="#jobs-panel-closed-jobs" aria-expanded="false" aria-controls="jobs-panel-closed-jobs">
+                <button class="accordion-button fw-bolder {% if not jobs.open.count %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#jobs-panel-closed-jobs" aria-expanded="false" aria-controls="jobs-panel-closed-jobs">
                   Closed Jobs ({{jobs.closed.count}})
                 </button>
               </h2>
-              <div id="jobs-panel-closed-jobs" class="accordion-collapse collapse" aria-labelledby="jobs-panel-closed-jobs-heading">
+              <div id="jobs-panel-closed-jobs" class="accordion-collapse collapse {% if jobs.open.count %}show{% endif %}" aria-labelledby="jobs-panel-closed-jobs-heading">
                 <div class="accordion-body">
                     <table class="table table-striped">
                         <thead>
                             <tr>
                                 <th>Title</th>
                                 <th>Company</th>
+                                <td>Location</td>
                                 <th>Closed Reason</th>
-                                <th>Remove Jobs</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -154,8 +168,11 @@
                             <tr>
                                 <td><a href="{% url 'cold_apply:job_detail' job.id %}">{{ job.title }}</a></td>
                                 <td>{{ job.company }}</td>
+                                <td>{{ job.location|default:job.location_detail }}</td>
                                 <td>{{ job.status_reason }}</td>
-                                <td><a class="btn btn-primary" href="{% url 'cold_apply:delete_job' job.id %}">Delete</a></td>
+                                <td>
+                                    {% include 'cold_apply/partials/job_actions.html' %}
+                                </td>
                             </tr>
                             {% endif %}
                             {% endfor %}
@@ -172,9 +189,7 @@
 <div class="row">
     <h3>Actions</h3>
     <div class="col">
-        {# <a class="btn btn-primary" href="{% url 'cold_apply:participant_update' object.id %}">Update Participant#}
-            {# Info</a>#}
-        <a class="btn btn-primary" href="{% url 'cold_apply:create_job' object.id %}" target="_blank">Add a Job</a>
+       
         <a class="btn btn-primary" href="{% url 'cold_apply:update_participant' object.id %}">Update Participant</a>
     </div>
 </div>
@@ -186,12 +201,12 @@
 </div>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-       
-        const target = document.querySelector(window.location.hash || '#jobs-panel-open-jobs-heading')
-        if(['jobs-panel-new-jobs-heading', 'jobs-panel-open-jobs-heading', 'jobs-panel-closed-jobs-heading'].includes(target.id)) {
-            const collapseTarget = document.getElementById(target.id.replace('-heading', ''))
-            new bootstrap.Collapse(collapseTarget, {toggle: true})
-        } 
+        const newJobs = document.getElementById('jobs-panel-new-jobs')
+        if(window.location.hash === '#jobs-panel-new-jobs-heading' && !{{jobs.new.count}}) {
+            
+            console.log(new bootstrap.Collapse(newJobs, {toggle: true}))
+        }
+      
     })
 
 </script>

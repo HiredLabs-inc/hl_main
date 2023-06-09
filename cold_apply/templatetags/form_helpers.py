@@ -1,5 +1,6 @@
 from urllib.parse import urlencode
 from django import template
+from django import forms
 
 register = template.Library()
 
@@ -11,6 +12,15 @@ def error_class(bound_field, class_name):
         bound_field.field.widget.attrs["class"] = class_name
         bound_field.field.widget.attrs[":class"] = "{'input-invalid': !touched}"
         bound_field.field.widget.attrs["@input"] = "touched=true;"
+    return bound_field
+
+
+@register.filter
+def bootstrap_input(bound_field):
+    if isinstance(bound_field.field.widget, forms.Select):
+        bound_field.field.widget.attrs["class"] = "form-select"
+    else:
+        bound_field.field.widget.attrs["class"] = "form-control"
     return bound_field
 
 

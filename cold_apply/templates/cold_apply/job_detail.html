@@ -83,13 +83,13 @@
             <a class="btn btn-primary" href="{% url 'cold_apply:refresh_keywords' object.id %}">Refresh
                 Keywords</a>
             <a class="btn btn-primary" href="{% url 'cold_apply:configure_tailored_resume'  job_pk=object.id %}" target="_blank">Tailor Resume</a>
-            <a class="btn btn-primary" href="{% url 'cold_apply:update_job' object.id %}" target="_blank">Edit Job</a>
+            <a class="btn btn-primary" href="{% url 'cold_apply:update_job' object.id %}?from={{request.path}}">Edit Job</a>
         </div>
     </div>
     <div class="row">
         <h3>Description</h3>
         <div class="col">
-            <p>{{ object.description }}</p>
+            <p style="white-space: pre-wrap;">{{ object.description }}</p>
         </div>
     </div>
     <div class="row">

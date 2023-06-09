@@ -170,7 +170,6 @@ def get_chip_url_params(chip_filters: dict) -> str:
     htichips format = {chip_name}:{chip_value},{chip_name}:{chip_value}
     htiscips format = {chip_name};{chip_value};{chip_value},{chip_name};{chip_value};{chip_value}
     """
-    print(chip_filters)
     chip_hti_url_params = ",".join(
         [
             f"{key}:{value}"
@@ -219,6 +218,7 @@ def make_job_from_google(participant, job):
         salary=job.get("salary", ""),
         remote=job.get("work_from_home", ""),
         source_id=job.get("id", ""),
+        auto_generated=True,
     )
 
 
@@ -240,7 +240,7 @@ def get_jobs_for_participant(
     print(
         f"Found {len(new_jobs)} jobs for {participant.first_name} {participant.last_name}"
     )
-    Job.objects.filter(participant=participant, status="New").delete()
+    # Job.objects.filter(participant=participant, status="New").delete()
     Job.objects.bulk_create(new_jobs)
 
 

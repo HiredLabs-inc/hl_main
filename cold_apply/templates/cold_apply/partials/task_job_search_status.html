@@ -2,7 +2,11 @@
 {% url 'cold_apply:task_status' as task_url %}
 
 {% if task_not_found %}
-    <div></div>
+    <div>
+        <div class="alert alert-danger d-flex justify-content-between" role="alert">
+            <div>Job search failed or timed out.</div>
+        </div>
+    </div>
 {% else %}
 <div hx-get="{% url 'cold_apply:task_status' %}" 
     hx-trigger="every 5s"

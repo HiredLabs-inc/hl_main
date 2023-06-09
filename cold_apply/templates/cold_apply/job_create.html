@@ -1,26 +1,25 @@
 {% extends 'staff.html' %}
 
 
-
 {% block content %}
-    <h3>Creating job for {{ participant.name }}</h3>
-    <form method="post">
+<div class="row">
+    <div class="col-lg-6 py-3">
+    <h3 class="mb-4">Add New Job for: {{ participant.name }}</h3>
+    <form method="post" >
         {% csrf_token %}
-        {{ form.as_p }}
-        <input class="btn btn-primary" type="submit" value="Save">
+        {% include "cold_apply/partials/job_form.html" %}
+
+        <div class="d-flex justify-content-end">
+            <a class="btn btn-outline-primary  me-3" href="{% url 'cold_apply:participant_detail' participant.id %}">Cancel</a>
+            <input class="btn btn-primary" type="submit" value="Add Job">
+        </div>
     </form>
-    <a class="btn btn-primary" href="{% url 'cold_apply:create_company' %}" target="_blank">Add Company</a>
-    <a class="btn btn-primary" href="{% url 'cold_apply:create_title'%}" target="_blank">Add
-        Title</a>
-    <a class="btn btn-primary" onclick=closeWindow()>Cancel</a>
+    
+    
+</div>
+
+</div>
 {% endblock %}
 
-{% block scripts %}
 
-    <script type="text/javascript">
-        function closeWindow() {
-            window.close();
-        }
-    </script>
-{% endblock %}
 

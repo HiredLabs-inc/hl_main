@@ -132,6 +132,7 @@ class Job(models.Model):
 
     # the identifier for the job from the job board
     source_id = models.CharField(max_length=200, blank=True)
+    auto_generated = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.company}: {self.title}, {self.status}: {self.participant.name}"

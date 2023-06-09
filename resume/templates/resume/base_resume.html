@@ -49,7 +49,7 @@
             {{form.as_p}}
             </div>
 
-            <button class="btn btn-secondary" 
+            <button class="btn btn-outline-primary me-3" 
                     @click.prevent="$el.form.target=''; 
                                     $el.form.action='{% url 'cold_apply:configure_tailored_resume' job.id %}'; 
                                     $el.form.submit()" 

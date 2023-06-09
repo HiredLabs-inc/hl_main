@@ -1,0 +1,10 @@
+{% load form_helpers %}
+<div class="mb-3 row">
+    <label for="{{field.id_for_label}}" class="col-sm-3 col-form-label">{{field.label}}</label>
+    <div class="col-sm-9">
+        {{field|bootstrap_input}}
+    </div>
+{% if field.errors %}
+    <span class="text-danger">{{field.errors}}</span>
+{% endif %}
+</div>

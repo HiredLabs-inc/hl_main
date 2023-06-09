@@ -207,15 +207,16 @@
             </div>
             
             <p><strong>Preview Content</strong> will display bullet weightings and allow inline editting of text content.</p>
-            <button class="btn btn-primary" 
-                    @click.prevent="$el.form.target='_blank'; 
-                                    $el.form.submit()"  
-                    >Generate PDF Resume</button>
-            <button class="btn btn-secondary" 
+            
+            <button class="btn btn-outline-primary me-3" 
                     @click.prevent="$el.form['preview'].value='True';   
                                     $el.form.target=''; 
                                     $el.form.submit()">
                     Preview Content</button>
+            <button class="btn btn-primary" 
+                    @click.prevent="$el.form.target='_blank'; 
+                                    $el.form.submit()"  
+                    >Generate PDF Resume</button>
         </div>
     </div>
    <div class="py-4">

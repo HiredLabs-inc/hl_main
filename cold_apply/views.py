@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from typing import Any, Dict
 
 from django.contrib.auth.decorators import login_required
@@ -5,7 +6,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models.query import QuerySet
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse
+from django.urls import Resolver404, resolve, reverse, reverse_lazy
 from django.utils import timezone
 from django_q.models import Task, OrmQ
 from django.views.decorators.http import require_http_methods
@@ -173,10 +174,6 @@ class ParticipantDetailView(LoginRequiredMixin, FormMixin, DetailView):
         else:
             return self.form_invalid(form)
 
-    def form_invalid(self, form: Any) -> HttpResponse:
-        print(form.errors)
-        return super().form_invalid(form)
-
     def form_valid(self, form):
         print(form.cleaned_data)
         if isinstance(form, NewJobSelectionForm):
@@ -225,47 +222,22 @@ class ParticipantUpdateView(LoginRequiredMixin, UpdateView):
         return super().form_valid(form)
 
 
-# Update Participant
-# @login_required
-# def update_participant(request, pk):
-#     participant = Participant.objects.get(id=pk)
-#     if request.method == "POST":
-#         form = ParticipantForm(request.POST, request.FILES, instance=participant)
-#         if form.is_valid():
-#             participant = form.save(commit=False)
-#             participant.updated_by = request.user
-#             participant.save()
-#             return redirect(reverse("cold_apply:confirm_update_participant"))
-#         else:
-#             print(form.errors)
-#     else:
-#         form = ParticipantForm(instance=participant)
-#     context = {"form": form}
-#     return render(request, "cold_apply/participant_update.html", context)
-
-
 # Organizations
-class OrganizationCreateView(LoginRequiredMixin, CreateView):
+class OrganizationCreateView(HtmxViewMixin, LoginRequiredMixin, CreateView):
     model = Organization
     template_name = "cold_apply/company_add.html"
+    htmx_template = "cold_apply/modals/company_add_modal.html"
+    empty_response_on_save = True
+    refresh_on_save = True
     fields = ["name", "website", "org_type"]
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["now"] = timezone.now()
-
-        return context
+    # TODO OrganizationDetail view for success_url
+    success_url = reverse_lazy("cold_apply:index")
 
     def form_valid(self, form):
-        if form.is_valid():
-            organization = form.save(commit=False)
-            organization.created_by = self.request.user
-            organization.updated_by = self.request.user
-            organization.save()
+        form.instance.created_by = self.request.user
+        form.instance.updated_by = self.request.user
 
-            return redirect(reverse("cold_apply:confirm_add_company"))
-        else:
-            print(form.errors)
         return super().form_valid(form)
 
 
@@ -291,27 +263,15 @@ class OrganizationUpdateView(LoginRequiredMixin, UpdateView):
 
 
 # Titles
-
-
-class TitleCreateView(LoginRequiredMixin, CreateView):
+class TitleCreateView(HtmxViewMixin, LoginRequiredMixin, CreateView):
     model = Position
-    template_name = "cold_apply/title_create.html"
     fields = ["title"]
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["now"] = timezone.now()
-
-        return context
-
-    def form_valid(self, form):
-        if form.is_valid():
-            position = form.save(commit=False)
-            position.save()
-            return redirect(reverse("cold_apply:confirm_add_title"))
-        else:
-            print(form.errors)
-        return super().form_valid(form)
+    template_name = "cold_apply/title_create.html"
+    htmx_template = "cold_apply/modals/title_create_modal.html"
+    empty_response_on_save = True
+    refresh_on_save = True
+    success_url = reverse_lazy("cold_apply:index")
+    # TODO TitleDetail view for success_url
 
 
 class TitleUpdateView(LoginRequiredMixin, UpdateView):
@@ -346,26 +306,23 @@ class JobCreateView(LoginRequiredMixin, CreateView):
         "description",
         "status",
         "status_reason",
+        "location",
     ]
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["pk"] = self.kwargs["pk"]
-        context["participant"] = Participant.objects.get(id=self.kwargs["pk"])
-        context["now"] = timezone.now()
+    def get_success_url(self) -> str:
+        return reverse("cold_apply:participant_detail", args=[self.kwargs["pk"]])
 
-        return context
+    def get_context_data(self, **kwargs):
+        return {
+            **super().get_context_data(**kwargs),
+            "participant": Participant.objects.get(id=self.kwargs["pk"]),
+            "now": timezone.now(),
+        }
 
     def form_valid(self, form):
-        if form.is_valid():
-            job = form.save(commit=False)
-            job.participant = Participant.objects.get(id=self.kwargs["pk"])
-            job.created_by = self.request.user
-            job.updated_by = self.request.user
-            job.save()
-            return redirect(reverse("cold_apply:confirm_add_job"))
-        else:
-            print(form.errors)
+        form.instance.participant = Participant.objects.get(id=self.kwargs["pk"])
+        form.instance.created_by = self.request.user
+        form.instance.updated_by = self.request.user
         return super().form_valid(form)
 
 
@@ -399,23 +356,25 @@ class JobUpdateView(LoginRequiredMixin, UpdateView):
         "description",
         "status",
         "status_reason",
+        "location",
     ]
+
+    def get_success_url(self) -> str:
+        from_url = self.request.GET.get("from")
+        try:
+            resolve(from_url)
+        except Resolver404:
+            from_url = reverse(
+                "cold_apply:participant_detail", args=[self.object.participant.id]
+            )
+        return from_url
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context["success_url"] = self.get_success_url()
         context["now"] = timezone.now()
 
         return context
-
-    def form_valid(self, form):
-        if form.is_valid():
-            job = form.save(commit=False)
-            job.updated_by = self.request.user
-            job.save()
-            return redirect(reverse("cold_apply:confirm_update_job"))
-        else:
-            print(form.errors)
-        return super().form_valid(form)
 
 
 @login_required
@@ -1052,6 +1011,7 @@ def find_new_jobs_view(request, participant_id):
 
             print("Task Id: ", task_id)
             request.session["task_id"] = task_id
+            # request.session["task_request_time"] = datetime.timestamp(timezone.now())
 
             return redirect(
                 f"{reverse('cold_apply:participant_detail', args=[participant_id])}#jobs-panel-new-jobs-heading"
@@ -1069,10 +1029,16 @@ def get_task_status_view(request):
     and return a Hx-Refresh trigger to refresh the current page,
     otherwise if the task is still running, return a alert with
     a loading spinner"""
+    timeout = 10
 
     task_id = request.session.get("task_id")
-    if task_id is None:
-        raise Http404("Task not found")
+    if request.session.get("task_request_time") is None:
+        request.session["task_request_time"] = datetime.timestamp(timezone.now())
+
+    is_after_timeout = (
+        datetime.timestamp(timezone.now())
+        > request.session["task_request_time"] + timeout
+    )
 
     # seems to be a bug in django_rq
     # these two functions are identical but
@@ -1088,13 +1054,16 @@ def get_task_status_view(request):
 
     if task_result:
         request.session.pop("task_id", None)
+        request.session.pop("task_request_time", None)
         return HttpResponse(status=204, headers={"HX-Refresh": "true"})
 
     # this is the pending tasks queue
-    elif not OrmQ.objects.all().exists():
+
+    elif not OrmQ.objects.all().exists() or task_id is None or is_after_timeout:
         # no finished task and nothing queued
         # assume task_id is invalid
         request.session.pop("task_id", None)
+        request.session.pop("task_request_time", None)
         context["task_not_found"] = True
 
     return render(

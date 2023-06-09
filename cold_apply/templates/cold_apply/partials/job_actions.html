@@ -1,0 +1,6 @@
+<a class="btn btn-outline-primary   border-2" href="{% url 'cold_apply:update_job' job.id %}">
+    <i class="bi bi-pencil"></i>
+</a>
+<a class="btn btn-outline-danger  border-2" onclick="return confirm('Delete Job?')" href="{% url 'cold_apply:delete_job' job.id %}">
+    <i class="bi bi-x-lg" ></i>
+</a>
