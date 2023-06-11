@@ -1,8 +1,14 @@
-{% extends 'staff.html' %}
+{% extends 'base_app.html' %}
 {% load tz %}
 {% get_current_timezone as TIME_ZONE %}
 
-{% block title %}
+{% block breadcrumbs %}
+    {% breadcrumb 'Pipeline' 'cold_apply:index' %}
+    {% breadcrumb participant.full_name 'cold_apply:participant_detail' participant.id %}
+    {% breadcrumb 'Experiences' %}
+{% endblock breadcrumbs %}
+
+{% block content %}
     <h1>Participant Experiences</h1>
     <h6>Participant: {{ participant.name }}</h6>
     <p class="text-muted">Data retrieved on {{ now|date }} at {{ now|time }} {{ TIME_ZONE }}</p>
@@ -14,12 +20,6 @@
             <span class="fw-bolder">Chronological</span> | <a href="{% url 'cold_apply:participant_experience_by_skill_list' participant.id %}">By Skill</a>
         </div>
     </div>
-    <a href="{% url 'cold_apply:participant_detail' participant.id %}#new_jobs">Test</a>
-{% endblock %}
-
-
-
-{% block content %}
     <h3>Chronological Experience</h3>
     {% if experiences %}
         {% for exp in experiences %}
@@ -34,7 +34,7 @@
             {% endif %}
             <br>
             <a href="{% url 'cold_apply:update_experience' pk=exp.id %}"
-               target="_blank">Update Experience</a>
+               >Update Experience</a>
             <br>
             <a href="{% url 'cold_apply:delete_experience' exp.id %}" onclick="return confirm('Delete experience?')">Delete Experience</a>
             {%  if bullets %}
@@ -74,7 +74,7 @@
         <p>No Education Entered</p>
     {% endif %}
     <div class="pb-4">
-        <a class="btn btn-primary" href="{% url 'cold_apply:create_experience' participant.id %}" target="_blank">Add Experience</a>
+        <a class="btn btn-primary" href="{% url 'cold_apply:create_experience' participant.id %}" >Add Experience</a>
         <a class="btn btn-primary" href="{% url 'cold_apply:create_education' participant.id %}" target="_blank">Add Education</a>
     </div>
 

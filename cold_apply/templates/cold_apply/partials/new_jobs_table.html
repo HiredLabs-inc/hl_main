@@ -42,7 +42,11 @@
                                         name="keep" 
                                         @change="keep ? discard = false : ''"
                                         value="{{job.id}}">
-                                    <label class="btn btn-outline-success border-2" for="job_{{job.id}}_keep"><i style="font-size:1.2rem;" class=" bi bi-check-lg"></i></label>
+                                    <label  class="btn btn-outline-success border-2 px-2" 
+                                            style="padding-top: 0.2rem; padding-bottom: 0.2rem;" 
+                                            for="job_{{job.id}}_keep">
+                                            <i style="font-size:1.2rem;" class=" bi bi-check-lg"></i>
+                                    </label>
                                 </div>
                                 <div>
                                     <input type="checkbox"
@@ -53,7 +57,11 @@
                                            x-model="discard" 
                                            @change="discard ? keep = false: ''"
                                            value="{{job.id}}">
-                                    <label class="btn btn-outline-danger border-2" for="job_{{job.id}}_discard"><i style="font-size:1.2rem;" class="bi bi-x-lg"></i></label>
+                                    <label class="btn btn-outline-danger border-2  px-2" 
+                                    style="padding-top: 0.2rem; padding-bottom: 0.2rem;" 
+                                            for="job_{{job.id}}_discard">
+                                        <i style="font-size:1.2rem;" class="bi bi-x-lg"></i>
+                                    </label>
 
 
                                 </div>

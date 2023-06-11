@@ -77,13 +77,13 @@ class ColdApplyBrowserTest(StaticLiveServerTestCase):
             page.get_by_role("link", name="Tailor Resume").click()
         page1 = page1_info.value
         page1.get_by_text(
-            "Hired Labs, inc.: Technical Co-founder, 2022-06-15 - Present"
+            "Hired Labs, inc.: Technical Co-founder - 2022-06-15 - Present"
         ).click()
         page1.get_by_text(
-            "Upwork Inc.: Program Manager, Data Analytics & Operations, 2019-12-31 - 2022-05-"
+            "Upwork Inc.: Program Manager, Data Analytics & Operations - 2019-12-31 - 2022-05-"
         ).click()
         page1.get_by_label(
-            "Upwork Inc.: Associate Program Manager, Contingent Workforce, 2018-08-01 - 2019-12-31"
+            "Upwork Inc.: Associate Program Manager, Contingent Workforce - 2018-08-01 - 2019-12-31"
         ).check()
         page1.get_by_role("listitem").filter(has_text="Top Skills").click()
         page1.get_by_role("listitem").filter(

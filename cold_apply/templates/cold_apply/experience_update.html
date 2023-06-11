@@ -1,0 +1,19 @@
+{% extends 'base_app.html' %}
+{% block breadcrumbs %}
+    {% breadcrumb 'Pipeline' 'cold_apply:index' %}
+    {% breadcrumb experience.participant.full_name 'cold_apply:participant_detail' experience.participant_id %}
+    {% breadcrumb 'Experiences' 'cold_apply:participant_experience_list' experience.participant_id %}
+    {% breadcrumb experience|truncatechars:"20" %}
+{% endblock breadcrumbs %}
+
+{% block content %}
+
+    <form class="post-form" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div>
+            <input class="btn btn-primary" type="submit" value="Save">
+            <a class="btn btn-primary" href="{% url 'cold_apply:participant_experience_list' experience.participant_id %}">Cancel</a>
+        </div>
+    </form>
+{% endblock %}

@@ -1,6 +1,8 @@
-{% extends 'staff.html' %}
+{% extends 'base_app.html' %}
 {% load tz %}
 {% get_current_timezone as TIME_ZONE %}
+
+
 
 {% block title %}
     <h1>Participant Pipeline</h1>
@@ -12,6 +14,11 @@
     <a class="btn btn-primary" href="{% url 'cold_apply:applicant_list' %}" target="_blank">See Applicants</a>
     <p class="text-muted">Data retrieved on {{ now|date }} at {{ now|time }} {{ TIME_ZONE }}</p>
 {% endblock %}
+
+{% block breadcrumbs %}
+{% breadcrumb 'Pipeline' %}
+{% endblock breadcrumbs %}
+
 
 {% block content %}
     <h2 class="sub-header">Active Participants</h2>

@@ -1,20 +1,17 @@
-{% extends 'staff.html' %}
+{% extends 'base_app.html' %}
 {% load form_helpers %}
 
 {% block breadcrumbs %}
     {% breadcrumb 'Pipeline' 'cold_apply:index' %}
     {% breadcrumb participant.full_name 'cold_apply:participant_detail' participant.id %}
     {% breadcrumb 'Job Search' %}
-    
-    
-
 {% endblock breadcrumbs %}
 
 {% block content %}
 <div class="row">
     <div class="col-lg-6">
         <form action="" method="post">
-            <h4>New Job Search</h4>
+        <h4>New Job Search</h4>
             <p>Set search parameters</p>
             
             {% csrf_token %}

@@ -798,7 +798,7 @@ class OverviewDeleteView(HtmxViewMixin, LoginRequiredMixin, DeleteView):
 
 class ExperienceCreateView(LoginRequiredMixin, CreateView):
     model = Experience
-    template_name = "cold_apply/create_update.html"
+    template_name = "cold_apply/experience_create.html"
     form_class = ExperienceForm
 
     def get_context_data(self, **kwargs):
@@ -825,8 +825,9 @@ class ExperienceCreateView(LoginRequiredMixin, CreateView):
 
 class ExperienceUpdateView(LoginRequiredMixin, UpdateView):
     model = Experience
-    template_name = "cold_apply/participant_update.html"
+    template_name = "cold_apply/experience_update.html"
     fields = ["start_date", "end_date", "org", "position"]
+    context_object_name = "experience"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

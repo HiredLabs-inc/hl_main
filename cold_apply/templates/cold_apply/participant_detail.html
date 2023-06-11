@@ -1,8 +1,6 @@
-{% extends 'staff.html' %}
-{% load breadcrumbs %}
+{% extends 'base_app.html' %}
 
 {% block breadcrumbs %}
-    
     {% breadcrumb 'Pipeline' 'cold_apply:index' %}
     {% breadcrumb object.full_name %}
 {% endblock breadcrumbs %}

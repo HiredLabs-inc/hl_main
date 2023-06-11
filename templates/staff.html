@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 {% load static %}
 {% load form_helpers %}
+
 {% get_static_prefix as STATIC_PREFIX %}
 {% get_media_prefix as MEDIA_PREFIX %}
 
@@ -88,14 +89,9 @@
         </div>
     </nav>
     <div class="container pt-3">
-        <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                {% block breadcrumbs %}
-                    {% breadcrumb 'Pipeline' %}
-                {% endblock breadcrumbs %}
-            </ol>
-          </nav>
-          <hr>
+
+       
+        
         
         {% block title %}
         {% endblock %}
@@ -135,7 +131,7 @@
     {% endblock %}
 
     <!-- Modal -->
-    {% include 'cold_apply/modals/modal.html' %}
+    {% include 'modal.html' %}
 
     
 
@@ -169,14 +165,9 @@
     <script>window.jQuery</script>
     <script>
         if (window.location.hash) {
-            // Get the target element from the anchor link
-            var targetElement = document.querySelector(window.location.hash);
-          
-            // Check if the target element exists
+            const targetElement = document.querySelector(window.location.hash);
             if (targetElement) {
-              // Wait for the new page to finish loading
               window.addEventListener('load', function () {
-                // Perform smooth scrolling to the target element
                 targetElement.scrollIntoView({ behavior: 'smooth' });
               });
             }

@@ -2,7 +2,8 @@
 {% block breadcrumbs %}
     {% breadcrumb 'Pipeline' 'cold_apply:index' %}
     {% breadcrumb participant.full_name 'cold_apply:participant_detail' participant.id %}
-    {% breadcrumb 'Update' %}
+    {% breadcrumb 'Experiences' 'cold_apply:participant_experience_list' participant.id %}
+    {% breadcrumb "Add Experience" %}
 {% endblock breadcrumbs %}
 
 {% block content %}
@@ -10,15 +11,9 @@
     <form class="post-form" method="post" enctype="multipart/form-data">
         {% csrf_token %}
         {{ form.as_p }}
-        <div  class="mb-3" >
-        {% url 'cold_apply:create_location' as create_location_url %}
-        <a href="{{create_location_url}}" 
-        hx-get="{{create_location_url}}"
-        hx-target="#modal">Add new location</a>
-        </div>
         <div>
             <input class="btn btn-primary" type="submit" value="Save">
-            <a class="btn btn-primary" href="{% url 'cold_apply:participant_detail' participant.id %}">Cancel</a>
+            <a class="btn btn-primary" href="{% url 'cold_apply:participant_experience_list' participant.id %}">Cancel</a>
         </div>
     </form>
 {% endblock %}

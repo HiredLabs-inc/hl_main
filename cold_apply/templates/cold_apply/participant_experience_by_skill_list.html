@@ -1,8 +1,15 @@
-{% extends 'staff.html' %}
+{% extends 'base_app.html' %}
 {% load tz %}
 {% get_current_timezone as TIME_ZONE %}
 
-{% block title %}
+{% block breadcrumbs %}
+    {% breadcrumb 'Pipeline' 'cold_apply:index' %}
+    {% breadcrumb participant.full_name 'cold_apply:participant_detail' participant.id %}
+    {% breadcrumb 'Experiences by Skill' %}
+{% endblock breadcrumbs %}
+
+
+{% block content %}
     <h1>Participant Experiences</h1>
     <h6>Participant: {{ participant.name }}</h6>
     <p class="text-muted">Data retrieved on {{ now|date }} at {{ now|time }} {{ TIME_ZONE }}</p>
@@ -15,11 +22,6 @@
             <a href="{% url 'cold_apply:participant_experience_list' participant.id %}">Chronological</a> | <span class="fw-bolder">By Skill</span>
         </div>
     </div>
-{% endblock %}
-
-
-
-{% block content %}
     <h3>Experience by Skill</h3>
     
     <div class="alert alert-primary" role="alert" class="mb-3">
