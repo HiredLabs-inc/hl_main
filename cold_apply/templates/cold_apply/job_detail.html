@@ -92,12 +92,11 @@
             <a href="{{object.application_link}}">{{ object.application_link }}</a>
         </div>
     </div>
-    <div class="row py-3">
-        <h3>Navigation</h3>
-        <div class="col">
-            <a class="btn btn-primary" href="{% url 'cold_apply:participant_detail' object.participant.id %}">Back to
-                Participant Detail</a>
-            <a class="btn btn-primary" href="{% url 'cold_apply:index' %}">Back to Pipeline</a>
-        </div>
-    </div>
+   
 {% endblock %}
+
+{% block navigation %}
+<a class="btn btn-primary" href="{% url 'cold_apply:participant_detail' object.participant.id %}">Back to
+    Participant Detail</a>
+<a class="btn btn-primary" href="{% url 'cold_apply:index' %}">Back to Pipeline</a>
+{% endblock navigation %}

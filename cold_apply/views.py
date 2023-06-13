@@ -27,9 +27,7 @@ from django_q.models import OrmQ, Task
 from requests import head
 
 from cold_apply.jobs import (
-    get_jobs_for_participant,
     q_get_jobs_for_participant,
-    q_test_job_task,
 )
 from cold_apply.resume_formatting import (
     group_bullets_by_experience,
@@ -63,6 +61,7 @@ from .models import (
     Applicant,
     BulletKeyword,
     Job,
+    JobSearch,
     KeywordAnalysis,
     Location,
     Participant,
@@ -187,6 +186,7 @@ class ParticipantDetailView(LoginRequiredMixin, FormMixin, DetailView):
         return {
             **super().get_form_kwargs(),
             "participant": self.object,
+            "user": self.request.user,
         }
 
     def get_form_class(self):
@@ -1021,35 +1021,52 @@ class LocationListView(LoginRequiredMixin, ListView):
 
 def find_new_jobs_view(request, participant_id):
     participant = get_object_or_404(Participant, pk=participant_id)
-    applicant = Applicant.objects.filter(email=participant.email).first()
+    applicant = participant.applicant
+    job_searches = JobSearch.objects.filter(participant=participant).order_by(
+        "-created_at"
+    )[:10]
+    last_search = job_searches.first()
+
     if request.method == "POST":
         form = FindNewJobsForm(request.POST)
         if form.is_valid():
             keywords = form.cleaned_data.get("keywords")
             if keywords:
                 keywords = keywords.split(",")
-            # task_id = q_test_job_task(5)
+
             task_id = q_get_jobs_for_participant(
+                request.user,
                 participant,
                 form.cleaned_data["query"],
                 keywords=keywords,
                 date_posted=form.cleaned_data.get("date_posted"),
             )
-
-            print("Task Id: ", task_id)
             request.session["task_id"] = task_id
-            # request.session["task_request_time"] = datetime.timestamp(timezone.now())
 
             return redirect(
                 f"{reverse('cold_apply:participant_detail', args=[participant_id])}#jobs-panel-new-jobs-heading"
             )
     else:
-        form = FindNewJobsForm()
+        if last_search:
+            form = FindNewJobsForm(
+                initial={
+                    "query": last_search.search_query,
+                    "keywords": last_search.keywords_csv,
+                    "date_posted": last_search.date_posted,
+                }
+            )
+        else:
+            form = FindNewJobsForm()
 
     return render(
         request,
         "cold_apply/find_new_jobs.html",
-        context={"form": form, "participant": participant, "applicant": applicant},
+        context={
+            "form": form,
+            "participant": participant,
+            "applicant": applicant,
+            "job_searches": job_searches,
+        },
     )
 
 

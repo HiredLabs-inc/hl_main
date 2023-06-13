@@ -1,8 +1,8 @@
-{% extends 'base.html' %}
 {% load static %}
 {% get_static_prefix as STATIC_PREFIX %}
-
-{% block head %}
+{% get_media_prefix as MEDIA_PREFIX %}
+<!DOCTYPE html>
+<html lang="en">
     <head>
         <meta charset="UTF-8"/>
         <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
@@ -634,12 +634,7 @@
         />
 
     </head>
-{% endblock %}
-
-
-{% block body %}
-    <body id="body">
-    <!-- transfar -->
+<body id="body">
     <div class="l-transfar" id="transfar">
         <div class="l-transfar_item"></div>
         <div class="l-transfar_item"></div>
@@ -980,10 +975,6 @@
             </div>
         </aside>
     </main>
-    </body>
-{% endblock %}
-
-{% block footer %}
     <footer class="l-footer jsFooterShow">
         <div class="l-footer_container">
             <nav>
@@ -1026,9 +1017,6 @@
             </p>
         </div>
     </footer>
-{% endblock %}
-
-{% block javascript %}
     <script
             type="text/javascript"
             src="{{ STATIC_PREFIX }}wp-content/themes/theme_gokagn-official/assets/scripts/lib/jquery-3.6.0.min.js?ver=3.6.0"
@@ -1068,4 +1056,6 @@
     <script>
         pageTitle();
     </script>
-{% endblock %}
+</body>
+</html>
+

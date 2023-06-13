@@ -75,4 +75,39 @@
     </div>
 </div>
 
+<div class="row">
+    <div class="col">
+        <h3>Recent Search history</h3>
+        <table class="table table-striped border" style="table-layout: fixed;">
+            <thead>
+                <thead>
+                    <tr>
+                        <th>Start Time</th>
+                        <th>Jobs Found</th>
+                        <th>Duplicate Count</th>
+                        <th>Search Query</th>
+                        <th>Keywords</th>
+                        <th>Date Posted</th>
+                        <th>Search Radius</th>
+                        <th>Run By</th>
+                    </tr>
+                </thead>
+            </thead>
+            <tbody>
+                {% for search in job_searches %}
+                    <tr>
+                        <td>{{search.created_at|date:'d/m/y H:i:s'}}</td>
+                        <td>{{search.result_count}}</td>
+                        <td>{{search.duplicate_count}}</td>
+                        <td>{{search.search_query}}</td>
+                        <td>{{search.keywords_csv}}</td>
+                        <td>{{search.date_posted}}</td>
+                        <td>{{search.distance_miles}}</td>
+                        <td>{{search.run_by}}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 {% endblock content %}

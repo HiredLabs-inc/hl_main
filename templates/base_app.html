@@ -1,5 +1,12 @@
 {% extends 'base.html' %}
+{% load form_helpers %}
 {% block body %}
+
+
+
+
+<div class="d-flex flex-column h-100">
+{% block navbar %}
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <div class="container">
         <a class="navbar-brand" href="{% url 'staff' %}">
@@ -49,7 +56,9 @@
         </div>
     </div>
 </nav>
-<div class="container pt-3">
+{% endblock navbar %}
+
+<div class="container py-3 flex-grow-1">
     {% wrapper_if_block_has_content breadcrumbs %}
         <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
             <ol class="breadcrumb">
@@ -61,9 +70,47 @@
     {% endwrapper %}
     {% block content %}
     {% endblock content %}
-    {% block footer %}
-    {% endblock footer %}
+
+    {% wrapper_if_block_has_content navigation %}
+    <hr>
+    <div class="row">
+        <h3>Navigation</h3>
+        <div class="col">
+            {% block navigation %}
+            {% endblock navigation %}
+        </div>
+        
+        
+    </div>
+    {% endwrapper %}
+    {% block resume_checkout_navigation %}
+        {% if request.GET.checkout is not None %}
+            <div>
+            
+                <a href="{{request.GET.checkout}}?{{request.GET|urlencode_dict}}" class="btn btn-primary">Back to Resume Configuration</a>
+            </div>
+        {% endif %}
+    {% endblock resume_checkout_navigation %}
+    
+
+</div>
     {% include 'modal.html' %}
+{% block footer %}
+<footer class="w-100 bg-secondary-subtle">
+    <div class="container">
+        {% if user.is_authenticated %}
+            <p class="text-muted">Logged in as
+                {% if user.is_superuser %}
+                    superuser
+                {% endif %}
+                {{ user.first_name }} {{ user.last_name }}</p>
+            <p class="text-muted mb-0 pb-3"><a href="{% url 'releases:submit_feedback' %}" target="_blank">Got Feedback?</a>
+            </p>
+        {% endif %}
+
+    </div>
+</footer>
+{% endblock footer %}
 </div>
 {% endblock body %}
 

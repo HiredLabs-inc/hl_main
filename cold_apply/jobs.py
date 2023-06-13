@@ -8,7 +8,7 @@ from playwright.sync_api import sync_playwright
 from django.utils import timezone
 from django_q.tasks import async_task
 
-from cold_apply.models import Job, Participant
+from cold_apply.models import Job, JobSearch, Participant
 from resume.models import Organization, Position
 
 
@@ -29,16 +29,8 @@ TIME_POSTED_SVG_PATH = "M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 
 WORK_FROM_HOME_PATH = "M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"
 
 
-class DatePostedFilter(models.Choices):
-    TODAY = "today"
-    THREE_DAYS = "3days"
-    WEEK = "week"
-    MONTH = "month"
-    ALL = "all"
-
-
-def get_jobs_from_google(main_query: str, chip_filters=None, limit=25):
-    limit = limit if limit < 25 else 25
+def get_jobs_from_google(main_query: str, chip_filters=None, limit=15):
+    limit = limit if limit < 15 else 15
 
     jobs = []
     with sync_playwright() as playwright:
@@ -70,16 +62,17 @@ def get_jobs_from_google(main_query: str, chip_filters=None, limit=25):
             # page uses infinite scroll so we can't just loop through the list
             # we need to update the job list every time and get the item by index
             job_list = page.locator(".iFjolb").all()
-            li = job_list[i]
-            if not li:
+            try:
+                li = job_list[i]
+            except IndexError:
                 break
+
             # loop through each job and click on it's link
             # this updates the main content with the job's details
             # then we can scrape the details from the main content
 
             li.click()
             page.wait_for_load_state("networkidle")
-            sleep(0.5)
 
             job_title = main_content.locator("h2.KLsYvd").first.text_content()
             job_text = main_content.locator("span.HBvzbc").first.text_content()
@@ -149,7 +142,7 @@ def get_jobs_from_google(main_query: str, chip_filters=None, limit=25):
                         break
 
             jobs.append(job)
-            sleep(0.5)
+            # sleep(0.3)
     return jobs
 
 
@@ -202,27 +195,32 @@ def get_relative_time(time_posted_str):
     return now
 
 
+def make_safe_encoding(string):
+    """Google jobs uses some weird encoding that breaks the django ORM"""
+    return string.encode("utf-8").decode("utf-8")
+
+
 def make_job_from_google(participant, job):
     return Job(
         participant=participant,
-        title=Position.objects.get_or_create(title=job.get("title"))[0],
-        company_detail=job.get("company_detail"),
+        title=Position.objects.get_or_create(title=job.get("title")[:100])[0],
+        company_detail=job.get("company_detail")[:100],
         company=Organization.objects.get_or_create(name=job.get("company_detail"))[0],
-        description=job.get("text"),
-        location_detail=job.get("location", ""),
-        application_link=job.get("application_link", ""),
-        application_agent=job.get("application_agent", ""),
+        description=make_safe_encoding(job.get("text", "")),
+        location_detail=job.get("location", "")[:100],
+        application_link=job.get("application_link", "")[:500],
+        application_agent=job.get("application_agent", "")[:100],
         status="New",
         posted_at=get_relative_time(job.get("time_posted")),
-        salary=job.get("salary", ""),
-        remote=job.get("work_from_home", ""),
-        source_id=job.get("id", ""),
+        salary=job.get("salary", "")[:100],
+        remote=job.get("work_from_home", "")[:50],
+        source_id=job.get("id", "")[:200],
         auto_generated=True,
     )
 
 
 def get_jobs_for_participant(
-    participant, search_query, keywords=None, date_posted=None
+    user, participant, search_query, keywords=None, date_posted=None
 ):
     if date_posted == "all":
         date_posted = None
@@ -235,6 +233,7 @@ def get_jobs_for_participant(
         },
     )
     new_jobs = []
+    duplicated_jobs = []
     for job in scraped_jobs:
         # check for duplicates on source_id
         if not Job.objects.filter(
@@ -243,41 +242,38 @@ def get_jobs_for_participant(
             new_jobs.append(make_job_from_google(participant, job))
         else:
             print(f"Duplicate found: {job['id']}")
+            duplicated_jobs.append(job)
     print(
         f"Found {len(new_jobs)} jobs for {participant.first_name} {participant.last_name}"
     )
 
+    job_search = JobSearch.objects.create(
+        participant=participant,
+        search_query=search_query,
+        keywords_csv=",".join(keywords) if keywords else "",
+        date_posted=date_posted,
+        distance_miles=30,
+        result_count=len(scraped_jobs),
+        duplicate_count=len(duplicated_jobs),
+        duplicates_json=duplicated_jobs,
+        run_by=user,
+    )
     if new_jobs:
-        Job.objects.bulk_create(new_jobs)
+        for job in new_jobs:
+            job.save()
+        # created_jobs = Job.objects.bulk_create(new_jobs)
+        # mysql doesn't return new ids for bulk create
+
+        job_search.jobs.add(*new_jobs)
 
 
 def q_get_jobs_for_participant(
-    participant,
-    search_query,
-    keywords=None,
-    date_posted=None,
+    *args,
+    **kwargs,
 ):
     return async_task(
         "cold_apply.jobs.get_jobs_for_participant",
-        participant,
-        search_query,
-        keywords=None,
-        date_posted=None,
+        *args,
+        **kwargs,
+        q_options={"max_retries": 1},
     )
-
-
-def q_test_job_task(number):
-    return async_task("cold_apply.jobs.test_job_task", number)
-
-
-def test_job_task(number):
-    sleep(number)
-    return 12
-
-
-# class Command(BaseCommand):
-#     def handle(self, *args, **options):
-#         participant = Participant.objects.get(pk=25)
-#         Job.objects.get_or_create
-#         participant.job_set.filter(status="New").delete()
-#         get_jobs_for_participant(participant, "python developer london")

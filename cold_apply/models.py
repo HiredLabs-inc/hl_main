@@ -35,6 +35,9 @@ class Participant(models.Model):
     updated_by = models.ForeignKey(
         User, on_delete=models.SET_NULL, related_name="updated_by", null=True
     )
+    applicant = models.ForeignKey(
+        "Applicant", on_delete=models.SET_NULL, null=True, blank=True
+    )
 
     def get_absolute_url(self):
         return reverse("cold_apply:participant_detail", kwargs={"pk": self.pk})
@@ -99,6 +102,7 @@ class Job(models.Model):
     REASONS = [
         ("In Progress", "In Progress"),
         ("Employer Closed", "Employer Closed"),
+        ("Admin Rejected", "Admin Rejected"),
         ("Candidate Rejected", "Candidate Rejected"),
         ("Cycle Complete", "Cycle Complete"),
     ]
@@ -112,7 +116,7 @@ class Job(models.Model):
         max_length=20, choices=REASONS, blank=True, null=True
     )
     application_link = models.URLField(blank=True, null=True, max_length=500)
-    application_agent = models.CharField(max_length=50, blank=True)
+    application_agent = models.CharField(max_length=100, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(
         User, on_delete=models.SET_NULL, related_name="job_created_by", null=True
@@ -137,6 +141,10 @@ class Job(models.Model):
     # the identifier for the job from the job board
     source_id = models.CharField(max_length=200, blank=True)
     auto_generated = models.BooleanField(default=False)
+
+    @property
+    def decoded(self):
+        return bytes(self.description).decode("utf-8")
 
     def __str__(self):
         return f"{self.company}: {self.title}, {self.status}: {self.participant.name}"
@@ -339,3 +347,31 @@ class Applicant(models.Model):
     military_specialiaty = models.CharField(max_length=200, null=True)
     years_of_service = models.IntegerField(null=True)
     rank_at_separation = models.CharField(max_length=200, null=True)
+
+    def __str__(self) -> str:
+        return f"{self.name}: {self.email}"
+
+
+class DatePostedFilter(models.Choices):
+    TODAY = "today"
+    THREE_DAYS = "3days"
+    WEEK = "week"
+    MONTH = "month"
+    ALL = "all"
+
+
+class JobSearch(models.Model):
+    search_query = models.TextField()
+    participant = models.ForeignKey(Participant, on_delete=models.CASCADE)
+    keywords_csv = models.TextField()
+    date_posted = models.CharField(choices=DatePostedFilter.choices, max_length=20)
+    distance_miles = models.IntegerField()
+    result_count = models.IntegerField()
+    duplicate_count = models.IntegerField()
+    duplicates_json = models.JSONField(null=True)
+
+    # who initiated the search
+    run_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    jobs = models.ManyToManyField(Job)

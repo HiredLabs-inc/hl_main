@@ -1,13 +1,10 @@
-from calendar import c
+import django
 import os
 from urllib.parse import urlencode
-from django.http import HttpResponse
 from django.test import TestCase
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.urls import reverse
 from django.contrib.auth.models import User
-from django.shortcuts import get_object_or_404
-from numpy import var
 
 from cold_apply.forms import ResumeConfigForm
 from cold_apply.models import Job, Location, Participant, SkillBullet, State
@@ -22,7 +19,6 @@ from resume.models import (
     Education,
     Experience,
     Organization,
-    Position,
 )
 from resume.pdf import (
     RESUME_TEMPLATE_SECTIONS_JSON,

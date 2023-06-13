@@ -70,16 +70,10 @@
     <div class="pb-4">
         
     </div>
-    <div class="row pb-4" >
-        <h3>Navigation</h3>
-        <div class="col d-flex">
-            <div class="me-3">
-                <a href="{% url 'cold_apply:participant_experience_list' participant.id %}" class="btn btn-primary">Back to Experiences</a>
-            </div>
-            <div>
-                <a class="btn btn-primary" href="{% url 'cold_apply:participant_detail' participant.id %}">Back to Participant</a>
-            </div>
-        </div>
-    </div>
    
 {% endblock %}
+
+{% block navigation %}
+    <a href="{% url 'cold_apply:participant_experience_list' participant.id %}" class="btn btn-primary">Back to Experiences</a>
+    <a class="btn btn-primary" href="{% url 'cold_apply:participant_detail' participant.id %}">Back to Participant</a>
+{% endblock navigation %}

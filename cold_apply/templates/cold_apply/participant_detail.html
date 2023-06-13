@@ -114,10 +114,10 @@
               </h2>
               <div id="jobs-panel-open-jobs" class="accordion-collapse collapse {% if jobs.open.count %}show{% endif %}" aria-labelledby="jobs-panel-open-jobs-heading">
                 <div class="accordion-body">
-                    <table class="table table-striped">
+                    <table class="table table-striped" style="table-layout: fixed;">
                         <thead>
                             <tr>
-                                <th>Title</th>
+                                <th colspan="2">Title</th>
                                 <th>Company</th>
                                 <th>Location</th>
                                 <th>Salary</th>
@@ -131,7 +131,7 @@
                             {% for job in jobs %}
                             {% if job.status == 'Open' %}
                             <tr>
-                                <td><a href="{% url 'cold_apply:job_detail' job.id %}">{{ job.title }}</a></td>
+                                <td  colspan="2"><a href="{% url 'cold_apply:job_detail' job.id %}">{{ job.title }}</a></td>
                                 <td>{{ job.company }}</td>
                                 <td>{{job.location|default:job.location_detail}}</td>
                                 <td>{{job.salary}}</td>
@@ -164,10 +164,10 @@
               </h2>
               <div id="jobs-panel-closed-jobs" class="accordion-collapse collapse {% if jobs.closed.count %}show{% endif %}" aria-labelledby="jobs-panel-closed-jobs-heading">
                 <div class="accordion-body">
-                    <table class="table table-striped">
+                    <table class="table table-striped"  style="table-layout: fixed;">
                         <thead>
                             <tr>
-                                <th>Title</th>
+                                <th colspan="2">Title</th>
                                 <th>Company</th>
                                 <th>Location</th>
                                 <th>Status</th>
@@ -179,7 +179,7 @@
                             {% for job in jobs %}
                             {% if job.status == 'Closed' %}
                             <tr>
-                                <td><a href="{% url 'cold_apply:job_detail' job.id %}">{{ job.title }}</a></td>
+                                <td colspan="2"><a href="{% url 'cold_apply:job_detail' job.id %}">{{ job.title }}</a></td>
                                 <td>{{ job.company }}</td>
                                 <td>{{ job.location|default:job.location_detail }}</td>
                                 <td>
@@ -214,18 +214,13 @@
         <a class="btn btn-primary" href="{% url 'cold_apply:update_participant' object.id %}">Update Participant</a>
     </div>
 </div>
-<div class="row">
-    <h3>Navigation</h3>
-    <div class="col">
-        <a class="btn btn-primary" href="{% url 'cold_apply:index' %}">Back to Pipeline</a>
-    </div>
-</div>
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const newJobs = document.getElementById('jobs-panel-new-jobs')
         if(window.location.hash === '#jobs-panel-new-jobs-heading' && !{{jobs.new.count}}) {
             
-            console.log(new bootstrap.Collapse(newJobs, {toggle: true}))
+            new bootstrap.Collapse(newJobs, {toggle: true})
         }
       
     })
@@ -233,3 +228,8 @@
 </script>
 {% endblock %}
 
+{% block navigation %}
+<div class="col">
+    <a class="btn btn-primary" href="{% url 'cold_apply:index' %}">Back to Pipeline</a>
+</div>
+{% endblock navigation %}

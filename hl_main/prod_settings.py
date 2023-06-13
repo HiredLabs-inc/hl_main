@@ -18,86 +18,86 @@ from environ import Env
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 env = Env()
-env.read_env(env_file='hl_main/.env')
+env.read_env(env_file="hl_main/.env")
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env('DJANGO_SECRET_KEY')
+SECRET_KEY = env("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['www.hiredlabs.org', 'hiredlabs.org']
+ALLOWED_HOSTS = ["www.hiredlabs.org", "hiredlabs.org"]
 
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'cold_apply.apps.ColdApplyConfig',
-    'rates.apps.RatesConfig',
-    'releases.apps.ReleasesConfig',
-    'resume.apps.ResumeConfig',
-    'userprofile.apps.UserprofileConfig',
-    'django_q',
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "cold_apply.apps.ColdApplyConfig",
+    "rates.apps.RatesConfig",
+    "releases.apps.ReleasesConfig",
+    "resume.apps.ResumeConfig",
+    "userprofile.apps.UserprofileConfig",
+    "django_q",
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-ROOT_URLCONF = 'hl_main.urls'
+ROOT_URLCONF = "hl_main.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.media',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [BASE_DIR / "templates"],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.media",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
 ]
 
-WSGI_APPLICATION = 'hl_main.wsgi.application'
+WSGI_APPLICATION = "hl_main.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'janton42$hl_main',
-        'USER': env('DB_USER'),
-        'PASSWORD': env('DB_PASSWORD'),
-        'HOST': 'janton42.mysql.pythonanywhere-services.com',
-        'PORT': '',
+    "default": {
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": "janton42$hl_main",
+        "USER": env("DB_USER"),
+        "PASSWORD": env("DB_PASSWORD"),
+        "HOST": "janton42.mysql.pythonanywhere-services.com",
+        "PORT": "",
     }
 }
 
 # Caching
 # https://docs.djangoproject.com/en/4.1/topics/cache/#setting-up-the-cache
 CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
-        'LOCATION': 'main_cache',
+    "default": {
+        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+        "LOCATION": "main_cache",
     }
 }
 
@@ -105,14 +105,14 @@ CACHES = {
 # https://django-q.readthedocs.io/en/latest/configure.html#orm
 
 Q_CLUSTER = {
-    'name': 'hl_main',
-    'max_attempts': 3,
-    'workers': 4,
-    'timeout': 600,
-    'retry': 615,
-    'queue_limit': 50,
-    'bulk': 10,
-    'orm': 'default',
+    "name": "hl_main",
+    "max_attempts": 1,
+    "workers": 4,
+    "timeout": 600,
+    "retry": 615,
+    "queue_limit": 50,
+    "bulk": 10,
+    "orm": "default",
 }
 
 # Password validation
@@ -120,31 +120,33 @@ Q_CLUSTER = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
 
 # Path to machine learning and natural language processing scripts and models
-ML_MODELS_PATH = os.path.join(BASE_DIR,
-                              'resume_parser/static/scripts/resume_parser/final_models/')
-ENTITIES_PATH = os.path.join(BASE_DIR,
-                             'resume_parser/static/scripts/resume_parser/entities/')
+ML_MODELS_PATH = os.path.join(
+    BASE_DIR, "resume_parser/static/scripts/resume_parser/final_models/"
+)
+ENTITIES_PATH = os.path.join(
+    BASE_DIR, "resume_parser/static/scripts/resume_parser/entities/"
+)
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = 'America/Los_Angeles'
+TIME_ZONE = "America/Los_Angeles"
 
 USE_I18N = True
 
@@ -157,24 +159,22 @@ USE_THOUSAND_SEPARATOR = True
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
 STATIC_ROOT = os.path.join(BASE_DIR, "static_files/")
-STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, 'static/'),
-)
+STATICFILES_DIRS = (os.path.join(BASE_DIR, "static/"),)
 
-STATIC_URL = 'static/'
+STATIC_URL = "static/"
 # STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
 
-RESUME_OUT_PATH = os.path.join(BASE_DIR, 'resume_parser/static/output/')
+RESUME_OUT_PATH = os.path.join(BASE_DIR, "resume_parser/static/output/")
 
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
-MEDIA_URL = 'media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, "media/")
+MEDIA_URL = "media/"
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-DEFAULT_FROM_EMAIL = 'jantonstock@gmail.com'
-LOGIN_REDIRECT_URL = 'staff'
-LOGIN_URL = 'login'
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+DEFAULT_FROM_EMAIL = "jantonstock@gmail.com"
+LOGIN_REDIRECT_URL = "staff"
+LOGIN_URL = "login"
 
 # Comment out the lines below for dev, uncomment them in prod
 SECURE_HSTS_SECONDS = 25

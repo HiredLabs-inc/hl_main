@@ -1,6 +1,6 @@
 from typing import Any, Dict
 from django import forms
-from cold_apply.jobs import DatePostedFilter
+from cold_apply.models import DatePostedFilter
 
 from resume.models import Bullet, CertProjectActivity, Experience
 from resume.pdf import (
@@ -17,7 +17,8 @@ class ParticipantForm(forms.ModelForm):
     class Meta:
         model = Participant
         fields = [
-            "name",
+            "first_name",
+            "last_name",
             "email",
             "phone",
             "veteran",
@@ -26,6 +27,7 @@ class ParticipantForm(forms.ModelForm):
             "uploaded_resume_title",
             "current_step",
             "location",
+            "applicant",
         ]
 
 
@@ -235,6 +237,7 @@ class ResumeConfigForm(forms.Form):
 class NewJobSelectionForm(forms.Form):
     def __init__(self, *args, **kwargs) -> None:
         participant = kwargs.pop("participant")
+        user = kwargs.pop("user")
         super().__init__(*args, **kwargs)
         self.fields["keep"].queryset = Job.objects.filter(
             participant=participant, status="New"
@@ -242,6 +245,7 @@ class NewJobSelectionForm(forms.Form):
         self.fields["discard"].queryset = Job.objects.filter(
             participant=participant, status="New"
         )
+        self.user = user
 
     keep = forms.ModelMultipleChoiceField(queryset=Job.objects.none(), required=False)
     discard = forms.ModelMultipleChoiceField(
@@ -250,7 +254,12 @@ class NewJobSelectionForm(forms.Form):
 
     def save(self):
         self.cleaned_data["keep"].update(status="Open")
-        self.cleaned_data["discard"].delete()
+        reason = (
+            "Admin Rejected"
+            if (self.user.is_staff or self.user.is_superuser)
+            else "Candidate Rejected by User"
+        )
+        self.cleaned_data["discard"].update(status="Closed", status_reason=reason)
 
 
 class FindNewJobsForm(forms.Form):

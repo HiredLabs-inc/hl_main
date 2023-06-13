@@ -119,7 +119,7 @@ CACHES = {
 
 Q_CLUSTER = {
     "name": "hl_main",
-    "max_attempts": 3,
+    "max_attempts": 1,
     "workers": 4,
     "timeout": 600,
     "retry": 615,
