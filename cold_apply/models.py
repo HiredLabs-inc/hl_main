@@ -2,6 +2,7 @@ from enum import unique
 
 from django.contrib.auth.models import User
 from django.db import models
+from django.db.models import Q
 from django.urls import reverse
 
 from rates.models import Country
@@ -35,7 +36,7 @@ class Participant(models.Model):
     updated_by = models.ForeignKey(
         User, on_delete=models.SET_NULL, related_name="updated_by", null=True
     )
-    applicant = models.ForeignKey(
+    applicant = models.OneToOneField(
         "Applicant", on_delete=models.SET_NULL, null=True, blank=True
     )
 
@@ -321,6 +322,17 @@ class Location(models.Model):
         return reverse("cold_apply:location_detail", kwargs={"pk": self.pk})
 
 
+class ApplicantQuerySet(models.QuerySet):
+    def rejected(self):
+        return self.filter(rejected=True)
+
+    def accepted(self):
+        return self.filter(rejected=False, participant__isnull=False)
+
+    def new(self):
+        return self.filter(rejected=False, participant__isnull=True)
+
+
 class Applicant(models.Model):
     BRANCHES = [
         ("Army", "Army"),
@@ -332,6 +344,8 @@ class Applicant(models.Model):
         ("Not a Veteran", "Not a Veteran"),
     ]
     name = models.CharField(max_length=200)
+    first_name = models.CharField(max_length=200)
+    last_name = models.CharField(max_length=200)
     email = models.EmailField(max_length=200)
     phone = models.CharField(max_length=200)
     location = models.TextField(blank=True, null=True)
@@ -347,9 +361,20 @@ class Applicant(models.Model):
     military_specialiaty = models.CharField(max_length=200, null=True)
     years_of_service = models.IntegerField(null=True)
     rank_at_separation = models.CharField(max_length=200, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    rejected = models.BooleanField(default=False)
+    objects = ApplicantQuerySet.as_manager()
 
     def __str__(self) -> str:
-        return f"{self.name}: {self.email}"
+        return f"{self.full_name}: {self.email}"
+
+    @property
+    def full_name(self):
+        return f"{self.first_name} {self.last_name}"
+
+    class Meta:
+        ordering = ["-first_name", "-last_name"]
 
 
 class DatePostedFilter(models.Choices):
@@ -364,7 +389,9 @@ class JobSearch(models.Model):
     search_query = models.TextField()
     participant = models.ForeignKey(Participant, on_delete=models.CASCADE)
     keywords_csv = models.TextField()
-    date_posted = models.CharField(choices=DatePostedFilter.choices, max_length=20)
+    date_posted = models.CharField(
+        choices=DatePostedFilter.choices, max_length=20, blank=True
+    )
     distance_miles = models.IntegerField()
     result_count = models.IntegerField()
     duplicate_count = models.IntegerField()

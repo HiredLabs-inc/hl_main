@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Any, Dict
 from django import http
+from django.forms.models import BaseModelForm
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -67,6 +68,7 @@ from .models import (
     Participant,
     Phase,
     Skill,
+    Step,
     WeightedBullet,
 )
 from .static.scripts.keyword_analyzer.keyword_analyzer import (
@@ -140,22 +142,48 @@ class ConfirmApplicationView(TemplateView):
 
 
 # Create new Participant
-@login_required
-def create_participant(request):
-    if request.method == "POST":
-        form = ParticipantForm(request.POST, request.FILES)
-        if form.is_valid():
-            participant = form.save(commit=False)
-            participant.created_by = request.user
-            participant.updated_by = request.user
-            participant.save()
-            return redirect(reverse("cold_apply:index"))
-        else:
-            print(form.errors)
-    else:
-        form = ParticipantForm()
-    context = {"form": form}
-    return render(request, "cold_apply/participant_create.html", context)
+class ParticipantCreateView(LoginRequiredMixin, CreateView):
+    model = Participant
+    form = ParticipantForm
+    fields = ParticipantForm.Meta.fields
+
+    template_name = "cold_apply/participant_create.html"
+
+    def get_initial(self) -> Dict[str, Any]:
+        applicant_id = self.request.GET.get("applicant_id")
+        if applicant_id:
+            applicant = get_object_or_404(Applicant, pk=applicant_id)
+
+            return {
+                "applicant": applicant,
+                "first_name": applicant.first_name,
+                "last_name": applicant.last_name,
+                "email": applicant.email,
+                "phone": applicant.phone,
+                "uploaded_resume": applicant.resume,
+                "veteran": not applicant.service_branch == "Not a Veteran",
+                "current_step": Step.objects.filter(order=0).first(),
+            }
+
+    def get_from_url(self):
+        from_url = self.request.GET.get("from")
+        try:
+            resolve(from_url)
+        except Resolver404:
+            from_url = reverse("cold_apply:index")
+        return from_url
+
+    def form_valid(self, form: BaseModelForm) -> HttpResponse:
+        form.instance.created_by = self.request.user
+        form.instance.updated_by = self.request.user
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        context["applicant"] = context["form"].initial.get("applicant")
+        context["from_url"] = self.get_from_url()
+
+        return context
 
 
 # Read Participant details
@@ -640,7 +668,10 @@ def tailored_resume_view(request, job_pk):
     )
     job.participant.experience_set.first()
 
-    experiences = Experience.objects.filter(participant=job.participant)
+    experiences = Experience.objects.filter(participant=job.participant).order_by(
+        "-start_date"
+    )
+
     skills = Skill.objects.filter(
         bullet__experience__participant=job.participant
     ).distinct()
@@ -659,7 +690,9 @@ def tailored_resume_view(request, job_pk):
         # delete existing weightings
         WeightedBullet.objects.filter(participant=job.participant).delete()
 
-        bullets = Bullet.objects.filter(experience__participant=job.participant)
+        bullets = Bullet.objects.filter(
+            experience__participant=job.participant
+        ).order_by("-experience__start_date")
 
         keywords = job.keywordanalysis_set.all()
         overview = Overview.objects.filter(
@@ -983,13 +1016,22 @@ class ApplicantListView(LoginRequiredMixin, ListView):
     context_object_name = "applicant_list"
 
     def get_queryset(self):
-        return Applicant.objects.all().order_by("name")
+        return Applicant.objects.all().order_by("-created_at")
 
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
         return {**super().get_context_data(**kwargs), "now": timezone.now()}
 
 
-# TODO View applicant details using generic DetailView (login required)
+class ApplicantDetailView(LoginRequiredMixin, DetailView):
+    model = Applicant
+    template_name = "cold_apply/applicant_detail.html"
+
+
+def applicant_reject_view(request, pk):
+    applicant = get_object_or_404(Applicant, pk=pk)
+    applicant.rejected = True
+    applicant.save()
+    return redirect(reverse("cold_apply:applicant_list"))
 
 
 class LocationCreateView(HtmxViewMixin, LoginRequiredMixin, CreateView):

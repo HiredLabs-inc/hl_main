@@ -10,7 +10,13 @@ from resume.pdf import (
     ResumeSections,
 )
 
-from .models import Applicant, Interaction, Job, Location, Participant, Skill
+from .models import (
+    Applicant,
+    Interaction,
+    Job,
+    Participant,
+    Skill,
+)
 
 
 class ParticipantForm(forms.ModelForm):
@@ -26,8 +32,8 @@ class ParticipantForm(forms.ModelForm):
             "uploaded_resume",
             "uploaded_resume_title",
             "current_step",
-            "location",
             "applicant",
+            "location",
         ]
 
 
@@ -56,7 +62,8 @@ class ApplicantForm(forms.ModelForm):
     class Meta:
         model = Applicant
         fields = [
-            "name",
+            "first_name",
+            "last_name",
             "email",
             "phone",
             "linkedin",
@@ -72,7 +79,8 @@ class ApplicantForm(forms.ModelForm):
             "rank_at_separation",
         ]
         widgets = {
-            "name": forms.TextInput(attrs={"class": "form-control"}),
+            "first_name": forms.TextInput(attrs={"class": "form-control"}),
+            "last_name": forms.TextInput(attrs={"class": "form-control"}),
             "email": forms.EmailInput(attrs={"class": "form-control"}),
             "phone": forms.NumberInput(attrs={"class": "form-control"}),
             "linkedin": forms.TextInput(attrs={"class": "form-control"}),

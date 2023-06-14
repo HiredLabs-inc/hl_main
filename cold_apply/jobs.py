@@ -2,11 +2,12 @@ from datetime import datetime, timedelta
 from pprint import pprint
 from time import sleep
 from urllib.parse import parse_qs, urlparse
-from django.db import models
+from django.db import transaction
 from django.core.management.base import BaseCommand, CommandError
 from playwright.sync_api import sync_playwright
 from django.utils import timezone
 from django_q.tasks import async_task
+from django.contrib.auth.models import User
 
 from cold_apply.models import Job, JobSearch, Participant
 from resume.models import Organization, Position
@@ -35,14 +36,14 @@ def get_jobs_from_google(main_query: str, chip_filters=None, limit=15):
     jobs = []
     with sync_playwright() as playwright:
         # set headless=False to see the browser running
-        browser = playwright.chromium.launch(headless=False)
+        browser = playwright.chromium.launch(headless=True)
 
         context = browser.new_context()
         context.add_cookies(
             [
                 {
                     "name": "CONSENT",
-                    "value": "YES+",
+                    "value": "YES+",  # skips the google consent page
                     "domain": ".google.com",
                     "path": "/",
                 }
@@ -113,7 +114,7 @@ def get_jobs_from_google(main_query: str, chip_filters=None, limit=15):
                 "id": job_id,
                 "application_link": apply_link,
                 "application_agent": apply_agent,
-                "company_detail": company_text,
+                "company": company_text,
             }
 
             # each jobs as an certain number of "tags" with details about the job
@@ -201,22 +202,71 @@ def make_safe_encoding(string):
 
 
 def make_job_from_google(participant, job):
+    title, _ = Position.objects.get_or_create(title=str(job.get("title", ""))[:100])
+    company_detail = str(job.get("company_detail", ""))[:100]
+    org, _ = Organization.objects.get_or_create(name=company_detail)
+
     return Job(
         participant=participant,
-        title=Position.objects.get_or_create(title=job.get("title")[:100])[0],
-        company_detail=job.get("company_detail")[:100],
-        company=Organization.objects.get_or_create(name=job.get("company_detail"))[0],
+        title=title,
+        company_detail=company_detail,
+        company=org,
         description=make_safe_encoding(job.get("text", "")),
-        location_detail=job.get("location", "")[:100],
-        application_link=job.get("application_link", "")[:500],
-        application_agent=job.get("application_agent", "")[:100],
+        location_detail=str(job.get("location", ""))[:100],
+        application_link=str(job.get("application_link", ""))[:500],
+        application_agent=str(job.get("application_agent", ""))[:100],
         status="New",
         posted_at=get_relative_time(job.get("time_posted")),
-        salary=job.get("salary", "")[:100],
-        remote=job.get("work_from_home", "")[:50],
-        source_id=job.get("id", "")[:200],
+        salary=str(job.get("salary", ""))[:100],
+        remote=str(job.get("work_from_home", ""))[:50],
+        source_id=str(job.get("id", ""))[:200],
         auto_generated=True,
     )
+
+
+@transaction.atomic
+def save_job_search(
+    run_by: User,
+    participant: Participant,
+    scraped_jobs,
+    search_query: str,
+    keywords: str = "",
+    date_posted: str = "",
+):
+    new_jobs = []
+    duplicated_jobs = []
+    for job in scraped_jobs:
+        # check for duplicates on source_id
+        if not Job.objects.filter(
+            participant=participant, source_id=job["id"]
+        ).exists():
+            new_jobs.append(make_job_from_google(participant, job))
+        else:
+            # print(f"Duplicate found ID: {job['id']}")
+            duplicated_jobs.append(job)
+    # print(
+    #     f"Found {len(new_jobs)} jobs for {participant.first_name} {participant.last_name}"
+    # )
+
+    job_search = JobSearch.objects.create(
+        participant=participant,
+        search_query=search_query,
+        keywords_csv=",".join(keywords) if keywords else "",
+        date_posted=date_posted,
+        distance_miles=30,
+        result_count=len(scraped_jobs),
+        duplicate_count=len(duplicated_jobs),
+        duplicates_json=duplicated_jobs,
+        run_by=run_by,
+    )
+    if new_jobs:
+        for job in new_jobs:
+            job.save()
+        # created_jobs = Job.objects.bulk_create(new_jobs)
+        # mysql doesn't return new ids for bulk create
+
+        job_search.jobs.add(*new_jobs)
+    return job_search
 
 
 def get_jobs_for_participant(
@@ -232,39 +282,10 @@ def get_jobs_for_participant(
             "job_family_1": keywords,
         },
     )
-    new_jobs = []
-    duplicated_jobs = []
-    for job in scraped_jobs:
-        # check for duplicates on source_id
-        if not Job.objects.filter(
-            participant=participant, source_id=job["id"]
-        ).exists():
-            new_jobs.append(make_job_from_google(participant, job))
-        else:
-            print(f"Duplicate found: {job['id']}")
-            duplicated_jobs.append(job)
-    print(
-        f"Found {len(new_jobs)} jobs for {participant.first_name} {participant.last_name}"
-    )
 
-    job_search = JobSearch.objects.create(
-        participant=participant,
-        search_query=search_query,
-        keywords_csv=",".join(keywords) if keywords else "",
-        date_posted=date_posted,
-        distance_miles=30,
-        result_count=len(scraped_jobs),
-        duplicate_count=len(duplicated_jobs),
-        duplicates_json=duplicated_jobs,
-        run_by=user,
+    save_job_search(
+        user, participant, scraped_jobs, search_query, keywords, date_posted
     )
-    if new_jobs:
-        for job in new_jobs:
-            job.save()
-        # created_jobs = Job.objects.bulk_create(new_jobs)
-        # mysql doesn't return new ids for bulk create
-
-        job_search.jobs.add(*new_jobs)
 
 
 def q_get_jobs_for_participant(

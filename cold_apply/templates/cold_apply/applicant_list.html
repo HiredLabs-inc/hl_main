@@ -1,17 +1,25 @@
 {% extends 'staff.html' %}
 {% load tz %}
 {% get_current_timezone as TIME_ZONE %}
+{% block breadcrumbs %}
+    {% breadcrumb 'Pipeline' 'cold_apply:index' %}
+    {% breadcrumb 'Applicants'  %}
+{% endblock breadcrumbs %}
 
 {% block content %}
     <h1>Applicants</h1>
     
     <p>Below is the current list of people who have volunteered to participate in Hired Labs' Beta Trials.</p>
-    <p><a class="btn btn-primary" href="{% url 'cold_apply:add_participant' %}" target="_blank">Add New Participant</a></p>
     <p class="text-muted">Data retrieved on {{ now|date }} at {{ now|time }} {{ TIME_ZONE }}</p>
-    <table class="table table-striped">
+    <h4>New Applicants</h4>
+
+    {% if applicant_list.new %}
+   
+    <table class="table table-striped mb-5  border">
         <thead>
         <tr>
             <th>Name</th>
+            <th>Created</th>
             <th>Email</th>
             <th>Phone</th>
             <th>LinkedIn</th>
@@ -19,22 +27,119 @@
             <th>Service Branch</th>
             <th>MOS</th>
             <th>Rank at Separation</th>
+            <th>Actions</th>
         </tr>
         </thead>
         <tbody>
-        {% for applicant in applicant_list %}
+        {% for applicant in applicant_list.new %}
                 <tr>
-                    <td>{{ applicant.name }}</td>
+                    <td>
+                        <a href="{% url 'cold_apply:applicant_detail' applicant.id %}">
+                            {{applicant.full_name}}
+                        </a>
+                        
+                    </td>
+                    <td>{{applicant.created_at|date:'d/m/y H:i'}}</td>
                     <td>{{ applicant.email }}</td>
                     <td>{{ applicant.phone}}</td>
                     <td>{{ applicant.linkedin }}</td>
-                    <td><a href="{{ MEDIA_PREFIX }}{{ applicant.resume }}" target="_blank">
-                        {{ applicant.resume }}</a></td>
+                    <td>
+                        {% if applicant.resume %}
+                        <a href="{{applicant.resume.url}}" target="_blank">
+                            {{ applicant.resume }}</a>
+                            
+                        {% else %}
+                        No Resume Uploaded
+                        {% endif %}
+                    </td>
+                        
                     <td>{{ applicant.service_branch }}</td>
                     <td>{{ applicant.military_specialiaty }}</td>
                     <td>{{ applicant.rank_at_separation }}</td>
+                    <td>
+                    <div class="d-flex">
+                        <div class="me-3">
+                            <a href="{% url 'cold_apply:add_participant' %}?applicant_id={{applicant.id}}&from={{request.path}}" class="btn btn-primary">Accept</a>
+                        </div>
+                        <div>
+                            <a hx-confirm="Reject Applicant?" hx-boost="true" href="{% url 'cold_apply:applicant_reject' applicant.id %}" class="btn btn-danger">Reject</a>
+                        </div>
+                    </div>
+                    </td>
                 </tr>
         {% endfor %}
         </tbody>
     </table>
+    {% else %}
+    <p class="mb-5">No new applicants</p>
+    {% endif %}
+    <h4>Accepted Applicants</h4>
+    <table class="table table-striped mb-5  border">
+        <thead>
+        <tr>
+            <th>Original Applicant</th>
+            <th>Participant</th>
+            <th>Email</th>
+            <th>Phone</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for applicant in applicant_list.accepted %}
+                <tr>
+                    <td>
+                        <a href="{% url 'cold_apply:applicant_detail' applicant.id %}">
+                            {{ applicant.first_name }} {{applicant.last_name}}
+                        </a>
+                    </td>
+                    <td>
+                        <a href="{% url 'cold_apply:participant_detail' applicant.participant.id %}">
+                            {{ applicant.participant.first_name }} {{applicant.participant.last_name}}
+                        </a>
+                    </td>
+                    <td>{{ applicant.email }}</td>
+                    <td>{{ applicant.phone}}</td>
+                  
+                </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <h4>Rejected Applicants</h4>
+    <table class="table table-striped mb-5  border">
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Created</th>
+            <th>Updated</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>LinkedIn</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for applicant in applicant_list.rejected %}
+                <tr>
+                    <td>
+                        <a href="{% url 'cold_apply:applicant_detail' applicant.id %}">
+                            {{applicant.full_name}}
+                        </a>
+                        
+                    </td>
+                    <td>{{applicant.created_at|date:'d/m/y H:i'}}</td>
+                    <td>{{applicant.updated_at|date:'d/m/y H:i'}}</td>
+                    <td>{{ applicant.email }}</td>
+                    <td>{{ applicant.phone}}</td>
+                    <td>{{ applicant.linkedin }}</td>
+                    <td>
+                    <div class="d-flex">
+                        <div class="me-3">
+                            <a href="{% url 'cold_apply:add_participant' %}?applicant_id={{applicant.id}}&from={{request.path}}" class="btn btn-primary">Accept</a>
+                        </div>
+                    </div>
+                    </td>
+                </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
 {% endblock %}

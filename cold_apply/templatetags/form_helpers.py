@@ -21,6 +21,7 @@ def bootstrap_input(bound_field):
         bound_field.field.widget.attrs["class"] = "form-select"
     elif isinstance(bound_field.field.widget, forms.CheckboxInput):
         pass
+
     else:
         bound_field.field.widget.attrs["class"] = "form-control"
     return bound_field

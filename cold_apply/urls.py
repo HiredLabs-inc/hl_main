@@ -1,6 +1,7 @@
 from django.urls import path
 
 from .views import (
+    ApplicantDetailView,
     BulletDetailView,
     LocationCreateView,
     LocationDetailView,
@@ -9,6 +10,7 @@ from .views import (
     OverviewDeleteView,
     OverviewDetailView,
     BulletCreateView,
+    ParticipantCreateView,
     ParticipantExperienceBySkillListView,
     ParticipantExperienceListView,
     ParticipantListView,
@@ -23,13 +25,13 @@ from .views import (
     JobUpdateView,
     TitleUpdateView,
     OrganizationUpdateView,
+    applicant_reject_view,
     configure_tailored_resume_view,
     delete_job,
     find_new_jobs_view,
     get_task_status_view,
     job_status_update_modal_view,
     refresh_keywords,
-    create_participant,
     tailored_resume_view,
     ExperienceCreateView,
     BulletCreateView,
@@ -58,7 +60,7 @@ urlpatterns = [
 
 # Participants CRU (no delete)
 urlpatterns += [
-    path("add_participant/", create_participant, name="add_participant"),
+    path("add_participant/", ParticipantCreateView.as_view(), name="add_participant"),
     path(
         "participants/<int:pk>/",
         ParticipantDetailView.as_view(),
@@ -278,6 +280,8 @@ urlpatterns += [
 # Applicant CRUD
 urlpatterns += [
     path("new_applicant/", create_applicant, name="create_applicant"),
+    path("applicant/<int:pk>/", ApplicantDetailView.as_view(), name="applicant_detail"),
+    path("applicant/<int:pk>/reject", applicant_reject_view, name="applicant_reject"),
     path(
         "new_applicant/confirm/",
         ConfirmApplicationView.as_view(),

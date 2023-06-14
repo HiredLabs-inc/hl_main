@@ -345,3 +345,25 @@ class TailoredResumeViewTestCase(TestCase):
             response.context["certifications"].order_by("id"),
             CertProjectActivity.objects.filter(id__in=certs).order_by("id"),
         )
+
+    def test_experiences_are_chronological(self):
+        self.client.force_login(self.user)
+        participant = Participant.objects.filter(name="Jeff Stock").first()
+
+        query_pararms = {
+            "sections": [v for v, k in ResumeSections.choices],
+            "bullets_content": ResumeFormatChoices.CHRONOLOGICAL,
+            "resume_template": ResumeCoreTemplates.STANDARD,
+            "preview": True,
+            "experiences": Experience.objects.filter(
+                participant=participant
+            ).values_list("id", flat=True),
+        }
+
+        response = self.client.get(self.url, query_pararms)
+
+        experiences = list(response.context["chronological_experiences"])
+        for i, ex in enumerate(experiences[:-1]):
+            self.assertGreater(
+                ex["obj"].start_date, experiences[i + 1]["obj"].start_date
+            )
