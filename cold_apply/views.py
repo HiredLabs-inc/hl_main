@@ -985,6 +985,9 @@ class ApplicantListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         return Applicant.objects.all().order_by("name")
 
+    def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
+        return {**super().get_context_data(**kwargs), "now": timezone.now()}
+
 
 # TODO View applicant details using generic DetailView (login required)
 

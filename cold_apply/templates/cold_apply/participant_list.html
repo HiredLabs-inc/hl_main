@@ -35,7 +35,7 @@
                     {% if participant.current_step.phase == phase %}
                         <tr>
                             <td>
-                                <a href="{% url 'cold_apply:participant_detail' participant.id %}">{{ participant.name }}</a>
+                                <a href="{% url 'cold_apply:participant_detail' participant.id %}">{{ participant.full_name }}</a>
                             </td>
                             <td>{{ participant.current_step.title }}</td>
                             <td>{{ participant.updated_at|date }}</td>

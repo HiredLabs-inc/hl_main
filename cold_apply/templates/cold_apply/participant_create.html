@@ -1,21 +1,34 @@
 {% extends 'base_app.html' %}
+{% load form_helpers %}
+
+{% block breadcrumbs %}
+    {% breadcrumb 'Pipeline' 'cold_apply:index' %}
+    {% breadcrumb 'Add Participant' %}
+{% endblock breadcrumbs %}
 
 {% block content %}
 <div class="py-4">
-<h3>Create New Participant</h3>
-    <form class="post-form" method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <div  class="mb-3" >
-            {% url 'cold_apply:create_location' as create_location_url %}
-            <a href="{{create_location_url}}" 
-            hx-get="{{create_location_url}}"
-            hx-target="#modal">Add new location</a>
+<div class="row">
+    <div class="col-lg-6">
+        <h3 class="mb-4">Create New Participant</h3>
+        <form class="post-form" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {% for field in form %}
+                {% include 'cold_apply/templates/form_input_template.html' %}
+            {% endfor %}
+            <div  class="mb-3" >
+                {% url 'cold_apply:create_location' as create_location_url %}
+                <a href="{{create_location_url}}" 
+                hx-get="{{create_location_url}}"
+                hx-target="#modal">Add new location</a>
+                </div>
+            <div>
+                <input class="btn btn-primary" type="submit" value="Save">
+                <a class="btn btn-primary" href="{% url 'cold_apply:index' %}">Cancel</a>
             </div>
-        <div>
-            <input class="btn btn-primary" type="submit" value="Save">
-            <a class="btn btn-primary" href="{% url 'cold_apply:index' %}">Cancel</a>
-        </div>
-    </form>
+        </form>
+    </div>
+</div>
+
 </div>
 {% endblock %}

@@ -19,6 +19,8 @@ def error_class(bound_field, class_name):
 def bootstrap_input(bound_field):
     if isinstance(bound_field.field.widget, forms.Select):
         bound_field.field.widget.attrs["class"] = "form-select"
+    elif isinstance(bound_field.field.widget, forms.CheckboxInput):
+        pass
     else:
         bound_field.field.widget.attrs["class"] = "form-control"
     return bound_field
