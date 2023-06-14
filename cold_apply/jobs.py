@@ -1,9 +1,6 @@
-from datetime import datetime, timedelta
-from pprint import pprint
+from datetime import timedelta
 from time import sleep
-from urllib.parse import parse_qs, urlparse
 from django.db import transaction
-from django.core.management.base import BaseCommand, CommandError
 from playwright.sync_api import sync_playwright
 from django.utils import timezone
 from django_q.tasks import async_task
@@ -36,9 +33,11 @@ def get_jobs_from_google(main_query: str, chip_filters=None, limit=15):
     jobs = []
     with sync_playwright() as playwright:
         # set headless=False to see the browser running
-        browser = playwright.chromium.launch(headless=True)
+        browser = playwright.chromium.launch()
 
-        context = browser.new_context()
+        context = browser.new_context(
+            user_agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
+        )
         context.add_cookies(
             [
                 {
@@ -52,17 +51,20 @@ def get_jobs_from_google(main_query: str, chip_filters=None, limit=15):
         page = context.new_page()
         jobs_url = get_job_url(main_query, chip_filters)
         page.goto(jobs_url)
-        # sleep(20000)
-        page.wait_for_load_state("networkidle")
 
         # this is the right hand side content box
         main_content = page.locator("#tl_ditc").first
+        main_content.wait_for()
 
         # these are the jobs listed on the left hand side
         for i in range(limit):
             # page uses infinite scroll so we can't just loop through the list
             # we need to update the job list every time and get the item by index
             job_list = page.locator(".iFjolb").all()
+            main_content.locator("div.pE8vnd.avtvi").wait_for()
+            # print(job_list)
+            # page.wait_for_selector("div.sVx81").is_visible()
+            # print("h")
             try:
                 li = job_list[i]
             except IndexError:
@@ -73,7 +75,6 @@ def get_jobs_from_google(main_query: str, chip_filters=None, limit=15):
             # then we can scrape the details from the main content
 
             li.click()
-            page.wait_for_load_state("networkidle")
 
             job_title = main_content.locator("h2.KLsYvd").first.text_content()
             job_text = main_content.locator("span.HBvzbc").first.text_content()
@@ -104,8 +105,6 @@ def get_jobs_from_google(main_query: str, chip_filters=None, limit=15):
                 "div.nJlQNd.sMzDkb"
             ).first.text_content()
             location_text = main_content.locator("div.sMzDkb").last.text_content()
-
-            page.wait_for_load_state("networkidle")
 
             job = {
                 "title": job_title,
@@ -143,7 +142,7 @@ def get_jobs_from_google(main_query: str, chip_filters=None, limit=15):
                         break
 
             jobs.append(job)
-            # sleep(0.3)
+            # sleep(0.1)
     return jobs
 
 
