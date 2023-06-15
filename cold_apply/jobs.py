@@ -2,6 +2,7 @@ from datetime import timedelta
 from time import sleep
 from django.db import transaction
 from playwright.sync_api import sync_playwright
+from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 from django.utils import timezone
 from django_q.tasks import async_task
 from django.contrib.auth.models import User
@@ -53,15 +54,22 @@ def get_jobs_from_google(main_query: str, chip_filters=None, limit=15):
         page.goto(jobs_url)
 
         # this is the right hand side content box
+        no_jobs_message = page.locator("div.h1N1Ee").first
         main_content = page.locator("#tl_ditc").first
-        main_content.wait_for()
+
+        try:
+            main_content.wait_for(timeout=10000)
+        except PlaywrightTimeoutError:
+            no_jobs_message = page.locator("div.h1N1Ee").first
+            no_jobs_message.wait_for(timeout=1000)
+            return jobs
 
         # these are the jobs listed on the left hand side
         for i in range(limit):
             # page uses infinite scroll so we can't just loop through the list
             # we need to update the job list every time and get the item by index
             job_list = page.locator(".iFjolb").all()
-            main_content.locator("div.pE8vnd.avtvi").wait_for()
+            main_content.locator("div.pE8vnd.avtvi").wait_for(timeout=5000)
             # print(job_list)
             # page.wait_for_selector("div.sVx81").is_visible()
             # print("h")
@@ -86,9 +94,7 @@ def get_jobs_from_google(main_query: str, chip_filters=None, limit=15):
             apply_link = apply_button.get_attribute("href")
 
             try:
-                apply_agent = (
-                    apply_button.text_content().split(" on ")[1].strip()
-                )  # [1].trim()
+                apply_agent = apply_button.text_content().split(" on ")[1].strip()
             except IndexError:
                 apply_agent = None
 
@@ -273,18 +279,23 @@ def get_jobs_for_participant(
 ):
     if date_posted == "all":
         date_posted = None
-
-    scraped_jobs = get_jobs_from_google(
-        search_query,
-        {
-            "date_posted": [date_posted] if date_posted else [],
-            "job_family_1": keywords,
-        },
-    )
-
-    save_job_search(
-        user, participant, scraped_jobs, search_query, keywords, date_posted
-    )
+    try:
+        scraped_jobs = get_jobs_from_google(
+            search_query,
+            {
+                "date_posted": [date_posted] if date_posted else [],
+                "job_family_1": keywords,
+            },
+        )
+        save_job_search(
+            user, participant, scraped_jobs, search_query, keywords, date_posted
+        )
+    except PlaywrightTimeoutError as ex:
+        # scrape has unexpectedly failed
+        # save the empty job search and re-raise the exception
+        # so django-q marks the task as failed
+        save_job_search(user, participant, [], search_query, keywords, date_posted)
+        raise ex
 
 
 def q_get_jobs_for_participant(

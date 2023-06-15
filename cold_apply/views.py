@@ -28,6 +28,7 @@ from django_q.models import OrmQ, Task
 from requests import head
 
 from cold_apply.jobs import (
+    get_jobs_for_participant,
     q_get_jobs_for_participant,
 )
 from cold_apply.resume_formatting import (
@@ -1078,8 +1079,8 @@ def find_new_jobs_view(request, participant_id):
             keywords = form.cleaned_data.get("keywords")
             if keywords:
                 keywords = keywords.split(",")
-
-            task_id = q_get_jobs_for_participant(
+            # q_get_jobs_for_participant
+            task_id = get_jobs_for_participant(
                 request.user,
                 participant,
                 form.cleaned_data["query"],
