@@ -1079,8 +1079,8 @@ def find_new_jobs_view(request, participant_id):
             keywords = form.cleaned_data.get("keywords")
             if keywords:
                 keywords = keywords.split(",")
-            # q_get_jobs_for_participant
-            task_id = get_jobs_for_participant(
+            # get_jobs_for_participant
+            task_id = q_get_jobs_for_participant(
                 request.user,
                 participant,
                 form.cleaned_data["query"],

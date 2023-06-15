@@ -70,9 +70,7 @@ def get_jobs_from_google(main_query: str, chip_filters=None, limit=15):
             # we need to update the job list every time and get the item by index
             job_list = page.locator(".iFjolb").all()
             main_content.locator("div.pE8vnd.avtvi").wait_for(timeout=5000)
-            # print(job_list)
-            # page.wait_for_selector("div.sVx81").is_visible()
-            # print("h")
+
             try:
                 li = job_list[i]
             except IndexError:
