@@ -128,5 +128,18 @@
       "patch": 0,
       "date": "2023-06-16T12:59:00Z"
     }
+  },
+  {
+  "model": "releases.release",
+    "pk": 11,
+    "fields": {
+      "title": "Job Search API Added",
+      "author": 1,
+      "app": 1,
+      "major": 2,
+      "minor": 2,
+      "patch": 1,
+      "date": "2023-06-17T12:59:00Z"
+    }
   }
 ]
