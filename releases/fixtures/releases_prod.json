@@ -141,5 +141,18 @@
       "patch": 1,
       "date": "2023-06-17T12:59:00Z"
     }
+  },
+  {
+  "model": "releases.release",
+    "pk": 12,
+    "fields": {
+      "title": "Hotfix 1",
+      "author": 1,
+      "app": 1,
+      "major": 2,
+      "minor": 2,
+      "patch": 2,
+      "date": "2023-06-29T12:59:00Z"
+    }
   }
 ]
