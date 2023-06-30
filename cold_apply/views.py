@@ -24,7 +24,8 @@ from django.views.generic import (
     UpdateView,
 )
 from django.views.generic.edit import FormMixin
-from django_q.models import OrmQ, Task
+
+# from django_q.models import OrmQ, Task
 from requests import head
 
 from cold_apply.jobs import (
@@ -77,10 +78,6 @@ from .static.scripts.keyword_analyzer.keyword_analyzer import (
     hook_after_jd_analysis,
 )
 from .static.scripts.resume_writer.bullet_weighter import hook_after_weighting, weigh
-from .static.scripts.resume_writer.file_writer import (
-    write_chronological_resume,
-    write_skills_resume,
-)
 
 
 # Index

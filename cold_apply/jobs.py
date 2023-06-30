@@ -4,7 +4,8 @@ from django.db import transaction
 from playwright.sync_api import sync_playwright
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 from django.utils import timezone
-from django_q.tasks import async_task
+
+# from django_q.tasks import async_task
 from django.contrib.auth.models import User
 
 from cold_apply.models import Job, JobSearch, Participant

@@ -8,6 +8,9 @@ from .forms import UserRegistrationForm, CompleteProfileForm, UserPasswordChange
 # Import any models needed for views. Note: all views accessing db should require login
 from .models import Profile
 
+from google.cloud import firestore
+from django.http import JsonResponse
+
 
 # Import other python packages, includes ones you wrote. "script_name" is the name of the .py file
 # containing ClassName, which is the desired import
@@ -17,6 +20,22 @@ from .models import Profile
 # These pages are accessible without a login.
 
 # MOVE TO userprofile app
+
+
+def create_firestore(request):
+    db = firestore.Client()
+    doc_ref = db.collection("users").document("alovelaces")
+    doc_ref.set({"first": "Ada", "last": "Lovelace", "born": 1815})
+    return JsonResponse({"status": "success"})
+
+
+def access_firestore(request):
+    db = firestore.Client()
+    users_ref = db.collection("users")
+    docs = users_ref.stream()
+
+    return JsonResponse({"objects": [doc.to_dict() for doc in docs]})
+
 def home(request):
     return render(request, 'home.html')
 

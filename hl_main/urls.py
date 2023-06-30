@@ -23,6 +23,8 @@ from userprofile import views as userprofile_views
 urlpatterns = [
     path("admin/", admin.site.urls, name="admin"),
     path("", userprofile_views.home, name="home"),
+    path("create_firestore/", userprofile_views.create_firestore, name="create_firestore"),
+    path("access_firestore/", userprofile_views.access_firestore, name="access_firestore"),
     path("about/", userprofile_views.about, name="about"),
     path("staff/", userprofile_views.staff, name="staff"),
     path("userprofile/", include("userprofile.urls")),

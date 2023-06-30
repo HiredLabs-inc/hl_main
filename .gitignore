@@ -103,6 +103,7 @@ celerybeat.pid
 
 # Environments
 .env
+.env.dev
 .venv
 env/
 venv/
@@ -141,3 +142,5 @@ output/
 static_files/
 .idea/
 .vscode
+
+gcp-creds

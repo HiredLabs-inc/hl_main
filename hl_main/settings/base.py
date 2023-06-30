@@ -15,20 +15,15 @@ from pathlib import Path
 from environ import Env
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 env = Env()
-env.read_env(env_file="hl_main/.env")
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env("DJANGO_SECRET_KEY")
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
-
-ALLOWED_HOSTS = ["www.hiredlabs.org", "hiredlabs.org"]
+ALLOWED_HOSTS = ["*"]
 
 # Application definition
 
@@ -44,8 +39,9 @@ INSTALLED_APPS = [
     "releases.apps.ReleasesConfig",
     "resume.apps.ResumeConfig",
     "userprofile.apps.UserprofileConfig",
-    "django_q",
+    # "django_q",
 ]
+
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -56,6 +52,9 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
+
+# for django_debug_toolbar
 
 ROOT_URLCONF = "hl_main.urls"
 
@@ -84,16 +83,8 @@ WSGI_APPLICATION = "hl_main.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.mysql",
-        "NAME": "janton42$hl_main",
-        "USER": env("DB_USER"),
-        "PASSWORD": env("DB_PASSWORD"),
-        "HOST": "janton42.mysql.pythonanywhere-services.com",
-        "PORT": "",
-    }
-}
+
+# SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 
 # Caching
 # https://docs.djangoproject.com/en/4.1/topics/cache/#setting-up-the-cache
@@ -102,20 +93,6 @@ CACHES = {
         "BACKEND": "django.core.cache.backends.db.DatabaseCache",
         "LOCATION": "main_cache",
     }
-}
-
-# Queing
-# https://django-q.readthedocs.io/en/latest/configure.html#orm
-
-Q_CLUSTER = {
-    "name": "hl_main",
-    "max_attempts": 1,
-    "workers": 4,
-    "timeout": 600,
-    "retry": 615,
-    "queue_limit": 50,
-    "bulk": 10,
-    "orm": "default",
 }
 
 # Password validation
@@ -161,28 +138,18 @@ USE_THOUSAND_SEPARATOR = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
-STATIC_ROOT = os.path.join(BASE_DIR, "static_files/")
+
 STATICFILES_DIRS = (os.path.join(BASE_DIR, "static/"),)
 
 STATIC_URL = "static/"
-# STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
-
 RESUME_OUT_PATH = os.path.join(BASE_DIR, "resume_parser/static/output/")
 
-MEDIA_ROOT = os.path.join(BASE_DIR, "media/")
-MEDIA_URL = "media/"
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 DEFAULT_FROM_EMAIL = "jantonstock@gmail.com"
 LOGIN_REDIRECT_URL = "staff"
-LOGIN_URL = "login"
+LOGIN_URL = "userprofile:login"
 
-# Comment out the lines below for dev, uncomment them in prod
-SECURE_HSTS_SECONDS = 25
-SECURE_SSL_REDIRECT = True
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
-SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-SECURE_HSTS_PRELOAD = True
