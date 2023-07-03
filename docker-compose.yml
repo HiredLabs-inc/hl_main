@@ -22,11 +22,10 @@ services:
       - .:/app
     ports:
       - 8000:8000
-    command: python manage.py runserver 0.0.0.0:8000
+    command: exec gunicorn --bind 0.0.0.0:8000 --workers 1 --threads 8 --timeout 0 hl_main.wsgi:application
     env_file:
-      - .env
+      - .env.dev
     environment:
-      - GOOGLE_APPLICATION_CREDENTIALS=gcp-creds/application_default_credentials.json
       - DJANGO_SETTINGS_MODULE=hl_main.settings.dev
 
   db:

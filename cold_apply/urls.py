@@ -48,6 +48,7 @@ from .views import (
     create_applicant,
     ConfirmApplicationView,
     ApplicantListView,
+    task_get_jobs_for_participant,
 )
 
 app_name = "cold_apply"
@@ -304,4 +305,7 @@ urlpatterns += [
 
 
 # Tasks
-urlpatterns += [path("tasks/task_status", get_task_status_view, name="task_status")]
+urlpatterns += [
+    path("tasks/task_status", get_task_status_view, name="task_status"),
+    path("tasks/get_jobs_for_participant", task_get_jobs_for_participant, name="task_get_jobs_for_participant")
+]

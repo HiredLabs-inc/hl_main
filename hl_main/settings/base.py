@@ -39,12 +39,13 @@ INSTALLED_APPS = [
     "releases.apps.ReleasesConfig",
     "resume.apps.ResumeConfig",
     "userprofile.apps.UserprofileConfig",
-    # "django_q",
+    "background_tasks.apps.BackgroundTasksConfig",
 ]
 
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -152,4 +153,3 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 DEFAULT_FROM_EMAIL = "jantonstock@gmail.com"
 LOGIN_REDIRECT_URL = "staff"
 LOGIN_URL = "userprofile:login"
-

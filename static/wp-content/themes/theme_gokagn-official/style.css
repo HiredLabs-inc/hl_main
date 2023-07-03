@@ -10,7 +10,7 @@ html {
   font-size: 15px;
 }
 
-  
+
 
 body {
   position: relative;
@@ -251,44 +251,37 @@ img {
 .c-headingIcon-about_philosophy::after {
   width: 30px;
   height: 23px;
-  background: url(./assets/images/about/icon_about-philosophy.png) no-repeat
-    center/contain;
+  background: url(./assets/images/about/icon_about-philosophy.png) no-repeat center/contain;
 }
 
 .c-headingIcon-about_service::after {
   top: -3px;
   width: 27px;
   height: 29px;
-  background: url(./assets/images/about/icon_about-service.png) no-repeat
-    center/contain;
+  background: url(./assets/images/about/icon_about-service.png) no-repeat center/contain;
 }
 
 .c-headingIcon-about_people::after {
   width: 29px;
   height: 28px;
-  background: url(./assets/images/about/icon_about-people.png) no-repeat
-    center/contain;
+  background: url(./assets/images/about/icon_about-people.png) no-repeat center/contain;
 }
 
 .c-headingIcon-about_companyProfile::after {
   width: 25px;
   height: 25px;
-  background: url(./assets/images/about/icon_about-companyprofile.png) no-repeat
-    center/contain;
+  background: url(./assets/images/about/icon_about-companyprofile.png) no-repeat center/contain;
 }
 
 .c-headingIcon-summary::after {
   width: 25px;
   height: 25px;
-  background: url(./assets/images/projects-details/icon_projectsdetails-summary.png)
-    no-repeat center/contain;
+
 }
 
 .c-headingIcon-contact::after {
   width: 22px;
   height: 22px;
-  background: url(./assets/images/contact/icon_contact.png) no-repeat
-    center/contain;
 }
 
 .c-projectsArchive {
@@ -303,6 +296,7 @@ img {
 .c-projectsArchive-tile.is-wide {
   grid-column: 2 / 4;
 }
+
 .c-projectsArchive-tile.is-wide .c-projectsArchive_image {
   padding-top: 55.5%;
 }
@@ -747,20 +741,16 @@ img {
   width: 100%;
   height: 100%;
   background: url(./assets/images/common/background-bk.gif);
-  -webkit-mask-image: linear-gradient(
-    90deg,
-    transparent 0%,
-    transparent 60%,
-    #000 98%,
-    #000 100%
-  );
-  mask-image: linear-gradient(
-    90deg,
-    transparent 0%,
-    transparent 60%,
-    #000 98%,
-    #000 100%
-  );
+  -webkit-mask-image: linear-gradient(90deg,
+      transparent 0%,
+      transparent 60%,
+      #000 98%,
+      #000 100%);
+  mask-image: linear-gradient(90deg,
+      transparent 0%,
+      transparent 60%,
+      #000 98%,
+      #000 100%);
   content: "";
   z-index: 1;
 }
@@ -1203,8 +1193,7 @@ img {
   display: block;
   width: 100%;
   height: 100%;
-  background: url(./assets/images/common/HiredLabs1.png) no-repeat center
-    center/contain;
+  background: url(./assets/images/common/HiredLabs1.png) no-repeat center center/contain;
   transform: translateZ(15px);
 }
 
@@ -1698,8 +1687,6 @@ img {
   left: 0;
   width: 100%;
   height: 100%;
-  background: url(./assets/images/common/pointer-hover.png) no-repeat center
-    center/contain;
   transition: transform 0.3s ease;
   content: "";
 }
@@ -2609,8 +2596,7 @@ img {
   -moz-appearance: none;
   -webkit-appearance: none;
   appearance: none;
-  background: #313131 url(./assets/images/contact/select-arrow.png) no-repeat
-    top 23px right 26px/7px 6px;
+  background: #313131 no-repeat top 23px right 26px/7px 6px;
   border: 1px solid #313131;
   border-radius: 0;
   color: inherit;
@@ -2751,7 +2737,7 @@ img {
   display: none;
 }
 
-.ob-contact_container_form .form-check + span {
+.ob-contact_container_form .form-check+span {
   top: -4px;
   cursor: pointer;
   display: inline-block;
@@ -2760,7 +2746,7 @@ img {
   position: relative;
 }
 
-.ob-contact_container_form .form-check + span::before {
+.ob-contact_container_form .form-check+span::before {
   -webkit-transform: translateY(-50%);
   background: transparent;
   border: 1px solid #fff;
@@ -2775,7 +2761,7 @@ img {
   height: 19px;
 }
 
-.ob-contact_container_form .form-check + span::after {
+.ob-contact_container_form .form-check+span::after {
   -webkit-transform: translateY(-50%) rotate(-45deg);
   border-bottom: 2px solid #f7941d;
   border-left: 2px solid #f7941d;
@@ -2791,7 +2777,7 @@ img {
   height: 0.6em;
 }
 
-.ob-contact_container_form .form-check:checked + span::after {
+.ob-contact_container_form .form-check:checked+span::after {
   opacity: 1;
 }
 
@@ -2985,8 +2971,7 @@ img {
 
   .l-header_logo:hover .l-header_logo_item {
     transform: scale(1.3);
-    background: url(./assets/images/common/HiredLabs1.png) no-repeat
-      center center/contain;
+    background: url(./assets/images/common/HiredLabs1.png) no-repeat center center/contain;
   }
 
   .l-nav_item:hover::after {
@@ -3486,7 +3471,7 @@ img {
     top: 488px;
     width: 664px;
     height: 165px;
-    background: url(./assets/images/common/eu.png) no-repeat top left/contain;
+    background: no-repeat top left/contain;
     content: "";
     z-index: 0;
   }
@@ -3979,8 +3964,7 @@ img {
     height: 50px;
     letter-spacing: 0.04em;
     font-size: 11px;
-    background: #313131 url(./assets/images/contact/select-arrow.png) no-repeat
-      top 21px right 19px/7px 6px;
+    background: #313131 no-repeat top 21px right 19px/7px 6px;
   }
 
   .ob-contact_container_form .form-select::-webkit-input-placeholder {
@@ -4057,7 +4041,7 @@ img {
     font-size: 11px;
   }
 
-  .ob-contact_container_form .form-check + span::before {
+  .ob-contact_container_form .form-check+span::before {
     width: 18px;
     height: 18px;
   }

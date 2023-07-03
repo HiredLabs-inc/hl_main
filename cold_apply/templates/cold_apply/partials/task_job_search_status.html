@@ -1,7 +1,7 @@
 
 {% url 'cold_apply:task_status' as task_url %}
 
-{% if task_not_found %}
+{% if task is None %}
     <div>
         <div class="alert alert-danger d-flex justify-content-between" role="alert">
             <div>Job search failed or timed out.</div>
