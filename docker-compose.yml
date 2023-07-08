@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  gcloud:
+    image: google/cloud-sdk:latest
+    volumes:
+      - ./gcp-creds:/gcp-creds
+      - .:/app
+    working_dir: /app
+    profiles:
+      - 'gcloud'
+    env_file:
+      - .env
+    environment:
+      - CLOUDSDK_CONFIG=/gcp-creds
+  django:
+    build: .
+    depends_on:
+      # - django-tasks
+      - db
+    volumes:
+      - .:/app
+    ports:
+      - 8000:8000
+    command: exec gunicorn --bind 0.0.0.0:8000 --workers 1 --threads 8 --timeout 0 hl_main.wsgi:application
+    env_file:
+      - .env.dev
+    environment:
+      - DJANGO_SETTINGS_MODULE=hl_main.settings.dev
+
+  db:
+    image: postgres
+    environment:
+      - POSTGRES_PASSWORD=postgres
+  django-tasks:
+    build: .
+    depends_on:
+      - db
+    volumes:
+      - .:/app
+    ports:
+      - "8001:8001"
+    environment:
+      - DJANGO_ROLE=tasks
+    command: python manage.py runserver 0.0.0.0:8001
+    env_file:
+      - .env.dev

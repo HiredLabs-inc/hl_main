@@ -25,7 +25,8 @@ class StateAdmin(admin.ModelAdmin):
 
 class ApplicantAdmin(admin.ModelAdmin):
     list_display = (
-        "name",
+        "first_name",
+        "last_name",
         "email",
         "phone",
         "location",
@@ -33,7 +34,8 @@ class ApplicantAdmin(admin.ModelAdmin):
         "rank_at_separation",
     )
     list_filter = (
-        "name",
+        "first_name",
+        "last_name",
         "email",
         "phone",
         "location",
@@ -41,7 +43,8 @@ class ApplicantAdmin(admin.ModelAdmin):
         "rank_at_separation",
     )
     search_fields = (
-        "name",
+        "first_name",
+        "last_name",
         "email",
         "phone",
         "location",

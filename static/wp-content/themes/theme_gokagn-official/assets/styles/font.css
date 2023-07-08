@@ -4,5 +4,5 @@
   font-family: "Stephani Regular";
   font-style: normal;
   font-weight: normal;
-  src: local("Stephani Regular"), url("./stephani.woff") format("woff");
+  src: local("Stephani Regular");
 }
