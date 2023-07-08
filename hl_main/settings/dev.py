@@ -1,7 +1,7 @@
 from .base import *
 
 SECRET_KEY = "doesntmatterdfklmasdlkfmsdaf"
-GCP_PROJECT_ID = os.environ["GCP_PROJECT_ID"]
+GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "")
 
 # MEDIA_ROOT = os.path.join(BASE_DIR, "media/")
 MEDIA_URL = "media/"

@@ -6,11 +6,10 @@ register = template.Library()
 
 
 @register.filter
-def error_class(bound_field, class_name):
+def error_class(bound_field, class_names):
     # relies on Alpine.js
     if hasattr(bound_field, "errors") and bound_field.errors:
-        bound_field.field.widget.attrs["class"] = class_name
-        bound_field.field.widget.attrs[":class"] = "{'input-invalid': !touched}"
+        bound_field.field.widget.attrs[":class"] = f"touched || '{class_names}'"
         bound_field.field.widget.attrs["@input"] = "touched=true;"
     return bound_field
 

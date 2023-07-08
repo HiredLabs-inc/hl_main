@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "resume.apps.ResumeConfig",
     "userprofile.apps.UserprofileConfig",
     "background_tasks.apps.BackgroundTasksConfig",
+    "frontend.apps.FrontendConfig",
 ]
 
 
@@ -73,7 +74,7 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
             ],
             "builtins": [
-                "cold_apply.templatetags.breadcrumbs",
+                "frontend.templatetags.breadcrumbs",
             ],
         },
     },
@@ -140,7 +141,10 @@ USE_THOUSAND_SEPARATOR = True
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
 
-STATICFILES_DIRS = (os.path.join(BASE_DIR, "static/"),)
+STATICFILES_DIRS = (
+    os.path.join(BASE_DIR, "static/"),
+    BASE_DIR / "frontend" / "build" / "static",
+)
 
 STATIC_URL = "static/"
 RESUME_OUT_PATH = os.path.join(BASE_DIR, "resume_parser/static/output/")

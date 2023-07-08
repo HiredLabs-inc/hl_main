@@ -1,6 +1,17 @@
 version: '3.8'
 
 services:
+  frontend:
+    build:
+      context: .
+      dockerfile: ./frontend/Dockerfile
+    volumes:
+      # need to include whole app directory
+      # as tailwind watches django templates
+      # see frontend/tailwind.config.js
+      - .:/app
+    working_dir: /app/frontend
+    command: npm run watch
   gcloud:
     image: google/cloud-sdk:latest
     volumes:

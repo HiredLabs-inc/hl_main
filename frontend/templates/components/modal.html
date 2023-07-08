@@ -1,0 +1,16 @@
+<div x-data="{showModal: false}">
+    <div x-show="showModal"
+         id="modal_container"
+         :class="showModal ? 'flex' : 'hidden'"
+         class="fixed inset-0 items-center hidden justify-center bg-black/50 z-50"
+         >
+        <div @click.away="showModal=false"
+             id="modal"
+             @htmx:after-swap.camel.self="showModal=true;"
+             @htmx:before-swap.camel="console.log($event.detail)"
+             class="max-h-[calc(100vh_-_50px)] overflow-auto p-6 border bg-white rounded-lg"
+             x-init="$watch('showModal', show => show ?  '' : $el.innerHTML='')"
+             >
+        </div>
+    </div>
+</div>
