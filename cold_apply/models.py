@@ -148,7 +148,7 @@ class Job(models.Model):
         return bytes(self.description).decode("utf-8")
 
     def __str__(self):
-        return f"{self.company}: {self.title}, {self.status}: {self.participant.name}"
+        return f"{self.company}: {self.title}, {self.status}"
 
     class Meta:
         verbose_name_plural = "Jobs"

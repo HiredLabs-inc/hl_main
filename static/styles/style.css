@@ -7,6 +7,14 @@ body {
   height: 100%;
 }
 
+.htmx-indicator {
+  opacity: 0
+}
+
+.htmx-indicator.htmx-request {
+  opacity: 1
+}
+
 .anchor-tag {
   color: blue;
   /* Sets the link color */

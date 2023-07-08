@@ -81,6 +81,7 @@ class Bullet(models.Model):
     experience = models.ForeignKey(Experience, on_delete=models.CASCADE)
     text = models.TextField()
     type = models.CharField(max_length=20, choices=BULLET_TYPES)
+
     skills = models.ManyToManyField(
         to="cold_apply.Skill", through="cold_apply.SkillBullet", blank=True
     )

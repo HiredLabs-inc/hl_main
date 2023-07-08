@@ -3,13 +3,29 @@
 <form action="{% url 'cold_apply:create_overview' participant.id position.id %}"
       method="post"
       hx-target="#overview-container"
+      hx-swap="outerHTML"
       hx-post="{% url 'cold_apply:create_overview' participant.id position.id %}"
-      
+      x-data="{auto_generate: false }"
+      x-init="auto_generate = $el['auto_generate'].value;"
+      hx-indicator=".htmx-indicator"
       >
       {% csrf_token %}
 
+    <div class="my-3">
+      <div class="fw-semibold">Auto Generate</div>
+      {{form.auto_generate|input_attrs:"x-model:auto_generate"}}
+    </div>
+    <div class="mb-3" x-show="auto_generate == 'False'">
+      <div class="fw-semibold">
+        Text
+      </div>
     {{form.text|input_class:"w-100"|input_styles:"height:100px"}}
-    
-    <button type="submit">Add Overview</button>
-    <button type="button" hx-on="click: this.closest('form').remove()">Cancel</button>
+  </div>
+  <div class="d-flex align-items-center">
+    <button class="me-2" type="submit">Add Overview</button>
+    <button class="me-3" type="button" hx-on="click: this.closest('form').remove()">Cancel</button>
+    <div class="spinner-border text-primary htmx-indicator" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
 </form>

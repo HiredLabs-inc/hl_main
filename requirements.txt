@@ -10,9 +10,11 @@ Django==4.2.2
 django-debug-toolbar==4.1.0
 django-environ==0.10.0
 django-storages==1.13.2
+django-extensions
 exceptiongroup==1.1.1
 google-api-core==2.11.1
 google-auth==2.17.3
+google-cloud-aiplatform==1.27.1
 google-cloud-core==2.3.2
 google-cloud-firestore==2.11.1
 google-cloud-secret-manager==2.16.1
@@ -61,4 +63,5 @@ tomli==2.0.1
 tqdm==4.65.0
 tzdata==2023.3
 urllib3==2.0.3
+Werkzeug
 whitenoise==6.5.0

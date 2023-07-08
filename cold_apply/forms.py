@@ -1,8 +1,10 @@
 from typing import Any, Dict
-from django import forms
-from cold_apply.models import DatePostedFilter
 
-from resume.models import Bullet, CertProjectActivity, Experience
+from django import forms
+
+from cold_apply.models import DatePostedFilter
+from cold_apply.text_generation import generate_bullet, generate_overview
+from resume.models import Bullet, CertProjectActivity, Experience, Overview
 from resume.pdf import (
     RESUME_TEMPLATE_SECTIONS,
     ResumeCoreTemplates,
@@ -10,13 +12,7 @@ from resume.pdf import (
     ResumeSections,
 )
 
-from .models import (
-    Applicant,
-    Interaction,
-    Job,
-    Participant,
-    Skill,
-)
+from .models import Applicant, Interaction, Job, Participant, Skill
 
 
 class ParticipantForm(forms.ModelForm):
@@ -148,7 +144,46 @@ class SkillForm(forms.ModelForm):
         fields = ["title", "type"]
 
 
+class OverviewForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        if self.fields["auto_generate"]:
+            self.fields["text"].required = False
+
+    auto_generate = forms.BooleanField(
+        widget=forms.RadioSelect(
+            choices=(
+                (False, "Manual"),
+                (True, "Auto Generate"),
+            ),
+        ),
+        initial=False,
+        required=False,
+    )
+
+    def save(self, commit: bool = ...) -> Any:
+        if self.cleaned_data["auto_generate"]:
+            overview_text = generate_overview(self.instance.title)
+            self.instance.text = overview_text
+        return super().save(commit)
+
+    class Meta:
+        model = Overview
+        fields = ["text"]
+
+
 class BulletForm(forms.ModelForm):
+    use_required_attribute = False
+    auto_generate = forms.BooleanField(
+        widget=forms.RadioSelect(
+            choices=(
+                (False, "Manual"),
+                (True, "Auto Generate"),
+            ),
+        ),
+        initial=False,
+        required=False,
+    )
     skills = forms.ModelMultipleChoiceField(
         queryset=Skill.objects.order_by("title").all(),
         widget=forms.CheckboxSelectMultiple(),
@@ -157,6 +192,12 @@ class BulletForm(forms.ModelForm):
     experience = forms.ModelChoiceField(
         queryset=Experience.objects.none(), empty_label=None
     )
+    job = forms.ModelChoiceField(queryset=Job.objects.none(), required=False)
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        if self.fields["auto_generate"]:
+            self.fields["text"].required = False
 
     def clean(self) -> Dict[str, Any]:
         if (
@@ -165,6 +206,16 @@ class BulletForm(forms.ModelForm):
         ):
             raise forms.ValidationError("Experience or Skills are required")
         return super().clean()
+
+    def save(self, commit: bool = ...) -> Any:
+        if self.cleaned_data["auto_generate"]:
+            bullet_text = generate_bullet(
+                self.cleaned_data["experience"],
+                self.cleaned_data["skills"],
+                self.cleaned_data["job"],
+            )
+            self.instance.text = bullet_text
+        return super().save(commit)
 
     class Meta:
         model = Bullet

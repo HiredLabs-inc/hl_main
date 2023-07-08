@@ -34,6 +34,15 @@ def input_class(bound_field, class_name):
 
 
 @register.filter
+def input_attrs(bound_field, attrs):
+    attributes = attrs.split(",")
+    for attribute in attributes:
+        name, value = attribute.split(":")
+        bound_field.field.widget.attrs[name.strip()] = value.strip()
+    return bound_field
+
+
+@register.filter
 def input_styles(bound_field, styles):
     bound_field.field.widget.attrs["style"] = styles
     return bound_field

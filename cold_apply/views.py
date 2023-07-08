@@ -1,18 +1,17 @@
 from datetime import datetime, timedelta
-from typing import Any, Dict
+from typing import Any, Dict, Optional, Type
+
 from django import http
-from django.forms.models import BaseModelForm
-from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.forms import models as model_forms
+from django.forms.models import BaseModelForm
 from django.http import HttpResponse, JsonResponse
 from django.http.response import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import Resolver404, resolve, reverse, reverse_lazy
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
-
 from django.views.decorators.http import require_http_methods
 from django.views.generic import (
     CreateView,
@@ -25,14 +24,9 @@ from django.views.generic import (
 )
 from django.views.generic.edit import FormMixin
 
-from requests import head
 from background_tasks.models import Task, TaskStatusChoices
 from background_tasks.queue import queue_task, work_task
-
-from cold_apply.jobs import (
-    get_jobs_for_participant,
-    q_get_jobs_for_participant,
-)
+from cold_apply.jobs import get_jobs_for_participant
 from cold_apply.resume_formatting import (
     group_bullets_by_experience,
     group_bullets_by_skill,
@@ -58,6 +52,7 @@ from .forms import (
     FindNewJobsForm,
     InteractionForm,
     NewJobSelectionForm,
+    OverviewForm,
     ParticipantForm,
     ResumeConfigForm,
 )
@@ -787,27 +782,34 @@ class OverviewDetailView(HtmxViewMixin, LoginRequiredMixin, DetailView):
 
 
 class OverviewCreateView(HtmxViewMixin, LoginRequiredMixin, CreateView):
-    model = Overview
-    fields = ["text"]
+    form_class = OverviewForm
     template_name = "cold_apply/overview_create.html"
     htmx_template = "cold_apply/partials/overview_create_form.html"
+    position: Position = None
+    refresh_on_save = True
+
+    def get_form(self, form_class=None):
+        self.position = Position.objects.get(id=self.kwargs["position_pk"])
+        return super().get_form(form_class)
 
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
+        # context =
         return {
-            "participant": Participant.objects.get(id=self.kwargs["pk"]),
-            "position": Position.objects.get(id=self.kwargs["position_pk"]),
             **super().get_context_data(**kwargs),
+            "participant": Participant.objects.get(id=self.kwargs["pk"]),
+            "position": self.position,
         }
 
     def form_valid(self, form):
         form.instance.participant_id = self.kwargs["pk"]
-        form.instance.title_id = self.kwargs["position_pk"]
+        form.instance.title = self.position
         return super().form_valid(form)
 
 
 class OverviewUpdateView(HtmxViewMixin, LoginRequiredMixin, UpdateView):
     model = Overview
     fields = ["text"]
+    refresh_on_save = True
     template_name = "cold_apply/overview_update.html"
     htmx_template = "cold_apply/partials/overview_update_form.html"
 
@@ -880,23 +882,6 @@ class ExperienceUpdateView(LoginRequiredMixin, UpdateView):
 # TODO: ExperienceDetailView
 
 
-class ParticipantBulletCreateView(HtmxViewMixin, LoginRequiredMixin, CreateView):
-    """ "For creating bullets for a participant with an experience dropdown box"""
-
-    fields = ["text", "skills", "experience"]
-
-    def get_form(self, form_class):
-        form = super().get_form(form_class)
-        form.fields["experience"].queryset = Experience.objects.filter(
-            participant_id=self.kwargs["pk"]
-        )
-        return form
-
-    def form_valid(self, form):
-        form.instance.type = "Work"
-        return super().form_valid(form)
-
-
 class BulletCreateView(HtmxViewMixin, LoginRequiredMixin, CreateView):
     """For creating bullets when the experience id is known"""
 
@@ -915,12 +900,20 @@ class BulletCreateView(HtmxViewMixin, LoginRequiredMixin, CreateView):
             "skills": skills,
         }
 
+    def form_valid(self, form):
+        # form.instance.created_by = self.request.user
+        # form.instance.updated_by = self.request.user
+        return super().form_valid(form)
+
     def get_form(self, form_class=None):
         form = super().get_form(form_class)
         form.fields["experience"].queryset = Experience.objects.filter(
             participant=self.kwargs["pk"]
         )
-        print(form.initial)
+
+        form.fields["job"].queryset = Job.objects.filter(
+            participant=self.kwargs["pk"], status="Open"
+        )
 
         return form
 
@@ -1079,16 +1072,16 @@ def find_new_jobs_view(request, participant_id):
                 keywords = keywords.split(",")
             # get_jobs_for_participant
             task = queue_task(
-                reverse('cold_apply:task_get_jobs_for_participant'),
+                reverse("cold_apply:task_get_jobs_for_participant"),
                 {
-                    'user_id': request.user.id,
-                    'participant_id': participant.id,
-                    'search_query': form.cleaned_data["query"],
-                    'keywords': keywords,
-                    'date_posted': form.cleaned_data.get("date_posted"),
-                }
+                    "user_id": request.user.id,
+                    "participant_id": participant.id,
+                    "search_query": form.cleaned_data["query"],
+                    "keywords": keywords,
+                    "date_posted": form.cleaned_data.get("date_posted"),
+                },
             )
-           
+
             request.session["task_id"] = task.id
 
             return redirect(
@@ -1141,18 +1134,17 @@ def get_task_status_view(request):
     if task is None or task.status == TaskStatusChoices.FAILURE:
         request.session.pop("task_id", None)
         request.session.pop("task_request_time", None)
-        context['task'] = None
+        context["task"] = None
 
     elif task.status == TaskStatusChoices.SUCCESS:
         request.session.pop("task_id", None)
         request.session.pop("task_request_time", None)
         return HttpResponse(status=204, headers={"HX-Refresh": "true"})
     else:
-        
         if is_after_timeout or task_id is None:
             request.session.pop("task_id", None)
             request.session.pop("task_request_time", None)
-            context['task'] = None
+            context["task"] = None
 
     return render(
         request,
@@ -1164,7 +1156,7 @@ def get_task_status_view(request):
 @csrf_exempt
 def task_get_jobs_for_participant(request):
     """Recieve POST from google cloud tasks"""
-    
+
     work_task(
         request,
         get_jobs_for_participant,

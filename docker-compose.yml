@@ -14,7 +14,10 @@ services:
     environment:
       - CLOUDSDK_CONFIG=/gcp-creds
   django:
-    build: .
+    build:
+      context: .
+      args:
+        - DJANGO_SETTINGS_MODULE=hl_main.settings.dev
     depends_on:
       # - django-tasks
       - db
@@ -25,15 +28,16 @@ services:
     command: exec gunicorn --bind 0.0.0.0:8000 --workers 1 --threads 8 --timeout 0 hl_main.wsgi:application
     env_file:
       - .env.dev
-    environment:
-      - DJANGO_SETTINGS_MODULE=hl_main.settings.dev
 
   db:
     image: postgres
     environment:
       - POSTGRES_PASSWORD=postgres
   django-tasks:
-    build: .
+    build:
+      context: .
+      args:
+        - DJANGO_SETTINGS_MODULE=hl_main.settings.dev
     depends_on:
       - db
     volumes:
