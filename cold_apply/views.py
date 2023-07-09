@@ -5,13 +5,13 @@ from django.forms.models import BaseModelForm
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models.query import QuerySet
 from django.forms import models as model_forms
-from django.http import Http404, HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.http.response import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import Resolver404, resolve, reverse, reverse_lazy
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
 
 from django.views.decorators.http import require_http_methods
 from django.views.generic import (
@@ -24,8 +24,10 @@ from django.views.generic import (
     UpdateView,
 )
 from django.views.generic.edit import FormMixin
-from django_q.models import OrmQ, Task
+
 from requests import head
+from background_tasks.models import Task, TaskStatusChoices
+from background_tasks.queue import queue_task, work_task
 
 from cold_apply.jobs import (
     get_jobs_for_participant,
@@ -77,10 +79,6 @@ from .static.scripts.keyword_analyzer.keyword_analyzer import (
     hook_after_jd_analysis,
 )
 from .static.scripts.resume_writer.bullet_weighter import hook_after_weighting, weigh
-from .static.scripts.resume_writer.file_writer import (
-    write_chronological_resume,
-    write_skills_resume,
-)
 
 
 # Index
@@ -1080,14 +1078,18 @@ def find_new_jobs_view(request, participant_id):
             if keywords:
                 keywords = keywords.split(",")
             # get_jobs_for_participant
-            task_id = q_get_jobs_for_participant(
-                request.user,
-                participant,
-                form.cleaned_data["query"],
-                keywords=keywords,
-                date_posted=form.cleaned_data.get("date_posted"),
+            task = queue_task(
+                reverse('cold_apply:task_get_jobs_for_participant'),
+                {
+                    'user_id': request.user.id,
+                    'participant_id': participant.id,
+                    'search_query': form.cleaned_data["query"],
+                    'keywords': keywords,
+                    'date_posted': form.cleaned_data.get("date_posted"),
+                }
             )
-            request.session["task_id"] = task_id
+           
+            request.session["task_id"] = task.id
 
             return redirect(
                 f"{reverse('cold_apply:participant_detail', args=[participant_id])}#jobs-panel-new-jobs-heading"
@@ -1134,36 +1136,37 @@ def get_task_status_view(request):
         > request.session["task_request_time"] + timeout
     )
 
-    # seems to be a bug in django_rq
-    # these two functions are identical but
-    # result() always returns None even when the task is finished
-    # fetch() returns the task as expected
-    # print(fetch(task_id))
-    # print(result(task_id))
+    task = Task.objects.filter(id=task_id).first()
+    context = {"task": task}
+    if task is None or task.status == TaskStatusChoices.FAILURE:
+        request.session.pop("task_id", None)
+        request.session.pop("task_request_time", None)
+        context['task'] = None
 
-    # have to use Task.get_task instead
-
-    task_result = Task.get_task(task_id)
-    context = {"finished_task": task_result}
-
-    if task_result:
-        if task_result.success:
-            request.session.pop("task_id", None)
-            request.session.pop("task_request_time", None)
-            return HttpResponse(status=204, headers={"HX-Refresh": "true"})
-        else:
-            request.session.pop("task_id", None)
-            request.session.pop("task_request_time", None)
-            context["task_not_found"] = True
+    elif task.status == TaskStatusChoices.SUCCESS:
+        request.session.pop("task_id", None)
+        request.session.pop("task_request_time", None)
+        return HttpResponse(status=204, headers={"HX-Refresh": "true"})
     else:
-        # this is the pending tasks queue
+        
         if is_after_timeout or task_id is None:
             request.session.pop("task_id", None)
             request.session.pop("task_request_time", None)
-            context["task_not_found"] = True
+            context['task'] = None
 
     return render(
         request,
         "cold_apply/partials/task_job_search_status.html",
         context=context,
     )
+
+
+@csrf_exempt
+def task_get_jobs_for_participant(request):
+    """Recieve POST from google cloud tasks"""
+    
+    work_task(
+        request,
+        get_jobs_for_participant,
+    )
+    return JsonResponse({"status": "success"})

@@ -4,7 +4,8 @@ from django.db import transaction
 from playwright.sync_api import sync_playwright
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 from django.utils import timezone
-from django_q.tasks import async_task
+
+# from django_q.tasks import async_task
 from django.contrib.auth.models import User
 
 from cold_apply.models import Job, JobSearch, Participant
@@ -229,8 +230,8 @@ def make_job_from_google(participant, job):
 
 @transaction.atomic
 def save_job_search(
-    run_by: User,
-    participant: Participant,
+    run_by_id: int,
+    participant_id: int,
     scraped_jobs,
     search_query: str,
     keywords: str = "",
@@ -238,6 +239,8 @@ def save_job_search(
 ):
     new_jobs = []
     duplicated_jobs = []
+    participant = Participant.objects.get(pk=participant_id)
+    run_by = User.objects.get(pk=run_by_id)
     for job in scraped_jobs:
         # check for duplicates on source_id
         if not Job.objects.filter(
@@ -245,11 +248,8 @@ def save_job_search(
         ).exists():
             new_jobs.append(make_job_from_google(participant, job))
         else:
-            # print(f"Duplicate found ID: {job['id']}")
             duplicated_jobs.append(job)
-    # print(
-    #     f"Found {len(new_jobs)} jobs for {participant.first_name} {participant.last_name}"
-    # )
+    
 
     job_search = JobSearch.objects.create(
         participant=participant,
@@ -273,7 +273,7 @@ def save_job_search(
 
 
 def get_jobs_for_participant(
-    user, participant, search_query, keywords=None, date_posted=None
+    user_id, participant_id, search_query, keywords=None, date_posted=None
 ):
     if date_posted == "all":
         date_posted = None
@@ -286,13 +286,13 @@ def get_jobs_for_participant(
             },
         )
         save_job_search(
-            user, participant, scraped_jobs, search_query, keywords, date_posted
+            user_id, participant_id, scraped_jobs, search_query, keywords, date_posted
         )
     except PlaywrightTimeoutError as ex:
         # scrape has unexpectedly failed
         # save the empty job search and re-raise the exception
         # so django-q marks the task as failed
-        save_job_search(user, participant, [], search_query, keywords, date_posted)
+        save_job_search(user_id, participant_id, [], search_query, keywords, date_posted)
         raise ex
 
 
@@ -300,6 +300,7 @@ def q_get_jobs_for_participant(
     *args,
     **kwargs,
 ):
+    # send task to cloud tasks
     return async_task(
         "cold_apply.jobs.get_jobs_for_participant",
         *args,
