@@ -1,18 +1,9 @@
-html {
-  position: relative;
-  height: 100%
-}
-
-body {
-  height: 100%;
-}
-
 .htmx-indicator {
-  opacity: 0
+  opacity: 0;
 }
 
 .htmx-indicator.htmx-request {
-  opacity: 1
+  opacity: 1;
 }
 
 .anchor-tag {
@@ -23,7 +14,6 @@ body {
   cursor: pointer;
   /* Changes the cursor to a pointer on hover */
 }
-
 
 .footer {
   position: absolute;
@@ -85,18 +75,17 @@ body {
   margin-left: -20px;
 }
 
-.nav-sidebar>li>a {
+.nav-sidebar > li > a {
   padding-right: 20px;
   padding-left: 20px;
 }
 
-.nav-sidebar>.active>a,
-.nav-sidebar>.active>a:hover,
-.nav-sidebar>.active>a:focus {
+.nav-sidebar > .active > a,
+.nav-sidebar > .active > a:hover,
+.nav-sidebar > .active > a:focus {
   color: #fff;
   background-color: #428bca;
 }
-
 
 /*
  * Main content

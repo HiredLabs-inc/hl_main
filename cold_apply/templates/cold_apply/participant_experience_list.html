@@ -38,7 +38,7 @@
             <br>
             <a href="{% url 'cold_apply:delete_experience' exp.id %}" onclick="return confirm('Delete experience?')">Delete Experience</a>
             {%  if bullets %}
-                <ul id="bullets_list_{{exp.id}}">
+                <ul id="bullets_list_{{exp.id}}" class="list-disc pl-3 space-y-1">
                 {%  for bullet in bullets %}
                     {% if bullet.experience == exp %}
                         {% include 'cold_apply/partials/bullet_detail_li.html' with show_skill_badges=True %}

@@ -1,10 +1,111 @@
 {% extends 'base.html' %}
 {% load form_helpers %}
 {% block body %}
+{% include 'modal.html' %}
+<div class="w-full sticky top-0 shadow-sm z-20 border-b border-gray-200 divide-y bg-white">
+    <div>
+        <div class=" container mx-auto p-2 flex justify-between  items-center">
+            <div>
+                Staff Area
+            </div>
+            <div>
+                <div x-data="{ isActive: false }" class="relative">
+                    <div
+                    class="inline-flex items-center overflow-hidden rounded-md bg-white"
+                    >
+                
+                    <button
+                        x-on:click="isActive = !isActive"
+                        class="h-full flex items-center space-x-2 text-sm p-2 text-gray-600 hover:bg-gray-50 hover:text-gray-700"
+                    >
+                        Menu
+                        <span class="sr-only">Menu</span>
+                        <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-4 w-4"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        >
+                        <path
+                            fill-rule="evenodd"
+                            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                            clip-rule="evenodd"
+                        />
+                        </svg>
+                    </button>
+                    </div>
+                
+                    <div
+                    class="absolute end-0 z-10 mt-2 w-56 divide-y divide-gray-100 rounded-md border border-gray-100 bg-white shadow-lg"
+                    role="menu"
+                    x-cloak
+                    x-transition
+                    x-show="isActive"
+                    x-on:click.away="isActive = false"
+                    x-on:keydown.escape.window="isActive = false"
+                    >
+                    <div class="p-2">
+                            {% if user.is_authenticated %}
+                                <strong class="block p-2 text-xs font-medium uppercase text-gray-400">
+                                    Toolbox
+                                </strong>
+                                    {% if perms.cold_apply %}
+                                        <a class="block rounded-lg px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-700" href="{% url 'cold_apply:index' %}">Cold Apply</a>
+                                    {% endif %}
+                                    {% if perms.rates %}
+                                        <a class="block rounded-lg px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-700" href="{% url 'rates:index' %}">World Rates</a>
+                                    {% endif %}
+                                    <a class="block rounded-lg px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-700" href="{% url 'home' %}">View Public Site</a>
+                                    {% if user.is_staff %}
+                                        <a class="block rounded-lg px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-700" href="{% url 'admin:index' %}">Admin Panel</a>
+                                    {% endif %}
+                                    <strong class="block p-2 text-xs font-medium uppercase text-gray-400">
+                                    Settings
+                                </strong>
+                                    <a class="block rounded-lg px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-700" href="{% url 'userprofile:logout' %}">Logout</a>
+                                    <a class="block rounded-lg px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-700" href="{% url 'userprofile:profile_view' %}">View Profile</a>
+                                    <a class="block rounded-lg px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-700"  href="{% url 'userprofile:password_change' %}">Change Password</a>
+                            {% else %}
+                                <li><a href="{% url 'userprofile:login' %}">Login</a></li>
+                            {% endif %}
+                    </div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    <div>
+        <nav class="flex container mx-auto p-2 text-sm" aria-label="Breadcrumb">
+            <ol class="inline-flex items-center space-x-1 md:space-x-3 overflow-x-scroll">
+                {% block breadcrumbs %}
+                {% endblock breadcrumbs %}
+            </ol>
+        </nav>
+    </div>
+</div>
+<div class="flex">
+    <div class="container mx-auto px-2 pt-6 pb-20">
+        {% block content %}
+        {% endblock content %}
+        {% wrapper_if_block_has_content navigation %}
+        <hr class="my-5">
+        <div class="row">
+            <h3>Navigation</h3>
+            <div class="col">
+                {% block navigation %}
+                {% endblock navigation %}
+            </div>
+            
+            
+        </div>
+        {% endwrapper %}
+    </div>
+</div>
 
+{% endblock body %}
 
-
-
+{% comment %} 
 <div class="d-flex flex-column h-100">
 {% block navbar %}
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
@@ -18,37 +119,7 @@
         </button>
         <div class="collapse navbar-collapse" id="main-navbar">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                {% if user.is_authenticated %}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" id="toolbox-dropdown" data-bs-toggle="dropdown" href="#"
-                        role="button" aria-haspopup="true" aria-expanded="false">Toolbox
-                        </a>
-                        <ul class="dropdown-menu">
-                            {% if perms.cold_apply %}
-                                <li><a class="dropdown-item" href="{% url 'cold_apply:index' %}">Cold Apply</a></li>
-                            {% endif %}
-                            {% if perms.rates %}
-                                <li><a class="dropdown-item" href="{% url 'rates:index' %}">World Rates</a></li>
-                            {% endif %}
-                            <li><a class="dropdown-item" href="{% url 'home' %}">View Public Site</a></li>
-                            {% if user.is_staff %}
-                                <li><a class="dropdown-item" href="{% url 'admin:index' %}">Admin Panel</a></li>
-                            {% endif %}
-                        </ul>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" id="toolbox-dropdown" data-bs-toggle="dropdown" href="#"
-                        role="button" aria-haspopup="true" aria-expanded="false">Settings
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="{% url 'userprofile:logout' %}">Logout</a></li>
-                            {#                <li><a href="{% url 'userprofile:profile_view' %}">View Profile</a></li>#}
-                            {#                  <li><a href="{% url 'userprofile:password_change' %}">Change Password</a></li>#}
-                        </ul>
-                    </li>
-                {% else %}
-                    <li><a href="{% url 'userprofile:login' %}">Login</a></li>
-                {% endif %}
+                
             </ul>
             <form class="navbar-form navbar-right">
                 {#            <input type="text" class="form-control" placeholder="Search...">#}
@@ -71,18 +142,7 @@
     {% block content %}
     {% endblock content %}
 
-    {% wrapper_if_block_has_content navigation %}
-    <hr>
-    <div class="row">
-        <h3>Navigation</h3>
-        <div class="col">
-            {% block navigation %}
-            {% endblock navigation %}
-        </div>
-        
-        
-    </div>
-    {% endwrapper %}
+    
     {% block resume_checkout_navigation %}
         {% if request.GET.checkout is not None %}
             <div>
@@ -127,4 +187,4 @@
 </script>
 {% endblock javascript %}
 
-
+ {% endcomment %}

@@ -4,8 +4,14 @@
 @tailwind components;
 @tailwind utilities;
 
-a {
+a:not(.btn) {
   @apply hover:underline text-blue-600;
+}
+
+@layer base {
+  html {
+    font-family: "Inter", sans-serif;
+  }
 }
 
 .htmx-indicator {
@@ -14,4 +20,109 @@ a {
 
 .htmx-indicator.htmx-request {
   display: inline !important;
+}
+
+.btn {
+  @apply text-base transition-all active:scale-90 
+          px-5 py-[9px] rounded-lg inline-flex items-center 
+          justify-center hover:brightness-110;
+}
+
+.btn-primary {
+  @apply bg-blue-500 hover:bg-blue-700 text-white;
+}
+
+.btn-secondary {
+  @apply bg-gray-500 hover:bg-gray-700 text-white;
+}
+
+.btn-success {
+  @apply bg-green-500 hover:bg-green-700 text-white;
+}
+
+.btn-danger {
+  @apply bg-red-500 hover:bg-red-700 text-white;
+}
+
+.btn-warning {
+  @apply bg-yellow-500 hover:bg-yellow-700 text-white;
+}
+
+.btn-info {
+  @apply bg-teal-500 hover:bg-teal-700 text-white;
+}
+
+.btn-light {
+  @apply bg-gray-100 hover:bg-gray-300 text-gray-800;
+}
+
+.btn-dark {
+  @apply bg-gray-700 hover:bg-gray-900 text-white;
+}
+
+.btn-outline-primary {
+  @apply !py-[7px] bg-transparent hover:bg-blue-500 text-blue-700 hover:text-white border-2 border-blue-500 hover:border-transparent;
+}
+
+.btn-outline-secondary {
+  @apply !py-[7px] bg-transparent hover:bg-gray-500 text-gray-700 hover:text-white border-2 border-gray-500 hover:border-transparent;
+}
+
+.btn-outline-success {
+  @apply !py-[7px] bg-transparent hover:bg-green-500 text-green-700 hover:text-white border-2 border-green-500 hover:border-transparent;
+}
+
+.btn-outline-danger {
+  @apply !py-[7px] bg-transparent hover:bg-red-500 text-red-700 hover:text-white border-2 border-red-500 hover:border-transparent;
+}
+
+.btn-outline-warning {
+  @apply !py-[7px] bg-transparent hover:bg-yellow-500 text-yellow-700 hover:text-white border-2 border-yellow-500 hover:border-transparent;
+}
+
+.btn-outline-info {
+  @apply !py-[7px] bg-transparent hover:bg-teal-500 text-teal-700 hover:text-white border-2 border-teal-500 hover:border-transparent;
+}
+
+.btn-outline-light {
+  @apply !py-[7px] bg-transparent hover:bg-gray-100 text-gray-700 hover:text-white border-2 border-gray-100 hover:border-transparent;
+}
+
+.btn-outline-dark {
+  @apply !py-[7px] bg-transparent hover:bg-gray-700 text-gray-700 hover:text-white border-2 border-gray-700 hover:border-transparent;
+}
+
+.td {
+  @apply p-2 text-sm text-gray-700;
+}
+.td-collapse {
+  @apply md:before:content-none before:content-[attr(data-cell)'_'] before:capitalize before:font-bold 
+           grid grid-cols-[12ch_auto] md:table-cell p-2 text-sm text-gray-700;
+}
+.tr {
+  @apply odd:bg-gray-100 border-t border-gray-200;
+}
+
+.link {
+  @apply text-blue-500 hover:text-blue-700 hover:underline;
+}
+
+.auth-link {
+  @apply text-sm font-medium text-gray-500 hover:text-gray-700 underline;
+}
+
+.th {
+  @apply text-left p-3 text-sm font-semibold tracking-wide md:table-cell;
+}
+
+h3 {
+  @apply text-xl font-bold mt-5 mb-3;
+}
+
+h1 {
+  @apply text-2xl font-bold mb-4;
+}
+
+h5 {
+  @apply font-bold mb-3 mt-5;
 }

@@ -10,200 +10,209 @@
 {% endblock breadcrumbs %}
 
 {% block content %}
-
-<h3 class="mb-2">Configure Tailored Resume Options</h3>
-<p>Select resume template, which sections and bullet points you want to include and any additional template specific format options.</p>
-<hr>
-{% comment %} sections= {% endcomment %}
-<h5 class="fw-bolder mb-4">1. Resume Template</h5>
-<form action="{% url 'cold_apply:tailored_resume' job.id %}" method="get" 
-    id="resume_form"
-    x-data="{ 
-        bullets_content: '',
-        resume_template: '',
-        preview_img_paths: {
-            {% for value, label in form.resume_template.field.choices %}
-                {{value}}:'{% static 'images/resume_previews/resume_'|add:value|add:'.png' %}',
-            {% endfor %}    
-        },
-        resume_template_sections,
-        sections:[],
-        skills:[],
-        extra_skills: []
-    }
-    "
-    x-init="
-        resume_template=$el['resume_template'].value; 
-        bullets_content=$el['bullets_content'].value;
-        sections=Array.from(document.querySelectorAll('input[name=\'sections\']:checked')).map(s => s.value);
-        skills=Array.from(document.querySelectorAll('input[name=\'skills\']:checked')).map(s => s.value);
-        extra_skills=Array.from(document.querySelectorAll('input[name=\'extra_skills\']:checked')).map(s => s.value);
-        window.history.pushState({}, '', window.location.pathname);
-    "
->
-{% csrf_token %}
-<input type="hidden" name="checkout" value="{{request.path}}">
-<div class="mb-4 row">
-    <div class="col-3">
-        <ul class="list-group" style="cursor: pointer;">
-            {% for choice_value, choice_label in form.resume_template.field.choices  %}
-            <li class="list-group-item  list-group-item-action" 
-            @click="resume_template='{{choice_value}}'" 
-            :class="{'active': resume_template=='{{choice_value}}'}" style="cursor: pointer;">
-              <label for="{{ form.resume_template.auto_id }}_{{ choice_value }}"  style="cursor: pointer;">
-                  <input   
-                  type="radio" 
-                  id="{{ form.resume_template.auto_id }}_{{ choice_value }}" 
-                  name="{{ form.resume_template.html_name }}" 
-                  value="{{ choice_value }}"
-                  {% if choice_value == form.resume_template.value %}checked{% endif  %}  
-                  x-model="resume_template"  
-                  style="cursor: pointer;">
-             
-                  {{choice_label}}
-                  <div>
-                    <small :class="resume_template=='{{choice_value}}' ? 'text-white': 'text-muted'">{{form.resume_template_sections|dict_key:choice_value}}</small>
-                  </div>
-              </label>
-          </li>
-          {% endfor %}
-        </ul>
-
-</div>
-        
-    <div class="col-9">
-        <img :src="preview_img_paths[resume_template]" 
-        alt="" 
-        style="height: 450px;box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);" 
-        class="border border-gray rounded"
-        >
-    </div>
-</div>
-<hr>
-<div class="mb-4">
-    <h5 class="fw-bolder mb-4">2. Select Template Sections</h5>
-    <p>Select which sections you wish to include from the final resume. </p>
-    <div> 
-        {% for choice in form.sections %}
-        <div x-show="resume_template_sections[resume_template].includes('{{choice.data.value}}')">
-            <label for="{{choice.id_for_label}}">
-                {{choice.attrs}}
-                <input type="checkbox" 
-                        name="sections" 
-                        id="id_sections_{{forloop.counter0}}" 
-                        value="{{choice.data.value}}" 
-                        {% if choice.data.attrs.checked %}checked{% endif %}
-                        x-model="sections"
-                >
-                {{choice.choice_label}}
-            </label>
-        </div>
-        
-            
-        {% endfor %}
-    </div>
-    {% comment %} {{form.sections|add_wrapper_attributes:"x-show:"}} {% endcomment %}
-    <p class="text-danger fw-semibold mt-3">Removing too many sections may break the resume layout.</p>
-    
-</div>
-<hr>
-<h5 class="fw-bolder">3. Bullet Points Content</h5>
-<p>Select what the main body of the resume will contain.</p>
-<div class="mb-4 row" >
-    <div class="col-3">
-        {% include 'inputs/alpine_list_radio_select.html' with form_field=form.bullets_content alpine_selected_var_name='bullets_content' %}
-    </div>
-    <div class="col-9 border rounded pt-2">
-        <div x-show="bullets_content=='chronological'">
-            <p class="fw-bolder mb-2">Chronological Experience</p>
-            <p>
-            Resume will list experiences in chronological order with a list of bullet point details under each.
-            </p>
-            
-            <p>Bullet points are sorted according to weighting of relevance to the job's description.</p>
-        </div>
-        <div x-show="bullets_content=='skills'">
-            <p class="fw-bolder mb-2">Top Skills</p>
-            <p>
-                Resume will list applicant's skills as section headings, bullet points that have been tagged as demonstrating a skill will be listed below
-                each skill heading. 
-            </p>
-            <p>Bullet points are sorted according to weighting of relevance to the job's description. If a bullet point is tagged as multiple skills, it will only be shown once under the first skill found.
-                
-            </p>
-            <p> 
-                <strong>If you have also selected the seperate "skills" section in your chosen template, this will only contain skills that have no been listed here in the main content section to 
-                    avoid duplication.
-                </strong>
-            </p>
-
-            
-        </div>
-    </div>
-    <div class="col mt-4">
-        
-        <p class="fw-bolder"  style="font-size: 1.1rem;">3.1 Configure specific skills or experiences</p>
-        <div x-show="bullets_content==='chronological'">
-            <p>Experiences Found: {{form.experiences.field.queryset.count}} 
-                (<a href="#" @click.prevent="const form = document.getElementById('resume_form'); 
-                            form.action='{% url 'cold_apply:participant_experience_list' job.participant.id %}'; 
-                            form.submit()"
-                >configure experiences</a>)</p>
-            <div>
-                {{form.experiences}}
-            </div>
-            
-        </div>
-        <div x-show="bullets_content==='skills'">
-            <p>Skills Found: {{form.skills.field.queryset.count}} 
-                (<a href="#" @click.prevent="const form = document.getElementById('resume_form'); 
-                            form.action='{% url 'cold_apply:participant_experience_by_skill_list' job.participant.id %}'; 
-                            form.submit()"
-                >configure skills</a>)</p>
-            
-            <div>
-                {{form.skills|add_attributes:"x-model:skills,@change:()=>extra_skills=extra_skills.filter(s => !skills.includes(s))"}}
-            </div>
-            
-        </div>
-            <div class="mt-4" x-show="['skills', 'certifications'].some(s => sections.includes(s))">
-                <p class="fw-bolder" style="font-size: 1.1rem;">3.2 Configure extra sections</p>
-                <div class="row">
-                    <div x-show="sections.includes('certifications')" class="mb-3">
-                        <p  class="fw-semibold mb-2">Awards and Certifications</p>
-                        {{form.certifications}}
-                    </div>
-                    <div x-show="sections.includes('skills')"  class="mb-3">
-                        <p class="fw-semibold mb-2">Extra Skills</p>
-                        {% for choice in form.extra_skills %}
-                            <div x-show="!skills.includes('{{choice.data.value}}')">
-                            
-                                <label for="{{choice.id_for_label}}">
-                                    <input type="checkbox" 
-                                            name="extra_skills" 
-                                            id="id_extra_skills_{{forloop.counter0}}" 
-                                            value="{{choice.data.value}}" 
-                                            {% if choice.data.attrs.checked %}checked{% endif %}
-                                            x-model="extra_skills"
-                                    >
-                                    {{choice.choice_label}}
-                                </label>
-                            </div>   
-                        {% endfor %}
-                    </div>
-                </div>
-                <div>
-                    
-                </div>
-            </div>
-            
-        
-    </div>
-    </div>
-    {{form.preview}}
+<div class="max-w-4xl">
+    <h1>Configure Tailored Resume Options</h1>
+    <p>Select resume template, which sections and bullet points you want to include and any additional template specific format options.</p>
     <hr>
-    <div class="rol">
-        <div class="col">
+    {% comment %} sections= {% endcomment %}
+    <h5 class="font-bold mb-4">1. Resume Template</h5>
+    <form action="{% url 'cold_apply:tailored_resume' job.id %}" method="get" 
+        id="resume_form"
+        x-data="{ 
+            bullets_content: '',
+            resume_template: '',
+            preview_img_paths: {
+                {% for value, label in form.resume_template.field.choices %}
+                    {{value}}:'{% static 'images/resume_previews/resume_'|add:value|add:'.png' %}',
+                {% endfor %}    
+            },
+            resume_template_sections,
+            sections:[],
+            skills:[],
+            extra_skills: []
+        }
+        "
+        x-init="
+            resume_template=$el['resume_template'].value; 
+            bullets_content=$el['bullets_content'].value;
+            sections=Array.from(document.querySelectorAll('input[name=\'sections\']:checked')).map(s => s.value);
+            skills=Array.from(document.querySelectorAll('input[name=\'skills\']:checked')).map(s => s.value);
+            extra_skills=Array.from(document.querySelectorAll('input[name=\'extra_skills\']:checked')).map(s => s.value);
+            window.history.pushState({}, '', window.location.pathname);
+        "
+    >
+    {% csrf_token %}
+    <input type="hidden" name="checkout" value="{{request.path}}">
+
+
+    <div class="mb-4 grid grid-cols-6">
+        <div class="col-span-2">
+            <fieldset class="flex flex-col gap-3 pr-3">
+                <legend class="sr-only">Template</legend>
+                {% for choice_value, choice_label in form.resume_template.field.choices %}
+                <div>
+                <input
+                    type="radio"
+                    name="{{ form.resume_template.html_name }}"
+                    value="{{ choice_value }}"
+                    id="{{ form.resume_template.auto_id }}_{{ choice_value }}"
+                    class="peer hidden"
+                    {% if choice_value == form.resume_template.value %}checked{% endif  %} 
+                    x-model="resume_template" 
+                />
+                    
+                <label
+                    for="{{ form.resume_template.auto_id }}_{{ choice_value }}"
+                    class=" flex cursor-pointer items-center rounded-md 
+                            border border-gray-300 bg-white px-3 py-2 text-gray-900 
+                            hover:border-gray-600 peer-checked:border-blue-500 
+                            peer-checked:bg-blue-500 peer-checked:text-white"
+                > 
+                <div class="text-sm font-medium flex flex-col">
+                    <div>
+                        {{choice_label}}
+                    </div>
+                    <div> <small>{{form.resume_template_sections|dict_key:choice_value}}</small></div>
+                </div>
+                </label>
+                </div>
+                {% endfor %}
+            </fieldset>
+
+        </div>
+            
+        <div class="col-span-4">
+            <img :src="preview_img_paths[resume_template]" 
+            alt="" 
+            style="height: 450px;box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);" 
+            class="border border-gray rounded"
+            >
+        </div>
+    </div>
+    <hr>
+    <div class="mb-4">
+        <h5 class="fw-bolder mb-4">2. Select Template Sections</h5>
+        <p>Select which sections you wish to include from the final resume. </p>
+        <div> 
+            {% for choice in form.sections %}
+            <div x-show="resume_template_sections[resume_template].includes('{{choice.data.value}}')">
+                <label for="{{choice.id_for_label}}">
+                    {{choice.attrs}}
+                    <input type="checkbox" 
+                            name="sections" 
+                            id="id_sections_{{forloop.counter0}}" 
+                            value="{{choice.data.value}}" 
+                            {% if choice.data.attrs.checked %}checked{% endif %}
+                            x-model="sections"
+                    >
+                    {{choice.choice_label}}
+                </label>
+            </div>
+            
+                
+            {% endfor %}
+        </div>
+        {% comment %} {{form.sections|add_wrapper_attributes:"x-show:"}} {% endcomment %}
+        <p class="text-danger fw-semibold mt-3">Removing too many sections may break the resume layout.</p>
+        
+    </div>
+    <hr>
+    <h5>3. Bullet Points Content</h5>
+    <p class="mb-3">Select what the main body of the resume will contain.</p>
+    <div class="mb-4 grid grid-cols-6" >
+        <div class="col-span-2">
+            {% include 'inputs/alpine_list_radio_select.html' with form_field=form.bullets_content alpine_selected_var_name='bullets_content' %}
+        </div>
+        <div class="col-span-4 border rounded-md p-2">
+            <div x-show="bullets_content=='chronological'">
+                <p class="fw-bolder mb-2  space-y-3">Chronological Experience</p>
+                <p>
+                Resume will list experiences in chronological order with a list of bullet point details under each.
+                </p>
+                
+                <p>Bullet points are sorted according to weighting of relevance to the job's description.</p>
+            </div>
+            <div x-show="bullets_content=='skills'" class="space-y-3">
+                <p class="fw-bolder mb-2">Top Skills</p>
+                <p>
+                    Resume will list applicant's skills as section headings, bullet points that have been tagged as demonstrating a skill will be listed below
+                    each skill heading. 
+                </p>
+                <p>Bullet points are sorted according to weighting of relevance to the job's description. If a bullet point is tagged as multiple skills, it will only be shown once under the first skill found.
+                    
+                </p>
+                <p> 
+                    <strong>If you have also selected the seperate "skills" section in your chosen template, this will only contain skills that have no been listed here in the main content section to 
+                        avoid duplication.
+                    </strong>
+                </p>
+
+                
+            </div>
+        </div>
+        <div class="col-span-6 py-5">
+            
+            <p class="fw-bolder"  style="font-size: 1.1rem;">3.1 Configure specific skills or experiences</p>
+            <div x-show="bullets_content==='chronological'">
+                <p>Experiences Found: {{form.experiences.field.queryset.count}} 
+                    (<a href="#" @click.prevent="const form = document.getElementById('resume_form'); 
+                                form.action='{% url 'cold_apply:participant_experience_list' job.participant.id %}'; 
+                                form.submit()"
+                    >configure experiences</a>)</p>
+                <div>
+                    {{form.experiences}}
+                </div>
+                
+            </div>
+            <div x-show="bullets_content==='skills'">
+                <p>Skills Found: {{form.skills.field.queryset.count}} 
+                    (<a href="#" @click.prevent="const form = document.getElementById('resume_form'); 
+                                form.action='{% url 'cold_apply:participant_experience_by_skill_list' job.participant.id %}'; 
+                                form.submit()"
+                    >configure skills</a>)</p>
+                
+                <div>
+                    {{form.skills|add_attributes:"x-model:skills,@change:()=>extra_skills=extra_skills.filter(s => !skills.includes(s))"}}
+                </div>
+                
+            </div>
+                <div class="mt-4" x-show="['skills', 'certifications'].some(s => sections.includes(s))">
+                    <p class="fw-bolder" style="font-size: 1.1rem;">3.2 Configure extra sections</p>
+                    <div class="row">
+                        <div x-show="sections.includes('certifications')" class="mb-3">
+                            <p  class="fw-semibold mb-2">Awards and Certifications</p>
+                            {{form.certifications}}
+                        </div>
+                        <div x-show="sections.includes('skills')"  class="mb-3">
+                            <p class="fw-semibold mb-2">Extra Skills</p>
+                            {% for choice in form.extra_skills %}
+                                <div x-show="!skills.includes('{{choice.data.value}}')">
+                                
+                                    <label for="{{choice.id_for_label}}">
+                                        <input type="checkbox" 
+                                                name="extra_skills" 
+                                                id="id_extra_skills_{{forloop.counter0}}" 
+                                                value="{{choice.data.value}}" 
+                                                {% if choice.data.attrs.checked %}checked{% endif %}
+                                                x-model="extra_skills"
+                                        >
+                                        {{choice.choice_label}}
+                                    </label>
+                                </div>   
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div>
+                        
+                    </div>
+                </div>
+                
+            
+        </div>
+        </div>
+        {{form.preview}}
+        <hr>
+        <div class="space-y-3">
             <h5 class="fw-bold">4. Select Output Format</h5>
             <div class="mb-3">
                 <label for="id_no_colors">
@@ -224,17 +233,11 @@
                                     $el.form.submit()"  
                     >Generate PDF Resume</button>
         </div>
-    </div>
-   <div class="py-4">
-    
-
-</form>
-
-    
+    </form>
+    <script>
+        const resume_template_sections = JSON.parse('{{resume_template_sections_json|safe}}')
+    </script>
 </div>
-<script>
-    const resume_template_sections = JSON.parse('{{resume_template_sections_json|safe}}')
-</script>
 {% endblock content %}
 {% block resume_checkout_navigation %}
 {% endblock resume_checkout_navigation %}

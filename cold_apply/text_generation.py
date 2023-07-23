@@ -26,8 +26,8 @@ def generate_bullet(
     """Generate a bullet point for a job description."""
     prompt = (
         f"Using between 25 and 40 words, no personal pronouns, and no text decoration."
-        "Write only one plain text bullet point for a CV under this "
-        "work experience heading:\n{experience.position.title}."
+        " Write five bullet points for a CV under this "
+        f"work experience heading:\n{experience.position.title}."
     )
 
     # tailored for this job description: {job_description}}"
@@ -76,6 +76,7 @@ def generate_text(prompt: str, language_model="text-bison@001"):
         prompt,
         **parameters,
     )
+    print("----------------------")
     print("Response:", response.text)
 
     return response.text

@@ -6,87 +6,91 @@
 {% endblock breadcrumbs %}
 
 {% block content %}
-<div class="row">
-    <div>
-        <div class="d-flex align-items-center">
-            <h3 class="me-3">{{ object.first_name }} {{object.last_name}}</h3>
-            <div>
-                {% if object.dnc %}
-                <span class="badge rounded-pill text-bg-danger fs-6">Do Not Contact</span>
-                {% else %}
-                <span class="badge rounded-pill text-bg-success  fs-6">Contactable</span>
-                {% endif %}
-            </div>
-        </div>
-
-        <h5>
-            {{object.location.city}}, {{object.location.state.abbreviation}}
-        </h5>
-        <h5>
-            {% if object.veteran %}
-            Veteran
+<div>
+    <div class="flex items-center">
+        <h1 class="text-2xl font-bold mr-2">{{ object.first_name }} {{object.last_name}}</h1>
+        <div>
+            {% if object.dnc %}
+            <span class="rounded-md bg-red-300 text-red-700 p-1">Do Not Contact</span>
             {% else %}
-            Not a Veteran
+            <span class="rounded-md bg-green-300 text-green-700  p-1">Contactable</span>
             {% endif %}
-        </h5>
-        <p class="mb-0">{{ object.phone }}</p>
-        <p>{{ object.email }}</p>
-        <hr>
-        <div class="mb-3">
-            <h4>Summary</h4>
-            <div class="row">
-                <div class="col-3">Latest Work Experience:</div>
-                <div class="col-9 text-muted">{{ latest_experience|default:"No data"}}</div>
-            </div>   
-            <div class="row">
-                <div class="col-3">Highest Education:</div>
-                <div class="col-9 text-muted">{{highest_edu}}</div>
-            </div>   
-            <div class="row">
-                <div class="col-3">Uploaded Resume:</div>
-                <div class="col-9 text-muted"><a href="{{ MEDIA_PREFIX }}{{ object.uploaded_resume }}" target="_blank">{{ object.uploaded_resume_title }}</a></div>
-            </div>   
-            <div class="row">
-                <div class="col-3">Current Phase:</div>
-                <div class="col-9 text-muted">{{ object.current_step.phase.title }}</div>
-            </div>   
-            <div class="row">
-                <div class="col-3">Current Step:</div>
-                <div class="col-9 text-muted">{{ object.current_step.title }}</div>
-            </div>   
         </div>
-        <p>
-            <a href="{% url 'cold_apply:participant_experience_list' object.id %}">See All Education and Experience</a>
-        </p>
     </div>
+
+    <h5>
+        {{object.location.city}}, {{object.location.state.abbreviation}}
+    </h5>
+    <h5>
+        {% if object.veteran %}
+        Veteran
+        {% else %}
+        Not a Veteran
+        {% endif %}
+    </h5>
+    <p class="mb-0">{{ object.phone }}</p>
+    <p>{{ object.email }}</p>
+    <hr class="my-5">
+    <h4 class="text-xl font-bold mb-4">Summary</h4>
+    <div class="mb-3 grid grid-cols-6">
+        <div class="col-span-1">Latest Work Experience:</div>
+        <div class="col-span-5 text-gray-600">{{ latest_experience|default:"No data"}}</div>
+        <div class="col-span-1">Highest Education:</div>
+        <div class="col-span-5 text-gray-600">{{highest_edu}}</div>
+        <div class="col-span-1">Uploaded Resume:</div>
+        <div class="col-span-5 text-gray-600"><a href="{{ MEDIA_PREFIX }}{{ object.uploaded_resume }}" target="_blank">{{ object.uploaded_resume_title }}</a></div>
+        <div class="col-span-1">Current Phase:</div>
+        <div class="col-span-5 text-gray-600">{{ object.current_step.phase.title }}</div>
+        <div class="col-span-1">Current Step:</div>
+        <div class="col-span-5 text-gray-600">{{ object.current_step.title }}</div>
+    </div>
+    <p>
+        <a href="{% url 'cold_apply:participant_experience_list' object.id %}">See All Education and Experience</a>
+    </p>
 </div>
-<hr>
-<div class="row">
-    <div>
-        <div class="d-flex mb-3">
-            <h4>Jobs</h4>
+<hr class="my-5">
+<div class="">
+    <div class="flex mb-3 justify-between">
+        <h4 class="text-xl font-bold">Jobs</h4>
+        <div class="flex space-x-2">
             <div class="ms-auto me-2">
                 <a class="btn btn-primary" href="{% url 'cold_apply:create_job' object.id %}">
                                 <i class="bi bi-plus-lg"></i>
                                 Add a Job</a>
             </div>
-            
+        
             <div>
                 <a href="{% url 'cold_apply:find_new_jobs' object.id %}" class="btn btn-primary">
                     <i class="bi bi-search"></i> Search for new jobs 
                 </a>
             </div>
         </div>
-        <div class="border accordion accordion-flush" id="jobs-panel-accordion">
-            
-            <div class="accordion-item"  id="new_jobs">
-              <h2 class="accordion-header" id="jobs-panel-new-jobs-heading">
-                <button class="accordion-button fw-bolder {% if not jobs.new.count %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#jobs-panel-new-jobs" aria-expanded="true" aria-controls="jobs-panel-new-jobs">
-                  New Jobs ({{ jobs.new.count }})
-                </button>
-              </h2>
-              <div id="jobs-panel-new-jobs" class="accordion-collapse collapse {% if jobs.new.count %}show{% endif %}" aria-labelledby="jobs-panel-new-jobs-heading">
-                <div class="accordion-body">
+    </div>
+    <div class="space-y-5">
+        <details class="group border" {% if jobs.new.count %}open{% endif %}>
+            <summary class="group-open:font-bold flex cursor-pointer items-center justify-between rounded-lg px-4 py-2 hover:bg-gray-100 ">
+                <span class=""> New Jobs ({{ jobs.new.count }})  </span>
+
+                <span
+                class="shrink-0 transition duration-300 group-open:-rotate-180"
+                >
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-5 w-5"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                >
+                    <path
+                    fill-rule="evenodd"
+                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                    clip-rule="evenodd"
+                    />
+                </svg>
+                </span>
+                
+                
+            </summary>
+            <div class="p-4 group-open:border-t ">
                 {% if request.session.task_id %}
                     <div hx-get="{% url 'cold_apply:task_status' %}" 
                         hx-trigger="load"
@@ -101,107 +105,155 @@
                     No new jobs available. When new jobs are available, they will appear here and you can chose to add them to your open jobs list or remove them.
                 
                 {% endif %}
-                </div>
-              </div>
             </div>
-            <div class="accordion-item">
-              <h2 class="accordion-header" id="jobs-panel-open-jobs-heading">
-                <button class="accordion-button  fw-bolder {% if not jobs.open.count %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#jobs-panel-open-jobs" aria-expanded="false" aria-controls="jobs-panel-open-jobs">
-                  Open Jobs ({{jobs.open.count}})
-                </button>
-              </h2>
-              <div id="jobs-panel-open-jobs" class="accordion-collapse collapse {% if jobs.open.count %}show{% endif %}" aria-labelledby="jobs-panel-open-jobs-heading">
-                <div class="accordion-body">
-                    <table class="table table-striped" style="table-layout: fixed;">
-                        <thead>
-                            <tr>
-                                <th colspan="2">Title</th>
-                                <th>Company</th>
-                                <th>Location</th>
-                                <th>Salary</th>
-                                <th>Status</th>
-                                <th>Posting</th>
-                                <th>Posted At</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for job in jobs %}
+        </details>
+        <details class="group border" {% if jobs.open.count %}open{% endif %}>
+            <summary  class="group-open:font-bold flex cursor-pointer items-center justify-between rounded-lg px-4 py-2 hover:bg-gray-100 ">
+                Open Jobs ({{jobs.open.count}})
+                <span
+                class="shrink-0 transition duration-300 group-open:-rotate-180"
+                >
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-5 w-5"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                >
+                    <path
+                    fill-rule="evenodd"
+                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                    clip-rule="evenodd"
+                    />
+                </svg>
+            </summary>
+            <div class="p-4 group-open:border-t ">
+                <table class="table w-full border" style="table-layout: fixed;">
+                    <thead>
+                        <tr>
+                            <th class="th" colspan="2">Title</th>
+                            <th class="th">Company</th>
+                            <th class="th">Location</th>
+                            <th class="th">Salary</th>
+                            <th class="th">Status</th>
+                            <th class="th">Posting</th>
+                            <th class="th">Posted At</th>
+                            <th class="th">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for job in jobs %}
                             {% if job.status == 'Open' %}
-                            <tr>
-                                <td  colspan="2"><a href="{% url 'cold_apply:job_detail' job.id %}">{{ job.title }}</a></td>
-                                <td>{{ job.company }}</td>
-                                <td>{{job.location|default:job.location_detail}}</td>
-                                <td>{{job.salary}}</td>
-                                <td  >
-                                    <form hx-post="{% url 'cold_apply:job_status_update_modal' job.id %}" hx-target="#modal">
-                                        <input type="hidden" name="status" value="Closed">
-                                        {{job.status}}
-                                        <button class="btn p-1 mb-1" type="submit"><i class="text-primary bi bi-caret-down-fill"></i></button>
-                                        
-                                    </form>
-                                </td>
-                                <td><a href="{{job.application_link|safe}}">{{job.application_agent}}</a></td>
-                                <td>{{job.posted_at|date:"d/m/y"}}</td>
-                                <td>
-                                    {% include 'cold_apply/partials/job_actions.html' %}
-                                </td>
-                            </tr>
+                                <tr class="tr">
+                                    <td class="td"  colspan="2"><a href="{% url 'cold_apply:job_detail' job.id %}">{{ job.title }}</a></td>
+                                    <td  class="td">{{ job.company }}</td>
+                                    <td class="td">{{job.location|default:job.location_detail}}</td>
+                                    <td class="td">{{job.salary}}</td>
+                                    <td class="td"  >
+                                        <form class="flex items-center" hx-post="{% url 'cold_apply:job_status_update_modal' job.id %}" hx-target="#modal">
+                                            <input type="hidden" name="status" value="Closed">
+                                            {{job.status}}
+                                            <button class="p-1  flex items-center" type="submit">
+                                                <svg
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    class="h-5 w-5"
+                                                    viewBox="0 0 20 20"
+                                                    fill="currentColor"
+                                                >
+                                                    <path
+                                                    fill-rule="evenodd"
+                                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                                    clip-rule="evenodd"
+                                                    />
+                                                </svg>
+                                            </button>
+                                            
+                                        </form>
+                                    </td>
+                                    <td class="td"><a href="{{job.application_link|safe}}">{{job.application_agent}}</a></td>
+                                    <td class="td">{{job.posted_at|date:"d/m/y"}}</td>
+                                    <td class="td">
+                                        <div class="flex space-x-2">
+                                            {% include 'cold_apply/partials/job_actions.html' %}
+                                        </div>
+                                    </td>
+                                </tr>
                             {% endif %}
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-              </div>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
-            <div class="accordion-item">
-              <h2 class="accordion-header" id="jobs-panel-closed-jobs-heading">
-                <button class="accordion-button fw-bolder {% if not jobs.closed.count %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#jobs-panel-closed-jobs" aria-expanded="false" aria-controls="jobs-panel-closed-jobs">
-                  Closed Jobs ({{jobs.closed.count}})
-                </button>
-              </h2>
-              <div id="jobs-panel-closed-jobs" class="accordion-collapse collapse {% if jobs.closed.count %}show{% endif %}" aria-labelledby="jobs-panel-closed-jobs-heading">
-                <div class="accordion-body">
-                    <table class="table table-striped"  style="table-layout: fixed;">
-                        <thead>
-                            <tr>
-                                <th colspan="2">Title</th>
-                                <th>Company</th>
-                                <th>Location</th>
-                                <th>Status</th>
-                                <th>Closed Reason</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for job in jobs %}
-                            {% if job.status == 'Closed' %}
-                            <tr>
-                                <td colspan="2"><a href="{% url 'cold_apply:job_detail' job.id %}">{{ job.title }}</a></td>
-                                <td>{{ job.company }}</td>
-                                <td>{{ job.location|default:job.location_detail }}</td>
-                                <td>
-                                    <form hx-post="{% url 'cold_apply:job_status_update_modal' job.id %}" hx-target="#modal">
-                                        <input type="hidden" name="status" value="Open">
-                                        {{job.status}}
-                                        <button class="btn p-1 mb-1" type="submit"><i class="text-primary bi bi-caret-up-fill"></i></button>
-                                        
-                                    </form>
-                                </td>
-                                <td>{{ job.status_reason }}</td>
-                                <td>
-                                    {% include 'cold_apply/partials/job_actions.html' %}
-                                </td>
-                            </tr>
-                            {% endif %}
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-              </div>
+        </details>
+        <details class="group border" {% if jobs.closed.count %}open{% endif %}>
+            <summary  class="group-open:font-bold flex cursor-pointer items-center justify-between rounded-lg px-4 py-2 hover:bg-gray-100 ">
+                Closed Jobs ({{jobs.closed.count}})
+                <span
+                class="shrink-0 transition duration-300 group-open:-rotate-180"
+                >
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-5 w-5"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                >
+                    <path
+                    fill-rule="evenodd"
+                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                    clip-rule="evenodd"
+                    />
+                </svg>
+            </summary>
+            <div class="p-4 group-open:border-t ">
+                <table class="table border w-full"  style="table-layout: fixed;">
+                    <thead>
+                        <tr >
+                            <th class="th" colspan="2">Title</th>
+                            <th class="th">Company</th>
+                            <th class="th">Location</th>
+                            <th class="th">Status</th>
+                            <th class="th">Closed Reason</th>
+                            <th class="th">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for job in jobs %}
+                        {% if job.status == 'Closed' %}
+                        <tr class="tr">
+                            <td class="td" colspan="2"><a href="{% url 'cold_apply:job_detail' job.id %}">{{ job.title }}</a></td>
+                            <td class="td">{{ job.company }}</td>
+                            <td class="td">{{ job.location|default:job.location_detail }}</td>
+                            <td class="td">
+                                <form class="flex items-center" hx-post="{% url 'cold_apply:job_status_update_modal' job.id %}" hx-target="#modal">
+                                    <input type="hidden" name="status" value="Open">
+                                    {{job.status}}
+                                    <button class="p-1  flex items-center rotate-180" type="submit">
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            class="h-5 w-5"
+                                            viewBox="0 0 20 20"
+                                            fill="currentColor"
+                                        >
+                                            <path
+                                            fill-rule="evenodd"
+                                            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                            clip-rule="evenodd"
+                                            />
+                                        </svg>
+                                    </button>
+                                </form>
+                            </td>
+                            <td class="td">{{ job.status_reason }}</td>
+                            <td class="td">
+                                {% include 'cold_apply/partials/job_actions.html' %}
+                            </td>
+                        </tr>
+                        {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
-          </div>
+        </details>
     </div>
+    
 </div>
 <br>
 <br>

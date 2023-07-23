@@ -4,63 +4,67 @@
     <table class="table border border-1">
         <thead>
             <tr>
-                <th>Title</th>
-                <th>Company</th>
-                <th>Location</th>
-                <th>Salary</th>
-                <th>Posting</th>
-                <th>Posted At</th>
-                <th>Uploaded</th>
-                <th  class="ps-4">Interested</th>
+                <th class="th">Title</th>
+                <th  class="th">Company</th>
+                <th  class="th">Location</th>
+                <th  class="th">Salary</th>
+                <th  class="th">Posting</th>
+                <th  class="th">Posted At</th>
+                <th  class="th">Uploaded</th>
+                <th  class="th">Interested</th>
             </tr>
         </thead>
         <tbody x-data="{open: 0, checked: []}">
             {% for job in jobs.new %}
-                    <tr style="cursor: pointer;" 
-                        :class="{'bg-light': open==={{forloop.counter}}, 'bg-success-subtle': checked.includes('{{job.id}}')}" 
-                        @click="open= open==={{forloop.counter}} ? 0 : {{forloop.counter}}"
+                    <tr  class="border-t cursor-pointer"
+                        :class="{'bg-gray-100 font-bold': open==={{forloop.counter}}}" 
+                        @click="open= open==={{forloop.counter}} ? 0 : {{forloop.counter}}; console.log(JSON.stringify(checked));"
                         >
-                        <td style="width: 20%" class="" :class="{'fw-bold': open=={{forloop.counter}}}" >
+                        <td  class="td" style="width: 20%" :class="{'fw-bold': open=={{forloop.counter}}}" >
                            
                                 {{job.title}}
                             
                         </td>
-                        <td>{{job.company_detail}}</td>
-                        <td>{{job.location_detail}}</td>
-                        <td>{{job.salary}}</td>
-                        <td><a href="{{job.application_link|safe}}">{{job.application_agent}}</a></td>
-                        <td>{{job.posted_at|date:"d/m/y"}}</td>
-                        <td>{{job.created_at|date:"d/m/y"}}</td>
-                        <td class="ps-4" x-data="{keep:false, discard: false}" @click="$event.stopPropagation()">
-                            <div class="d-flex">
-                                <div class="me-2">
+                        <td class="td">{{job.company_detail}}</td>
+                        <td class="td">{{job.location_detail}}</td>
+                        <td class="td">{{job.salary}}</td>
+                        <td class="td"><a href="{{job.application_link|safe}}">{{job.application_agent}}</a></td>
+                        <td class="td">{{job.posted_at|date:"d/m/y"}}</td>
+                        <td class="td">{{job.created_at|date:"d/m/y"}}</td>
+                        <td class="td" x-data="{keep:false, discard: false}" @click="$event.stopPropagation()">
+                            <div class="flex">
+                                <div class="mr-2">
                                     <input type="checkbox" 
-                                        class="btn-check" 
+                                        class="hidden peer" 
                                         id="job_{{job.id}}_keep" 
                                         autocomplete="off" 
                                         x-model="keep" 
                                         name="keep" 
                                         @change="keep ? discard = false : ''"
                                         value="{{job.id}}">
-                                    <label  class="btn btn-outline-success border-2 px-2" 
-                                            style="padding-top: 0.2rem; padding-bottom: 0.2rem;" 
+                                    <label  class="btn btn-outline-success  !px-3 !py-1 border-2 cursor-pointer peer-checked:bg-green-500 peer-checked:text-white" 
                                             for="job_{{job.id}}_keep">
-                                            <i style="font-size:1.2rem;" class=" bi bi-check-lg"></i>
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                        </svg>
                                     </label>
                                 </div>
                                 <div>
                                     <input type="checkbox"
-                                           class="btn-check" 
+                                           class="hidden peer" 
                                            id="job_{{job.id}}_discard" 
                                            autocomplete="off"
                                            name="discard"  
                                            x-model="discard" 
                                            @change="discard ? keep = false: ''"
                                            value="{{job.id}}">
-                                    <label class="btn btn-outline-danger border-2  px-2" 
-                                    style="padding-top: 0.2rem; padding-bottom: 0.2rem;" 
+                                    <label class="btn btn-outline-danger  !px-3 !py-1 border-2 cursor-pointer peer-checked:bg-red-500 peer-checked:text-white" 
+                        
                                             for="job_{{job.id}}_discard">
-                                        <i style="font-size:1.2rem;" class="bi bi-x-lg"></i>
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                              
                                     </label>
 
 
@@ -69,7 +73,8 @@
                         </td>
                         
                     </tr>
-                    <tr :class="checked.includes('{{job.id}}') ? 'bg-success-subtle': 'bg-light'"
+                    <tr
+                        class="bg-gray-100 text-sm"
                         x-show="open=={{forloop.counter}}" 
                         style="border-top-style: hidden !important;" >
                         <td colspan="9" class="p-2 m-0">
@@ -80,7 +85,7 @@
             {% endfor %}
         </tbody>
     </table>
-    <div class="d-flex justify-content-end">
+    <div class="flex justify-end mt-3">
         <button class="btn btn-primary" type="submit">Save Selection</button>
     </div>
     </form>

@@ -35,6 +35,7 @@ urlpatterns = [
 )  # this only works in development
 
 if settings.DEBUG:
-    urlpatterns.append(
+    urlpatterns += [
         path("__debug__/", include("debug_toolbar.urls")),
-    )
+        path("__reload__/", include("django_browser_reload.urls")),
+    ]

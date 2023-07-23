@@ -7,12 +7,13 @@ GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "")
 MEDIA_URL = "media/"
 DEBUG = True
 
-INSTALLED_APPS += [
-    "debug_toolbar",
-    "django_extensions",
-]
+INSTALLED_APPS += ["debug_toolbar", "django_extensions", "django_browser_reload"]
 INTERNAL_IPS = ["127.0.0.1"]
-MIDDLEWARE.append("debug_toolbar.middleware.DebugToolbarMiddleware")
+MIDDLEWARE += [
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
+    "django_browser_reload.middleware.BrowserReloadMiddleware",
+]
+
 
 DATABASES = {
     "default": {
