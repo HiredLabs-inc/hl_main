@@ -10,14 +10,46 @@ from resume.models import Bullet, Experience, Position
 # def generate_overview(participant: Participant):
 
 
-def generate_overview(position: Position):
+def rewrite_bullet_for_job(bullet, job):
+    keywords = job.keywordanalysis_set.values_list("unigram", flat=True)
+    keywords_list = "\n".join(keywords)
+    prompt = f"Rewrite the following bullet point into a single bullet point only: '{bullet.text}' to focus on these keywords: {keywords_list}"
+
+    return generate_text(prompt)
+
+
+def generate_overview(position: Position, job: Job = None):
     prompt = (
         ""
         "Write an overview section for a CV. The overview needs to be a minimum of 150 word and maximum 200 words with no personal pronouns and no text decoration."
         "The overview should be tailored to this job title: "
         f"{position.title}."
     )
+    if job:
+        keywords = job.keywordanalysis_set.values_list("unigram", flat=True)
+        keywords_list = "\n".join(keywords)
+        prompt += f"\n\nThe overview should focus on these keywords: {keywords_list}"
+
     return generate_text(prompt)
+
+
+def generate_bullets(experience: Experience, skills: List[Skill] = None, quantity=1):
+    prompt = f"Write {quantity} bullet points, using 25-40 words per bullet point, with no text decoration, seperated by a | character, for a CV under this heading: '{experience.position.title}'."
+    if skills:
+        skills_list = "\n".join([skill.title for skill in skills])
+        prompt += f"\n\nThe bullet point should focus on these skills:\n{skills_list}"
+
+    if experience.bullet_set.count():
+        existing_bullets = "\n".join(
+            [bullet.text for bullet in experience.bullet_set.all()]
+        )
+        prompt += (
+            f"\n\nHere are the bullet points you have already "
+            f"written, try not to repeat them:\n{existing_bullets}"
+        )
+
+    response = generate_text(prompt)
+    return [t.strip() for t in response.split("|") if t]
 
 
 def generate_bullet(

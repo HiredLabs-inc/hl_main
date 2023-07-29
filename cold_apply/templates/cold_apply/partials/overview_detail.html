@@ -1,5 +1,8 @@
 <div id="overview">
     {{overview.text}} 
+    {% if overview.auto_generated %}
+    <small class="bg-blue-300 p-1 rounded-md badge bg-primary">Generated</small>
+    {% endif %}
     <a href="{% url 'cold_apply:update_overview' overview.id %}"
     hx-get="{% url 'cold_apply:update_overview' overview.id %}"
     hx-target="closest div"

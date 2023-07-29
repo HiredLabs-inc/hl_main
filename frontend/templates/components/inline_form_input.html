@@ -1,0 +1,18 @@
+{% load form_helpers %}
+<div class="grid md:grid-cols-4 w-full gap-2 items-center {% if field.field.widget.is_hidden %} hidden{% endif %}" x-data="{touched:false}">
+    <label class="block label text-sm md:col-span-1">
+        {{ field.label }}
+    </label>
+    <div class="md:col-span-3">
+    {% with error_classes='bg-red-50 border border-red-500 text-red-900 placeholder-red-700 focus:ring-red-500 focus:border-red-500' %}
+    
+    {% if field.field.widget.input_type == 'checkbox' %}
+        {{ field|input_class:"border-gray-200"|error_class:error_classes }}
+    {% else %}
+        {{ field|input_class:"w-full rounded-md border-gray-200"|error_class:error_classes }}
+
+    {% endif %}
+    {% endwith %}
+    {% if field.errors %}<span class="text-red-500 text-sm" :class="{'hidden':touched}">{{ field.errors }}</span>{% endif %}
+    </div>
+</div>

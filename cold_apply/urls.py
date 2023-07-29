@@ -46,6 +46,7 @@ from .views import (
     get_task_status_view,
     job_status_update_modal_view,
     refresh_keywords,
+    regenerate_bullet_view,
     tailored_resume_view,
     task_get_jobs_for_participant,
 )
@@ -239,19 +240,34 @@ urlpatterns += [
     ),
     path("bullets/<int:pk>/update/", BulletUpdateView.as_view(), name="update_bullet"),
     path(
+        "bullets/<int:pk>/update/<int:job_id>",
+        BulletUpdateView.as_view(),
+        name="update_bullet_for_job",
+    ),
+    path(
         "bullets/confirm_update/",
         ConfirmCreateView.as_view(),
         name="confirm_update_bullet",
     ),
     path("bullets/<int:pk>/delete", delete_bullet, name="delete_bullet"),
     path("bullets/<int:pk>", BulletDetailView.as_view(), name="bullet_detail"),
+    path(
+        "bullets/<int:pk>/<int:job_id>",
+        BulletDetailView.as_view(),
+        name="bullet_detail_for_job",
+    ),
+    path(
+        "bullets/<int:bullet_id>/regenerate/<int:job_id>",
+        regenerate_bullet_view,
+        name="regenerate_bullet",
+    ),
 ]
 
 # Overviews CRUD
 urlpatterns += [
     path("overviews/<int:pk>/", OverviewDetailView.as_view(), name="overview_detail"),
     path(
-        "participant/<int:pk>/title/<int:position_pk>/add_overview/",
+        "participant/<int:pk>/title/<int:position_pk>/<int:job_pk>/add_overview/",
         OverviewCreateView.as_view(),
         name="create_overview",
     ),

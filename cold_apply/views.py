@@ -31,6 +31,7 @@ from cold_apply.resume_formatting import (
     group_bullets_by_experience,
     group_bullets_by_skill,
 )
+from cold_apply.text_generation import generate_bullet, rewrite_bullet_for_job
 from hl_main.mixins import HtmxViewMixin
 from rates.models import Country
 from resume.models import (
@@ -47,7 +48,8 @@ from resume.pdf import RESUME_TEMPLATE_SECTIONS_JSON, write_template_to_pdf
 
 from .forms import (
     ApplicantForm,
-    BulletForm,
+    BulletCreateForm,
+    BulletUpdateForm,
     ExperienceForm,
     FindNewJobsForm,
     InteractionForm,
@@ -176,6 +178,7 @@ class ParticipantCreateView(LoginRequiredMixin, CreateView):
         context = super().get_context_data(**kwargs)
         context["applicant"] = context["form"].initial.get("applicant")
         context["from_url"] = self.get_from_url()
+        context["something"] = "something"
 
         return context
 
@@ -625,15 +628,6 @@ class ConfigureTailoredResumeView(LoginRequiredMixin, CreateView):
         experiences = Experience.objects.filter(participant=self.kwargs[""])
 
 
-class TailoredResumView(LoginRequiredMixin, DetailView):
-    model = Job
-    template_name = "resume/index.html"
-    context_object_name = "job"
-
-    def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
-        context = super().get_context_data(**kwargs)
-
-
 def weigh_bullets(bullets, job, keywords):
     for bullet in bullets:
         weight = weigh(bullet=bullet, jd_keywords=keywords)
@@ -786,23 +780,31 @@ class OverviewCreateView(HtmxViewMixin, LoginRequiredMixin, CreateView):
     template_name = "cold_apply/overview_create.html"
     htmx_template = "cold_apply/partials/overview_create_form.html"
     position: Position = None
+    job: Job = None
     refresh_on_save = True
+
+    def get_form_kwargs(self) -> Dict[str, Any]:
+        return {
+            **super().get_form_kwargs(),
+            "position": self.position,
+            "job": self.job,
+        }
 
     def get_form(self, form_class=None):
         self.position = Position.objects.get(id=self.kwargs["position_pk"])
+        self.job = get_object_or_404(Job, pk=self.kwargs["job_pk"])
         return super().get_form(form_class)
 
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
-        # context =
         return {
             **super().get_context_data(**kwargs),
             "participant": Participant.objects.get(id=self.kwargs["pk"]),
             "position": self.position,
+            "job": self.job,
         }
 
     def form_valid(self, form):
         form.instance.participant_id = self.kwargs["pk"]
-        form.instance.title = self.position
         return super().form_valid(form)
 
 
@@ -812,6 +814,10 @@ class OverviewUpdateView(HtmxViewMixin, LoginRequiredMixin, UpdateView):
     refresh_on_save = True
     template_name = "cold_apply/overview_update.html"
     htmx_template = "cold_apply/partials/overview_update_form.html"
+
+    def form_valid(self, form):
+        form.instance.auto_generated = False
+        return super().form_valid(form)
 
 
 class OverviewDeleteView(HtmxViewMixin, LoginRequiredMixin, DeleteView):
@@ -888,8 +894,14 @@ class BulletCreateView(HtmxViewMixin, LoginRequiredMixin, CreateView):
     model = Bullet
     template_name = "cold_apply/bullet_create.html"
     htmx_template = "cold_apply/partials/bullet_create_form.html"
-    form_class = BulletForm
+    form_class = BulletCreateForm
     refresh_on_save = True
+
+    def get_form_kwargs(self) -> Dict[str, Any]:
+        return {
+            **super().get_form_kwargs(),
+            "participant": Participant.objects.get(id=self.kwargs["pk"]),
+        }
 
     def get_initial(self) -> Dict[str, Any]:
         experience_id = self.request.GET.get("experience")
@@ -905,18 +917,6 @@ class BulletCreateView(HtmxViewMixin, LoginRequiredMixin, CreateView):
         # form.instance.updated_by = self.request.user
         return super().form_valid(form)
 
-    def get_form(self, form_class=None):
-        form = super().get_form(form_class)
-        form.fields["experience"].queryset = Experience.objects.filter(
-            participant=self.kwargs["pk"]
-        )
-
-        form.fields["job"].queryset = Job.objects.filter(
-            participant=self.kwargs["pk"], status="Open"
-        )
-
-        return form
-
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
         return {
             **super().get_context_data(**kwargs),
@@ -927,19 +927,29 @@ class BulletCreateView(HtmxViewMixin, LoginRequiredMixin, CreateView):
         return reverse("cold_apply:bullet_detail", kwargs={"pk": self.object.id})
 
 
+def regenerate_bullet_view(request, bullet_id, job_id):
+    bullet = get_object_or_404(Bullet, pk=bullet_id)
+    job = get_object_or_404(Job, pk=job_id)
+
+    rewritten_text = rewrite_bullet_for_job(bullet, job)
+    bullet.text = rewritten_text
+    bullet.auto_generated = True
+    bullet.save()
+    return HttpResponse(status=204, headers={"Hx-Refresh": "true"})
+
+
 class BulletUpdateView(HtmxViewMixin, LoginRequiredMixin, UpdateView):
     model = Bullet
     template_name = "cold_apply/participant_update.html"
     htmx_template = "cold_apply/partials/bullet_update_form.html"
     refresh_on_save = True
-    form_class = BulletForm
+    form_class = BulletUpdateForm
 
-    def get_form(self, form_class=None):
-        form = super().get_form(form_class)
-        form.fields["experience"].queryset = Experience.objects.filter(
-            participant=self.object.experience.participant_id
-        )
-        return form
+    def get_form_kwargs(self) -> Dict[str, Any]:
+        return {
+            **super().get_form_kwargs(),
+            "participant": self.object.experience.participant,
+        }
 
     def get_success_url(self) -> str:
         return reverse("cold_apply:bullet_detail", kwargs={"pk": self.object.id})
@@ -952,6 +962,9 @@ class BulletUpdateView(HtmxViewMixin, LoginRequiredMixin, UpdateView):
 
         context["now"] = timezone.now()
 
+        if job_id := self.kwargs.get("job_id"):
+            context["job"] = get_object_or_404(Job, pk=job_id)
+
         return context
 
 
@@ -961,6 +974,14 @@ class BulletDetailView(HtmxViewMixin, LoginRequiredMixin, DetailView):
     htmx_template = "cold_apply/partials/bullet_detail_li.html"
     template_name = "cold_apply/bullet_detail.html"
     context_object_name = "bullet"
+
+    def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
+        context = super().get_context_data()
+        if job_id := self.kwargs.get("job_id"):
+            job = get_object_or_404(Job, pk=job_id)
+            context["job"] = job
+
+        return context
 
 
 # TODO Create Interaction using generic CreateView

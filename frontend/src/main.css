@@ -115,14 +115,21 @@ a:not(.btn) {
   @apply text-left p-3 text-sm font-semibold tracking-wide md:table-cell;
 }
 
-h3 {
-  @apply text-xl font-bold mt-5 mb-3;
-}
-
 h1 {
   @apply text-2xl font-bold mb-4;
 }
 
+h2 {
+  @apply text-xl font-bold  mb-3;
+}
+h3 {
+  @apply text-xl font-bold  mb-3;
+}
+
+h4 {
+  @apply text-lg font-bold  mb-3;
+}
+
 h5 {
-  @apply font-bold mb-3 mt-5;
+  @apply font-bold mb-3;
 }

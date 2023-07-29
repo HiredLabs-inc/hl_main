@@ -2,23 +2,8 @@
 {% block content %}
     <div class="container">
         <h2>Log in</h2>
-        {% if user.is_authenticated %}
-            <p>You are already logged in.</p>
-        {% else %}
-            <form action="" method="POST">
-                {% csrf_token %}
-                {% for field in form %}
-                    <p>
-                        {{ field.label }}:
-                        <br>
-                        {{ field }}
-                    </p>
-                {% endfor %}
-                <button type="submit">Login</button>
-                <button type="button"><a style="text-decoration: none" href="{% url 'home' %}">Cancel</a></button>
-                {{form.errors}}
-            </form>
-        {% endif %}
+        {% url 'home' as cancel_url %}
+        {% include 'forms/standard_form.html' with form=form  %}
     </div>
 
 {% endblock %}

@@ -31,6 +31,9 @@ STATIC_ROOT = os.path.join(BASE_DIR, "static_files/")
 MEDIA_ROOT = os.path.join(BASE_DIR, "tmp/")
 
 STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },

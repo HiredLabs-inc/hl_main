@@ -1,10 +1,15 @@
 from typing import Any, Dict
 
 from django import forms
+from django.core.validators import MaxValueValidator, MinValueValidator
 
 from cold_apply.models import DatePostedFilter
-from cold_apply.text_generation import generate_bullet, generate_overview
-from resume.models import Bullet, CertProjectActivity, Experience, Overview
+from cold_apply.text_generation import (
+    generate_bullet,
+    generate_bullets,
+    generate_overview,
+)
+from resume.models import Bullet, CertProjectActivity, Experience, Overview, Position
 from resume.pdf import (
     RESUME_TEMPLATE_SECTIONS,
     ResumeCoreTemplates,
@@ -145,10 +150,15 @@ class SkillForm(forms.ModelForm):
 
 
 class OverviewForm(forms.ModelForm):
-    def __init__(self, *args, **kwargs) -> None:
+    position: Position
+    job: Job
+
+    def __init__(self, position, job, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         if self.fields["auto_generate"]:
             self.fields["text"].required = False
+        self.position = position
+        self.job = job
 
     auto_generate = forms.BooleanField(
         widget=forms.RadioSelect(
@@ -162,9 +172,14 @@ class OverviewForm(forms.ModelForm):
     )
 
     def save(self, commit: bool = ...) -> Any:
+        self.instance.title = self.position
+
         if self.cleaned_data["auto_generate"]:
-            overview_text = generate_overview(self.instance.title)
+            self.instance.auto_generated = True
+            overview_text = generate_overview(self.instance.title, self.job)
             self.instance.text = overview_text
+        else:
+            self.instance.auto_generated = False
         return super().save(commit)
 
     class Meta:
@@ -172,7 +187,31 @@ class OverviewForm(forms.ModelForm):
         fields = ["text"]
 
 
-class BulletForm(forms.ModelForm):
+class BulletUpdateForm(forms.ModelForm):
+    experience = forms.ModelChoiceField(
+        queryset=Experience.objects.none(), empty_label=None
+    )
+
+    def __init__(self, participant, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["experience"].queryset = Experience.objects.filter(
+            participant=participant
+        )
+
+    class Meta:
+        model = Bullet
+        fields = ["text", "skills", "experience"]
+        widgets = {
+            "skills": forms.CheckboxSelectMultiple(),
+            "text": forms.Textarea(attrs={"rows": 4}),
+        }
+
+    def save(self, commit=True) -> Any:
+        self.instance.auto_generated = False
+        return super().save(commit)
+
+
+class BulletCreateForm(forms.ModelForm):
     use_required_attribute = False
     auto_generate = forms.BooleanField(
         widget=forms.RadioSelect(
@@ -184,6 +223,7 @@ class BulletForm(forms.ModelForm):
         initial=False,
         required=False,
     )
+    quantity = forms.IntegerField(required=False, min_value=1, initial=1)
     skills = forms.ModelMultipleChoiceField(
         queryset=Skill.objects.order_by("title").all(),
         widget=forms.CheckboxSelectMultiple(),
@@ -192,12 +232,35 @@ class BulletForm(forms.ModelForm):
     experience = forms.ModelChoiceField(
         queryset=Experience.objects.none(), empty_label=None
     )
-    job = forms.ModelChoiceField(queryset=Job.objects.none(), required=False)
+    remaning_bullet_count = 0
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, participant, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        if self.fields["auto_generate"]:
+
+        self.fields["experience"].queryset = Experience.objects.filter(
+            participant=participant
+        )
+
+        bullet_count = Bullet.objects.filter(
+            experience__participant=participant
+        ).count()
+
+        self.remaning_bullet_count = Bullet.MAX_PER_PARTICIPANT - (bullet_count or 0)
+        if self.remaning_bullet_count < 0:
+            self.remaning_bullet_count = 0
+
+        if kwargs.get("data", {}).get("auto_generate") == "True":
             self.fields["text"].required = False
+            self.fields["quantity"].required = True
+
+    def clean_quantity(self):
+        quantity = self.cleaned_data["quantity"]
+        if self.fields["quantity"].required:
+            if quantity > self.remaning_bullet_count:
+                raise forms.ValidationError(
+                    f"Only {self.remaning_bullet_count} bullets remaining of {Bullet.MAX_PER_PARTICIPANT} limit."
+                )
+        return quantity
 
     def clean(self) -> Dict[str, Any]:
         if (
@@ -205,16 +268,28 @@ class BulletForm(forms.ModelForm):
             and self.cleaned_data["skills"] is None
         ):
             raise forms.ValidationError("Experience or Skills are required")
+
+        if self.remaning_bullet_count == 0:
+            raise forms.ValidationError(
+                f"Bullet limit of {Bullet.MAX_PER_PARTICIPANT} reached."
+            )
         return super().clean()
 
-    def save(self, commit: bool = ...) -> Any:
+    def save(self, commit=True):
         if self.cleaned_data["auto_generate"]:
-            bullet_text = generate_bullet(
+            bullets = generate_bullets(
                 self.cleaned_data["experience"],
                 self.cleaned_data["skills"],
-                self.cleaned_data["job"],
+                self.cleaned_data["quantity"],
             )
-            self.instance.text = bullet_text
+            for bullet_text in bullets:
+                self.instance.id = None
+                self.instance.auto_generated = True
+                bullet_text = bullet_text
+                self.instance.text = bullet_text
+                super().save(commit)
+            return self.instance
+
         return super().save(commit)
 
     class Meta:

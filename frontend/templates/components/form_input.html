@@ -1,7 +1,7 @@
 {% load form_helpers %}
-{% with input_classes="flex flex-col w-full space-y-2" label_classes="block label text-sm" %}
+{% with input_classes="flex flex-col w-full space-y-2" label_classes="block label text-sm" input_attrs=input_attrs|default:"" %}
     <div class="{{ input_classes }}{% if field.field.widget.is_hidden %} hidden{% endif %}" x-data="{touched:false}">
-        <label class="{{ label_classes }}">
+        <label class="{{ label_classes }} form-label">
             {% if label_text %}
                 {{ label_text }}
             {% else %}
@@ -10,7 +10,7 @@
                 
             {% endif %}
         </label>
-        {{ field|error_class:"bg-red-50 border border-red-500 text-red-900 placeholder-red-700 focus:ring-red-500 focus:border-red-500"|input_class:"rounded-md" }}
+        {{ field|bootstrap_input|error_class:"bg-red-50 border border-red-500 text-red-900 placeholder-red-700 focus:ring-red-500 focus:border-red-500"|input_class:"rounded-md"|input_attrs:input_attrs }}
         {% if field.errors %}<span class="text-red-500 text-sm" :class="{'hidden':touched}">{{ field.errors }}</span>{% endif %}
     </div>
 {% endwith %}

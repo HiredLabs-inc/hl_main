@@ -1,5 +1,6 @@
 {% extends 'base_app.html' %}
 {% load form_helpers %}
+{% load components %}
 
 {% block breadcrumbs %}
     {% breadcrumb 'Pipeline' 'cold_apply:index' %}
@@ -7,72 +8,69 @@
 {% endblock breadcrumbs %}
 
 {% block content %}
-<div class="py-4">
-<div class="row">
-    <div class="col-lg-6">
-        <h3 class="mb-4">Create New Participant</h3>
-        <form class="post-form" method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-            {% for field in form %}
-                {% include 'cold_apply/templates/form_input_template.html' %}
-            {% endfor %}
+<div class="flex">
+   
+    <div  class="px-3 w-1/2">
+       
+        <h1>Create New Participant</h1>
+        {% component 'forms/standard_form.html' form=form enctype='multipart/form-data' cancel_url=from_url test='test' %}
+            {% section after_form %}
             <div  class="mb-3" >
                 {% url 'cold_apply:create_location' as create_location_url %}
                 <a href="{{create_location_url}}" 
                 hx-get="{{create_location_url}}"
                 hx-target="#modal">Add new location</a>
                 </div>
-            <div>
-                <input class="btn btn-primary" type="submit" value="Save">
-                <a class="btn btn-primary" href="{{from_url}}">Cancel</a>
-            </div>
-        </form>
+            {% endsection %}
+        {% endcomponent %}
     </div>
+
     {% if applicant %}
-    <div class="col-lg-6">
-        <h3 class="mb-4">Original Applicant Info</h3>
-        <div class="row">
-            <div class="col-3">
-                First Name:
-            </div>
-            <div class="col-9">{{applicant.first_name}}</div>
-            <div class="col-3">
-                Last Name:
-            </div>
-            <div class="col-9">{{applicant.last_name}}</div>
-            <div class="col-3">
-                Email:
-            </div>
-            <div class="col-9">{{applicant.email}}</div>
-            <div class="col-3">
-                Phone:
-            </div>
-            <div class="col-9">{{applicant.phone}}</div>
-            <div class="col-3">
-                Location:
-            </div>
-            <div class="col-9">{{applicant.location}}</div>
-            <div class="col-3">
-                Service Branch:
-            </div>
-            <div class="col-9">{{applicant.service_branch}}</div>
-            <div class="col-3">
-                Military Speciality:
-            </div>
-            <div class="col-9">{{applicant.military_specialiaty}}</div>
-            <div class="col-3">
-                Years of Service:
-            </div>
-            <div class="col-9">{{applicant.years_of_service}}</div>
-            <div class="col-3">
-                Rank at Separation:
-            </div>
-            <div class="col-9">{{applicant.rank_at_separation}}</div>
-            
+    <div class="px-3  w-1/2">
+        <div class="grid grid-cols-4">
+            <h3 class="mb-4 col-span-4">Original Applicant Info</h3>
+                <div class="col-span-1">
+                    First Name:
+                </div>
+                <div class="col-span-3">{{applicant.first_name}}</div>
+                <div class="col-span-1">
+                    Last Name:
+                </div>
+                <div class="col-span-3">{{applicant.last_name}}</div>
+                <div class="col-span-1">
+                    Email:
+                </div>
+                <div class="col-span-3">{{applicant.email}}</div>
+                <div class="col-span-1">
+                    Phone:
+                </div>
+                <div class="col-span-3">{{applicant.phone}}</div>
+                <div class="col-span-1">
+                    Location:
+                </div>
+                <div class="col-span-3">{{applicant.location}}</div>
+                <div class="col-span-1">
+                    Service Branch:
+                </div>
+                <div class="col-span-3">{{applicant.service_branch}}</div>
+                <div class="col-span-1">
+                    Military Speciality:
+                </div>
+                <div class="col-span-3">{{applicant.military_specialiaty}}</div>
+                <div class="col-span-1">
+                    Years of Service:
+                </div>
+                <div class="col-span-3">{{applicant.years_of_service}}</div>
+                <div class="col-span-1">
+                    Rank at Separation:
+                </div>
+                <div class="col-span-3">{{applicant.rank_at_separation}}</div>
+                
         </div>
     </div>
     {% endif %}
-</div>
 
 </div>
+
+
 {% endblock %}

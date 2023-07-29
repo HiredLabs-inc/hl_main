@@ -4,6 +4,7 @@ const defaultTheme = require('tailwindcss/defaultTheme')
 module.exports = {
   content: [
     'node_modules/preline/dist/*.js',
+    '../frontend/templates/**/*.html',
     '../bookings/templates/**/*.html',
     '../cold_apply/templates/**/*.html',
     '../resume/templates/**/*.html',

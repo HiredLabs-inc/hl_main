@@ -1,6 +1,6 @@
 from urllib.parse import urlencode
-from django import template
-from django import forms
+
+from django import forms, template
 
 register = template.Library()
 
@@ -8,9 +8,12 @@ register = template.Library()
 @register.filter
 def error_class(bound_field, class_names):
     # relies on Alpine.js
+
+    attrs = bound_field.field.widget.attrs
     if hasattr(bound_field, "errors") and bound_field.errors:
-        bound_field.field.widget.attrs[":class"] = f"touched || '{class_names}'"
-        bound_field.field.widget.attrs["@input"] = "touched=true;"
+        attrs[":class"] = f"{{'{class_names}': !touched}}"
+        attrs["class"] = (attrs.get("class", "") + " " + class_names).strip()
+        attrs["@input"] = "touched=true;"
     return bound_field
 
 
@@ -18,7 +21,11 @@ def error_class(bound_field, class_names):
 def bootstrap_input(bound_field):
     if isinstance(bound_field.field.widget, forms.Select):
         bound_field.field.widget.attrs["class"] = "form-select"
-    elif isinstance(bound_field.field.widget, forms.CheckboxInput):
+    elif (
+        isinstance(bound_field.field.widget, forms.CheckboxInput)
+        or isinstance(bound_field.field.widget, forms.CheckboxSelectMultiple)
+        or isinstance(bound_field.field.widget, forms.RadioSelect)
+    ):
         pass
 
     else:
@@ -28,16 +35,18 @@ def bootstrap_input(bound_field):
 
 @register.filter
 def input_class(bound_field, class_name):
-    bound_field.field.widget.attrs["class"] = class_name
+    attrs = bound_field.field.widget.attrs
+    attrs["class"] = attrs.get("class", "") + " " + class_name
     return bound_field
 
 
 @register.filter
 def input_attrs(bound_field, attrs):
-    attributes = attrs.split(",")
-    for attribute in attributes:
-        name, value = attribute.split(":")
-        bound_field.field.widget.attrs[name.strip()] = value.strip()
+    if attrs:
+        attributes = attrs.split(",")
+        for attribute in attributes:
+            name, value = attribute.split(":")
+            bound_field.field.widget.attrs[name.strip()] = value.strip()
     return bound_field
 
 

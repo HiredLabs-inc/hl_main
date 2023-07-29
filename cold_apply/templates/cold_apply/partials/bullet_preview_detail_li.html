@@ -1,17 +1,8 @@
 {% with show_skill_badges=show_skill_badges|default:False show_experience_subtext=show_experience_subtext|default:False  %}
 <li>
     {% include 'cold_apply/partials/bullet_detail.html' %}
-    <a
-    {% if job %}
-        href="{% url 'cold_apply:update_bullet_for_job' bullet.id  job.id %}"
-    {% else %}
-        href="{% url 'cold_apply:update_bullet' pk=bullet.id %}"
-    {% endif %}
-    {% if job %}
-        hx-get="{% url 'cold_apply:update_bullet_for_job' bullet.id  job.id %}"
-    {% else %}
+    <a href="{% url 'cold_apply:update_bullet' pk=bullet.id %}"
         hx-get="{% url 'cold_apply:update_bullet' pk=bullet.id %}"
-    {% endif %}
         hx-target="closest li"
         hx-swap="outerHTML"
     >[edit]</a>

@@ -8,6 +8,7 @@ class Overview(models.Model):
         "Position", on_delete=models.CASCADE, default=None, null=True
     )
     participant = models.ForeignKey("cold_apply.Participant", on_delete=models.CASCADE)
+    auto_generated = models.BooleanField(default=False)
 
     def get_absolute_url(self):
         return reverse("cold_apply:overview_detail", kwargs={"pk": self.pk})
@@ -78,9 +79,11 @@ class Experience(models.Model):
 
 class Bullet(models.Model):
     BULLET_TYPES = [("Work", "Work"), ("Summary", "Summary")]
+    MAX_PER_PARTICIPANT = 40
     experience = models.ForeignKey(Experience, on_delete=models.CASCADE)
     text = models.TextField()
     type = models.CharField(max_length=20, choices=BULLET_TYPES)
+    auto_generated = models.BooleanField(default=False)
 
     skills = models.ManyToManyField(
         to="cold_apply.Skill", through="cold_apply.SkillBullet", blank=True

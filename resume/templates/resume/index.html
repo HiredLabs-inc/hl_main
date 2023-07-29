@@ -31,7 +31,7 @@
                 {% endfor %}
             </p>
         {% else %}
-            <a href="{% url 'cold_apply:create_overview' pk=participant.id position_pk=job.title_id %}" target="_blank">Add Overview</a>
+            <a href="{% url 'cold_apply:create_overview' participant.id job.title_id job.id %}" target="_blank">Add Overview</a>
         {% endif %}
     </div>
     <br>

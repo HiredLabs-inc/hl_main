@@ -13,8 +13,8 @@
         <div id="overview">
             <p>No overview found</p>
         </div>
-        <a href="{% url 'cold_apply:create_overview' participant.id job.title_id %}"
-            hx-get="{% url 'cold_apply:create_overview' participant.id job.title_id %}"
+        <a href="{% url 'cold_apply:create_overview' participant.id job.title_id job.id %}"
+            hx-get="{% url 'cold_apply:create_overview' participant.id job.title_id job.id %}"
             hx-target="#overview">
             Add Overview
         </a>

@@ -8,20 +8,8 @@
 {% endblock navbar %}
 
 {% block content %}
-    <form class="post-form" method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <div class="row">
-        <input class="btn btn-primary" type="submit" value="Submit">
-            </div>
-    </form>
-    <br>
-    <br>
-    <div>
-    <div class="row">
-    <a class="btn btn-primary" onclick=closeWindow()>Cancel</a>
-    </div>
-    </div>
+    {% include 'forms/inline_form.html' with enctype="multipart/form-data" %}
+    
 {% endblock %}
 
 {% block scripts %}

@@ -9,7 +9,7 @@
 <div>
     <div class="flex items-center">
         <h1 class="text-2xl font-bold mr-2">{{ object.first_name }} {{object.last_name}}</h1>
-        <div>
+        <div class="mb-4">
             {% if object.dnc %}
             <span class="rounded-md bg-red-300 text-red-700 p-1">Do Not Contact</span>
             {% else %}
@@ -18,16 +18,16 @@
         </div>
     </div>
 
-    <h5>
+    <div class="font-bold">
         {{object.location.city}}, {{object.location.state.abbreviation}}
-    </h5>
-    <h5>
+    </div>
+    <div class="font-bold">
         {% if object.veteran %}
         Veteran
         {% else %}
         Not a Veteran
         {% endif %}
-    </h5>
+    </div>
     <p class="mb-0">{{ object.phone }}</p>
     <p>{{ object.email }}</p>
     <hr class="my-5">

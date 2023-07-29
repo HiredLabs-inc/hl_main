@@ -1,30 +1,73 @@
 {% load form_helpers %}
+<div class="border py-2 px-3 rounded max-w-xl bullet-wrapper" x-data="{regenerate: 'no'}">
+  {% if job %}
+  <div class="flex flex-col">
+    <div>Method</div>
+    <div>
+      <label for="regenerate_0">
+        
+        <input type="radio" x-model="regenerate" value="no" id="regenerate_0">
+        Manual
+      </label>
+    </div>
+    <div>
+      
+      <label for="regenerate_1">
+        <input type="radio" x-model="regenerate" value="yes" id="regenerate_1">
+        Regenerate
+      </label>
+    </div>
+  </div>
+  {% endif %}
+  
+{% if job %}
+<form
+    hx-post="{% url 'cold_apply:regenerate_bullet' bullet.id job.id %}"
+    x-show="regenerate=='yes'"
+    hx-indicator=".htmx-indicator"
+    class="pt-3">
+  <p>Use an AI language model to attempt to rewrite this bullet point focusing on the key words for this job.</p>
 
+  <button type="submit" class="btn btn-primary">Regenerate</button>
+  <div class="spinner-border text-primary htmx-indicator" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+</form>
+{% endif %}
 <form action="{% url 'cold_apply:update_bullet' pk=bullet.id %}"
       hx-post="{% url 'cold_apply:update_bullet' pk=bullet.id %}"
       method="post"
-      hx-boost="true"
-      class="border py-2 px-3 rounded">
+      hx-indicator=".htmx-indicator"
+      class="pt-3"
+      x-show="regenerate=='no'">
       {% csrf_token %}
-
       <div class="mb-3">
-        <div class="fw-semibold">
-          Text
-        </div>
-      {{form.text|input_class:"w-100"|input_styles:"height:100px"}}
-    </div>
-      
-      <div class="my-3">
-        <div class="fw-semibold">Experience</div>
-        {{form.experience}}
+        {% include 'components/form_input.html' with field=form.text %}
       </div>
       
       <div class="my-3">
-        <div class="fw-semibold">Skills</div>
-        {{form.skills}}
+        {% include 'components/form_input.html' with field=form.experience %}
+      </div>
+      
+      <div class="my-3">
+        {% include 'components/form_input.html' with field=form.skills %}
       </div>
     
         
     <button class="btn btn-primary" type="submit">Update Bullet</button>
-    <button class="btn btn-outline-primary" type="button" hx-get="{% url 'cold_apply:bullet_detail' pk=bullet.id %}" hx-target="closest form" hx-swap="outerHTML">Cancel</button>
+    <button class="btn btn-outline-primary" 
+          type="button" 
+          {% if job %}
+              hx-get="{% url 'cold_apply:bullet_detail_for_job' bullet.id  job.id %}"
+          {% else %}
+              hx-get="{% url 'cold_apply:bullet_detail' pk=bullet.id %}"
+          {% endif %}
+          
+          hx-target="closest .bullet-wrapper" 
+          hx-swap="outerHTML">Cancel</button>
+      <div class="spinner-border text-primary htmx-indicator" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
 </form>
+
+</div>

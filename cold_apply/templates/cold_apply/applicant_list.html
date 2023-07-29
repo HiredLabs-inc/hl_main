@@ -18,32 +18,32 @@
     <table class="table table-striped mb-5  border">
         <thead>
         <tr>
-            <th>Name</th>
-            <th>Created</th>
-            <th>Email</th>
-            <th>Phone</th>
-            <th>LinkedIn</th>
-            <th>Resume</th>
-            <th>Service Branch</th>
-            <th>MOS</th>
-            <th>Rank at Separation</th>
-            <th>Actions</th>
+            <th class="th">Name</th>
+            <th class="th">Created</th>
+            <th class="th">Email</th>
+            <th class="th">Phone</th>
+            <th class="th">LinkedIn</th>
+            <th class="th">Resume</th>
+            <th class="th">Service Branch</th>
+            <th class="th">MOS</th>
+            <th class="th">Rank at Separation</th>
+            <th class="th">Actions</th>
         </tr>
         </thead>
         <tbody>
         {% for applicant in applicant_list.new %}
-                <tr>
-                    <td>
+                <tr class="tr">
+                    <td class="td">
                         <a href="{% url 'cold_apply:applicant_detail' applicant.id %}">
                             {{applicant.full_name}}
                         </a>
                         
                     </td>
-                    <td>{{applicant.created_at|date:'d/m/y H:i'}}</td>
-                    <td>{{ applicant.email }}</td>
-                    <td>{{ applicant.phone}}</td>
-                    <td>{{ applicant.linkedin }}</td>
-                    <td>
+                    <td class="td">{{applicant.created_at|date:'d/m/y H:i'}}</td>
+                    <td class="td">{{ applicant.email }}</td>
+                    <td class="td">{{ applicant.phone}}</td>
+                    <td class="td">{{ applicant.linkedin }}</td>
+                    <td class="td">
                         {% if applicant.resume %}
                         <a href="{{applicant.resume.url}}" target="_blank">
                             {{ applicant.resume }}</a>
@@ -53,10 +53,10 @@
                         {% endif %}
                     </td>
                         
-                    <td>{{ applicant.service_branch }}</td>
-                    <td>{{ applicant.military_specialiaty }}</td>
-                    <td>{{ applicant.rank_at_separation }}</td>
-                    <td>
+                    <td class="td">{{ applicant.service_branch }}</td>
+                    <td class="td">{{ applicant.military_specialiaty }}</td>
+                    <td class="td">{{ applicant.rank_at_separation }}</td>
+                    <td class="td">
                     <div class="d-flex">
                         <div class="me-3">
                             <a href="{% url 'cold_apply:add_participant' %}?applicant_id={{applicant.id}}&from={{request.path}}" class="btn btn-primary">Accept</a>
@@ -74,63 +74,63 @@
     <p class="mb-5">No new applicants</p>
     {% endif %}
     <h4>Accepted Applicants</h4>
-    <table class="table table-striped mb-5  border">
+    <table class="table table-striped mb-5 border w-full">
         <thead>
         <tr>
-            <th>Original Applicant</th>
-            <th>Participant</th>
-            <th>Email</th>
-            <th>Phone</th>
+            <th class="th">Original Applicant</th>
+            <th class="th">Participant</th>
+            <th class="th">Email</th>
+            <th class="th">Phone</th>
         </tr>
         </thead>
         <tbody>
         {% for applicant in applicant_list.accepted %}
-                <tr>
-                    <td>
+                <tr class="tr">
+                    <td class="td">
                         <a href="{% url 'cold_apply:applicant_detail' applicant.id %}">
                             {{ applicant.first_name }} {{applicant.last_name}}
                         </a>
                     </td>
-                    <td>
+                    <td class="td">
                         <a href="{% url 'cold_apply:participant_detail' applicant.participant.id %}">
                             {{ applicant.participant.first_name }} {{applicant.participant.last_name}}
                         </a>
                     </td>
-                    <td>{{ applicant.email }}</td>
-                    <td>{{ applicant.phone}}</td>
+                    <td class="td">{{ applicant.email }}</td>
+                    <td class="td">{{ applicant.phone}}</td>
                   
                 </tr>
         {% endfor %}
         </tbody>
     </table>
     <h4>Rejected Applicants</h4>
-    <table class="table table-striped mb-5  border">
+    <table class="table w-full mb-5  border">
         <thead>
         <tr>
-            <th>Name</th>
-            <th>Created</th>
-            <th>Updated</th>
-            <th>Email</th>
-            <th>Phone</th>
-            <th>LinkedIn</th>
-            <th>Actions</th>
+            <th class="th">Name</th>
+            <th class="th">Created</th>
+            <th class="th">Updated</th>
+            <th class="th">Email</th>
+            <th class="th">Phone</th>
+            <th class="th">LinkedIn</th>
+            <th class="th">Actions</th>
         </tr>
         </thead>
         <tbody>
         {% for applicant in applicant_list.rejected %}
-                <tr>
-                    <td>
+                <tr class="tr">
+                    <td class="td">
                         <a href="{% url 'cold_apply:applicant_detail' applicant.id %}">
                             {{applicant.full_name}}
                         </a>
                         
                     </td>
-                    <td>{{applicant.created_at|date:'d/m/y H:i'}}</td>
-                    <td>{{applicant.updated_at|date:'d/m/y H:i'}}</td>
-                    <td>{{ applicant.email }}</td>
-                    <td>{{ applicant.phone}}</td>
-                    <td>{{ applicant.linkedin }}</td>
-                    <td>
+                    <td class="td">{{applicant.created_at|date:'d/m/y H:i'}}</td>
+                    <td class="td">{{applicant.updated_at|date:'d/m/y H:i'}}</td>
+                    <td class="td">{{ applicant.email }}</td>
+                    <td class="td">{{ applicant.phone}}</td>
+                    <td class="td">{{ applicant.linkedin }}</td>
+                    <td class="td">
                     <div class="d-flex">
                         <div class="me-3">
                             <a href="{% url 'cold_apply:add_participant' %}?applicant_id={{applicant.id}}&from={{request.path}}" class="btn btn-primary">Accept</a>

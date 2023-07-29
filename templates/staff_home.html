@@ -3,32 +3,31 @@
 {% get_static_prefix as STATIC_PREFIX %}
 {#TODO: Make this page sexier#}
 {% block content %}
-    <p>Thank you for working on the Hired Labs project!</p>
-    <br>
-    <br>
+    <h1>Thank you for working on the Hired Labs project!</h1>
+   
     <p>Here are the tools you have access to:</p>
     <br>
-    <table class="table table-striped">
+    <table class="table table-striped border">
         <thead>
         <tr>
-            <th>App Name</th>
-            <th>Description</th>
-            <th>Last Update</th>
-            <th>Release Notes</th>
+            <th class="th">App Name</th>
+            <th class="th">Description</th>
+            <th class="th">Last Update</th>
+            <th class="th">Release Notes</th>
         </tr>
         </thead>
         <tbody>
         {% for app in apps %}
             {% if app.name in perms %}
-                <tr>
-                    <td><a href="{% url app.name|add:':index' %}">{{ app.name }}</a>
+                <tr class="tr">
+                    <td class="td"><a href="{% url app.name|add:':index' %}">{{ app.name }}</a>
                         v{{ app.release_set.values.first.major }}.
                         {{ app.release_set.values.first.minor }}.
                         {{ app.release_set.values.first.patch }}
                     </td>
-                    <td>{{ app.description }}</td>
-                    <td>{{ app.release_set.values.first.date }}</td>
-                    <td><a href="{% url 'releases:index' app.id %}">Go To Notes</a></td>
+                    <td class="td">{{ app.description }}</td>
+                    <td class="td">{{ app.release_set.values.first.date }}</td>
+                    <td class="td"><a href="{% url 'releases:index' app.id %}">Go To Notes</a></td>
                 </tr>
             {% endif %}
         {% endfor %}

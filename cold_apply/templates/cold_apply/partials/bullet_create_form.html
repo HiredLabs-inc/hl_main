@@ -5,7 +5,7 @@
       hx-target="this"
       hx-swap="outerHTML"
       hx-post="{% url 'cold_apply:create_bullet' participant.id %}"
-      class="border py-2 px-3 rounded"
+      class="border py-2 px-3 rounded max-w-lg"
       x-data="{auto_generate: false }"
       x-init="auto_generate = $el['auto_generate'].value;"
       hx-indicator=".htmx-indicator"
@@ -13,33 +13,29 @@
       
       {% csrf_token %}
       <div class="my-3">
-        <div class="fw-semibold">Auto Generate</div>
-        {{form.auto_generate|input_attrs:"x-model:auto_generate"}}
+        {% include 'components/form_input.html' with field=form.auto_generate input_attrs="x-model:auto_generate" %}
       </div>
-      {% comment %} <div  class="mb-3" x-show="auto_generate == 'True'">
-        <div class="fw-semibold">
-            Tailor to Job (optional)
-        </div>
-        {{form.job}}
-      </div> {% endcomment %}
       <div class="mb-3" x-show="auto_generate == 'False'">
-        <div class="fw-semibold">
-          Text
-        </div>
-      {{form.text}}
-    </div>
+        {% include 'components/form_input.html' with field=form.text %}
+      </div>
+      <div class="mb-3" x-show="auto_generate == 'True'">
+          {% include 'components/form_input.html' with field=form.quantity %}
+      </div>
       
 
       <div class="my-3">
-        <div class="fw-semibold">Experience</div>
-        {{form.experience}}
+        {% include 'components/form_input.html' with field=form.experience %}
       </div>
       
       <div class="my-3">
-        <div class="fw-semibold">Skills</div>
-        {{form.skills}}
+        {% include 'components/form_input.html' with field=form.skills %}
       </div>
-    {{form.non_field_errors}}
+      {% if form.non_field_errors %}
+
+      <div class="bg-red-100 border border-red-500 text-red-900 px-4 py-3 rounded my-3 text-sm">
+        {{form.non_field_errors}}
+      </div>
+      {% endif %}
     <div class="d-flex align-items-center">
       <button  class="btn btn-primary me-2" type="submit">Add Bullet</button>
       <button class="btn btn-outline-primary me-3" type="button" hx-on="click: this.closest('form').remove()">Cancel</button>
@@ -47,5 +43,4 @@
         <span class="visually-hidden">Loading...</span>
       </div>
     </div>
-    {{form.errors}}
 </form>

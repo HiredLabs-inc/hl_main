@@ -20,7 +20,7 @@
                         :class="{'bg-gray-100 font-bold': open==={{forloop.counter}}}" 
                         @click="open= open==={{forloop.counter}} ? 0 : {{forloop.counter}}; console.log(JSON.stringify(checked));"
                         >
-                        <td  class="td" style="width: 20%" :class="{'fw-bold': open=={{forloop.counter}}}" >
+                        <td  class="td hover:font-bold" style="width: 20%" :class="{'fw-bold': open=={{forloop.counter}}}" >
                            
                                 {{job.title}}
                             

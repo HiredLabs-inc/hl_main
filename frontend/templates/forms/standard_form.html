@@ -1,0 +1,17 @@
+
+
+<form method="post" class="max-w-md space-y-5" {% if enctype %}enctype="{{enctype}}" {% endif %}>
+    {{body}}
+    {% csrf_token %}
+    {% include 'forms/standard_form_content.html' %}
+    {{after_form}}    
+    <div class="text-red-500">
+        {{form.non_field_errors}}
+    </div>
+    <div class="flex flex-col transition-transform md:flex-row md:space-x-4 space-y-4 md:space-y-0 md:justify-end">
+       
+        <a href="{{cancel_url}}" class="btn btn-outline-primary">Cancel</a>    
+        
+        <button type="submit" class="btn btn-primary">{{submit_text|default:'Submit'}}</button>
+    </div>
+</form>

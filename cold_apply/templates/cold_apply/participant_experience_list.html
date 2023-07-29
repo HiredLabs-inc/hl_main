@@ -38,7 +38,7 @@
             <br>
             <a href="{% url 'cold_apply:delete_experience' exp.id %}" onclick="return confirm('Delete experience?')">Delete Experience</a>
             {%  if bullets %}
-                <ul id="bullets_list_{{exp.id}}" class="list-disc pl-3 space-y-1">
+                <ul id="bullets_list_{{exp.id}}" class="list-disc pl-3 space-y-1 my-3">
                 {%  for bullet in bullets %}
                     {% if bullet.experience == exp %}
                         {% include 'cold_apply/partials/bullet_detail_li.html' with show_skill_badges=True %}
@@ -52,7 +52,7 @@
             <a href="{% url 'cold_apply:create_bullet' participant.id %}?experience={{exp.id}}" 
                hx-get="{% url 'cold_apply:create_bullet' participant.id %}?experience={{exp.id}}" 
                hx-target="#create_bullet_form_{{exp.id}}"
-               class="button"
+               class="btn btn-primary"
                >Add Bullet</a>
         </div>
         {% endfor %}

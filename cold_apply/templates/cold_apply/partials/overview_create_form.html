@@ -1,10 +1,10 @@
 {% load form_helpers %}
 
-<form action="{% url 'cold_apply:create_overview' participant.id position.id %}"
+<form action="{% url 'cold_apply:create_overview' participant.id position.id job.id  %}"
       method="post"
       hx-target="#overview-container"
       hx-swap="outerHTML"
-      hx-post="{% url 'cold_apply:create_overview' participant.id position.id %}"
+      hx-post="{% url 'cold_apply:create_overview' participant.id position.id job.id %}"
       x-data="{auto_generate: false }"
       x-init="auto_generate = $el['auto_generate'].value;"
       hx-indicator=".htmx-indicator"

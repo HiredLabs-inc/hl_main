@@ -13,7 +13,7 @@
 <div class="max-w-4xl">
     <h1>Configure Tailored Resume Options</h1>
     <p>Select resume template, which sections and bullet points you want to include and any additional template specific format options.</p>
-    <hr>
+    <hr class="mt-3 mb-6">
     {% comment %} sections= {% endcomment %}
     <h5 class="font-bold mb-4">1. Resume Template</h5>
     <form action="{% url 'cold_apply:tailored_resume' job.id %}" method="get" 
@@ -89,9 +89,9 @@
             >
         </div>
     </div>
-    <hr>
+    <hr class="mt-3 mb-6">
     <div class="mb-4">
-        <h5 class="fw-bolder mb-4">2. Select Template Sections</h5>
+        <h5 class="font-semibold mb-4">2. Select Template Sections</h5>
         <p>Select which sections you wish to include from the final resume. </p>
         <div> 
             {% for choice in form.sections %}
@@ -116,7 +116,7 @@
         <p class="text-danger fw-semibold mt-3">Removing too many sections may break the resume layout.</p>
         
     </div>
-    <hr>
+    <hr class="mt-3 mb-6">
     <h5>3. Bullet Points Content</h5>
     <p class="mb-3">Select what the main body of the resume will contain.</p>
     <div class="mb-4 grid grid-cols-6" >
@@ -125,7 +125,7 @@
         </div>
         <div class="col-span-4 border rounded-md p-2">
             <div x-show="bullets_content=='chronological'">
-                <p class="fw-bolder mb-2  space-y-3">Chronological Experience</p>
+                <p class="font-semibold mb-2  space-y-3">Chronological Experience</p>
                 <p>
                 Resume will list experiences in chronological order with a list of bullet point details under each.
                 </p>
@@ -133,7 +133,7 @@
                 <p>Bullet points are sorted according to weighting of relevance to the job's description.</p>
             </div>
             <div x-show="bullets_content=='skills'" class="space-y-3">
-                <p class="fw-bolder mb-2">Top Skills</p>
+                <p class="font-semibold mb-2">Top Skills</p>
                 <p>
                     Resume will list applicant's skills as section headings, bullet points that have been tagged as demonstrating a skill will be listed below
                     each skill heading. 
@@ -152,9 +152,9 @@
         </div>
         <div class="col-span-6 py-5">
             
-            <p class="fw-bolder"  style="font-size: 1.1rem;">3.1 Configure specific skills or experiences</p>
+            <p class="font-semibold  mb-3">3.1 Configure specific skills or experiences</p>
             <div x-show="bullets_content==='chronological'">
-                <p>Experiences Found: {{form.experiences.field.queryset.count}} 
+                <p class="mb-2">Experiences Found: {{form.experiences.field.queryset.count}} 
                     (<a href="#" @click.prevent="const form = document.getElementById('resume_form'); 
                                 form.action='{% url 'cold_apply:participant_experience_list' job.participant.id %}'; 
                                 form.submit()"
@@ -177,7 +177,7 @@
                 
             </div>
                 <div class="mt-4" x-show="['skills', 'certifications'].some(s => sections.includes(s))">
-                    <p class="fw-bolder" style="font-size: 1.1rem;">3.2 Configure extra sections</p>
+                    <p class="font-semibold">3.2 Configure extra sections</p>
                     <div class="row">
                         <div x-show="sections.includes('certifications')" class="mb-3">
                             <p  class="fw-semibold mb-2">Awards and Certifications</p>
@@ -211,7 +211,7 @@
         </div>
         </div>
         {{form.preview}}
-        <hr>
+        <hr class="mt-3 mb-6">
         <div class="space-y-3">
             <h5 class="fw-bold">4. Select Output Format</h5>
             <div class="mb-3">

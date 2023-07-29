@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load form_helpers %}
 {% block body %}
+{% load components %}
 {% include 'modal.html' %}
 <div class="w-full sticky top-0 shadow-sm z-20 border-b border-gray-200 divide-y bg-white">
     <div>
@@ -66,7 +67,7 @@
                                     <a class="block rounded-lg px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-700" href="{% url 'userprofile:profile_view' %}">View Profile</a>
                                     <a class="block rounded-lg px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-700"  href="{% url 'userprofile:password_change' %}">Change Password</a>
                             {% else %}
-                                <li><a href="{% url 'userprofile:login' %}">Login</a></li>
+                                <a   class="block rounded-lg px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-700" href="{% url 'userprofile:login' %}">Login</a>
                             {% endif %}
                     </div>
                     </div>
@@ -75,6 +76,7 @@
             
         </div>
     </div>
+    {% wrapper breadcrumbs %}
     <div>
         <nav class="flex container mx-auto p-2 text-sm" aria-label="Breadcrumb">
             <ol class="inline-flex items-center space-x-1 md:space-x-3 overflow-x-scroll">
@@ -83,6 +85,7 @@
             </ol>
         </nav>
     </div>
+    {% endwrapper %}
 </div>
 <div class="flex">
     <div class="container mx-auto px-2 pt-6 pb-20">
