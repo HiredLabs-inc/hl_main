@@ -145,3 +145,4 @@ static_files/
 .vscode
 
 gcp-creds
+gcloud

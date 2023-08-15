@@ -13,41 +13,55 @@ our mission of ending veteran underemployment.
 git clone git@github.com:janton42/hl_main.git && cd hl_main
 ```
 
-#### 1.2. Create a .env file containing the environment variables below in the hl_main/ subdirectory
+#### 1.2. Install dependencies and initialize virtual environment
+```bash
+pipenv install && pipenv shell
+```
+
+#### 1.3. Install MySQL
+
+Refer to the MySql docs for details on installation and configuration. https://dev.mysql.com/doc/
+
+#### 1.4. Create a database
+```bash
+mysql -u root -p
+```
+
+```sql
+CREATE DATABASE HiredLabs;
+quit;
+```
+
+Refer to this helpful MySql cheat sheet for more commands: https://devhints.io/mysql
+
+#### 1.5. Create a .env file containing the environment variables below in the hl_main/ subdirectory
 
 ```bash
-vi hl_main/.env.dev
+vi hl_main/.env
 i # enter insert mode
 DJANGO_SECRET_KEY=long-string-of-characters
-GCP_PROJECT_ID=whatever-project-id-you-want
-GOOGLE_APPLICATION_CREDENTIALS=gcloud/application_default_credentials.json
+DB_USER=username-you-created-in-MySql
+DB_PASSWORD=password-you-created-in-MySql
 q # quit insert mode
 :wq # write and quit
 ```
 
-#### 1.3. Setup gcloud
+#### 1.6. Run migrations
 ```bash
-docker-compose build
-docker-compose run --rm gcloud bash
-# you should now be in the gcloud container
-gcloud init
-# follow the prompts to login and set your default project
-# region is us-west1-a (should be option 13)
-
-gcloud auth application-default login
-# follow the prompts to login
+python3 manage.py migrate
 ```
 
-#### 1.4. Run migrations
+#### 1.7. Load development seed data
 ```bash
-docker-compose run --rm django python manage.py migrate
+python3 manage.py loaddata dev_data
 ```
 
-#### 1.5. Load development seed data
+#### 1.8. Run development server
 ```bash
-docker-compose run --rm django python manage.py loaddata dev_data
+python3 manage.py runserver
 ```
-#### 1.6. Open localhost:8000 in your browser
+
+#### 1.9. Open localhost:8000 in your browser
 ##### Linux
 ```bash
  xdg-open http://127.0.0.1:8000/
@@ -70,7 +84,7 @@ Your browser may warn you that this password is not secure. You can create anoth
 if you wish. Simply run the command below and follow the prompts:
 
 ```bash
-docker-compose run --rm django python manage.py createsuperuser 
+python3 manage.py createsuperuser 
 ```
 
 ## Contributing

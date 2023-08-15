@@ -1,5 +1,7 @@
 {% load form_helpers %}
-<div class="border py-2 px-3 rounded max-w-xl bullet-wrapper" x-data="{regenerate: 'no'}">
+<div class="border py-2 px-3 rounded max-w-xl bullet-wrapper" x-data="{regenerate: 'no'}"
+    style="max-width:36rem;">
+  <h5>Edit Bullet Point</h5>
   {% if job %}
   <div class="flex flex-col">
     <div>Method</div>
@@ -28,7 +30,19 @@
     class="pt-3">
   <p>Use an AI language model to attempt to rewrite this bullet point focusing on the key words for this job.</p>
 
+  <button class="btn btn-outline-primary" 
+            type="button" 
+            {% if job %}
+                hx-get="{% url 'cold_apply:bullet_detail_for_job' bullet.id  job.id %}"
+            {% else %}
+                hx-get="{% url 'cold_apply:bullet_detail' pk=bullet.id %}"
+            {% endif %}
+            hx-target="closest .bullet-wrapper" 
+            hx-swap="outerHTML">
+          Cancel
+    </button>
   <button type="submit" class="btn btn-primary">Regenerate</button>
+  
   <div class="spinner-border text-primary htmx-indicator" role="status">
     <span class="visually-hidden">Loading...</span>
   </div>

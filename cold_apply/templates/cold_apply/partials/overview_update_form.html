@@ -7,6 +7,6 @@
       {{form.text|input_class:"w-100"|input_styles:"height:100px"}}
       {{form.errors}}
       
-    <button type="submit">Update Overview</button>
-    <button type="button" hx-get="{% url 'cold_apply:overview_detail' overview.id %}" hx-target="closest form" hx-swap="outerHTML">Cancel</button>
+    <button type="button" class="btn btn-outline-primary" hx-get="{% url 'cold_apply:overview_detail' overview.id %}" hx-target="closest form" hx-swap="outerHTML">Cancel</button>
+    <button type="submit" class="btn btn-primary">Update Overview</button>
 </form>

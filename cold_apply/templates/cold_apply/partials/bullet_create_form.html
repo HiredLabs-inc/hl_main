@@ -6,6 +6,8 @@
       hx-swap="outerHTML"
       hx-post="{% url 'cold_apply:create_bullet' participant.id %}"
       class="border py-2 px-3 rounded max-w-lg"
+      
+      style="max-width:36rem;"
       x-data="{auto_generate: false }"
       x-init="auto_generate = $el['auto_generate'].value;"
       hx-indicator="find .hx-indicator"
@@ -37,7 +39,8 @@
       </div>
       {% endif %}
     <div class="flex justify-end gap-2 items-center">
-      {% include 'components/spinner.html' %}
+        {% include 'components/spinner.html'  %}
+      
      
       <button class="btn btn-outline-primary" type="button" hx-on="click: this.closest('form').remove()">Cancel</button>
       <button  class="btn btn-primary " type="submit">Add Bullet</button>

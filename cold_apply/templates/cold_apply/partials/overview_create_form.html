@@ -10,9 +10,9 @@
       hx-indicator=".htmx-indicator"
       >
       {% csrf_token %}
-
+    <h5 class="fw-semibold">Add Overview</h1>
     <div class="my-3">
-      <div class="fw-semibold">Auto Generate</div>
+      <div class="fw-semibold">Method</div>
       {{form.auto_generate|input_attrs:"x-model:auto_generate"}}
     </div>
     <div class="mb-3" x-show="auto_generate == 'False'">
@@ -22,8 +22,8 @@
     {{form.text|input_class:"w-100"|input_styles:"height:100px"}}
   </div>
   <div class="d-flex align-items-center">
-    <button class="me-2" type="submit">Add Overview</button>
-    <button class="me-3" type="button" hx-on="click: this.closest('form').remove()">Cancel</button>
+    <button class="me-3 btn btn-outline-primary" type="button" hx-on="click: this.closest('form').remove()">Cancel</button>
+    <button class="me-2 btn btn-primary" type="submit">Add Overview</button>
     <div class="spinner-border text-primary htmx-indicator" role="status">
       <span class="visually-hidden">Loading...</span>
     </div>
