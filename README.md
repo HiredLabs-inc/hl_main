@@ -24,8 +24,12 @@ GOOGLE_APPLICATION_CREDENTIALS=gcloud/application_default_credentials.json
 q # quit insert mode
 :wq # write and quit
 ```
+#### 1.3
+install docker and docker-compose
+https://docs.docker.com/compose/install/
 
-#### 1.3. Setup gcloud
+
+#### 1.4. Setup gcloud
 ```bash
 docker-compose build
 docker-compose run --rm gcloud bash
@@ -38,16 +42,16 @@ gcloud auth application-default login
 # follow the prompts to login
 ```
 
-#### 1.4. Run migrations
+#### 1.5. Run migrations
 ```bash
 docker-compose run --rm django python manage.py migrate
 ```
 
-#### 1.5. Load development seed data
+#### 1.6. Load development seed data
 ```bash
 docker-compose run --rm django python manage.py loaddata dev_data
 ```
-#### 1.6. Open localhost:8000 in your browser
+#### 1.7. Open localhost:8000 in your browser
 ##### Linux
 ```bash
  xdg-open http://127.0.0.1:8000/
