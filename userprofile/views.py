@@ -3,7 +3,6 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
-from google.cloud import firestore
 
 from releases.models import App
 
@@ -52,6 +51,12 @@ def register(request):
     context = {"form": form}
     return render(request, "userprofile/register.html", context)
 
+
+def register_veteran_status(request):
+    return render(request, "userprofile/register_veteran_status.html")
+
+def register_user_info(request):
+    return render(request, "userprofile/register_user_info.html")
 
 # All views below require login
 @login_required

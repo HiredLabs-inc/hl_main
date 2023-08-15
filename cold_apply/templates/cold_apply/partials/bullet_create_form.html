@@ -8,7 +8,7 @@
       class="border py-2 px-3 rounded max-w-lg"
       x-data="{auto_generate: false }"
       x-init="auto_generate = $el['auto_generate'].value;"
-      hx-indicator=".htmx-indicator"
+      hx-indicator="find .hx-indicator"
       >
       
       {% csrf_token %}
@@ -36,11 +36,11 @@
         {{form.non_field_errors}}
       </div>
       {% endif %}
-    <div class="d-flex align-items-center">
-      <button  class="btn btn-primary me-2" type="submit">Add Bullet</button>
-      <button class="btn btn-outline-primary me-3" type="button" hx-on="click: this.closest('form').remove()">Cancel</button>
-      <div class="spinner-border text-primary htmx-indicator" role="status">
-        <span class="visually-hidden">Loading...</span>
-      </div>
+    <div class="flex justify-end gap-2 items-center">
+      {% include 'components/spinner.html' %}
+     
+      <button class="btn btn-outline-primary" type="button" hx-on="click: this.closest('form').remove()">Cancel</button>
+      <button  class="btn btn-primary " type="submit">Add Bullet</button>
+      
     </div>
 </form>

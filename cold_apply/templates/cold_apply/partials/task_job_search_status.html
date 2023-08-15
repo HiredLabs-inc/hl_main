@@ -3,8 +3,11 @@
 
 {% if task is None %}
     <div>
-        <div class="alert alert-danger d-flex justify-content-between" role="alert">
-            <div>Job search failed or timed out.</div>
+        <div role="alert" class="rounded border-s-4 border-red-500 bg-red-50 p-4">
+            <strong class="block font-medium text-red-800">Job Search</strong>
+            <div class="flex justify-between text-red-700 mt-2 text-sm" role="alert">
+                <div>Job search failed or timed out.</div>
+            </div>
         </div>
     </div>
 {% else %}
@@ -14,12 +17,12 @@
     id="task-alert"
     
     >
-    <div class="alert alert-info d-flex justify-content-between" role="alert">
-        <div>Finding Jobs...</div>
-        <div class="spinner-border text-info" role="status">
-            <span class="visually-hidden">Loading...</span>
+    <div role="alert" class="rounded border-s-4 border-green-500 bg-green-50 p-4">
+        <strong class="block font-medium text-green-800">Job Search</strong>
+        <div class="flex justify-between text-green-700 mt-2 text-sm" role="alert">
+            <div class="">Finding Jobs...</div>
+            {% include 'components/spinner.html' %}
         </div>
-        
     </div>
 </div>
 {% endif %}

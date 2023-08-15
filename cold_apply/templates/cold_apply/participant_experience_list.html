@@ -47,12 +47,12 @@
                 </ul>
             {% endif %}
             </p>
-            <div id="create_bullet_form_{{exp.id}}"></div>
+            <div id="create_bullet_form_{{exp.id}}" class="mb-3"></div>
 
             <a href="{% url 'cold_apply:create_bullet' participant.id %}?experience={{exp.id}}" 
                hx-get="{% url 'cold_apply:create_bullet' participant.id %}?experience={{exp.id}}" 
                hx-target="#create_bullet_form_{{exp.id}}"
-               class="btn btn-primary"
+               class=""
                >Add Bullet</a>
         </div>
         {% endfor %}

@@ -10,10 +10,9 @@
                 {{field|input_class:"hidden"}}
             {% endif %}
         {% endfor %}
-        <p>Choose Reason:</p>
-        {{form.status_reason}}
+        {% include 'components/form_input.html' with field=form.status_reason %}
     </div>
-    <div class="">
+    <div class="mt-5 flex justify-end gap-2">
         <button class="btn btn-outline-primary" type="button" @click="showModal=false">Cancel</button>
         <button class="btn btn-primary" type="submit">Update</button>
     </div>

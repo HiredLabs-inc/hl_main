@@ -1,7 +1,7 @@
 
 <form action="?form=new_jobs#jobs-panel-open-jobs-heading" method="post" id="new-jobs-table">
     {% csrf_token %}
-    <table class="table border border-1">
+    <table class="table border border-1 w-full">
         <thead>
             <tr>
                 <th class="th">Title</th>
@@ -16,11 +16,11 @@
         </thead>
         <tbody x-data="{open: 0, checked: []}">
             {% for job in jobs.new %}
-                    <tr  class="border-t cursor-pointer"
+                    <tr  class="border-t cursor-pointer  hover:bg-gray-100"
                         :class="{'bg-gray-100 font-bold': open==={{forloop.counter}}}" 
-                        @click="open= open==={{forloop.counter}} ? 0 : {{forloop.counter}}; console.log(JSON.stringify(checked));"
+                        @click="open= open==={{forloop.counter}} ? 0 : {{forloop.counter}};"
                         >
-                        <td  class="td hover:font-bold" style="width: 20%" :class="{'fw-bold': open=={{forloop.counter}}}" >
+                        <td  class="td" style="width: 20%" :class="{'fw-bold': open=={{forloop.counter}}}" >
                            
                                 {{job.title}}
                             

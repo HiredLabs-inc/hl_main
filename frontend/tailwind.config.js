@@ -5,6 +5,7 @@ module.exports = {
   content: [
     'node_modules/preline/dist/*.js',
     '../frontend/templates/**/*.html',
+    '../userprofile/templates/**/*.html',
     '../bookings/templates/**/*.html',
     '../cold_apply/templates/**/*.html',
     '../resume/templates/**/*.html',
@@ -12,7 +13,7 @@ module.exports = {
     "../core/templatetags/*.py",
     "./templatetags/*.py",
     "../templates/**/*.html",
-    
+
   ],
   darkMode: 'class',
   theme: {

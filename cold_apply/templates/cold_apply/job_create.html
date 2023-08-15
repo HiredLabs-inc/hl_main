@@ -7,21 +7,20 @@
 {% endblock breadcrumbs %}
 
 {% block content %}
-<div class="row">
+<div class="max-w-lg">
     <div class="col-lg-6 py-3">
     <h3 class="mb-4">Add New Job for: {{ participant.name }}</h3>
     <form method="post" >
         {% csrf_token %}
         {% include "cold_apply/partials/job_form.html" %}
 
-        <div class="d-flex justify-content-end">
+        <div class="flex justify-end mt-3">
             <a class="btn btn-outline-primary  me-3" href="{% url 'cold_apply:participant_detail' participant.id %}">Cancel</a>
             <input class="btn btn-primary" type="submit" value="Add Job">
         </div>
     </form>
     
     
-</div>
 
 </div>
 {% endblock %}

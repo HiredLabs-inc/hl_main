@@ -8,29 +8,29 @@
 {% endblock breadcrumbs %}
 
 {% block content %}
-<div class="row">
-    <div class="col-lg-6">
-        <form action="" method="post">
+<div class="grid grid-cols-3 gap-8">
+    <div class="col-span-1">
+        <form action="" method="post" class="flex flex-col gap-3">
         <h4>New Job Search</h4>
-            <p>Set search parameters</p>
-            
-            {% csrf_token %}
-            {% for field in form %}
-                {% include 'cold_apply/templates/form_input_template.html' %}
-            {% endfor %}
-            <div class="row">
-            <div class="col-3">
-                Search Radius
-            </div>
-                <div class="col-3">30 miles (48km)</div>
-            </div>
-            <div class="text-end">
-                <a href="{% url 'cold_apply:participant_detail' participant.id %}" class="btn btn-outline-primary">Cancel</a>
-                <input class="btn btn-primary" type="submit" value="Search">
-            </div>
+        <p>Set search parameters</p>
+        
+        {% csrf_token %}
+        {% for field in form %}
+            {% include 'components/form_input.html' %}
+        {% endfor %}
+        <div class="row">
+        <div class="col-3">
+            Search Radius
+        </div>
+            <div class="col-3">30 miles (48km)</div>
+        </div>
+        <div class="text-end">
+            <a href="{% url 'cold_apply:participant_detail' participant.id %}" class="btn btn-outline-primary">Cancel</a>
+            <button class="btn btn-primary" type="submit">Search</button>
+        </div>
         </form>
     </div>
-    <div class="col-lg-6">
+    <div class="col-span-2">
         <h4>Applicant Information</h4>
         {% if applicant %}
         <div class="row mb-2">
@@ -74,40 +74,36 @@
         {% endif %}
     </div>
 </div>
-
-<div class="row">
-    <div class="col">
-        <h3>Recent Search history</h3>
-        <table class="table table-striped border" style="table-layout: fixed;">
-            <thead>
-                <thead>
-                    <tr>
-                        <th>Start Time</th>
-                        <th>Jobs Found</th>
-                        <th>Duplicate Count</th>
-                        <th>Search Query</th>
-                        <th>Keywords</th>
-                        <th>Date Posted</th>
-                        <th>Search Radius</th>
-                        <th>Run By</th>
-                    </tr>
-                </thead>
-            </thead>
-            <tbody>
-                {% for search in job_searches %}
-                    <tr>
-                        <td>{{search.created_at|date:'d/m/y H:i:s'}}</td>
-                        <td>{{search.result_count}}</td>
-                        <td>{{search.duplicate_count}}</td>
-                        <td>{{search.search_query}}</td>
-                        <td>{{search.keywords_csv}}</td>
-                        <td>{{search.date_posted}}</td>
-                        <td>{{search.distance_miles}}</td>
-                        <td>{{search.run_by}}</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+<hr class="my-5">
+<div>
+    <h3 class="text-lg font-medium">Recent Search history</h3>
+    <table class="table table-striped border" style="table-layout: fixed;">
+        <thead>
+            <tr>
+                <th class="th">Start Time</th>
+                <th class="th">Jobs Found</th>
+                <th class="th">Duplicate Count</th>
+                <th class="th">Search Query</th>
+                <th class="th">Keywords</th>
+                <th class="th">Date Posted</th>
+                <th class="th">Search Radius</th>
+                <th class="th">Run By</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for search in job_searches %}
+                <tr class="tr">
+                    <td class="td">{{search.created_at|date:'d/m/y H:i:s'}}</td>
+                    <td class="td">{{search.result_count}}</td>
+                    <td class="td">{{search.duplicate_count}}</td>
+                    <td class="td">{{search.search_query}}</td>
+                    <td class="td">{{search.keywords_csv}}</td>
+                    <td class="td">{{search.date_posted}}</td>
+                    <td class="td">{{search.distance_miles}}</td>
+                    <td class="td">{{search.run_by}}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
 {% endblock content %}

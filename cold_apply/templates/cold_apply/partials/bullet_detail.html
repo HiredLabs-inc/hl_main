@@ -1,10 +1,10 @@
 {{ bullet.text }}
 {% if bullet.auto_generated %}
- <small class="bg-blue-300 p-1 rounded-md">Generated</small>
+ <small class="bg-blue-300 p-1 rounded-md badge bg-primary">Generated</small>
 {% endif %}
 {% if show_skill_badges %}
     {% for skill in bullet.skills.all %}
-    <small class="rounded-md p-1 bg-green-500 ">{{skill}}</small>
+    <small class="rounded-md p-1 bg-green-600 text-white">{{skill}}</small>
     {% endfor %}
 {% endif %}
 {% if show_experience_subtext %}

@@ -14,12 +14,19 @@ a:not(.btn) {
   }
 }
 
-.htmx-indicator {
-  display: none;
+.hx-indicator {
+  opacity: 0;
+  transition-property: opacity;
+  /* transition-duration: 1000ms; */
+  transition-delay: 100ms;
 }
 
-.htmx-indicator.htmx-request {
-  display: inline !important;
+.hx-indicator .htmx-request {
+  opacity: 1;
+}
+
+.hx-indicator.htmx-request {
+  opacity: 1;
 }
 
 .btn {

@@ -1,4 +1,4 @@
-<div class="fixed bottom-10 right-1/2 translate-x-1/2 z-50">
+<div class="fixed  bottom-10 right-10 z-50">
     <div class="flex flex-col space-y-4 w-80 max-w-[100vw]  sm:w-96"
         x-data="Toaster()" 
         @htmx:send-error.camel.window="addToast({category: 'error', text: 'Unable to connect'})"
@@ -57,7 +57,7 @@
                 
                 setTimeout(() => {
                     this.removeToast(toast.id)
-                }, 5000);
+                }, 8000);
             },
             toastClasses: function(category){
                 if(category === 'error') {

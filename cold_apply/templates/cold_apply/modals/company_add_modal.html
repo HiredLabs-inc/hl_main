@@ -4,14 +4,14 @@
     <div class="modal-header">
         <h5 class="modal-title">Create Company</h5>
     </div>
-    <div class="modal-body">
+    <div class="grid gap-2">
         {% for field in form %}
-            {% include 'cold_apply/templates/form_input_template.html'  %}
+            {% include 'components/form_input.html'  %}
         {% endfor %}
         
     </div>
-    <div class="modal-footer">
-        <button class="btn btn-outline-primary" type="button" data-bs-dismiss="modal">Cancel</button>
+    <div class="mt-5 flex justify-end gap-2">
+        <button class="btn btn-outline-primary" type="button" @click="showModal=false">Cancel</button>
         <button class="btn btn-primary" type="submit">Create</button>
     </div>
 </form>

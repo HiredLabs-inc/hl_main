@@ -1,10 +1,6 @@
 {% load form_helpers %}
 {% for field in form %}
-    <div class="mb-3 row">
-        <label for="{{field.id_for_label}}" class="col-sm-3 col-form-label">{{field.label}}</label>
-        <div class="col-sm-9">
-            
-            {{field|bootstrap_input}}
+            {% include 'components/form_input.html' %}
             {% if field.name == "title" %}
                 {% url 'cold_apply:create_title' as create_title_url %}
                 <div class="text-end pt-1">
@@ -27,7 +23,7 @@
             {% endif %}
             {% if field.name == "location" %}
                 {% url 'cold_apply:create_location' as create_location_url %}
-                <div class="d-flex justify-content-between pt-1">
+                <div class="flex justify-between pt-1">
                     <div>
                         {% if job.auto_generated %}
                             Location from source ({{job.location_detail}})
@@ -41,9 +37,5 @@
                     
                 </div>
             {% endif %}
-        </div>
-    {% if field.errors %}
-        <span class="text-danger">{{field.errors}}</span>
-    {% endif %}
-    </div>
+   
 {% endfor %}

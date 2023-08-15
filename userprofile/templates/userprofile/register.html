@@ -1,26 +1,155 @@
-{% extends 'staff.html' %}
+{% extends 'base.html' %}
+{% load static %}
 
-{% block content %}
-    <h2>New User Registration</h2>
+{% block body %}
 
-    <hr>
-    <form action="" method="POST">
+    {% comment %} <form action="" method="POST">
         {% csrf_token %}
-        {% for field in form %}
-            <div>
-                <p>
-                    {{ field.label }}: <br> {{ field }}
-                </p>
-
-                {% for error in field.errors %}
-                    <<small style="color: red">{{ error }}</small>
-                {% endfor %}
-            </div>
-        {% endfor %}
+        
 
         <button type="submit">Submit</button>
         <button type="reset">Reset</button>
         <a href="{% url 'home' %}">Cancel</a>
 
-    </form>
-{% endblock %}
+    </form> {% endcomment %}
+    <div class="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
+        <div class="sm:mx-auto sm:w-full sm:max-w-sm">
+          <img class="mx-auto h-10 w-auto" src="{% static 'assets/logo.png' %}" alt="Hired Labs">
+          <h2 class="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">Create an account</h2>
+        </div>
+        
+        
+        <div class="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
+          <form class="space-y-6" action="#" method="POST" x-data="{veteran_status: ''}">
+            <div>   
+                <div class="text-sm font-medium">Are you a veteran?</div>
+                <fieldset class="grid grid-cols-2 gap-4 mt-2">
+                    <legend class="sr-only">Veteran Status</legend>
+    
+                    <div>
+                        <input
+                        type="radio"
+                        name="veteran_status"
+                        value="veteran"
+                        id="veteran"
+                        x-model="veteran_status"
+                        class="peer hidden [&:checked_+_label_svg]:block"
+                        checked
+                        />
+    
+                        <label
+                        for="veteran"
+                        class="block cursor-pointer rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 hover:border-gray-200 peer-checked:border-blue-500 peer-checked:bg-blue-500 peer-checked:text-white"
+                        >
+                        <div class="flex items-center justify-between">
+                            <p class="text-sm font-medium">Yes</p>
+    
+                            <svg
+                            class="hidden h-5 w-5 "
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                            >
+                            <path
+                                fill-rule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                clip-rule="evenodd"
+                            />
+                            </svg>
+                        </div>
+    
+                       
+                        </label>
+                    </div>
+    
+                    <div>
+                        <input
+                        type="radio"
+                        name="veteran_status"
+                        value="not_veteran"
+                        id="not_veteran"
+                        x-model="veteran_status"
+                        class="peer hidden [&:checked_+_label_svg]:block"
+                        />
+    
+                        <label
+                        for="not_veteran"
+                        class="block cursor-pointer rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 hover:border-gray-200 peer-checked:border-blue-500 peer-checked:bg-blue-500 peer-checked:text-white"
+                        >
+                        <div class="flex items-center justify-between">
+                            <p class="text-sm font-medium">No</p>
+    
+                            <svg
+                            class="hidden h-5 w-5"
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                            >
+                            <path
+                                fill-rule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                clip-rule="evenodd"
+                            />
+                            </svg>
+                        </div>
+    
+                        
+                        </label>
+                    </div>
+                    </fieldset>
+    
+            </div>
+            <div x-show="veteran_status=='not_veteran'">
+                {% for field in form %}
+                    {% include 'components/form_input.html' %}
+                {% endfor %}
+            </div>
+            <div>
+              <label for="email" class="block text-sm font-medium leading-6 text-gray-900">Email address</label>
+              <div class="mt-2">
+                <input id="email" name="email" type="email" autocomplete="email" required class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-orange-600 sm:text-sm sm:leading-6">
+              </div>
+            </div>
+      
+            <div>
+              <div class="flex items-center justify-between">
+                <label for="password" class="block text-sm font-medium leading-6 text-gray-900">Password</label>
+                <div class="text-sm">
+                  <a href="#" class="font-semibold text-orange-600 hover:text-orange-500">Forgot password?</a>
+                </div>
+              </div>
+              <div class="mt-2">
+                <input id="password" name="password" type="password" autocomplete="current-password" required class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-orange-600 sm:text-sm sm:leading-6">
+              </div>
+            </div>
+            <div>
+            <div>
+              <button type="submit" class="flex w-full justify-center rounded-md bg-orange-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-orange-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600">Sign in</button>
+            </div>
+            <div class="relative flex py-5 items-center">
+                <div class="flex-grow border-t border-gray-400"></div>
+                <span class="flex-shrink mx-4">or</span>
+                <div class="flex-grow border-t border-gray-400"></div>
+            </div>
+            
+            <div id="idme-verification">
+                <a href="https://api.id.me/oauth/authorize?client_id=[YOUR_CLIENT_ID]&redirect_uri=[YOUR_REDIRECT_URI]&response_type=code&scope=openid teacher&state=488e864b&nonce=123456">
+                  <img src="https://s3.amazonaws.com/idme/developer/idme-buttons/assets/img/signin.svg" height="30"/>
+                </a>
+                <p class="text-xs text-gray-700 mt-3">
+                  ID.me is our trusted technology partner in helping to keep your personal information safe. They specialize in digital identity protection and help
+                  us make sure you're you—and not someone pretending to be you—before we give you access to your information.
+                  <a href="https://www.id.me/about">Learn more about ID.me</a>.
+                </p>
+              </div>
+            </div>
+          </form>
+      
+          <p class="mt-10 text-center text-sm text-gray-500">
+            Not a member?
+            <a href="#" class="font-semibold leading-6 text-orange-600 hover:text-orange-500">Sign Up</a>
+          </p>
+        </div>
+      </div>
+
+{% endblock body %}

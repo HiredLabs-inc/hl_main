@@ -3,6 +3,7 @@
 {% block body %}
 {% load components %}
 {% include 'modal.html' %}
+{% include 'components/toaster.html' %}
 <div class="w-full sticky top-0 shadow-sm z-20 border-b border-gray-200 divide-y bg-white">
     <div>
         <div class=" container mx-auto p-2 flex justify-between  items-center">
@@ -107,87 +108,3 @@
 </div>
 
 {% endblock body %}
-
-{% comment %} 
-<div class="d-flex flex-column h-100">
-{% block navbar %}
-<nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <div class="container">
-        <a class="navbar-brand" href="{% url 'staff' %}">
-            Staff Area
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#main-navbar"
-                aria-expanded="false" aria-controls="navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="main-navbar">
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                
-            </ul>
-            <form class="navbar-form navbar-right">
-                {#            <input type="text" class="form-control" placeholder="Search...">#}
-            </form>
-        </div>
-    </div>
-</nav>
-{% endblock navbar %}
-
-<div class="container py-3 flex-grow-1">
-    {% wrapper_if_block_has_content breadcrumbs %}
-        <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                {% block breadcrumbs %}
-                {% endblock breadcrumbs %}
-            </ol>
-        </nav>
-        <hr>
-    {% endwrapper %}
-    {% block content %}
-    {% endblock content %}
-
-    
-    {% block resume_checkout_navigation %}
-        {% if request.GET.checkout is not None %}
-            <div>
-            
-                <a href="{{request.GET.checkout}}?{{request.GET|urlencode_dict}}" class="btn btn-primary">Back to Resume Configuration</a>
-            </div>
-        {% endif %}
-    {% endblock resume_checkout_navigation %}
-    
-
-</div>
-    {% include 'modal.html' %}
-{% block footer %}
-<footer class="w-100 bg-secondary-subtle">
-    <div class="container">
-        {% if user.is_authenticated %}
-            <p class="text-muted">Logged in as
-                {% if user.is_superuser %}
-                    superuser
-                {% endif %}
-                {{ user.first_name }} {{ user.last_name }}</p>
-            <p class="text-muted mb-0 pb-3"><a href="{% url 'releases:submit_feedback' %}" target="_blank">Got Feedback?</a>
-            </p>
-        {% endif %}
-
-    </div>
-</footer>
-{% endblock footer %}
-</div>
-{% endblock body %}
-
-{% block javascript %}
-<script>
-    if (window.location.hash) {
-        const targetElement = document.querySelector(window.location.hash);
-        if (targetElement) {
-          window.addEventListener('load', function () {
-            targetElement.scrollIntoView({ behavior: 'smooth' });
-          });
-        }
-      }
-</script>
-{% endblock javascript %}
-
- {% endcomment %}

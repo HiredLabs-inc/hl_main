@@ -11,9 +11,9 @@
         <h1 class="text-2xl font-bold mr-2">{{ object.first_name }} {{object.last_name}}</h1>
         <div class="mb-4">
             {% if object.dnc %}
-            <span class="rounded-md bg-red-300 text-red-700 p-1">Do Not Contact</span>
+            <span class="rounded-md bg-red-100 text-red-700 p-1">Do Not Contact</span>
             {% else %}
-            <span class="rounded-md bg-green-300 text-green-700  p-1">Contactable</span>
+            <span class="rounded-md bg-green-100 text-green-700  p-1">Contactable</span>
             {% endif %}
         </div>
     </div>
@@ -67,7 +67,7 @@
         </div>
     </div>
     <div class="space-y-5">
-        <details class="group border" {% if jobs.new.count %}open{% endif %}>
+        <details class="group border" {% if jobs.new.count or request.session.task_id %}open{% endif %}>
             <summary class="group-open:font-bold flex cursor-pointer items-center justify-between rounded-lg px-4 py-2 hover:bg-gray-100 ">
                 <span class=""> New Jobs ({{ jobs.new.count }})  </span>
 
@@ -91,6 +91,7 @@
                 
             </summary>
             <div class="p-4 group-open:border-t ">
+               
                 {% if request.session.task_id %}
                     <div hx-get="{% url 'cold_apply:task_status' %}" 
                         hx-trigger="load"
