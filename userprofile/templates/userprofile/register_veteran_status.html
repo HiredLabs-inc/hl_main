@@ -19,11 +19,18 @@
         </div>
         <div class="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
           <h2 class="sr-only">Steps</h2>
-        
+          
           <div>
             <div class="overflow-hidden rounded-full bg-gray-200">
-              <div class="h-2 w-2 rounded-full bg-blue-500"></div>
+              {% if step_number == 1%}
+                <div class="h-2 w-2 rounded-full bg-blue-500"></div>
+              {% elif step_number == 2 %}
+                <div class="h-2 w-1/2 rounded-full bg-blue-500"></div>
+              {% elif step_number == 3 %}
+                <div class="h-2 w-full rounded-full bg-blue-500"></div>
+              {% endif %}
             </div>
+           
         
             <ol class="mt-4 grid grid-cols-3 text-sm font-medium text-gray-500">
               <li class="flex items-center justify-start text-blue-600 sm:gap-1.5">
@@ -45,7 +52,7 @@
                 </svg>
               </li>
         
-              <li class="flex items-center justify-center sm:gap-1.5">
+              <li class="flex items-center justify-center sm:gap-1.5 {% if step_number > 1 %}text-blue-600{% endif %}">
                 <span class="hidden sm:inline"> Details </span>
         
                 <svg
@@ -69,7 +76,7 @@
                 </svg>
               </li>
         
-              <li class="flex items-center justify-end sm:gap-1.5">
+              <li class="flex items-center justify-end sm:gap-1.5 {% if step_number > 1 %}text-blue-600{% endif %}">
                 <span class="hidden sm:inline"> Upload CV </span>
         
                 <svg

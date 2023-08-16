@@ -1,0 +1,18 @@
+{% extends 'account/base.html' %}
+
+{% block content %}
+<h1 class="text-center">Complete your profile</h1>
+{% include 'userprofile/onboarding_stepper.html' with step_number=step_number|default:1 %}
+    {% block form %}
+
+
+    <form action="" method="POST" class="space-y-5">
+        {% csrf_token %}
+        {% for field in form %}
+            {% include 'components/form_input.html' %}
+        {% endfor %}
+        <button type="submit" class="auth-primary-button">Next</button>    
+    </form>
+    {% endblock form %}
+
+{% endblock content %}

@@ -1,13 +1,10 @@
 from django.urls import path
 
 from .views import (
-    ApplicantDetailView,
-    ApplicantListView,
     BulletCreateView,
     BulletDetailView,
     BulletUpdateView,
     ConcentrationCreateView,
-    ConfirmApplicationView,
     ConfirmCreateView,
     EducationCreateView,
     EducationUpdateView,
@@ -35,9 +32,7 @@ from .views import (
     PhaseListView,
     TitleCreateView,
     TitleUpdateView,
-    applicant_reject_view,
     configure_tailored_resume_view,
-    create_applicant,
     delete_bullet,
     delete_education,
     delete_exp,
@@ -291,19 +286,6 @@ urlpatterns += [
         OverviewDeleteView.as_view(),
         name="delete_overview",
     ),
-]
-
-# Applicant CRUD
-urlpatterns += [
-    path("new_applicant/", create_applicant, name="create_applicant"),
-    path("applicant/<int:pk>/", ApplicantDetailView.as_view(), name="applicant_detail"),
-    path("applicant/<int:pk>/reject", applicant_reject_view, name="applicant_reject"),
-    path(
-        "new_applicant/confirm/",
-        ConfirmApplicationView.as_view(),
-        name="confirm_create_applicant",
-    ),
-    path("applicants/", ApplicantListView.as_view(), name="applicant_list"),
 ]
 
 # Locations CRUD

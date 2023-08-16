@@ -49,6 +49,14 @@ DATABASES = {
     }
 }
 
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+        "LOCATION": "main_cache",
+    }
+}
+
 # Caching
 # https://docs.djangoproject.com/en/4.1/topics/cache/#setting-up-the-cache
 

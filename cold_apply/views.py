@@ -47,7 +47,6 @@ from resume.models import (
 from resume.pdf import RESUME_TEMPLATE_SECTIONS_JSON, write_template_to_pdf
 
 from .forms import (
-    ApplicantForm,
     BulletCreateForm,
     BulletUpdateForm,
     ExperienceForm,
@@ -59,7 +58,6 @@ from .forms import (
     ResumeConfigForm,
 )
 from .models import (
-    Applicant,
     BulletKeyword,
     Job,
     JobSearch,
@@ -82,15 +80,18 @@ from .static.scripts.resume_writer.bullet_weighter import hook_after_weighting, 
 class ParticipantListView(LoginRequiredMixin, ListView):
     model = Phase
     template_name = "cold_apply/participant_list.html"
-    context_object_name = "phases"
+    context_object_name = "participants"
     paginate_by = 10
 
-    def get_queryset(self):
-        return Phase.objects.all().order_by("order")
+    queryset = (
+        Participant.objects.all()
+        # .select_related("user__profile", "user__veteranprofile")
+        .order_by("-created_at")
+    )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["participants"] = Participant.objects.all()
+        context["phases"] = Phase.objects.all()
         context["now"] = timezone.now()
 
         return context
@@ -145,22 +146,6 @@ class ParticipantCreateView(LoginRequiredMixin, CreateView):
 
     template_name = "cold_apply/participant_create.html"
 
-    def get_initial(self) -> Dict[str, Any]:
-        applicant_id = self.request.GET.get("applicant_id")
-        if applicant_id:
-            applicant = get_object_or_404(Applicant, pk=applicant_id)
-
-            return {
-                "applicant": applicant,
-                "first_name": applicant.first_name,
-                "last_name": applicant.last_name,
-                "email": applicant.email,
-                "phone": applicant.phone,
-                "uploaded_resume": applicant.resume,
-                "veteran": not applicant.service_branch == "Not a Veteran",
-                "current_step": Step.objects.filter(order=0).first(),
-            }
-
     def get_from_url(self):
         from_url = self.request.GET.get("from")
         try:
@@ -176,7 +161,6 @@ class ParticipantCreateView(LoginRequiredMixin, CreateView):
 
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
-        context["applicant"] = context["form"].initial.get("applicant")
         context["from_url"] = self.get_from_url()
         context["something"] = "something"
 
@@ -1007,44 +991,7 @@ def create_interaction(request):
 # TODO View interaction details using generic DetailView
 
 
-def create_applicant(request):
-    if request.method == "POST":
-        form = ApplicantForm(request.POST, request.FILES)
-        if form.is_valid():
-            applicant = form.save(commit=False)
-            applicant.save()
-            return redirect(reverse("cold_apply:confirm_create_applicant"))
-        else:
-            print(form.errors)
-    else:
-        form = ApplicantForm()
-    context = {"form": form}
-    return render(request, "cold_apply/applicant_create.html", context)
-
-
 # TODO View applicant list using generic ListView (login required)
-class ApplicantListView(LoginRequiredMixin, ListView):
-    model = Applicant
-    template_name = "cold_apply/applicant_list.html"
-    context_object_name = "applicant_list"
-
-    def get_queryset(self):
-        return Applicant.objects.all().order_by("-created_at")
-
-    def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
-        return {**super().get_context_data(**kwargs), "now": timezone.now()}
-
-
-class ApplicantDetailView(LoginRequiredMixin, DetailView):
-    model = Applicant
-    template_name = "cold_apply/applicant_detail.html"
-
-
-def applicant_reject_view(request, pk):
-    applicant = get_object_or_404(Applicant, pk=pk)
-    applicant.rejected = True
-    applicant.save()
-    return redirect(reverse("cold_apply:applicant_list"))
 
 
 class LocationCreateView(HtmxViewMixin, LoginRequiredMixin, CreateView):
@@ -1079,7 +1026,7 @@ class LocationListView(LoginRequiredMixin, ListView):
 
 def find_new_jobs_view(request, participant_id):
     participant = get_object_or_404(Participant, pk=participant_id)
-    applicant = participant.applicant
+
     job_searches = JobSearch.objects.filter(participant=participant).order_by(
         "-created_at"
     )[:10]
@@ -1126,7 +1073,6 @@ def find_new_jobs_view(request, participant_id):
         context={
             "form": form,
             "participant": participant,
-            "applicant": applicant,
             "job_searches": job_searches,
         },
     )

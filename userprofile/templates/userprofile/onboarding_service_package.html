@@ -1,0 +1,14 @@
+{% extends 'userprofile/onboarding_base.html' %}
+
+{% block form %}
+
+
+<form action="" method="POST" class="space-y-5">
+    {% csrf_token %}
+    {% for field in form %}
+        {% include 'components/form_input.html' %}
+    {% endfor %}
+    <button type="submit" class="auth-primary-button">Next</button>    
+</form>
+
+{% endblock form %}

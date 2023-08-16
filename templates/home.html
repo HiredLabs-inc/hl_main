@@ -42,7 +42,7 @@
                 {% if user.is_authenticated %}
                     <li><a style="text-decoration: none" href="{% url 'staff' %}">Staff Only</a></li>
                 {% else %}
-                    <li><a style="text-decoration: none" href="{% url 'userprofile:login' %}">Sign In</a></li>
+                    <li><a style="text-decoration: none" href="{% url 'account_login' %}">Sign In</a></li>
                 {% endif %}
             </ul>
         </div>
@@ -59,7 +59,7 @@
                 {% if user.is_authenticated %}
                     <li><a style="text-decoration: none" href="{% url 'staff' %}">Staff Only</a></li>
                 {% else %}
-                    <li><a style="text-decoration: none" href="{% url 'userprofile:login' %}">Sign In</a></li>
+                    <li><a style="text-decoration: none" href="{% url 'account_login' %}">Sign In</a></li>
                 {% endif %}
             </ul>
         </div>
@@ -166,7 +166,7 @@
                 </div>
     
                 <div>
-                    <a href="{% url 'cold_apply:create_applicant' %}" target="_blank">
+                    <a href="#" target="_blank">
                         <button style="border: 2px solid #f25353;
     
                   box-sizing: border-box;

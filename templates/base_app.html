@@ -3,7 +3,7 @@
 {% block body %}
 {% load components %}
 {% include 'modal.html' %}
-{% include 'components/toaster.html' %}
+
 <div class="w-full sticky top-0 shadow-sm z-20 border-b border-gray-200 divide-y bg-white">
     <div>
         <div class=" container mx-auto p-2 flex justify-between  items-center">
@@ -64,11 +64,12 @@
                                     <strong class="block p-2 text-xs font-medium uppercase text-gray-400">
                                     Settings
                                 </strong>
-                                    <a class="block rounded-lg px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-700" href="{% url 'userprofile:logout' %}">Logout</a>
+                                    <a class="block rounded-lg px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-700" href="{% url 'account_logout' %}">Logout</a>
                                     <a class="block rounded-lg px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-700" href="{% url 'userprofile:profile_view' %}">View Profile</a>
-                                    <a class="block rounded-lg px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-700"  href="{% url 'userprofile:password_change' %}">Change Password</a>
+                                    <a class="block rounded-lg px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-700"  href="{% url 'account_change_password' %}">Change Password</a>
+                                    <a class="block rounded-lg px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-700"  href="{% url 'account_email' %}">Change Email</a>
                             {% else %}
-                                <a   class="block rounded-lg px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-700" href="{% url 'userprofile:login' %}">Login</a>
+                                <a   class="block rounded-lg px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-700" href="{% url 'account_login' %}">Login</a>
                             {% endif %}
                     </div>
                     </div>

@@ -2,18 +2,17 @@ from django.contrib import admin
 
 # Register your models here.
 from .models import (
-    Location,
-    Participant,
+    BulletKeyword,
     Interaction,
     Job,
+    KeywordAnalysis,
+    Location,
+    Participant,
     Phase,
     Skill,
-    Step,
-    KeywordAnalysis,
-    WeightedBullet,
-    BulletKeyword,
-    Applicant,
     State,
+    Step,
+    WeightedBullet,
 )
 
 
@@ -21,36 +20,6 @@ class StateAdmin(admin.ModelAdmin):
     list_display = ("name", "abbreviation")
     list_filter = ("name", "abbreviation")
     search_fields = ("name", "abbreviation")
-
-
-class ApplicantAdmin(admin.ModelAdmin):
-    list_display = (
-        "first_name",
-        "last_name",
-        "email",
-        "phone",
-        "location",
-        "service_branch",
-        "rank_at_separation",
-    )
-    list_filter = (
-        "first_name",
-        "last_name",
-        "email",
-        "phone",
-        "location",
-        "service_branch",
-        "rank_at_separation",
-    )
-    search_fields = (
-        "first_name",
-        "last_name",
-        "email",
-        "phone",
-        "location",
-        "service_branch",
-        "rank_at_separation",
-    )
 
 
 class BulletKeywordAdmin(admin.ModelAdmin):
@@ -67,10 +36,6 @@ class WeightedBulletAdmin(admin.ModelAdmin):
 
 class ParticipantAdmin(admin.ModelAdmin):
     list_display = (
-        "name",
-        "email",
-        "phone",
-        "veteran",
         "active",
         "current_step",
         "created_at",
@@ -79,10 +44,6 @@ class ParticipantAdmin(admin.ModelAdmin):
         "updated_by",
     )
     list_filter = (
-        "name",
-        "email",
-        "phone",
-        "veteran",
         "active",
         "current_step",
         "created_at",
@@ -91,10 +52,6 @@ class ParticipantAdmin(admin.ModelAdmin):
         "updated_by",
     )
     search_fields = (
-        "name",
-        "email",
-        "phone",
-        "veteran",
         "active",
         "current_step",
         "created_at",
@@ -166,7 +123,6 @@ class LocationAdmin(admin.ModelAdmin):
 
 
 admin.site.register(State, StateAdmin)
-admin.site.register(Applicant, ApplicantAdmin)
 admin.site.register(BulletKeyword, BulletKeywordAdmin)
 admin.site.register(WeightedBullet, WeightedBulletAdmin)
 admin.site.register(KeywordAnalysis, KeywordAnalysisAdmin)
