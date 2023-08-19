@@ -2,13 +2,13 @@
 
 {% block breadcrumbs %}
     {% breadcrumb 'Pipeline' 'cold_apply:index' %}
-    {% breadcrumb request.user.get_full_name %}
+    {% breadcrumb object.user.get_full_name %}
 {% endblock breadcrumbs %}
 
 {% block content %}
 <div>
     <div class="flex items-center">
-        <h1 class="text-2xl font-bold mr-2">{{ request.user.first_name }} {{request.user.last_name}}</h1>
+        <h1 class="text-2xl font-bold mr-2">{{ object.user.get_full_name}}</h1>
         <div class="mb-4">
             {% if profile.dnc %}
             <span class="rounded-md bg-red-100 text-red-700 p-1">Do Not Contact</span>

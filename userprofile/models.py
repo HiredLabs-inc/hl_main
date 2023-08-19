@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.models import User
 from django.db import models
 
-from cold_apply.models import Participant
+from cold_apply.models import Participant, Step
 from hl_main.models import TrackedModel
 
 
@@ -50,13 +50,13 @@ class Profile(TrackedModel):
         if current_step == OnboardingStep.VETERAN_PROFILE:
             self.onboarding_step = OnboardingStep.PROFILE
 
-        elif current_step == OnboardingStep.SERVICE_PACKAGE:
+        elif current_step == OnboardingStep.UPLOAD_RESUME:
             if self.is_veteran:
                 self.onboarding_step = OnboardingStep.VETERAN_PROFILE
             else:
                 self.onboarding_step = OnboardingStep.PROFILE
 
-        elif current_step == OnboardingStep.UPLOAD_RESUME:
+        elif current_step == OnboardingStep.SERVICE_PACKAGE:
             self.onboarding_step = OnboardingStep.UPLOAD_RESUME
 
         elif current_step == OnboardingStep.COMPLETE:
@@ -76,10 +76,10 @@ class Profile(TrackedModel):
                 self.onboarding_step = OnboardingStep.SERVICE_PACKAGE
 
         elif current_step == OnboardingStep.VETERAN_PROFILE:
-            self.onboarding_step = OnboardingStep.SERVICE_PACKAGE
+            self.onboarding_step = OnboardingStep.UPLOAD_RESUME
 
         elif current_step == OnboardingStep.UPLOAD_RESUME:
-            self.onboarding_step = OnboardingStep.UPLOAD_RESUME
+            self.onboarding_step = OnboardingStep.SERVICE_PACKAGE
 
         elif current_step == OnboardingStep.SERVICE_PACKAGE:
             self.onboarding_step = OnboardingStep.COMPLETE
@@ -89,7 +89,10 @@ class Profile(TrackedModel):
 
     def handle_onboard_complete(self):
         self.is_onboarded = True
-        participant, _ = Participant.objects.get_or_create(user=self.user)
+        step = Step.objects.order_by("phase__order", "order").first()
+
+        participant, _ = Participant.objects.get_or_create(user=self.user, step=step)
+
         # do service package stuff
         return self.save()
 
@@ -118,3 +121,6 @@ class VeteranProfile(TrackedModel):
 
 class ServicePackage(models.Model):
     name = models.CharField(max_length=300)
+
+    def __str__(self) -> str:
+        return self.name

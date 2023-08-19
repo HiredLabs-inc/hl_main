@@ -181,3 +181,5 @@ ACCOUNT_SESSION_REMEMBER = True
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 LOGIN_REDIRECT_URL = "userprofile:user_home"
+
+ACCOUNT_ADAPTER = "hl_main.adapter.CustomAccountAdapter"

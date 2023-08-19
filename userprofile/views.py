@@ -1,11 +1,13 @@
-from allauth.account.decorators import verified_email_required
+from allauth.account.utils import send_email_confirmation
 from allauth.account.views import EmailView
+from allauth.decorators import rate_limit
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 from django.urls import reverse
 
 from releases.models import App
+from userprofile.guards import verified_required
 from userprofile.va_api import confirm_veteran_status
 
 from .forms import (
@@ -26,7 +28,17 @@ def previous_step_response(request, profile):
     return False
 
 
-@verified_email_required
+@login_required
+@rate_limit(action="manage_email")
+def verified_email_required_view(request):
+    if "action_send" in request.POST:
+        send_email_confirmation(request, request.user)
+
+    request.user
+    return render(request, "account/verified_email_required.html")
+
+
+@verified_required
 def onboarding_home_view(request):
     user = request.user
     profile, _ = Profile.objects.get_or_create(user=user)
@@ -44,7 +56,7 @@ def onboarding_home_view(request):
     return redirect("cold_apply:index")
 
 
-@verified_email_required
+@verified_required
 def onboarding_profile_view(request):
     profile: Profile = request.user.profile
     if previous_step := previous_step_response(request, profile):
@@ -64,7 +76,7 @@ def onboarding_profile_view(request):
     )
 
 
-@verified_email_required
+@verified_required
 def onboarding_veteran_profile_view(request):
     profile: Profile = request.user.profile
     if previous_step := previous_step_response(request, profile):
@@ -84,30 +96,12 @@ def onboarding_veteran_profile_view(request):
             "form": form,
             "step_number": 2,
             "step_name": step_name,
+            "profile": profile,
         },
     )
 
 
-@verified_email_required
-def onboarding_service_package_view(request):
-    profile: Profile = request.user.profile
-    if previous_step := previous_step_response(request, profile):
-        return previous_step
-    form = ProfileServicePackageForm(request.POST or None, instance=profile)
-    if request.method == "POST" and form.is_valid():
-        form.save()
-        profile.increment_step(OnboardingStep.SERVICE_PACKAGE)
-        return redirect("userprofile:onboarding_home")
-
-    step_name = ONBOARDING_STEP_NAMES[OnboardingStep.SERVICE_PACKAGE]
-    return render(
-        request,
-        "userprofile/onboarding_service_package.html",
-        {"form": form, "step_number": 3, "step_name": step_name},
-    )
-
-
-@verified_email_required
+@verified_required
 def onboarding_upload_resume_view(request):
     profile: Profile = request.user.profile
     if previous_step := previous_step_response(request, profile):
@@ -124,6 +118,25 @@ def onboarding_upload_resume_view(request):
     return render(
         request,
         "userprofile/onboarding_upload_resume.html",
+        {"form": form, "step_number": 3, "step_name": step_name},
+    )
+
+
+@verified_required
+def onboarding_service_package_view(request):
+    profile: Profile = request.user.profile
+    if previous_step := previous_step_response(request, profile):
+        return previous_step
+    form = ProfileServicePackageForm(request.POST or None, instance=profile)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        profile.increment_step(OnboardingStep.SERVICE_PACKAGE)
+        return redirect("userprofile:onboarding_home")
+
+    step_name = ONBOARDING_STEP_NAMES[OnboardingStep.SERVICE_PACKAGE]
+    return render(
+        request,
+        "userprofile/onboarding_service_package.html",
         {"form": form, "step_number": 4, "step_name": step_name},
     )
 

@@ -7,7 +7,15 @@ from allauth.account.models import EmailAddress
 from django.contrib.auth import get_user_model
 from factory.django import DjangoModelFactory
 
-from cold_apply.models import Job, Location, Participant, Skill, SkillBullet, State
+from cold_apply.models import (
+    Job,
+    Location,
+    Participant,
+    Skill,
+    SkillBullet,
+    State,
+    Step,
+)
 from rates.models import Country
 from resume.models import Bullet, Experience, Organization, Position
 from userprofile.models import OnboardingStep, Profile
@@ -163,7 +171,7 @@ class UserFactory(DjangoModelFactory):
     class Meta:
         model = get_user_model()
 
-    first_name = factory.Faker("first_name")
+    first_name = factory.Sequence(lambda n: f"{fake.first_name()}{n}")
     last_name = factory.Faker("last_name")
     username = factory.SelfAttribute("email")
     email = factory.LazyAttribute(lambda u: f"{u.first_name}_{u.last_name}@email.com")
@@ -296,7 +304,7 @@ class ParticipantFactory(DjangoModelFactory):
 
     user = factory.SubFactory(UserFactory)
     active = True
-    current_step = None
+    current_step = factory.Iterator(Step.objects.all())
     jobs = factory.RelatedFactoryList(JobFactory, "participant", size=10)
     experiences = factory.RelatedFactoryList(ExperienceFactory, "participant", size=3)
 
@@ -306,6 +314,6 @@ class SkillFactory(DjangoModelFactory):
         model = Skill
 
     title = factory.Faker(
-        "word"
+        "word", length=50
     )  # You can adjust the data generation strategy if needed
     type = factory.Faker("random_element", elements=["Hard", "Soft"])

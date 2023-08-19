@@ -9,16 +9,19 @@
 
 {% url 'account_email' as email_url %}
 <div class="space-y-6">
-<p>{% blocktrans %}This part of the site requires us to verify that
-you are who you claim to be. For this purpose, we require that you
-verify ownership of your e-mail address. {% endblocktrans %}</p>
-
-<p>{% blocktrans %}We have sent an e-mail to you for
-verification. Please click on the link inside that e-mail. If you do not see the verification e-mail in your main inbox, check your spam folder. Otherwise contact us if you do not receive it within a few minutes.{% endblocktrans %}</p>
-
-<p>{% blocktrans %}<strong>Note:</strong> you can still <a href="{{ email_url }}">change your e-mail address</a>.{% endblocktrans %}</p>
+<p>We have sent an e-mail to <strong>{{request.user.email}} </strong> for
+    verification.
+</p>
+<p>
+     Please click on the link inside that e-mail. If you do not see the verification e-mail in your main inbox, check your spam folder. 
+    </p><p>
+    Otherwise you can try resending the email by clicking the button below, 
+    or contact us at <strong>info@hiredlabs.org</strong> if you're still having an issue.</p>
+<p><strong>Note:</strong> you can still <a href="{{ email_url }}">change your e-mail address</a>.</p>
 </div>
-
-<button class="auth-primary-button mt-5" onclick="location.reload()">Resend Verification Email</button>
+<form action="{% url  'account_verified_email_required' %}" method="post" class="my-3">
+    {% csrf_token %}
+    <button type="submit" name="action_send" class="auth-primary-button">{% trans 'Re-send Verification' %}</button>
+</form>
 
 {% endblock %}

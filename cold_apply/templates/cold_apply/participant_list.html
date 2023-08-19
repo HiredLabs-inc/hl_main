@@ -18,6 +18,7 @@
         
         <h2 class="text-xl font-bold">Active Participants</h2>
         {% for phase in phases %}
+        {{phase.id}}
         <div class="space-y-2">
             {% if phase.active %}
                 <h4 class="text-lg">{{ phase.title }}</h4>
@@ -35,7 +36,7 @@
                         {% if participant.current_step.phase == phase %}
                             <tr class="tr">
                                 <td class="td">
-                                    <a href="{% url 'cold_apply:participant_detail' participant.id %}">{{ user.get_full_name }}</a>
+                                    <a href="{% url 'cold_apply:participant_detail' participant.id %}">{{ participant.user.get_full_name }}</a>
                                 </td>
                                 <td  class="td">{{ participant.current_step.title }}</td>
                                 <td  class="td">{{ participant.updated_at|date }}</td>
@@ -71,7 +72,7 @@
                         {% if participant.current_step.phase == phase %}
                             <tr class="tr">
                                 <td class="td">
-                                    <a href="{% url 'cold_apply:participant_detail' participant.id %}">{{ participant.name }}</a>
+                                    <a href="{% url 'cold_apply:participant_detail' participant.id %}">{{ participant.user.get_full_name }}</a>
                                 </td>
                                 <td class="td">{{ participant.current_step.title }}</td>
                                 <td class="td">{{ participant.updated_at|date }}</td>

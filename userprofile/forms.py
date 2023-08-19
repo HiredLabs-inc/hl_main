@@ -1,3 +1,4 @@
+import logging
 from typing import Any
 
 from django import forms
@@ -7,6 +8,8 @@ from django.utils.translation import gettext as _
 from userprofile.va_api import VAApiException, confirm_veteran_status
 
 from .models import Profile, VeteranProfile
+
+logger = logging.getLogger(__name__)
 
 
 class ButtonRadioSelectWidget(forms.RadioSelect):
@@ -116,22 +119,15 @@ class ProfileForm(forms.ModelForm):
         is_veteran = cleaned_data.get("is_veteran")
         if is_veteran:
             try:
-                if not confirm_veteran_status(self.instance.user):
-                    self.add_error(
-                        "is_veteran",
-                        "We were unable to confirm your veteran status. Please check your information and try again.",
-                    )
+                if confirm_veteran_status(self.instance.user):
+                    self.instance.veteran_verified = True
 
-            except BadRequest as bad_request:
-                self.add_error(
+            except (BadRequest, VAApiException) as bad_request:
+                logger.error(
                     "is_veteran",
                     f"An error occurred while confirming your veteran status: {bad_request}",
                 )
-            except VAApiException:
-                self.add_error(
-                    "is_veteran",
-                    "An error occurred while confirming your veteran status. Please try again later.",
-                )
+        return cleaned_data
 
 
 class VeteranProfileForm(forms.ModelForm):

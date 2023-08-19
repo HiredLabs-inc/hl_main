@@ -1,12 +1,9 @@
 from datetime import datetime, timedelta
-from typing import Any, Dict, Optional, Type
+from typing import Any, Dict
 
-from allauth.account.decorators import verified_email_required
-from django import http
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.forms import models as model_forms
-from django.forms.models import BaseModelForm
 from django.http import HttpResponse, JsonResponse
 from django.http.response import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -46,6 +43,7 @@ from resume.models import (
     Position,
 )
 from resume.pdf import RESUME_TEMPLATE_SECTIONS_JSON, write_template_to_pdf
+from userprofile.guards import verified_required
 
 from .forms import (
     BulletCreateForm,
@@ -77,7 +75,7 @@ from .static.scripts.keyword_analyzer.keyword_analyzer import (
 from .static.scripts.resume_writer.bullet_weighter import hook_after_weighting, weigh
 
 
-@verified_email_required
+@verified_required
 def home_view(request):
     if request.user.is_staff:
         return redirect("cold_apply:index")
