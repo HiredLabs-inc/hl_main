@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Any, Dict, Optional, Type
 
+from allauth.account.decorators import verified_email_required
 from django import http
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -76,6 +77,13 @@ from .static.scripts.keyword_analyzer.keyword_analyzer import (
 from .static.scripts.resume_writer.bullet_weighter import hook_after_weighting, weigh
 
 
+@verified_email_required
+def home_view(request):
+    if request.user.is_staff:
+        return redirect("cold_apply:index")
+    return redirect("cold_apply:participant_detail", request.user.participant.id)
+
+
 # Index
 class ParticipantListView(LoginRequiredMixin, ListView):
     model = Phase
@@ -135,38 +143,6 @@ class ConfirmApplicationView(TemplateView):
         return context
 
 
-# Participants
-
-
-# Create new Participant
-class ParticipantCreateView(LoginRequiredMixin, CreateView):
-    model = Participant
-    form = ParticipantForm
-    fields = ParticipantForm.Meta.fields
-
-    template_name = "cold_apply/participant_create.html"
-
-    def get_from_url(self):
-        from_url = self.request.GET.get("from")
-        try:
-            resolve(from_url)
-        except Resolver404:
-            from_url = reverse("cold_apply:index")
-        return from_url
-
-    def form_valid(self, form: BaseModelForm) -> HttpResponse:
-        form.instance.created_by = self.request.user
-        form.instance.updated_by = self.request.user
-        return super().form_valid(form)
-
-    def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
-        context = super().get_context_data(**kwargs)
-        context["from_url"] = self.get_from_url()
-        context["something"] = "something"
-
-        return context
-
-
 # Read Participant details
 class ParticipantDetailView(LoginRequiredMixin, FormMixin, DetailView):
     model = Participant
@@ -218,6 +194,7 @@ class ParticipantDetailView(LoginRequiredMixin, FormMixin, DetailView):
             participant_id=self.kwargs["pk"]
         ).first()
         context["now"] = timezone.now()
+        context["profile"] = self.request.user.profile
 
         return context
 
@@ -632,9 +609,7 @@ def tailored_resume_view(request, job_pk):
     job = get_object_or_404(
         Job.objects.select_related(
             "title",
-            "participant",
-            "participant__location__country",
-            "participant__location__state",
+            "participant__user__profile",
         ).prefetch_related("keywordanalysis_set"),
         pk=job_pk,
     )
@@ -732,6 +707,8 @@ def tailored_resume_view(request, job_pk):
                 "title": job.title,
                 "overview": overview,
                 "participant": job.participant,
+                "user": job.participant.user,
+                "profile": job.participant.user.profile,
                 "education": education,
                 "now": timezone.now(),
                 "form": form,

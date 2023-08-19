@@ -1,19 +1,14 @@
 import datetime
 
-from django.test import TestCase
+from django.contrib.auth.models import User
 
 # Create your tests here.
 # model tests
 from django.test import TestCase
-from cold_apply.models import (
-    Participant,
-    Job,
-    Phase,
-    Step,
-)
-from resume.models import Organization, Position, Experience, Overview, Bullet
-from django.contrib.auth.models import User
-from cold_apply.forms import ParticipantForm, InteractionForm, ExperienceForm
+
+from cold_apply.forms import ExperienceForm, InteractionForm, ParticipantForm
+from cold_apply.models import Job, Participant, Phase, Step
+from resume.models import Bullet, Experience, Organization, Overview, Position
 
 
 class ParticipantModelTest(TestCase):
@@ -96,7 +91,7 @@ class ParticipantModelTest(TestCase):
 
     def test_object_name_is_name_colon_email(self):
         participant = Participant.objects.get(id=1)
-        expected_object_name = f"{participant.name}: {participant.email}"
+        expected_object_name = f"{participant.name}: {request.user.email}"
         self.assertEqual(expected_object_name, str(participant))
 
 
@@ -206,7 +201,6 @@ class StepTestCase(TestCase):
     def test_step_deletion(self):
         self.step.delete()
         self.assertFalse(Step.objects.filter(title="Test Step").exists())
-
 
 
 class ParticipantFormTest(TestCase):

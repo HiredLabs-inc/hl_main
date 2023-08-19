@@ -1,4 +1,4 @@
-from django.contrib.auth import get_user_model
+from django.conf import settings
 from django.db import models
 from django.urls import reverse
 
@@ -8,7 +8,7 @@ from resume.models import Bullet, Organization, Position
 
 # Create your models here.
 
-User = get_user_model()
+User = settings.AUTH_USER_MODEL
 
 
 class Participant(TrackedModel):
@@ -20,9 +20,6 @@ class Participant(TrackedModel):
 
     def get_absolute_url(self):
         return reverse("cold_apply:participant_detail", kwargs={"pk": self.pk})
-
-    def __str__(self):
-        return f"{self.name}: {self.email}"
 
     class Meta:
         verbose_name_plural = "Participants"

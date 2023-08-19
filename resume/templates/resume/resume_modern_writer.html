@@ -16,11 +16,11 @@
 
     <div  class="row mb-4 oswald">
         <div class="col">
-            <div class="text-muted fs-5">{{participant.location.city}}</div>
-            <div class="text-muted fs-5">{{participant.location.state.abbreviation}}</div>
-            <div class="accent fs-5">{{job.participant.phone}}</div>
-            <div class="accent mb-4 fs-5">{{job.participant.email}}</div>
-            <h1>{{job.participant.name}}</h1>
+            <div class="text-muted fs-5">{{profile.city}}</div>
+            <div class="text-muted fs-5">{{profile.state}}</div>
+            <div class="accent fs-5">{{profile.phone}}</div>
+            <div class="accent mb-4 fs-5">{{user.email}}</div>
+            <h1>{{user.get_full_name}}</h1>
             <div style="width:100%; border-top:3px solid black;" class="mb-3"></div>
         </div>
     </div>

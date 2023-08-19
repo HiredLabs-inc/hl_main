@@ -17,12 +17,12 @@
     <div  class="row mb-4">
         <div class="col">
             <h1 class="accent fw-bold  playfair">Hello</h1>
-            <h1 class=" playfair">I'm {{participant.name}}</h1>
+            <h1 class=" playfair">I'm {{ user.get_full_name }}</h1>
 
-            <div class="fs-5">{{participant.location.city}} </div>
-            <div class="fs-5">{{participant.location.state.abbreviation}} </div>
-            <div class="fs-5">{{participant.phone}}</div>
-            <div class="mb-4 fs-5">{{participant.email}}</div>
+            <div class="fs-5">{{profile.city}} </div>
+            <div class="fs-5">{{profile.state}} </div>
+            <div class="fs-5">{{profile.phone}}</div>
+            <div class="mb-4 fs-5">{{user.email}}</div>
         </div>
     </div>
     <!-- Skills  -->

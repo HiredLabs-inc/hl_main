@@ -27,6 +27,7 @@ class Profile(TrackedModel):
         "ServicePackage", on_delete=models.SET_NULL, null=True
     )
     is_veteran = models.BooleanField(null=True)
+    veteran_verified = models.BooleanField(default=False)
     is_onboarded = models.BooleanField(default=False)
     resume = models.FileField(upload_to="uploads/", null=True)
 

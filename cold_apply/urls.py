@@ -23,7 +23,6 @@ from .views import (
     OverviewDeleteView,
     OverviewDetailView,
     OverviewUpdateView,
-    ParticipantCreateView,
     ParticipantDetailView,
     ParticipantExperienceBySkillListView,
     ParticipantExperienceListView,
@@ -39,6 +38,7 @@ from .views import (
     delete_job,
     find_new_jobs_view,
     get_task_status_view,
+    home_view,
     job_status_update_modal_view,
     refresh_keywords,
     regenerate_bullet_view,
@@ -50,13 +50,13 @@ app_name = "cold_apply"
 
 # Index: list of current participants and link to process overview
 urlpatterns = [
-    path("", ParticipantListView.as_view(), name="index"),
+    path("", home_view, name="home"),
+    path("participants/", ParticipantListView.as_view(), name="index"),
     path("process/", PhaseListView.as_view(), name="process"),
 ]
 
 # Participants CRU (no delete)
 urlpatterns += [
-    path("add_participant/", ParticipantCreateView.as_view(), name="add_participant"),
     path(
         "participants/<int:pk>/",
         ParticipantDetailView.as_view(),

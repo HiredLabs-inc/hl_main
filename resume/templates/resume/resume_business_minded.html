@@ -4,8 +4,8 @@
 <div class="px-5">
     <div class="row mb-3">
         <div class="col-9">
-            <div>{{ participant.email }}</div>
-            <div>{{ participant.phone }}</div>
+            <div>{{ request.user.email }}</div>
+            <div>{{ profile.phone }}</div>
         </div>
         <div class="col-3 text-end">
             <h1 class="mb-0">{{ participant.first_name }}</h1>

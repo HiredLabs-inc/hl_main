@@ -6,17 +6,17 @@
     <!-- Name  -->
     <div  class="row mb-4">
         <div class="col-4">
-            <h3 class="fw-bold mb-0">{{job.participant.first_name}}</h3>
-            <h3 class="fw-bold mb-4">{{job.participant.last_name}}</h3>
+            <h3 class="fw-bold mb-0">{{user.first_name}}</h3>
+            <h3 class="fw-bold mb-4">{{user.last_name}}</h3>
             <h5 class="accent fw-bold">{{job.participant.experience_set.first.position  }}</h5>
         </div>
         <div class="col-8">
             <div style="width:100%; border-top:3px solid black;" class="mb-3"></div>
-            <h6 class="fw-bolder mb-0">{{job.participant.first_name}} {{job.participant.last_name}}</h6>
-            <div>{{participant.location.city}}</div>
-            <p>{{participant.location.state.abbreviation}}</p>
-            <div  class="accent">{{job.participant.phone}}</div>
-            <div  class="accent">{{job.participant.email}}</div>
+            <h6 class="fw-bolder mb-0">{{user.get_full_name}}</h6>
+            <div>{{profile.city}}</div>
+            <p>{{profile.state}}</p>
+            <div  class="accent">{{profile.phone}}</div>
+            <div  class="accent">{{user.email}}</div>
         </div>
     </div>
     <!-- Overview  -->

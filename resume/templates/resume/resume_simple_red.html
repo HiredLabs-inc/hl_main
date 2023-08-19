@@ -6,12 +6,12 @@
     <!-- Name  -->
     <div class="row">
         <div class="col-9">
-            <h1 class="fw-bold  red">{{job.participant.name}}</h1>
+            <h1 class="fw-bold  red">{{request.user.get_full_name}}</h1>
             <h4>{{job.participant.experience_set.first.position  }}</h4>
         </div>
         <div class="col-3 fst-italic">
-            <div>{{job.participant.phone}}</div>
-            <div>{{job.participant.email}}</div>
+            <div>{{job.profile.phone}}</div>
+            <div>{{job.request.user.email}}</div>
         </div>
     </div>
     <!-- Overview  -->

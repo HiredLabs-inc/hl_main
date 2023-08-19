@@ -4,9 +4,9 @@
 <div class="px-4">
     <header>
         <div class="text-center">
-            <h1>{{ participant.name }}</h1>
-            <div>{{ participant.email }} | {{ participant.phone }}</div>
-            <p>{{participant.location.city}} | {{participant.location.state.abbreviation}}</p>
+            <h1>{{ user.get_full_name }}</h1>
+            <div>{{ user.email }} | {{ profile.phone }}</div>
+            <p>{{profile.city}} | {{profile.state}}</p>
         </div>
     </header>
     {% if "overview" in form.sections.value %}
