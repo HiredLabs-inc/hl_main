@@ -39,25 +39,19 @@ class ParticipantAdmin(admin.ModelAdmin):
         "active",
         "current_step",
         "created_at",
-        "created_by",
         "updated_at",
-        "updated_by",
     )
     list_filter = (
         "active",
         "current_step",
         "created_at",
-        "created_by",
         "updated_at",
-        "updated_by",
     )
     search_fields = (
         "active",
         "current_step",
         "created_at",
-        "created_by",
         "updated_at",
-        "updated_by",
     )
 
 

@@ -6,14 +6,12 @@ from django.shortcuts import redirect, render
 from django.urls import reverse
 
 from releases.models import App
+from userprofile.va_api import confirm_veteran_status
 
 from .forms import (
-    PasswordResetForm,
     ProfileForm,
     ProfileServicePackageForm,
     UploadResumeForm,
-    UserPasswordChangeForm,
-    UserRegistrationForm,
     VeteranProfileForm,
 )
 from .models import OnboardingStep, Profile, VeteranProfile
@@ -21,12 +19,17 @@ from .models import OnboardingStep, Profile, VeteranProfile
 ONBOARDING_STEP_NAMES = {value: label for value, label in OnboardingStep.choices}
 
 
+def previous_step_response(request, profile):
+    if "previous_step" in request.POST:
+        profile.decrement_step()
+        return redirect("userprofile:onboarding_home")
+    return False
+
+
 @verified_email_required
 def onboarding_home_view(request):
     user = request.user
-    profile, _ = Profile.objects.get_or_create(user=user, defaults={})
-    # profile.onboarding_step = OnboardingStep.PROFILE
-    # profile.save()
+    profile, _ = Profile.objects.get_or_create(user=user)
     step = profile.onboarding_step
 
     if step == OnboardingStep.PROFILE:
@@ -44,10 +47,13 @@ def onboarding_home_view(request):
 @verified_email_required
 def onboarding_profile_view(request):
     profile: Profile = request.user.profile
+    if previous_step := previous_step_response(request, profile):
+        return previous_step
     form = ProfileForm(request.POST or None, instance=profile)
     if request.method == "POST" and form.is_valid():
-        if profile.onboarding_step == OnboardingStep.PROFILE:
-            form.instance.increment_step()
+        # form.instance.user = request.user
+        form.save()
+        form.instance.increment_step(OnboardingStep.PROFILE)
         return redirect("userprofile:onboarding_home")
 
     step_name = ONBOARDING_STEP_NAMES[OnboardingStep.PROFILE]
@@ -61,12 +67,14 @@ def onboarding_profile_view(request):
 @verified_email_required
 def onboarding_veteran_profile_view(request):
     profile: Profile = request.user.profile
+    if previous_step := previous_step_response(request, profile):
+        return previous_step
     veteran_profile, _ = VeteranProfile.objects.get_or_create(user=request.user)
+
     form = VeteranProfileForm(request.POST or None, instance=veteran_profile)
     if request.method == "POST" and form.is_valid():
         form.save()
-        if profile.onboarding_step == OnboardingStep.VETERAN_PROFILE:
-            profile.increment_step()
+        profile.increment_step(OnboardingStep.VETERAN_PROFILE)
         return redirect("userprofile:onboarding_home")
     step_name = ONBOARDING_STEP_NAMES[OnboardingStep.VETERAN_PROFILE]
     return render(
@@ -83,11 +91,12 @@ def onboarding_veteran_profile_view(request):
 @verified_email_required
 def onboarding_service_package_view(request):
     profile: Profile = request.user.profile
+    if previous_step := previous_step_response(request, profile):
+        return previous_step
     form = ProfileServicePackageForm(request.POST or None, instance=profile)
     if request.method == "POST" and form.is_valid():
         form.save()
-        if profile.onboarding_step == OnboardingStep.SERVICE_PACKAGE:
-            profile.increment_step()
+        profile.increment_step(OnboardingStep.SERVICE_PACKAGE)
         return redirect("userprofile:onboarding_home")
 
     step_name = ONBOARDING_STEP_NAMES[OnboardingStep.SERVICE_PACKAGE]
@@ -101,11 +110,14 @@ def onboarding_service_package_view(request):
 @verified_email_required
 def onboarding_upload_resume_view(request):
     profile: Profile = request.user.profile
-    form = UploadResumeForm(request.POST or None, files=request.FILES, instance=profile)
+    if previous_step := previous_step_response(request, profile):
+        return previous_step
+    form = UploadResumeForm(
+        request.POST or None, files=request.FILES or None, instance=profile
+    )
     if request.method == "POST" and form.is_valid():
         form.save()
-        if profile.onboarding_step == OnboardingStep.UPLOAD_RESUME:
-            profile.increment_step()
+        profile.increment_step(OnboardingStep.UPLOAD_RESUME)
         return redirect("userprofile:onboarding_home")
 
     step_name = ONBOARDING_STEP_NAMES[OnboardingStep.UPLOAD_RESUME]
@@ -123,7 +135,7 @@ def user_home(request):
     if user.is_staff:
         return redirect("staff")
 
-    if hasattr(user, "profile") and user.profile.is_onboard:
+    if hasattr(user, "profile") and user.profile.is_onboarded:
         return redirect("cold_apply:home")
 
     return redirect("userprofile:onboarding_home")

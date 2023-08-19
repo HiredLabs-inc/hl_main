@@ -29,10 +29,12 @@
       </div> {% endcomment %}
       {% block content %}
       {% endblock content %}
+      {% block bottom_nav %}
       <div class="mt-5 flex flex-col md:flex-row justify-between text-sm gap-3">
-        <a href="#" class="font-semibold text-bue-600 hover:text-blue-500" onclick="history.back()" >Back</a>
+        <a href="#" class="font-semibold text-blue-600 hover:text-blue-500" onclick="history.back()" >Back</a>
         <a href="{% url 'home' %}" class="font-semibold text-bue-600 hover:text-blue-500" >Go to main site</a>
       </div>
+      {% endblock bottom_nav %}
     </div>
   </div>
 

@@ -1,10 +1,5 @@
-from enum import unique
-
-from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import User
 from django.db import models
-from django.db.models import Q
 from django.urls import reverse
 
 from hl_main.models import TrackedModel
@@ -13,18 +8,14 @@ from resume.models import Bullet, Organization, Position
 
 # Create your models here.
 
-user_model = get_user_model()
+User = get_user_model()
+
+
 class Participant(TrackedModel):
-    user = models.ForeignKey(user_model, on_delete=models.SET_NULL, null=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
     active = models.BooleanField(default=True)
     current_step = models.ForeignKey(
         "Step", on_delete=models.SET_NULL, blank=True, null=True
-    )
-    created_by = models.ForeignKey(
-        User, on_delete=models.SET_NULL, related_name="created_by", null=True
-    )
-    updated_by = models.ForeignKey(
-        User, on_delete=models.SET_NULL, related_name="updated_by", null=True
     )
 
     def get_absolute_url(self):
@@ -32,10 +23,6 @@ class Participant(TrackedModel):
 
     def __str__(self):
         return f"{self.name}: {self.email}"
-
-    @property
-    def full_name(self):
-        return self.user.profile.full_name
 
     class Meta:
         verbose_name_plural = "Participants"

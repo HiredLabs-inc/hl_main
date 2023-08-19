@@ -16,3 +16,13 @@
     {% endblock form %}
 
 {% endblock content %}
+
+{% block bottom_nav %}
+<div class="mt-5 flex flex-col md:flex-row justify-between text-sm gap-3">
+    <form action="" method="post">
+        {% csrf_token %}
+        <button name="previous_step" class="font-semibold text-blue-600 hover:text-blue-500" >Previous Step</button>
+    </form>
+    <a href="{% url 'account_logout' %}" class="font-semibold text-blue-600 hover:text-blue-500">Logout</a>
+  </div>
+{% endblock bottom_nav %}

@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth.models import User
 from django.db import models
 
+from cold_apply.models import Participant
 from hl_main.models import TrackedModel
 
 
@@ -17,7 +18,9 @@ class Profile(TrackedModel):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     nickname = models.CharField(max_length=300)
     phone = models.CharField(max_length=200, blank=True)
-    location = models.CharField(max_length=200, null=True)
+    state = models.CharField(max_length=2)
+    city = models.CharField(max_length=100)
+    zip_code = models.CharField(max_length=200)
     linkedin = models.URLField(max_length=200, blank=True)
 
     service_package = models.ForeignKey(
@@ -37,22 +40,47 @@ class Profile(TrackedModel):
     )
     dnc = models.BooleanField(default=False)
 
-    def increment_step(self):
-        current = self.onboarding_step
+    def decrement_step(self, current_step=None):
+        if current_step is None:
+            current_step = self.onboarding_step
+        if current_step == OnboardingStep.PROFILE:
+            return False
 
-        if current == OnboardingStep.PROFILE:
+        if current_step == OnboardingStep.VETERAN_PROFILE:
+            self.onboarding_step = OnboardingStep.PROFILE
+
+        elif current_step == OnboardingStep.SERVICE_PACKAGE:
+            if self.is_veteran:
+                self.onboarding_step = OnboardingStep.VETERAN_PROFILE
+            else:
+                self.onboarding_step = OnboardingStep.PROFILE
+
+        elif current_step == OnboardingStep.UPLOAD_RESUME:
+            self.onboarding_step = OnboardingStep.UPLOAD_RESUME
+
+        elif current_step == OnboardingStep.COMPLETE:
+            self.onboarding_step = OnboardingStep.SERVICE_PACKAGE
+
+        self.save()
+        return True
+
+    def increment_step(self, current_step=None):
+        if current_step is None:
+            current_step = self.onboarding_step
+
+        if current_step == OnboardingStep.PROFILE:
             if self.is_veteran:
                 self.onboarding_step = OnboardingStep.VETERAN_PROFILE
             else:
                 self.onboarding_step = OnboardingStep.SERVICE_PACKAGE
 
-        elif current == OnboardingStep.VETERAN_PROFILE:
+        elif current_step == OnboardingStep.VETERAN_PROFILE:
             self.onboarding_step = OnboardingStep.SERVICE_PACKAGE
 
-        elif current == OnboardingStep.SERVICE_PACKAGE:
+        elif current_step == OnboardingStep.UPLOAD_RESUME:
             self.onboarding_step = OnboardingStep.UPLOAD_RESUME
 
-        elif current == OnboardingStep.UPLOAD_RESUME:
+        elif current_step == OnboardingStep.SERVICE_PACKAGE:
             self.onboarding_step = OnboardingStep.COMPLETE
             return self.handle_onboard_complete()
 
@@ -60,6 +88,7 @@ class Profile(TrackedModel):
 
     def handle_onboard_complete(self):
         self.is_onboarded = True
+        participant, _ = Participant.objects.get_or_create(user=self.user)
         # do service package stuff
         return self.save()
 

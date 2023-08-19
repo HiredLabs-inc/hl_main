@@ -40,14 +40,17 @@ STORAGES = {
 }
 ACCOUNT_LOGIN_ATTEMPTS = None
 
-CACHES = {
-    "default": {
-        "BACKEND": "django.core.cache.backends.dummy.DummyCache",
-    }
-}
+# CACHES = {
+#     "default": {
+#         "BACKEND": "django.core.cache.backends.dummy.DummyCache",
+#     }
+# }
 
 # del TEMPLATES[0]["APP_DIRS"]
 # TEMPLATES[0]["OPTIONS"]["loaders"] = [
 #     "django.template.loaders.filesystem.Loader",
 #     "django.template.loaders.app_directories.Loader",
 # ]
+
+
+VA_API_KEY = env("VA_API_KEY", default="")

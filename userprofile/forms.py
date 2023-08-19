@@ -1,30 +1,12 @@
+from typing import Any
+
 from django import forms
-from django.contrib.auth.forms import (
-    PasswordChangeForm,
-    PasswordResetForm,
-    UserCreationForm,
-)
-from django.contrib.auth.models import User
+from django.core.exceptions import BadRequest
 from django.utils.translation import gettext as _
 
+from userprofile.va_api import VAApiException, confirm_veteran_status
+
 from .models import Profile, VeteranProfile
-
-
-class UserRegistrationForm(UserCreationForm):
-    first_name = forms.CharField(max_length=101)
-    last_name = forms.CharField(max_length=101)
-    email = forms.EmailField()
-
-    class Meta:
-        model = User
-        fields = [
-            "username",
-            "first_name",
-            "last_name",
-            "email",
-            "password1",
-            "password2",
-        ]
 
 
 class ButtonRadioSelectWidget(forms.RadioSelect):
@@ -34,24 +16,51 @@ class ButtonRadioSelectWidget(forms.RadioSelect):
 class ProfileForm(forms.ModelForm):
     use_required_attribute = False
 
+    first_name = forms.CharField(max_length=101)
+    last_name = forms.CharField(max_length=101)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["first_name"].initial = self.instance.user.first_name
+        self.fields["last_name"].initial = self.instance.user.last_name
+
     def clean_is_veteran(self):
         is_veteran = self.cleaned_data["is_veteran"]
         if is_veteran is None:
             raise forms.ValidationError("This field is required.")
         return is_veteran
 
+    field_order = [
+        "first_name",
+        "last_name",
+        "city",
+        "state",
+        "zip_code",
+        "phone",
+        "linkedin",
+        "special_training",
+        "special_skills",
+        "job_links",
+        "work_preferences",
+        "is_veteran",
+    ]
+
     class Meta:
         model = Profile
+
         fields = [
-            "phone",
-            "location",
-            "linkedin",
             "is_veteran",
+            "city",
+            "state",
+            "zip_code",
+            "phone",
+            "linkedin",
             "special_training",
             "special_skills",
             "job_links",
             "work_preferences",
         ]
+
         labels = {
             "is_veteran": _("Are you a US Military Veteran?"),
             "phone": "Contact Number (optional)",
@@ -95,6 +104,35 @@ class ProfileForm(forms.ModelForm):
             ),
         }
 
+    def save(self, commit: bool = ...) -> Any:
+        instance = super().save(commit)
+        instance.user.first_name = self.cleaned_data["first_name"]
+        instance.user.last_name = self.cleaned_data["last_name"]
+        instance.user.save()
+        return instance
+
+    def clean(self):
+        cleaned_data = super().clean()
+        is_veteran = cleaned_data.get("is_veteran")
+        if is_veteran:
+            try:
+                if not confirm_veteran_status(self.instance.user):
+                    self.add_error(
+                        "is_veteran",
+                        "We were unable to confirm your veteran status. Please check your information and try again.",
+                    )
+
+            except BadRequest as bad_request:
+                self.add_error(
+                    "is_veteran",
+                    f"An error occurred while confirming your veteran status: {bad_request}",
+                )
+            except VAApiException:
+                self.add_error(
+                    "is_veteran",
+                    "An error occurred while confirming your veteran status. Please try again later.",
+                )
+
 
 class VeteranProfileForm(forms.ModelForm):
     use_required_attribute = False
@@ -113,24 +151,6 @@ class UploadResumeForm(forms.ModelForm):
     class Meta:
         model = Profile
         fields = ["resume"]
-
-
-class UserPasswordChangeForm(PasswordChangeForm):
-    class Meta:
-        model = User
-        fields = ["password1", "password2"]
-
-
-class UpdateProfileForm(forms.ModelForm):
-    class Meta:
-        model = Profile
-        fields = ["nickname"]
-
-
-class UserPasswordResetForm(PasswordResetForm):
-    class Meta:
-        model = User
-        fields = ["email"]
 
 
 class ProfileServicePackageForm(forms.ModelForm):
