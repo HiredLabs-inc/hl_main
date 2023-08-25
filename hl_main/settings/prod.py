@@ -10,11 +10,13 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 import os
-from environ import Env
 from io import StringIO
-from .base import *
 from urllib.parse import urlparse
+
+from environ import Env
 from google.cloud import secretmanager
+
+from .base import *
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
@@ -110,7 +112,6 @@ DATABASES = {
 }
 
 STATIC_URL = "/static/"
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 STATIC_ROOT = os.path.join(BASE_DIR, "static_files/")
 
 GS_BUCKET_NAME = f"{os.environ['GCP_PROJECT_ID']}-{os.environ['GCP_BUCKET_SUFFIX']}"

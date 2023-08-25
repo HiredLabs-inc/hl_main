@@ -11,7 +11,7 @@ services:
       # see frontend/tailwind.config.js
       - .:/app
     working_dir: /app/frontend
-    command: npm run watch
+    command: sh -c "npm install && npm run dev"
   gcloud:
     image: google/cloud-sdk:latest
     volumes:
@@ -40,6 +40,8 @@ services:
     command: python manage.py runserver_plus 0.0.0.0:8000
     env_file:
       - .env.dev
+    environment:
+      - DJANGO_SETTINGS_MODULE=hl_main.settings.dev
 
   db:
     image: postgres
