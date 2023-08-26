@@ -35,7 +35,11 @@ payload = client.access_secret_version(name=name).payload.data.decode("UTF-8")
 env.read_env(StringIO(payload))
 
 SECRET_KEY = env("DJANGO_SECRET_KEY")
-# ALLOWED_HOSTS = ["www.hiredlabs.org", "hiredlabs.org"]
+ALLOWED_HOSTS = [
+    # "www.hiredlabs.org",
+    # "hiredlabs.org",
+    "run-service-dev-001-nfq35uocvq-uw.a.run.app"
+    ]
 # Application definition
 
 DATABASES = {
@@ -69,7 +73,7 @@ SECURE_SSL_REDIRECT = True
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 CLOUDRUN_SERVICE_URL = os.environ.get("CLOUDRUN_SERVICE_URL")
-ALLOWED_HOSTS = []
+# ALLOWED_HOSTS = []
 if CLOUDRUN_SERVICE_URL:
     ALLOWED_HOSTS.append(urlparse(CLOUDRUN_SERVICE_URL).netloc)
     CSRF_TRUSTED_ORIGINS = [CLOUDRUN_SERVICE_URL]
