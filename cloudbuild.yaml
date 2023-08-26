@@ -1,7 +1,11 @@
 steps:
+# Build container image with Cloud Build from Dockerfile
 - name: 'gcr.io/cloud-builders/docker'
   args: [
           'build',
           '-t', 'us-west1-docker.pkg.dev/hl-main-dev/hl-dev-repo/hl_main_django',
           '.'
     ]
+# Push the image to Artifact Registry
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'us-west1-docker.pkg.dev/hl-main-dev/hl-dev-repo/hl_main_django']
