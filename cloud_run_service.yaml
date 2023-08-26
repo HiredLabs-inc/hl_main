@@ -1,0 +1,33 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: run-service-dev-001
+  namespace: 676530430552
+  labels:
+    cloud.googleapis.com/location: us-west1
+  annotations:
+    run.googleapis.com/description: "Main run service for dev."
+    run.googleapis.com/ingress: internal
+  template:
+    metadata:
+      name: initial-revision
+      annotations:
+        autoscaling.knative.dev/minScale: 2
+        autoscaling.knative.dev/maxScale: 10
+        run.googleapis.com/cpu-throttling: true
+        run.googleapis.com/cloudsql-instances: hl-main-dev:us-west1:sql-dev-001
+        run.googleapis.com/execution-environment: gen2
+        run.googleapis.com/vpc-access-connector: dev-connector-1
+    spec:
+      serviceAccountName: project-service-account@vpc-host-staging-yk380-hm150.iam.gserviceaccount.com
+      containers:
+      - image: us-west1-docker.pkg.dev/hl-main-dev/hl-dev-repo/hl_main_django
+        name: hl-main-dev
+        ports:
+          containerPort: 8080
+        env:
+        - name: DJANGO_SETTINGS_MODULE
+          value: hl_main.settings.dev
+      volumes:
+        secret:
+          secretName: squirrel-dev-002

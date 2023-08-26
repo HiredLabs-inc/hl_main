@@ -146,3 +146,6 @@ static_files/
 
 gcp-creds
 gcloud
+.config/
+certs/
+creds/

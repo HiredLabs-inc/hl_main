@@ -41,7 +41,7 @@ SECRET_KEY = env("DJANGO_SECRET_KEY")
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": env("GCP_CLOUDRUN_NAME"),
+        "NAME": env("GCP_CLOUDSQL_DB_NAME"),
         "USER": env("GCP_CLOUDSQL_USER"),
         "PASSWORD": env("GCP_CLOUDSQL_PASSWORD"),
         "HOST": env("GCP_CLOUDSQL_PRIVATE_IP"),
@@ -102,7 +102,6 @@ DATABASES = {
 }
 
 STATIC_URL = "/static/"
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 STATIC_ROOT = os.path.join(BASE_DIR, "static_files/")
 
 GS_BUCKET_NAME = f"{os.environ['GCP_PROJECT_ID']}-{os.environ['GCP_BUCKET_SUFFIX']}"
