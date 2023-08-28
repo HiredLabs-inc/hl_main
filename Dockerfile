@@ -30,7 +30,6 @@ WORKDIR $APP_HOME
 # Removes output stream buffering, allowing for more efficient logging
 ENV PYTHONUNBUFFERED 1
 RUN apt-get update
-RUN apt-get update
 RUN apt install -y software-properties-common
 RUN add-apt-repository --yes ppa:deadsnakes/ppa
 RUN apt-get update && apt-get install -y python3.8 python3-pip
@@ -50,8 +49,12 @@ COPY . .
 COPY --from=frontend_builder /app/frontend/build ./frontend/build
 # https://github.com/canonical/base-2204-python38/blob/main/Dockerfile
 
+RUN python -m nltk.downloader all -d /usr/local/nltk_data
+
 # arg DJANGO_SETTINGS_MODULE needed to run collectstatic in docker build step
-ARG DJANGO_SETTINGS_MODULE=hl_main.settings.prod
+ARG DJANGO_SETTINGS_MODULE
+
+#=hl_main.settings.prod
 
 COPY ./creds ./creds
 ARG GOOGLE_APPLICATION_CREDENTIALS=./creds/application_default_credentials.json

@@ -1,0 +1,53 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  annotations:
+    run.googleapis.com/ingress: all
+    run.googleapis.com/ingress-status: all
+    run.googleapis.com/operation-id: 25971517-a982-4fb2-a8d2-8f11659c8ff0
+  labels:
+    cloud.googleapis.com/location: us-west1
+  name: run-service-dev-001
+  namespace: '676530430552'
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/maxScale: '100'
+        run.googleapis.com/client-name: gcloud
+        run.googleapis.com/client-version: 442.0.0
+        run.googleapis.com/cloudsql-instances: hl-main-dev:us-west1:sql-dev-001
+        run.googleapis.com/vpc-access-connector: projects/vpc-host-staging-yk380-hm150/locations/us-west1/connectors/dev-connector-1
+        run.googleapis.com/vpc-access-egress: private-ranges-only
+      labels:
+        run.googleapis.com/startupProbeType: Default
+      name: run-service-dev-001-00015-zap
+    spec:
+      containerConcurrency: 80
+      containers:
+      - env:
+        - name: GCP_SECRETS_NAME
+          value: squirrel-dev-002
+        - name: GCP_PROJECT_ID
+          value: hl-main-dev
+        - name: DJANGO_SETTINGS_MODULE
+          value: hl_main.settings.prod
+        image: us-west1-docker.pkg.dev/hl-main-dev/hl-dev-repo/hl_main_django
+        ports:
+        - containerPort: 8000
+          name: http1
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 512Mi
+        startupProbe:
+          failureThreshold: 1
+          periodSeconds: 240
+          tcpSocket:
+            port: 8000
+          timeoutSeconds: 240
+      serviceAccountName: dev-service-account@hl-main-dev.iam.gserviceaccount.com
+      timeoutSeconds: 300
+  traffic:
+  - latestRevision: true
+    percent: 100

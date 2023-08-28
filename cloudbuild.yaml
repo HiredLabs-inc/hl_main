@@ -1,9 +1,11 @@
 steps:
-# Build container image with Cloud Build from Dockerfile
 # Use cached images to speed the build process
 - name: 'gcr.io/cloud-builders/docker'
   entrypoint: 'bash'
   args: ['-c', 'docker pull us-west1-docker.pkg.dev/hl-main-dev/hl-dev-repo/hl_main_django:latest || exit 0']
+  id: 'Pull'
+
+# Build container image with Cloud Build from Dockerfile
 - name: 'gcr.io/cloud-builders/docker'
   args: [
           'build',
@@ -11,9 +13,13 @@ steps:
           '--cache-from', 'us-west1-docker.pkg.dev/hl-main-dev/hl-dev-repo/hl_main_django:latest',
           '.'
     ]
+  id: 'Build'
+
 # Push the image to Artifact Registry
 - name: 'gcr.io/cloud-builders/docker'
   args: ['push', 'us-west1-docker.pkg.dev/hl-main-dev/hl-dev-repo/hl_main_django']
+  id: 'Push'
+
 # Deploy to Cloud Run
 - name: 'gcr.io/cloud-builders/gcloud'
   args: [
@@ -30,7 +36,11 @@ steps:
           'dev-service-account@hl-main-dev.iam.gserviceaccount.com',
           '--vpc-connector',
           'projects/vpc-host-staging-yk380-hm150/locations/us-west1/connectors/dev-connector-1',
-          '--allow-unauthenticated'
+          '--set-cloudsql-instances',
+          'hl-main-dev:us-west1:sql-dev-001',
+          '--allow-unauthenticated',
     ]
+  id: 'Deploy'
+  entrypoint: gcloud
 images:
 - 'us-west1-docker.pkg.dev/hl-main-dev/hl-dev-repo/hl_main_django:latest'
