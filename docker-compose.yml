@@ -34,6 +34,7 @@ services:
       # - django-tasks
       - db
     volumes:
+      - ~/.config/gcloud/application_default_credentials.json:/gcloud/application_default_credentials.json:ro
       - .:/app
     ports:
       - 8000:8000
@@ -55,6 +56,7 @@ services:
     depends_on:
       - db
     volumes:
+      - ~/.config/gcloud/application_default_credentials.json:/gcloud/application_default_credentials.json:ro
       - .:/app
     ports:
       - "8001:8001"

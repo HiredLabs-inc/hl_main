@@ -146,3 +146,4 @@ static_files/
 
 gcp-creds
 gcloud
+cloud-sql-proxy

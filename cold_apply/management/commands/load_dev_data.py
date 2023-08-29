@@ -67,7 +67,8 @@ class Command(BaseCommand):
         Organization.objects.all().delete()
 
         User.objects.create_superuser(
-           email="admin@admin.com"
+           username="admin",
+           email="admin@admin.com",
            password="admin"
         )
         # admin_user = UserFactory(, )
