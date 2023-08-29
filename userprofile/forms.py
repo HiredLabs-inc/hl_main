@@ -119,8 +119,9 @@ class ProfileForm(forms.ModelForm):
         is_veteran = cleaned_data.get("is_veteran")
         if is_veteran:
             try:
-                if confirm_veteran_status(self.instance.user):
-                    self.instance.veteran_verified = True
+                self.instance.veteran_verified = confirm_veteran_status(
+                    self.instance.user
+                )
 
             except (BadRequest, VAApiException) as bad_request:
                 logger.error(

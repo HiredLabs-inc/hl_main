@@ -91,7 +91,9 @@ class Profile(TrackedModel):
         self.is_onboarded = True
         step = Step.objects.order_by("phase__order", "order").first()
 
-        participant, _ = Participant.objects.get_or_create(user=self.user, step=step)
+        participant, _ = Participant.objects.get_or_create(
+            user=self.user, current_step=step
+        )
 
         # do service package stuff
         return self.save()

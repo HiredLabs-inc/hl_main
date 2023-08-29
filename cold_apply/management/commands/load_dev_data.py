@@ -22,6 +22,9 @@ class Command(BaseCommand):
         User.objects.all().delete()
         Phase.objects.all().delete()
 
+        User.objects.create_superuser(
+            username="admin@admin.com", email="admin@admin.com", password="admin"
+        )
         phase_1 = Phase.objects.create(
             title="Phase 1",
             start="Participant Shows Interest",
@@ -63,7 +66,11 @@ class Command(BaseCommand):
         Position.objects.all().delete()
         Organization.objects.all().delete()
 
-        admin_user = UserFactory(email="admin@admin.com", password="admin")
+        User.objects.create_superuser(
+           email="admin@admin.com"
+           password="admin"
+        )
+        # admin_user = UserFactory(, )
 
         for i in range(5):
             user = UserFactory(email=f"user{i}@email.com", password="password")

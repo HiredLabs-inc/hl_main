@@ -33,7 +33,7 @@ def confirm_veteran_status(user):
             # "birthPlaceCountry": "USA",
         },
     )
-    # raise BadRequest("Invalid Address")
+
     as_json = response.json()
     if response.ok:
         return as_json["veteran_status"] == "confirmed"

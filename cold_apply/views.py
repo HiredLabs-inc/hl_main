@@ -79,6 +79,7 @@ from .static.scripts.resume_writer.bullet_weighter import hook_after_weighting, 
 def home_view(request):
     if request.user.is_staff:
         return redirect("cold_apply:index")
+    # TODO handle no profile
     return redirect("cold_apply:participant_detail", request.user.participant.id)
 
 
