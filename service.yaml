@@ -4,7 +4,7 @@ metadata:
   annotations:
     run.googleapis.com/ingress: all
     run.googleapis.com/ingress-status: all
-    run.googleapis.com/operation-id: 25971517-a982-4fb2-a8d2-8f11659c8ff0
+    run.googleapis.com/operation-id: 0639431a-58ca-418c-8444-5eb944275a33
   labels:
     cloud.googleapis.com/location: us-west1
   name: run-service-dev-001
@@ -21,7 +21,6 @@ spec:
         run.googleapis.com/vpc-access-egress: private-ranges-only
       labels:
         run.googleapis.com/startupProbeType: Default
-      name: run-service-dev-001-00015-zap
     spec:
       containerConcurrency: 80
       containers:
@@ -33,6 +32,12 @@ spec:
         - name: DJANGO_SETTINGS_MODULE
           value: hl_main.settings.prod
         image: us-west1-docker.pkg.dev/hl-main-dev/hl-dev-repo/hl_main_django
+        env:
+        - name: GCP_REGION
+          valueFrom:
+            secretKeyRef:
+              key: 10
+              name: squirrel-dev-002
         ports:
         - containerPort: 8000
           name: http1
