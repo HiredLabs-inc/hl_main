@@ -57,13 +57,9 @@ RUN python -m nltk.downloader all -d /usr/local/nltk_data
 # arg DJANGO_SETTINGS_MODULE needed to run collectstatic in docker build step
 ARG DJANGO_SETTINGS_MODULE
 
-<<<<<<< HEAD
-#=hl_main.settings.prod
-=======
 COPY ./creds ./creds
 ARG GOOGLE_APPLICATION_CREDENTIALS=./creds/application_default_credentials.json
 RUN python manage.py collectstatic --no-input
->>>>>>> sign-up-rework
 
 COPY ./creds ./creds
 ARG GOOGLE_APPLICATION_CREDENTIALS=./creds/application_default_credentials.json
