@@ -144,4 +144,3 @@ gcloud
 .config/
 certs/
 cloud-sql-proxy
-creds/
