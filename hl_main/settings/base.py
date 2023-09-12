@@ -34,6 +34,13 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    # needed for allauth
+    "django.contrib.sites",
+    # third party
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    # hiredlabs apps
     "cold_apply.apps.ColdApplyConfig",
     "rates.apps.RatesConfig",
     "releases.apps.ReleasesConfig",
@@ -90,12 +97,6 @@ WSGI_APPLICATION = "hl_main.wsgi.application"
 
 # Caching
 # https://docs.djangoproject.com/en/4.1/topics/cache/#setting-up-the-cache
-CACHES = {
-    "default": {
-        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
-        "LOCATION": "main_cache",
-    }
-}
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
@@ -155,5 +156,30 @@ RESUME_OUT_PATH = os.path.join(BASE_DIR, "resume_parser/static/output/")
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 DEFAULT_FROM_EMAIL = "jantonstock@gmail.com"
-LOGIN_REDIRECT_URL = "staff"
-LOGIN_URL = "userprofile:login"
+# LOGIN_REDIRECT_URL = "staff"
+# LOGIN_URL = "userprofile:login"
+
+
+# DJANGO ALLAUTH CONFIG
+SITE_ID = 1
+
+AUTHENTICATION_BACKENDS = [
+    # Needed to login by username in Django admin, regardless of `allauth`
+    "django.contrib.auth.backends.ModelBackend",
+    # `allauth` specific authentication methods, such as login by e-mail
+    "allauth.account.auth_backends.AuthenticationBackend",
+]
+ACCOUNT_AUTHENTICATION_METHOD = "email"
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_UNIQUE_EMAIL = True
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_EMAIL_VERIFICATION = "optional"
+ACCOUNT_PASSWORD_MIN_LENGTH = 8
+ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
+ACCOUNT_LOGIN_ON_PASSWORD_RESET = True
+ACCOUNT_SESSION_REMEMBER = True
+
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+LOGIN_REDIRECT_URL = "userprofile:user_home"
+
+ACCOUNT_ADAPTER = "hl_main.adapter.CustomAccountAdapter"

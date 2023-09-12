@@ -22,6 +22,12 @@ from userprofile import views as userprofile_views
 
 urlpatterns = [
     path("admin/", admin.site.urls, name="admin"),
+    path("accounts/", include("allauth.urls")),
+    path(
+        "accounts/verified_email_required",
+        userprofile_views.verified_email_required_view,
+        name="account_verified_email_required",
+    ),
     path("", userprofile_views.home, name="home"),
     path("about/", userprofile_views.about, name="about"),
     path("staff/", userprofile_views.staff, name="staff"),

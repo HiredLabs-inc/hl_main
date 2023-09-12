@@ -10,11 +10,13 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 import os
-from environ import Env
 from io import StringIO
-from .base import *
 from urllib.parse import urlparse
+
+from environ import Env
 from google.cloud import secretmanager
+
+from .base import *
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
@@ -50,6 +52,14 @@ DATABASES = {
         "PASSWORD": env("GCP_CLOUDSQL_PASSWORD"),
         "HOST": env("GCP_CLOUDSQL_PRIVATE_IP"),
         "PORT": 5432,
+    }
+}
+
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+        "LOCATION": "main_cache",
     }
 }
 

@@ -8,8 +8,8 @@
            
         </div>
         <div class="text-center py-2">
-            <div>{{ participant.email }} </div>
-            <div>{{ participant.phone }}</div>
+            <div>{{ request.user.email }} </div>
+            <div>{{ profile.phone }}</div>
         </div>
     </header>
     {% if "overview" in form.sections.value %}

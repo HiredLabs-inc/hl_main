@@ -6,10 +6,10 @@
     <!-- Name  -->
     <div class="row">
         <div class="col text-center">
-            <h2 class="fw-bold accent">{{job.participant.name}}</h2>
-            <h5>{{job.participant.experience_set.first.position  }}</h5>
-            <div>{{job.participant.phone}} / {{job.participant.email}}</div>
-            <div>{{participant.location.city}}, {{participant.location.state.abbreviation}}</div>
+            <h2 class="fw-bold accent">{{user.get_full_name}}</h2>
+            <h5>{{participant.experience_set.first.position  }}</h5>
+            <div>{{profile.phone}} / {{user.email}}</div>
+            <div>{{profile.city}}, {{profile.state}}</div>
         </div>
     </div>
     <!-- Overview  -->

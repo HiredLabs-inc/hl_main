@@ -5,7 +5,7 @@
 
 <div class="header py-4 px-5 row">
         <div class="col-9 text-end">
-            <h1>{{job.participant.name}}</h1>
+            <h1>{{request.user.get_full_name}}</h1>
         </div>
         <div class="col-3 profile-pic-container">
             <div class="profile-pic">
@@ -15,8 +15,8 @@
 </div>
 <div class="row px-5 mb-3">
     <div class="col-9 text-end">
-        <div>{{job.participant.phone}}</div> 
-        <div>{{job.participant.email}}</div>
+        <div>{{job.profile.phone}}</div> 
+        <div>{{job.request.user.email}}</div>
 
     </div>
 </div>

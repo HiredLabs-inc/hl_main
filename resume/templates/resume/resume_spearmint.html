@@ -10,10 +10,10 @@
 
     <div  class="row mb-4">
         <div class="col">
-            <h3 class="fw-semibold">{{job.participant.name}}</h3>
+            <h3 class="fw-semibold">{{request.user.get_full_name}}</h3>
             <h4 class="spearmint">{{job.participant.experience_set.first.position  }}</h4>
-            <div>{{job.participant.phone}}</div>
-            <div>{{job.participant.email}}</div>
+            <div>{{job.profile.phone}}</div>
+            <div>{{job.request.user.email}}</div>
         </div>
     </div>
     <!-- Overview  -->

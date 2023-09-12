@@ -11,7 +11,7 @@ services:
       # see frontend/tailwind.config.js
       - .:/app
     working_dir: /app/frontend
-    command: npm run watch
+    command: sh -c "npm install && npm run dev"
   gcloud:
     image: google/cloud-sdk:latest
     volumes:
@@ -22,7 +22,8 @@ services:
       - 'gcloud'
     env_file:
       - .env
-
+    # don't need to run gcloud in dev environment
+    # so just run a command that does nothing and exits
     command: echo ''
   django:
     build:
@@ -37,9 +38,11 @@ services:
       - .:/app
     ports:
       - 8000:8000
-    command: python manage.py runserver 0.0.0.0:8000
+    command: python manage.py runserver_plus 0.0.0.0:8000
     env_file:
       - .env.dev
+    environment:
+      - DJANGO_SETTINGS_MODULE=hl_main.settings.dev
 
   db:
     image: postgres

@@ -1,0 +1,10 @@
+{% if form.non_field_errors %}
+<div role="alert" class="rounded border-s-4 border-red-500 bg-red-50 p-4">
+    <strong class="block font-medium text-red-800"> {{title}} </strong>
+  
+    <div class="mt-2 text-sm text-red-700">
+        {{form.non_field_errors}}
+    </div>
+  </div>
+{% endif %}
+

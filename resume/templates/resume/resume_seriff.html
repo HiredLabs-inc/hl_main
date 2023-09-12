@@ -12,7 +12,7 @@
 <div class="p-4">
     <div class="row mb-4">
         <div class="col-8">
-            <h2 class="fw-bold" id="participant_name">{{job.participant.name}}</h2>
+            <h2 class="fw-bold" id="participant_name">{{user.get_full_name}}</h2>
             <h5>{{job.participant.experience_set.first.position  }}</h5>
             <!-- Overview  -->
             {% if "overview" in form.sections.value %}
@@ -22,10 +22,10 @@
             {% endif %}
         </div>
         <div class="col-4 ">
-            <div>{{participant.location.city}}</div>
-            <div>{{participant.location.state.abbreviation}}</div>
-            <div class="fw-bolder">{{job.participant.phone}}</div>
-            <div class="fw-bolder">{{job.participant.email}}</div>
+            <div>{{profile.city}}</div>
+            <div>{{profile.state}}</div>
+            <div class="fw-bolder">{{profile.phone}}</div>
+            <div class="fw-bolder">{{user.email}}</div>
         </div>
     </div>
     <div class="row">

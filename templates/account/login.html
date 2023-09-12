@@ -1,0 +1,55 @@
+{% extends "account/base.html" %}
+
+{% load i18n %}
+{% load account socialaccount %}
+
+{% block head_title %}{% trans "Sign In" %}{% endblock %}
+
+{% block content %}
+
+<h1 class="text-center">{% trans "Sign In" %}</h1>
+
+{% get_providers as socialaccount_providers %}
+
+{% if socialaccount_providers %}
+<p>{% blocktrans with site.name as site_name %}Please sign in with one
+of your existing third party accounts. Or, <a href="{{ signup_url }}">sign up</a>
+for a {{ site_name }} account and sign in below:{% endblocktrans %}</p>
+
+<div class="socialaccount_ballot">
+
+  <ul class="socialaccount_providers">
+    {% include "socialaccount/snippets/provider_list.html" with process="login" %}
+  </ul>
+
+  <div class="login-or">{% trans 'or' %}</div>
+
+</div>
+
+{% include "socialaccount/snippets/login_extra.html" %}
+
+{% else %}
+
+{% endif %}
+
+<form class="login space-y-6" method="POST" action="{% url 'account_login' %}">
+  {% csrf_token %}
+  {% for field in form %}
+    {% include 'components/form_input.html' %}
+  {% endfor %}
+  {% include 'components/form_errors.html' with title='Login Failed' %}
+  {% if redirect_field_value %}
+  <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+  {% endif %}
+  <div class="text-sm flex justify-end mt-2">
+    <a href="{% url 'account_reset_password' %}" class="font-semibold text-bue-600 hover:text-blue-500">{% trans "Forgot Password?" %}</a>
+  </div>
+    <button class="auth-primary-button" type="submit">{% trans "Sign In" %}</button>
+  <p class="mt-10 text-center text-sm text-gray-500">
+    Need an account?
+    <a href="{{ signup_url }}" class="font-semibold leading-6 text-blue-600 hover:text-blue-500">Sign Up</a>
+  </p>
+  
+</form>
+
+{% endblock %}

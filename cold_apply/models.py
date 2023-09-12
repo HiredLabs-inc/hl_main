@@ -1,54 +1,25 @@
-from enum import unique
-
-from django.contrib.auth.models import User
+from django.conf import settings
 from django.db import models
-from django.db.models import Q
 from django.urls import reverse
 
+from hl_main.models import TrackedModel
 from rates.models import Country
 from resume.models import Bullet, Organization, Position
 
 # Create your models here.
 
+User = settings.AUTH_USER_MODEL
 
-class Participant(models.Model):
-    first_name = models.CharField(max_length=100, blank=True)
-    last_name = models.CharField(max_length=100, blank=True)
-    name = models.CharField(max_length=100)
-    email = models.EmailField()
-    phone = models.CharField(max_length=20, blank=True, null=True)
-    dnc = models.BooleanField(default=False)
-    location = models.ForeignKey(
-        "Location", null=True, on_delete=models.SET_NULL
-    )  # drop null later?
-    uploaded_resume = models.FileField(upload_to="uploads/", blank=True, null=True)
-    uploaded_resume_title = models.CharField(max_length=100, blank=True, null=True)
-    veteran = models.BooleanField(default=False)
+
+class Participant(TrackedModel):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
     active = models.BooleanField(default=True)
     current_step = models.ForeignKey(
         "Step", on_delete=models.SET_NULL, blank=True, null=True
     )
-    created_at = models.DateTimeField(auto_now_add=True)
-    created_by = models.ForeignKey(
-        User, on_delete=models.SET_NULL, related_name="created_by", null=True
-    )
-    updated_at = models.DateTimeField(auto_now=True)
-    updated_by = models.ForeignKey(
-        User, on_delete=models.SET_NULL, related_name="updated_by", null=True
-    )
-    applicant = models.OneToOneField(
-        "Applicant", on_delete=models.SET_NULL, null=True, blank=True
-    )
 
     def get_absolute_url(self):
         return reverse("cold_apply:participant_detail", kwargs={"pk": self.pk})
-
-    def __str__(self):
-        return f"{self.name}: {self.email}"
-
-    @property
-    def full_name(self):
-        return f"{self.first_name} {self.last_name}"
 
     class Meta:
         verbose_name_plural = "Participants"
@@ -320,61 +291,6 @@ class Location(models.Model):
 
     def get_absolute_url(self):
         return reverse("cold_apply:location_detail", kwargs={"pk": self.pk})
-
-
-class ApplicantQuerySet(models.QuerySet):
-    def rejected(self):
-        return self.filter(rejected=True)
-
-    def accepted(self):
-        return self.filter(rejected=False, participant__isnull=False)
-
-    def new(self):
-        return self.filter(rejected=False, participant__isnull=True)
-
-
-class Applicant(models.Model):
-    BRANCHES = [
-        ("Army", "Army"),
-        ("Navy", "Navy"),
-        ("Air Force", "Air Force"),
-        ("Marines", "Marines"),
-        ("Coast Guard", "Coast Guard"),
-        ("Space Force", "Space Force"),
-        ("Not a Veteran", "Not a Veteran"),
-    ]
-    name = models.CharField(max_length=200)
-    first_name = models.CharField(max_length=200)
-    last_name = models.CharField(max_length=200)
-    email = models.EmailField(max_length=200)
-    phone = models.CharField(max_length=200)
-    location = models.TextField(blank=True, null=True)
-    linkedin = models.URLField(max_length=200)
-    resume = models.FileField(upload_to="uploads/", blank=True, null=True)
-    special_training = models.TextField(blank=True, null=True)
-    special_skills = models.TextField(blank=True, null=True)
-    job_links = models.TextField(blank=True, null=True)
-    work_preferences = models.TextField(blank=True, null=True)
-    service_branch = models.CharField(
-        max_length=200, choices=BRANCHES, null=True, default="Not a Veteran"
-    )
-    military_specialiaty = models.CharField(max_length=200, null=True)
-    years_of_service = models.IntegerField(null=True)
-    rank_at_separation = models.CharField(max_length=200, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    rejected = models.BooleanField(default=False)
-    objects = ApplicantQuerySet.as_manager()
-
-    def __str__(self) -> str:
-        return f"{self.full_name}: {self.email}"
-
-    @property
-    def full_name(self):
-        return f"{self.first_name} {self.last_name}"
-
-    class Meta:
-        ordering = ["-first_name", "-last_name"]
 
 
 class DatePostedFilter(models.Choices):

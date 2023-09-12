@@ -130,11 +130,6 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-investotron/
-db/
-*.db
-api.py
-
 uploads/
 *.csv
 *.pdf
@@ -148,3 +143,5 @@ gcp-creds
 gcloud
 .config/
 certs/
+cloud-sql-proxy
+creds/

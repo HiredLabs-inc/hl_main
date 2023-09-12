@@ -140,3 +140,22 @@ h4 {
 h5 {
   @apply font-bold mb-3;
 }
+
+/* django-allauth styles */
+
+
+.auth-primary-button {
+  @apply flex w-full justify-center rounded-md bg-blue-600 
+  px-3 py-1.5 text-sm font-semibold leading-6 text-white 
+  shadow-sm hover:bg-blue-500 focus-visible:outline 
+  focus-visible:outline-2 focus-visible:outline-offset-2 
+  focus-visible:outline-blue-600 cursor-pointer
+}
+
+.auth-outline-button {
+  @apply flex w-full justify-center rounded-md hover:bg-blue-500 
+  px-3 py-1.5 text-sm font-semibold leading-6 hover:text-white 
+  shadow-sm bg-white border-blue-500 border-2 text-blue-500 focus-visible:outline 
+  focus-visible:outline-2 focus-visible:outline-offset-2 
+  focus-visible:outline-blue-600 cursor-pointer
+}

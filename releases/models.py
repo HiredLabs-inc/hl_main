@@ -1,5 +1,8 @@
-from django.contrib.auth.models import User
+from allauth.utils import get_user_model
+from django.conf import settings
 from django.db import models
+
+User = settings.AUTH_USER_MODEL
 
 
 class App(models.Model):
@@ -21,11 +24,11 @@ class Release(models.Model):
     date = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('app', 'major', 'minor', 'patch')
-        ordering = ['-major', '-minor', '-patch']
+        unique_together = ("app", "major", "minor", "patch")
+        ordering = ["-major", "-minor", "-patch"]
 
     def __str__(self):
-        return f'{self.major}.{self.minor}.{self.patch}'
+        return f"{self.major}.{self.minor}.{self.patch}"
 
 
 class Note(models.Model):
@@ -33,16 +36,16 @@ class Note(models.Model):
     text = models.TextField()
 
     def __str__(self):
-        return f'{self.release_id}: {self.text}'
+        return f"{self.release_id}: {self.text}"
 
 
 class Feedback(models.Model):
     STATUSES = [
-        ('Unread', 'Unread'),
-        ('Read', 'Read'),
-        ('Added to Backlog', 'Added to Backlog'),
-        ('Added to Roadmap', 'Added to Roadmap'),
-        ('Resolved', 'Resolved'),
+        ("Unread", "Unread"),
+        ("Read", "Read"),
+        ("Added to Backlog", "Added to Backlog"),
+        ("Added to Roadmap", "Added to Roadmap"),
+        ("Resolved", "Resolved"),
     ]
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     app = models.ForeignKey(App, on_delete=models.CASCADE)
@@ -50,7 +53,7 @@ class Feedback(models.Model):
     text = models.TextField()
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
-    status = models.CharField(max_length=20, choices=STATUSES, default='Unread')
+    status = models.CharField(max_length=20, choices=STATUSES, default="Unread")
 
     def __str__(self):
         return self.short_description

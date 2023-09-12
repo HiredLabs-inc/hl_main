@@ -1,0 +1,27 @@
+{% extends "account/base.html" %}
+
+{% load i18n %}
+
+{% block head_title %}{% trans "Verify Your E-mail Address" %}{% endblock %}
+
+{% block content %}
+<h1 class="text-center">{% trans "Verify Your E-mail Address" %}</h1>
+
+{% url 'account_email' as email_url %}
+<div class="space-y-6">
+<p>We have sent an e-mail to <strong>{{request.user.email}} </strong> for
+    verification.
+</p>
+<p>
+     Please click on the link inside that e-mail. If you do not see the verification e-mail in your main inbox, check your spam folder. 
+    </p><p>
+    Otherwise you can try resending the email by clicking the button below, 
+    or contact us at <strong>info@hiredlabs.org</strong> if you're still having an issue.</p>
+<p><strong>Note:</strong> you can still <a href="{{ email_url }}">change your e-mail address</a>.</p>
+</div>
+<form action="{% url  'account_verified_email_required' %}" method="post" class="my-3">
+    {% csrf_token %}
+    <button type="submit" name="action_send" class="auth-primary-button">{% trans 'Re-send Verification' %}</button>
+</form>
+
+{% endblock %}

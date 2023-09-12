@@ -1,0 +1,52 @@
+apiVersion: run.googleapis.com/v1
+kind: Job
+metadata:
+  annotations:
+    run.googleapis.com/creator: jeff.stock@hiredlabs.org
+    run.googleapis.com/lastModifier: jeff.stock@hiredlabs.org
+    run.googleapis.com/operation-id: 0cd2e6ba-0226-450f-9644-636e40e0d11f
+  labels:
+    cloud.googleapis.com/location: us-west1
+    run.googleapis.com/lastUpdatedTime: '2023-08-30T16:29:31.093988Z'
+  name: migrate-database
+  namespace: '676530430552'
+spec:
+  template:
+    metadata:
+      annotations:
+        run.googleapis.com/client-name: gcloud
+        run.googleapis.com/client-version: 444.0.0
+        run.googleapis.com/cloudsql-instances: hl-main-dev:us-west1:sql-dev-001
+        run.googleapis.com/execution-environment: gen2
+        run.googleapis.com/vpc-access-connector: projects/vpc-host-staging-yk380-hm150/locations/us-west1/connectors/dev-connector-1
+        run.googleapis.com/vpc-access-egress: private-ranges-only
+      labels:
+        client.knative.dev/nonce: bac_sem_lov
+    spec:
+      taskCount: 1
+      template:
+        spec:
+          containers:
+          - args:
+            - 'manage.py'
+            - 'migrate'
+            command:
+            - '/usr/bin/python'
+            env:
+            - name: APPLICATION_SETTINGS
+              valueFrom:
+                secretKeyRef:
+                  key: latest
+                  name: squirrel-dev-002
+            - name: GCP_PROJECT_ID
+              value: hl-main-dev
+            - name: GCP_SECRETS_NAME
+              value: squirrel-dev-002
+            image: us-west1-docker.pkg.dev/hl-main-dev/hl-dev-repo/hl_main_django
+            resources:
+              limits:
+                cpu: 1000m
+                memory: 512Mi
+          maxRetries: 3
+          serviceAccountName: 676530430552-compute@developer.gserviceaccount.com
+          timeoutSeconds: '600'
