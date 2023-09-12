@@ -32,8 +32,7 @@ WORKDIR $APP_HOME
 
 # Removes output stream buffering, allowing for more efficient logging
 ENV PYTHONUNBUFFERED 1
-RUN apt-get update
-RUN apt install -y software-properties-common
+RUN apt-get update && apt-get upgrade && apt-get install -y software-properties-common
 RUN add-apt-repository --yes ppa:deadsnakes/ppa
 RUN apt-get update && apt-get install -y python3.8 python3-pip
 #python3-dev libcairo2-dev
@@ -59,11 +58,6 @@ ARG DJANGO_SETTINGS_MODULE
 
 COPY ./creds ./creds
 ARG GOOGLE_APPLICATION_CREDENTIALS=./creds/application_default_credentials.json
-RUN python manage.py collectstatic --no-input
-
-COPY ./creds ./creds
-ARG GOOGLE_APPLICATION_CREDENTIALS=./creds/application_default_credentials.json
-
 RUN python manage.py collectstatic --no-input
 
 # Run the web service on container startup. Here we use the gunicorn
