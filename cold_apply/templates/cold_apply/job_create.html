@@ -2,7 +2,7 @@
 
 {% block breadcrumbs %}
     {% breadcrumb 'Pipeline' 'cold_apply:index' %}
-    {% breadcrumb participant.full_name 'cold_apply:participant_detail' participant.id %}
+    {% breadcrumb participant.user.get_full_name 'cold_apply:participant_detail' participant.id %}
     {% breadcrumb 'Add New Job' %}
 {% endblock breadcrumbs %}
 

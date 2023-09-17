@@ -26,4 +26,5 @@ urlpatterns = [
         name="onboarding_upload_resume",
     ),
     path("profile/view/", views.profile_view, name="profile_view"),
+    path("profile/update/", views.profile_update_view, name="profile_update_view"),
 ]

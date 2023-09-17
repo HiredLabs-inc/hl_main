@@ -4,7 +4,7 @@
 
 {% block breadcrumbs %}
     {% breadcrumb 'Pipeline' 'cold_apply:index' %}
-    {% breadcrumb object.participant.full_name 'cold_apply:participant_detail' object.participant_id %}
+    {% breadcrumb object.participant.user.get_full_name 'cold_apply:participant_detail' object.participant_id %}
     {% breadcrumb object.title|truncatechars:25 %}
 {% endblock breadcrumbs %}
 

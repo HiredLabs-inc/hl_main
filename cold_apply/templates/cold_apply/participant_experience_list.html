@@ -4,13 +4,13 @@
 
 {% block breadcrumbs %}
     {% breadcrumb 'Pipeline' 'cold_apply:index' %}
-    {% breadcrumb participant.full_name 'cold_apply:participant_detail' participant.id %}
+    {% breadcrumb participant.user.get_full_name 'cold_apply:participant_detail' participant.id %}
     {% breadcrumb 'Experiences' %}
 {% endblock breadcrumbs %}
 
 {% block content %}
     <h1>Participant Experiences</h1>
-    <h6>Participant: {{ participant.name }}</h6>
+    <h6>Participant: {{ participant.user.get_full_name }}</h6>
     <p class="text-muted">Data retrieved on {{ now|date }} at {{ now|time }} {{ TIME_ZONE }}</p>
     <div class="mb-4">
         <div>

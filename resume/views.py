@@ -1,12 +1,17 @@
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render
+from django.urls import reverse_lazy
+from django.views.generic import CreateView
+
+from hl_main.mixins import HtmxViewMixin
 
 from .models import (
-    Organization,
-    Experience,
     Bullet,
-    Education,
     CertProjectActivity,
+    Education,
+    Experience,
     LanguageFATS,
+    Organization,
     Position,
 )
 

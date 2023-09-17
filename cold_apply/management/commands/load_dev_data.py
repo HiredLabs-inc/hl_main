@@ -9,7 +9,7 @@ from cold_apply.tests.factories import (
     SkillFactory,
     UserFactory,
 )
-from resume.models import Organization, Position
+from resume.models import Degree, Organization, Position
 from userprofile.models import Profile, ServicePackage
 
 User = get_user_model()
@@ -22,9 +22,11 @@ class Command(BaseCommand):
         User.objects.all().delete()
         Phase.objects.all().delete()
 
-        User.objects.create_superuser(
+        admin_user = User.objects.create_superuser(
             username="admin@admin.com", email="admin@admin.com", password="admin"
         )
+        Profile.objects.create(user=admin_user)
+
         phase_1 = Phase.objects.create(
             title="Phase 1",
             start="Participant Shows Interest",
@@ -57,25 +59,27 @@ class Command(BaseCommand):
         Step.objects.create(title="Phase 3.0", phase=phase_3, order=0)
         Step.objects.create(title="Phase 3.1", phase=phase_3, order=1)
 
+        Skill.objects.all().delete()
+
         SkillFactory(title="Teamwork")
         SkillFactory(title="Leadership")
         SkillFactory(title="Organization")
         SkillFactory(title="Planning")
         SkillFactory(title="Engineering")
 
+        Degree.objects.get_or_create(name="Degree 1", defaults={"abbr": "dg1"})
+
         Position.objects.all().delete()
         Organization.objects.all().delete()
 
         User.objects.create_superuser(
-           username="admin",
-           email="admin@admin.com",
-           password="admin"
+            username="admin", email="admin@admin.com", password="admin"
         )
-        # admin_user = UserFactory(, )
 
         for i in range(5):
             user = UserFactory(email=f"user{i}@email.com", password="password")
             participant = ParticipantFactory(user=user)
+            print(participant.user.profile)
             job = JobFactory(participant=participant)
 
         ServicePackage.objects.all().delete()

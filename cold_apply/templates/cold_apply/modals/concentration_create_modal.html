@@ -1,0 +1,18 @@
+{% load form_helpers %}
+<form hx-post="{% url 'cold_apply:create_concentration' %}" class="modal-content">
+    {% csrf_token %}
+    <div class="modal-header">
+        <h5 class="modal-title">Create Concentration</h5>
+    </div>
+    <div class="grid gap-2">
+        {% for field in form %}
+            {% include 'components/form_input.html'  %}
+        {% endfor %}
+        
+    </div>
+    <div class="mt-5 flex justify-end gap-2">
+        <button class="btn btn-outline-primary" type="button" @click="showModal=false">Cancel</button>
+        <button class="btn btn-primary" type="submit">Create</button>
+    </div>
+</form>
+  

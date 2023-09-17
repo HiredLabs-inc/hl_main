@@ -29,6 +29,7 @@ from .views import (
     ParticipantListView,
     ParticipantUpdateView,
     PhaseListView,
+    PositionCreateView,
     TitleCreateView,
     TitleUpdateView,
     configure_tailored_resume_view,
@@ -91,6 +92,9 @@ urlpatterns += [
         "companies/confirm_update/",
         ConfirmCreateView.as_view(),
         name="confirm_update_company",
+    ),
+    path(
+        "positions/add_position", PositionCreateView.as_view(), name="create_position"
     ),
 ]
 

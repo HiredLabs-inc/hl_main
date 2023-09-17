@@ -286,7 +286,7 @@ class ExperienceFactory(DjangoModelFactory):
     class Meta:
         model = Experience
 
-    start_date = factory.Faker("date_this_decade")
+    start_date = factory.Faker("date_this_decade", locale="en_US")
     end_date = factory.LazyAttribute(lambda o: o.start_date + timedelta(days=365))
     org = factory.Iterator(
         Organization.objects.all()

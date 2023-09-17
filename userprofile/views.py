@@ -3,6 +3,7 @@ from allauth.account.views import EmailView
 from allauth.decorators import rate_limit
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import redirect, render
 from django.urls import reverse
 
@@ -53,7 +54,7 @@ def onboarding_home_view(request):
     if step == OnboardingStep.UPLOAD_RESUME:
         return redirect("userprofile:onboarding_upload_resume")
 
-    return redirect("cold_apply:index")
+    return redirect("cold_apply:participant_detail", request.user.participant.id)
 
 
 @verified_required
@@ -171,5 +172,16 @@ def staff(request):
 
 @login_required
 def profile_view(request):
-    context = {"user_profile": request.user.profile}
+    user_profile = Profile.objects.get_or_create(user=request.user)
+
+    context = {"user_profile": user_profile}
     return render(request, "userprofile/profile_view.html", context)
+
+
+@login_required
+def profile_update_view(request):
+    form = ProfileForm(request.POST or None, instance=request.user.profile)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        return redirect("userprofile:profile_view")
+    return render(request, "userprofile/profile_update_view.html", {"form": form})

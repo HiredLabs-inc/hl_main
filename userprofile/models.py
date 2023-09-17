@@ -73,7 +73,7 @@ class Profile(TrackedModel):
             if self.is_veteran:
                 self.onboarding_step = OnboardingStep.VETERAN_PROFILE
             else:
-                self.onboarding_step = OnboardingStep.SERVICE_PACKAGE
+                self.onboarding_step = OnboardingStep.UPLOAD_RESUME
 
         elif current_step == OnboardingStep.VETERAN_PROFILE:
             self.onboarding_step = OnboardingStep.UPLOAD_RESUME

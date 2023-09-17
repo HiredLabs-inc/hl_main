@@ -2,14 +2,16 @@
 
 {% block content %}
     <h3>Adding New Education</h3>
-    <p>For: {{ participant.name }}</p>
-    <form method="post">
+    <p>For: {{ participant.user.get_full_name }}</p>
+    <form method="post" class="max-w-md space-y-4">
         {% csrf_token %}
-        {{ form.as_p }}
+        {% for field in form  %}
+            {% include "components/form_input.html"  %}
+        {% endfor %}
         <input class="btn btn-primary" type="submit" value="Save">
         <a class="btn btn-primary" onclick="window.close()">Cancel</a>
     </form>
-    <hr>
-    <a class="btn btn-primary" href="{% url 'cold_apply:create_company' %}" target="_blank">Add School</a>
-    <a class="btn btn-primary" href="{% url 'cold_apply:create_concentration'%}" target="_blank">Add Concentration</a>
+    <hr class="my-6">
+    <a class="btn btn-primary" hx-get="{% url 'cold_apply:create_company' %}" hx-target="#modal">Add School</a>
+    <a class="btn btn-primary" hx-get="{% url 'cold_apply:create_concentration'%}" hx-target="#modal">Add Concentration</a>
 {% endblock %}

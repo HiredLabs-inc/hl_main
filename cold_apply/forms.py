@@ -37,15 +37,10 @@ class InteractionForm(forms.ModelForm):
 class ExperienceForm(forms.ModelForm):
     class Meta:
         model = Experience
-        start_date = forms.DateField(
-            input_formats=["%m/%d/%Y"],
-            widget=forms.DateInput(
-                attrs={
-                    "class": "form-control datetimepicker-input",
-                    "data-target": "#datetimepicker1",
-                }
-            ),
-        )
+        widgets = {
+            "start_date": forms.DateInput(attrs={"type": "date"}),
+            "end_date": forms.DateInput(attrs={"type": "date"}),
+        }
         fields = ["position", "org", "start_date", "end_date"]
 
 

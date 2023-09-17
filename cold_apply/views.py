@@ -3,6 +3,7 @@ from typing import Any, Dict
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import ObjectDoesNotExist
 from django.forms import models as model_forms
 from django.http import HttpResponse, JsonResponse
 from django.http.response import HttpResponse
@@ -193,7 +194,10 @@ class ParticipantDetailView(LoginRequiredMixin, FormMixin, DetailView):
             participant_id=self.kwargs["pk"]
         ).first()
         context["now"] = timezone.now()
-        context["profile"] = self.request.user.profile
+        try:
+            context["profile"] = self.request.user.profile
+        except ObjectDoesNotExist:
+            context["profile"] = None
 
         return context
 
@@ -491,25 +495,20 @@ class EducationUpdateView(LoginRequiredMixin, UpdateView):
         return redirect(reverse("cold_apply:confirm_update_education"))
 
 
-class ConcentrationCreateView(LoginRequiredMixin, CreateView):
+class ConcentrationCreateView(HtmxViewMixin, LoginRequiredMixin, CreateView):
     model = Concentration
     template_name = "cold_apply/concentration_create.html"
+    htmx_template = "cold_apply/modals/concentration_create_modal.html"
+    empty_response_on_save = True
+    refresh_on_save = True
     fields = ["name"]
+    success_url = reverse_lazy("cold_apply:index")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["now"] = timezone.now()
 
         return context
-
-    def form_valid(self, form):
-        if form.is_valid():
-            concentration = form.save(commit=False)
-            concentration.save()
-            return redirect(reverse("cold_apply:confirm_add_concentration"))
-        else:
-            print(form.errors)
-        return super().form_valid(form)
 
 
 @login_required
@@ -655,7 +654,10 @@ def tailored_resume_view(request, job_pk):
             weighted_bullets = weigh_bullets(bullets, job, keywords)
             weighted_bullets = weighted_bullets.select_related(
                 "bullet__experience"
-            ).order_by("-weight", "-bullet__experience__start_date")
+            ).order_by(
+                "-bullet__experience__start_date",
+                "-weight",
+            )
 
             context["chronological_experiences"] = group_bullets_by_experience(
                 weighted_bullets
@@ -968,6 +970,13 @@ def create_interaction(request):
 
 
 # TODO View applicant list using generic ListView (login required)
+class PositionCreateView(HtmxViewMixin, LoginRequiredMixin, CreateView):
+    model = Position
+    htmx_template = "cold_apply/modals/position_create_modal.html"
+    empty_response_on_save = True
+    refresh_on_save = True
+    fields = ["title"]
+    success_url = reverse_lazy("cold_apply:index")
 
 
 class LocationCreateView(HtmxViewMixin, LoginRequiredMixin, CreateView):

@@ -85,7 +85,7 @@ class Job(models.Model):
     description = models.TextField()
     status = models.CharField(max_length=20, choices=STATUSES, default="Open")
     status_reason = models.CharField(
-        max_length=20, choices=REASONS, blank=True, null=True
+        max_length=100, choices=REASONS, blank=True, null=True
     )
     application_link = models.URLField(blank=True, null=True, max_length=500)
     application_agent = models.CharField(max_length=100, blank=True)
