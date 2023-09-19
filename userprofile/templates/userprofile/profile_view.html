@@ -3,13 +3,15 @@
 {% block content %}
 
     <div class="container">
-        <h2>User Details</h2>
-        <p>First Name: {{ user.first_name }}</p>
-        <p>Last Name: {{ user.last_name }}</p>
-        <p>Email: {{ user.email }}</p>
-        <p>Nickname: {{ profile.nickname }}</p>
-        <a href="{% url 'userprofile:profile_update_view' %}" class="btn btn-primary">Update Profile
-        </a>
+        <h2>User Profile</h2>
+        <div class="space-y-6">
+            <p>First Name: {{ user.first_name }}</p>
+            <p>Last Name: {{ user.last_name }}</p>
+            <p>Email: {{ user.email }}</p>
+            <p>Nickname: {{ profile.nickname }}</p>
+            <a href="{% url 'userprofile:profile_update_view' %}" class="btn btn-primary">Update Profile
+            </a>
+        </div>
 
         
     </div>

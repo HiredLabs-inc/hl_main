@@ -1,8 +1,10 @@
 {% extends 'staff.html' %}
 
 {% block content %}
-
+    <h2>Update Profile</h2>
     <div class="container">
+        {% url "userprofile:profile_view" as cancel_url %}
+        {{cancel_url}}
         {% include "forms/standard_form.html" with form=form %}
     </div>
 

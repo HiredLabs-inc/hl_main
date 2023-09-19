@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from typing import Any, Dict
+from django import http
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -10,6 +11,7 @@ from django.http.response import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import Resolver404, resolve, reverse, reverse_lazy
 from django.utils import timezone
+from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.views.generic import (
@@ -25,6 +27,7 @@ from django.views.generic.edit import FormMixin
 
 from background_tasks.models import Task, TaskStatusChoices
 from background_tasks.queue import queue_task, work_task
+from cold_apply.guards import sign_up_completed
 from cold_apply.jobs import get_jobs_for_participant
 from cold_apply.resume_formatting import (
     group_bullets_by_experience,
@@ -85,6 +88,7 @@ def home_view(request):
 
 
 # Index
+@method_decorator(sign_up_completed, name="dispatch")
 class ParticipantListView(LoginRequiredMixin, ListView):
     model = Phase
     template_name = "cold_apply/participant_list.html"

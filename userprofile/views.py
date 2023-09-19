@@ -7,6 +7,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import redirect, render
 from django.urls import reverse
 
+from cold_apply.guards import sign_up_completed
 from releases.models import App
 from userprofile.guards import verified_required
 from userprofile.va_api import confirm_veteran_status
@@ -53,6 +54,8 @@ def onboarding_home_view(request):
         return redirect("userprofile:onboarding_service_package")
     if step == OnboardingStep.UPLOAD_RESUME:
         return redirect("userprofile:onboarding_upload_resume")
+
+    # do redirect here when someone completes sign up
 
     return redirect("cold_apply:participant_detail", request.user.participant.id)
 
@@ -171,6 +174,7 @@ def staff(request):
 
 
 @login_required
+# @sign_up_completed
 def profile_view(request):
     user_profile = Profile.objects.get_or_create(user=request.user)
 

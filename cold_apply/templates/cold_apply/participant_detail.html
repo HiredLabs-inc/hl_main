@@ -1,8 +1,10 @@
 {% extends 'base_app.html' %}
 
 {% block breadcrumbs %}
-    {% breadcrumb 'Pipeline' 'cold_apply:index' %}
-    {% breadcrumb object.user.get_full_name %}
+    {% if request.user.is_staff  %}
+        {% breadcrumb 'Pipeline' 'cold_apply:index' %}
+    {% endif %}
+    {% breadcrumb object.user.get_full_name    %}
 {% endblock breadcrumbs %}
 
 {% block content %}

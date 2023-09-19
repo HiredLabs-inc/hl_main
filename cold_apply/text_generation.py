@@ -10,10 +10,27 @@ from resume.models import Bullet, Experience, Position
 # def generate_overview(participant: Participant):
 
 
+def get_keywords(job: Job):
+    """Returns a list of keywords for a job description."""
+    keywords = job.keywordanalysis_set.values_list("unigram", "bigram", "trigram")
+    unigrams = [unigram for unigram, _, _ in keywords]
+    bigrams = [bigram for _, bigram, _ in keywords]
+    trigrams = [trigram for _, _, trigram in keywords]
+
+    return unigrams, bigrams, trigrams
+
+
 def rewrite_bullet_for_job(bullet, job):
-    keywords = job.keywordanalysis_set.values_list("unigram", flat=True)
-    keywords_list = "\n".join(keywords)
-    prompt = f"Rewrite the following bullet point into a single bullet point only: '{bullet.text}' to focus on these keywords: {keywords_list}"
+    unigrams, bigrams, trigrams = get_keywords(job)
+
+    unigrams_list = "\n".join(unigrams)
+    bigrams_list = "\n".join(bigrams)
+    trigrams_list = "\n".join(trigrams)
+
+    prompt = (
+        f"Rewrite the following bullet point into a single bullet point only: '{bullet.text}' "
+        f"to focus on these keywords: {unigrams_list}"
+    )
 
     return generate_text(prompt)
 
@@ -26,9 +43,13 @@ def generate_overview(position: Position, job: Job = None):
         f"{position.title}."
     )
     if job:
-        keywords = job.keywordanalysis_set.values_list("unigram", flat=True)
-        keywords_list = "\n".join(keywords)
-        prompt += f"\n\nThe overview should focus on these keywords: {keywords_list}"
+        unigrams, bigrams, trigrams = get_keywords(job)
+
+        unigrams_list = "\n".join(unigrams)
+        bigrams_list = "\n".join(bigrams)
+        trigrams_list = "\n".join(trigrams)
+
+        prompt += f"\n\nThe overview should focus on these keywords: {unigrams_list}"
 
     return generate_text(prompt)
 
