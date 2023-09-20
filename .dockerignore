@@ -2,5 +2,4 @@ gcp-creds
 .env
 gcloud
 frontend/node_modules
-frontend/build
 **/node_modules

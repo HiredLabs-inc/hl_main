@@ -27,7 +27,7 @@ from django.views.generic.edit import FormMixin
 
 from background_tasks.models import Task, TaskStatusChoices
 from background_tasks.queue import queue_task, work_task
-from cold_apply.guards import sign_up_completed
+# from cold_apply.guards import sign_up_completed
 from cold_apply.jobs import get_jobs_for_participant
 from cold_apply.resume_formatting import (
     group_bullets_by_experience,
@@ -88,7 +88,7 @@ def home_view(request):
 
 
 # Index
-@method_decorator(sign_up_completed, name="dispatch")
+# @method_decorator(sign_up_completed, name="dispatch")
 class ParticipantListView(LoginRequiredMixin, ListView):
     model = Phase
     template_name = "cold_apply/participant_list.html"

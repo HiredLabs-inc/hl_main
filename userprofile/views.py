@@ -7,7 +7,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import redirect, render
 from django.urls import reverse
 
-from cold_apply.guards import sign_up_completed
+# from cold_apply.guards import sign_up_completed
 from releases.models import App
 from userprofile.guards import verified_required
 from userprofile.va_api import confirm_veteran_status
