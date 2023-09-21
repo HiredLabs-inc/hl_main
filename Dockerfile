@@ -49,9 +49,10 @@ RUN playwright install chromium --with-deps
 # Copy local code to the container image.
 COPY . .
 COPY --from=frontend_builder /app/frontend/build ./frontend/build
+
 # https://github.com/canonical/base-2204-python38/blob/main/Dockerfile
 
-RUN python -m nltk.downloader all -d /usr/local/nltk_data
+RUN python -m nltk.downloader stopwords -d /usr/local/nltk_data
 
 # arg DJANGO_SETTINGS_MODULE needed to run collectstatic in docker build step
 ARG DJANGO_SETTINGS_MODULE
@@ -59,6 +60,7 @@ ARG DJANGO_SETTINGS_MODULE
 COPY ./creds ./creds
 ARG GOOGLE_APPLICATION_CREDENTIALS=./creds/application_default_credentials.json
 RUN python manage.py collectstatic --no-input
+
 
 # Run the web service on container startup. Here we use the gunicorn
 # webserver, with one worker process and 8 threads.

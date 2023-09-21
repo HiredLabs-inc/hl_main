@@ -66,7 +66,9 @@ CACHES = {
 # Caching
 # https://docs.djangoproject.com/en/4.1/topics/cache/#setting-up-the-cache
 
-STATICFILES_DIRS = (os.path.join(BASE_DIR, "static/"),)
+STATICFILES_DIRS = (os.path.join(BASE_DIR, "main_static/"),
+                    os.path.join(BASE_DIR, "frontend/build/static")    )
+
 
 # RESUME write to gcloud storage
 
@@ -116,7 +118,7 @@ DATABASES = {
 }
 
 STATIC_URL = "/static/"
-STATIC_ROOT = os.path.join(BASE_DIR, "static_files/")
+STATIC_ROOT = os.path.join(BASE_DIR, "static/")
 
 GS_BUCKET_NAME = f"{os.environ['GCP_PROJECT_ID']}-{os.environ['GCP_BUCKET_SUFFIX']}"
 GS_DEFAULT_ACL = "projectPrivate"

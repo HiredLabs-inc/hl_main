@@ -13,7 +13,6 @@ module.exports = {
     "../core/templatetags/*.py",
     "./templatetags/*.py",
     "../templates/**/*.html",
-
   ],
   darkMode: 'class',
   theme: {
@@ -28,4 +27,3 @@ module.exports = {
     require('preline/plugin'),
   ],
 }
-
