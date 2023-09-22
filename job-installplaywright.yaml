@@ -26,7 +26,7 @@ spec:
             - 'playwright'
             - 'install'
             command:
-            - '/usr/local/bin/playwright'
+            - '/usr/local/bin/bash'
             env:
             - name: APPLICATION_SETTINGS
               valueFrom:
