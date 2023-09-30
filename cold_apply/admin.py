@@ -36,18 +36,21 @@ class WeightedBulletAdmin(admin.ModelAdmin):
 
 class ParticipantAdmin(admin.ModelAdmin):
     list_display = (
+        "user",
         "active",
         "current_step",
         "created_at",
         "updated_at",
     )
     list_filter = (
+        "user",
         "active",
         "current_step",
         "created_at",
         "updated_at",
     )
     search_fields = (
+        "user"
         "active",
         "current_step",
         "created_at",
