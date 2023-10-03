@@ -12,12 +12,14 @@ COPY . /app
 
 RUN npm run build
 
-FROM ubuntu:20.04
+FROM ubuntu:jammy
 # Environment variable declaration for Google Cloud Build.
 # see cloudbuild.yaml for usage in this project
 # Reference to this solution:
 # https://stackoverflow.com/questions/39597925/how-do-i-set-environment-variables-during-the-build-in-docker
-
+ARG DEBIAN_FRONTEND=noninteractive
+ARG TZ=America/Los_Angeles
+ARG DOCKER_IMAGE_NAME_TEMPLATE="mcr.microsoft.com/playwright:v1.35.0-jammy"
 ARG GCP_PROJECT_ID=hl-main-dev
 # ENV GCP_PROJECT_ID=$GCP_PROJECT_ID
 
@@ -44,7 +46,44 @@ RUN ln -s /usr/bin/python3 /usr/bin/python
 COPY ./requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-RUN playwright install chromium --with-deps
+# === INSTALL Node.js ===
+
+RUN apt-get update && \
+    # Install Node 18
+    apt-get install -y curl wget gpg ca-certificates && \
+    mkdir -p /etc/apt/keyrings && \
+    curl -sL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg && \
+    echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_18.x nodistro main" >> /etc/apt/sources.list.d/nodesource.list && \
+    apt-get update && \
+    apt-get install -y nodejs && \
+    # Feature-parity with node.js base images.
+    apt-get install -y --no-install-recommends git openssh-client && \
+    npm install -g yarn && \
+    # clean apt cache
+    rm -rf /var/lib/apt/lists/* && \
+    # Create the pwuser
+    adduser pwuser
+
+# === BAKE BROWSERS INTO IMAGE ===
+
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+
+# 2. Bake in browsers & deps.
+#    Browsers will be downloaded in `/ms-playwright`.
+#    Note: make sure to set 777 to the registry so that any user can access
+#    registry.
+RUN mkdir /ms-playwright && \
+    mkdir /ms-playwright-agent && \
+    cd /ms-playwright-agent && npm init -y && \
+    npm i playwright && \
+    npm exec --no -- playwright-core mark-docker-image "${DOCKER_IMAGE_NAME_TEMPLATE}" && \
+    npm exec --no -- playwright-core install --with-deps && rm -rf /var/lib/apt/lists/* && \
+    rm -rf /ms-playwright-agent && \
+    rm -rf ~/.npm/ && \
+    chmod -R 777 /ms-playwright
+
+RUN playwright install-deps
+RUN playwright install
 
 # Copy local code to the container image.
 COPY . .
