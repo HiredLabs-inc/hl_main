@@ -45,7 +45,7 @@ $(document).ready(function () {
         renderer: "svg",
         loop: true,
         autoplay: true,
-        path: "static/assets/PAGE00/pg0_loadingLoop.json", // the path to the animation json
+        // path: "static/assets/PAGE00/pg0_loadingLoop.json", // the path to the animation json
     };
 
     var pg1_Lottie_SquiggleParams = {
