@@ -57,6 +57,7 @@ class ProfileForm(forms.ModelForm):
             "state",
             "zip_code",
             "phone",
+            "birthdate",
             "linkedin",
             "special_training",
             "special_skills",
@@ -68,6 +69,7 @@ class ProfileForm(forms.ModelForm):
             "is_veteran": _("Are you a US Military Veteran?"),
             "phone": "Contact Number (optional)",
             "linkedin": "LinkedIn (optional)",
+            "birthdate": "Birth date (required for veteran verification)",
         }
         widgets = {
             "special_training": forms.Textarea(

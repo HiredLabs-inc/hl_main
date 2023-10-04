@@ -2,6 +2,7 @@ from .base import *
 
 SECRET_KEY = "doesntmatterdfklmasdlkfmsdaf"
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "")
+VA_API_KEY = os.environ.get("VA_API_KEY")
 
 # MEDIA_ROOT = os.path.join(BASE_DIR, "media/")
 MEDIA_URL = "media/"
@@ -53,4 +54,4 @@ ACCOUNT_LOGIN_ATTEMPTS = None
 # ]
 
 
-VA_API_KEY = env("VA_API_KEY", default="")
+

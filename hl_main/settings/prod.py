@@ -106,6 +106,7 @@ GCP_SERVICE_ACCOUNT = os.environ["GCP_SERVICE_ACCOUNT"]
 SECRET_KEY = os.environ["DJANGO_SECRET_KEY"]
 
 
+
 DATABASES = {
     "default": {
         "NAME": os.environ["GCP_CLOUDSQL_DB_NAME"],

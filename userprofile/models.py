@@ -21,6 +21,7 @@ class Profile(TrackedModel):
     state = models.CharField(max_length=2)
     city = models.CharField(max_length=100)
     zip_code = models.CharField(max_length=200)
+    birthdate = models.DateField(null=True, blank=True)
     linkedin = models.URLField(max_length=200, blank=True)
 
     service_package = models.ForeignKey(
