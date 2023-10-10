@@ -11,14 +11,14 @@
 {% block content %}
     {% url 'cold_apply:participant_detail' participant.id as cancel_url %}
     {% component 'forms/standard_form.html' form=form enctype='multipart/form-data' cancel_url=cancel_url %}
-        {% section after_form %}
-        <div  class="mb-3" >
-            {% url 'cold_apply:create_location' as create_location_url %}
-            <a href="{{create_location_url}}" 
-            hx-get="{{create_location_url}}"
-            hx-target="#modal">Add new location</a>
-            </div>
-        {% endsection %}
+{#        {% section after_form %}#}
+{#        <div  class="mb-3" >#}
+{#            {% url 'cold_apply:create_location' as create_location_url %}#}
+{#            <a href="{{create_location_url}}" #}
+{#            hx-get="{{create_location_url}}"#}
+{#            hx-target="#modal">Add new location</a>#}
+{#            </div>#}
+{#        {% endsection %}#}
     {% endcomponent %}
     
 {% endblock %}
