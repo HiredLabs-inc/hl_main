@@ -272,11 +272,15 @@
 </div>
 <br>
 <br>
-<div class="row">
-    <h3>Actions</h3>
+
+{% endblock %}
+
+{% block navigation %}
+{% if user.is_staff %}
+    <div class="row">
     <div class="col">
 
-        <a class="btn btn-primary" href="{% url 'cold_apply:update_participant' object.id %}">Update Participant</a>
+        <a class="btn btn-primary" href="{% url 'cold_apply:update_participant' object.id %}">Update Participant Phase</a>
     </div>
 </div>
 
@@ -291,10 +295,14 @@
     })
 
 </script>
-{% endblock %}
+{% endif %}
 
-{% block navigation %}
+{% if request.user.is_staff  %}
 <div class="col">
+
     <a class="btn btn-primary" href="{% url 'cold_apply:index' %}">Back to Pipeline</a>
+
 </div>
+    {% endif %}
 {% endblock navigation %}
+
