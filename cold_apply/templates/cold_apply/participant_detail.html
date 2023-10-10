@@ -24,8 +24,18 @@
         {{object.user.profile.city}}, {{object.user.profile.state}}
     </div>
     <div class="font-bold">
-        {% if object.user.profile.veteran_verified %}
+        {% if object.user.profile.is_veteran %}
         {{object.user.veteranprofile.service_branch}} Veteran
+            {% if object.user.profile.veteran_verified %}
+            <span class="rounded-md bg-green-100 text-green-700  p-1">Verified</span>
+            {% else %}
+            <span class="rounded-md bg-red-100 text-red-700 p-1">Not Verified</span>
+                <div>
+                <a href="{% url 'userprofile:profile_update_view' %}" class="btn btn-primary">
+                    <i class="bi bi-search"></i>Verify
+                </a>
+            </div>
+            {% endif %}
         {% else %}
         Not a Veteran
         {% endif %}
