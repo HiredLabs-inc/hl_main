@@ -3,7 +3,9 @@
 {% load form_helpers %}
 
 {% block breadcrumbs %}
-    {% breadcrumb 'Pipeline' 'cold_apply:index' %}
+    {% if request.user.is_staff  %}
+        {% breadcrumb 'Pipeline' 'cold_apply:index' %}
+    {% endif %}
     {% breadcrumb job.participant.user.get_full_name 'cold_apply:participant_detail' job.participant_id %}
     {% breadcrumb job.title|truncatechars:25 'cold_apply:job_detail' job.id %}
     {% breadcrumb 'Tailor Resume' %}

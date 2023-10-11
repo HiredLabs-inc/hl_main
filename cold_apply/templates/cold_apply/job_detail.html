@@ -3,7 +3,9 @@
 {% get_current_timezone as TIME_ZONE %}
 
 {% block breadcrumbs %}
-    {% breadcrumb 'Pipeline' 'cold_apply:index' %}
+    {% if request.user.is_staff  %}
+        {% breadcrumb 'Pipeline' 'cold_apply:index' %}
+    {% endif %}
     {% breadcrumb object.participant.user.get_full_name 'cold_apply:participant_detail' object.participant_id %}
     {% breadcrumb object.title|truncatechars:25 %}
 {% endblock breadcrumbs %}
@@ -76,9 +78,3 @@
     </div>
    
 {% endblock %}
-
-{% block navigation %}
-<a class="btn btn-primary" href="{% url 'cold_apply:participant_detail' object.participant.id %}">Back to
-    Participant Detail</a>
-<a class="btn btn-primary" href="{% url 'cold_apply:index' %}">Back to Pipeline</a>
-{% endblock navigation %}

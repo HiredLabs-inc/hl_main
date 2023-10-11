@@ -1,6 +1,8 @@
 {% extends 'base_app.html' %}
 {% block breadcrumbs %}
-    {% breadcrumb 'Pipeline' 'cold_apply:index' %}
+    {% if request.user.is_staff  %}
+        {% breadcrumb 'Pipeline' 'cold_apply:index' %}
+    {% endif %}
     {% breadcrumb experience.participant.user.get_full_name 'cold_apply:participant_detail' experience.participant_id %}
     {% breadcrumb 'Experiences' 'cold_apply:participant_experience_list' experience.participant_id %}
     {% breadcrumb experience|truncatechars:"20" %}

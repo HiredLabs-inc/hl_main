@@ -30,9 +30,17 @@
             <span class="rounded-md bg-green-100 text-green-700  p-1">Verified</span>
             {% else %}
             <span class="rounded-md bg-red-100 text-red-700 p-1">Not Verified</span>
+                <br>
+                <br>
                 <div>
                 <a href="{% url 'userprofile:profile_update_view' %}" class="btn btn-primary">
-                    <i class="bi bi-search"></i>Verify
+                    <i class="bi bi-search"></i>
+                    {% if object.user.is_staff %}
+                    Verify Participant Veteran Status
+                    {% else %}
+                        Verify Your Veteran Status
+                    {% endif %}
+
                 </a>
             </div>
             {% endif %}

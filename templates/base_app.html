@@ -54,7 +54,11 @@
                                     Toolbox
                                 </strong>
                                     {% if perms.cold_apply %}
-                                        <a class="block rounded-lg px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-700" href="{% url 'cold_apply:index' %}">Cold Apply</a>
+                                        {% if user.is_staff %}
+                                            <a class="block rounded-lg px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-700" href="{% url 'cold_apply:index' %}">Cold Apply</a>
+                                        {% else %}
+                                            <a class="block rounded-lg px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-700" href="{% url 'cold_apply:home' %}">Cold Apply</a>
+                                        {% endif %}
                                     {% endif %}
                                     {% if perms.rates %}
                                         <a class="block rounded-lg px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-700" href="{% url 'rates:index' %}">World Rates</a>

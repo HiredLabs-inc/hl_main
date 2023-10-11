@@ -3,7 +3,9 @@
 {% get_current_timezone as TIME_ZONE %}
 
 {% block breadcrumbs %}
-    {% breadcrumb 'Pipeline' 'cold_apply:index' %}
+    {% if request.user.is_staff  %}
+        {% breadcrumb 'Pipeline' 'cold_apply:index' %}
+    {% endif %}
     {% breadcrumb participant.user.get_full_name 'cold_apply:participant_detail' participant.id %}
     {% breadcrumb 'Experiences' %}
 {% endblock breadcrumbs %}
