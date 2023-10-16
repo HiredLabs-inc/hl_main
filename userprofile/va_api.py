@@ -19,18 +19,11 @@ def confirm_veteran_status(user):
             "firstName": user.first_name,
             "lastName": user.last_name,
             "birthDate": str(user.profile.birthdate),
-            # "middleName": "M",
-            # "gender": "M",
             "streetAddressLine1": user.profile.address,
             "city": user.profile.city,
             "zipCode": user.profile.zip_code,
             "state": user.profile.state,
             "country": user.profile.country,
-            # "homePhoneNumber": "555-555-5555",
-            # "mothersMaidenName": "Smith",
-            # "birthPlaceCity": "Johnson City",
-            # "birthPlaceState": "MA",
-            # "birthPlaceCountry": "USA",
         },
     )
 
