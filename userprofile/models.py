@@ -1,5 +1,5 @@
 from django import forms
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.db import models
 
 from cold_apply.models import Participant, Step
@@ -18,8 +18,10 @@ class Profile(TrackedModel):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     nickname = models.CharField(max_length=300)
     phone = models.CharField(max_length=200, blank=True)
+    address = models.CharField(max_length=200, default="None Entered")
     state = models.CharField(max_length=2)
     city = models.CharField(max_length=100)
+    country = models.CharField(max_length=200, default="USA")
     zip_code = models.CharField(max_length=200)
     birthdate = models.DateField(null=True, blank=True)
     linkedin = models.URLField(max_length=200, blank=True)
@@ -31,6 +33,7 @@ class Profile(TrackedModel):
     veteran_verified = models.BooleanField(default=False)
     is_onboarded = models.BooleanField(default=False)
     resume = models.FileField(upload_to="uploads/", null=True)
+    service_documents = models.FileField(upload_to="uploads/", null=True)
 
     special_training = models.TextField(blank=True, null=True)
     special_skills = models.TextField(blank=True, null=True)
@@ -95,7 +98,9 @@ class Profile(TrackedModel):
         participant, _ = Participant.objects.get_or_create(
             user=self.user, current_step=step
         )
-
+        # add to cold_apply_user group
+        group = Group.objects.get(name="cold_apply_user")
+        self.user.groups.add(group)
         # do service package stuff
         return self.save()
 

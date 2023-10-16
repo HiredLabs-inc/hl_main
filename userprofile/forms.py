@@ -36,9 +36,12 @@ class ProfileForm(forms.ModelForm):
     field_order = [
         "first_name",
         "last_name",
+        "birthdate",
+        "address",
         "city",
         "state",
         "zip_code",
+        "country",
         "phone",
         "linkedin",
         "special_training",
@@ -52,17 +55,21 @@ class ProfileForm(forms.ModelForm):
         model = Profile
 
         fields = [
-            "is_veteran",
+            "first_name",
+            "last_name",
+            "birthdate",
+            "address",
             "city",
             "state",
             "zip_code",
+            "country",
             "phone",
-            "birthdate",
             "linkedin",
             "special_training",
             "special_skills",
             "job_links",
             "work_preferences",
+            "is_veteran",
         ]
 
         labels = {
@@ -101,7 +108,7 @@ class ProfileForm(forms.ModelForm):
                     "rows": 3,
                     "class": "form-control",
                     "placeholder": "Please list any preferences you have for your next job (e.g. location, industry, hours, "
-                    "level, etc.).",
+                                   "level, etc.).",
                 }
             ),
             "is_veteran": ButtonRadioSelectWidget(
