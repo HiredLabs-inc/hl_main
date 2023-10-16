@@ -60,11 +60,13 @@
         <div class="col-span-1">Highest Education:</div>
         <div class="col-span-5 text-gray-600">{{highest_edu}}</div>
         <div class="col-span-1">Uploaded Resume:</div>
-        <div class="col-span-5 text-gray-600"><a href="{{ MEDIA_PREFIX }}{{ object.uploaded_resume }}" target="_blank">{{ object.uploaded_resume_title }}</a></div>
-        <div class="col-span-1">Current Phase:</div>
-        <div class="col-span-5 text-gray-600">{{ object.current_step.phase.title }}</div>
-        <div class="col-span-1">Current Step:</div>
-        <div class="col-span-5 text-gray-600">{{ object.current_step.title }}</div>
+        <div class="col-span-5 text-gray-600"><a href="{{ MEDIA_PREFIX }}{{ object.user.profile.resume }}" target="_blank">View Uploaded Resume</a></div>
+        {% if user.is_staff %}
+            <div class="col-span-1">Current Phase:</div>
+            <div class="col-span-5 text-gray-600">{{ object.current_step.phase.title }}</div>
+            <div class="col-span-1">Current Step:</div>
+            <div class="col-span-5 text-gray-600">{{ object.current_step.title }}</div>
+        {% endif %}
     </div>
     <p>
         <a href="{% url 'cold_apply:participant_experience_list' object.id %}">See All Education and Experience</a>
