@@ -12,11 +12,13 @@
     <div class="flex items-center">
         <h1 class="text-2xl font-bold mr-2">{{ object.user.get_full_name}}</h1>
         <div class="mb-4">
+        {% if object.user.is_staff %}
             {% if object.user.profile.dnc %}
             <span class="rounded-md bg-red-100 text-red-700 p-1">Do Not Contact</span>
             {% else %}
             <span class="rounded-md bg-green-100 text-green-700  p-1">Contactable</span>
             {% endif %}
+        {% endif %}
         </div>
     </div>
 
@@ -35,8 +37,8 @@
                 <div>
                 <a href="{% url 'userprofile:profile_update_view' %}" class="btn btn-primary">
                     <i class="bi bi-search"></i>
-                    {% if object.user.is_staff %}
-                    Verify Participant Veteran Status
+                    {% if user.is_staff %}
+                        Verify Participant Veteran Status
                     {% else %}
                         Verify Your Veteran Status
                     {% endif %}
