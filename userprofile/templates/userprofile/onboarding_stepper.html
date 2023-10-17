@@ -1,17 +1,19 @@
 <h2 class="sr-only">Steps</h2>
 
-<div class="text-sm font-medium mb-3">Step {{step_number}} of 4 - {{step_name}}</div>
+<div class="text-sm font-medium mb-3">Step {{step_number}} of 5 - {{step_name}}</div>
 
     <div>
     <div class="overflow-hidden rounded-full bg-gray-200">
         {% if step_number == 1%}
-                <div class="h-2 w-2 rounded-full bg-blue-500"></div>
+            <div class="h-2 w-2 rounded-full bg-blue-500"></div>
         {% elif step_number == 2 %}
-        <div class="h-2 w-1/3 rounded-full bg-blue-500"></div>
+            <div class="h-2 w-1/4 rounded-full bg-blue-500"></div>
         {% elif step_number == 3 %}
-        <div class="h-2 w-2/3 rounded-full bg-blue-500"></div>
+            <div class="h-2 w-2/4 rounded-full bg-blue-500"></div>
         {% elif step_number == 4 %}
-        <div class="h-2 w-full rounded-full bg-blue-500"></div>
+            <div class="h-2 w-3/4 rounded-full bg-blue-500"></div>
+        {% elif step_number == 5 %}
+            <div class="h-2 w-full rounded-full bg-blue-500"></div>
         {% endif %}
     </div>
 
@@ -34,7 +36,6 @@
                 />
             </svg>
         </li>
-
         <li class="flex items-center justify-center sm:gap-1.5 {% if step_number > 1 %}text-blue-600{% endif %}">
             <span class="hidden sm:inline"> Veteran </span>
 
@@ -49,7 +50,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
             </svg>
         </li>
-        <li class="flex items-center justify-end sm:gap-1.5 {% if step_number > 3 %}text-blue-600{% endif %}">
+        <li class="flex items-center justify-end sm:gap-1.5 {% if step_number > 4 %}text-blue-600{% endif %}">
             <span class="hidden sm:inline"> Service </span>
 
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 sm:h-5 sm:w-5">

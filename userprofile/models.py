@@ -10,6 +10,7 @@ class OnboardingStep(models.TextChoices):
     PROFILE = "PROFILE", "Profile"
     VETERAN_PROFILE = "VETERAN_PROFILE", "Veteran Status"
     SERVICE_PACKAGE = "SERVICE_PACKAGE", "Service Package"
+    UPLOAD_SERVICE_DOC = "UPLOAD_SERVICE_DOC", "Upload Service Doc"
     UPLOAD_RESUME = "UPLOAD_RESUME", "Upload Resume"
     COMPLETE = "COMPLETE", "Complete"
 
@@ -33,7 +34,6 @@ class Profile(TrackedModel):
     veteran_verified = models.BooleanField(default=False)
     is_onboarded = models.BooleanField(default=False)
     resume = models.FileField(upload_to="uploads/", null=True)
-    service_documents = models.FileField(upload_to="uploads/", null=True)
 
     special_training = models.TextField(blank=True, null=True)
     special_skills = models.TextField(blank=True, null=True)
@@ -56,9 +56,12 @@ class Profile(TrackedModel):
 
         elif current_step == OnboardingStep.UPLOAD_RESUME:
             if self.is_veteran:
-                self.onboarding_step = OnboardingStep.VETERAN_PROFILE
+                self.onboarding_step = OnboardingStep.UPLOAD_SERVICE_DOC
             else:
                 self.onboarding_step = OnboardingStep.PROFILE
+
+        elif current_step == OnboardingStep.UPLOAD_SERVICE_DOC:
+            self.onboarding_step = OnboardingStep.VETERAN_PROFILE
 
         elif current_step == OnboardingStep.SERVICE_PACKAGE:
             self.onboarding_step = OnboardingStep.UPLOAD_RESUME
@@ -80,6 +83,9 @@ class Profile(TrackedModel):
                 self.onboarding_step = OnboardingStep.UPLOAD_RESUME
 
         elif current_step == OnboardingStep.VETERAN_PROFILE:
+            self.onboarding_step = OnboardingStep.UPLOAD_SERVICE_DOC
+
+        elif current_step == OnboardingStep.UPLOAD_SERVICE_DOC:
             self.onboarding_step = OnboardingStep.UPLOAD_RESUME
 
         elif current_step == OnboardingStep.UPLOAD_RESUME:
@@ -125,6 +131,7 @@ class VeteranProfile(TrackedModel):
     military_specialiaty = models.CharField(max_length=200, null=True)
     years_of_service = models.IntegerField(null=True)
     rank_at_separation = models.CharField(max_length=200, null=True)
+    service_doc = models.FileField(upload_to="uploads/", null=True)
 
 
 class ServicePackage(models.Model):

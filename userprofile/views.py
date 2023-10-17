@@ -17,6 +17,8 @@ from .forms import (
     ProfileServicePackageForm,
     UploadResumeForm,
     VeteranProfileForm,
+    UploadServiceDocForm,
+    VeteranStatusUpdateForm,
 )
 from .models import OnboardingStep, Profile, VeteranProfile
 
@@ -48,12 +50,14 @@ def onboarding_home_view(request):
 
     if step == OnboardingStep.PROFILE:
         return redirect("userprofile:onboarding_profile")
-    if step == OnboardingStep.VETERAN_PROFILE:
+    elif step == OnboardingStep.VETERAN_PROFILE:
         return redirect("userprofile:onboarding_veteran_profile")
-    if step == OnboardingStep.SERVICE_PACKAGE:
-        return redirect("userprofile:onboarding_service_package")
-    if step == OnboardingStep.UPLOAD_RESUME:
+    elif step == OnboardingStep.UPLOAD_SERVICE_DOC:
+        return redirect("userprofile:onboarding_upload_service_doc")
+    elif step == OnboardingStep.UPLOAD_RESUME:
         return redirect("userprofile:onboarding_upload_resume")
+    elif step == OnboardingStep.SERVICE_PACKAGE:
+        return redirect("userprofile:onboarding_service_package")
 
     # do redirect here when someone completes sign up
 
@@ -67,7 +71,6 @@ def onboarding_profile_view(request):
         return previous_step
     form = ProfileForm(request.POST or None, instance=profile)
     if request.method == "POST" and form.is_valid():
-        # form.instance.user = request.user
         form.save()
         form.instance.increment_step(OnboardingStep.PROFILE)
         return redirect("userprofile:onboarding_home")
@@ -104,6 +107,27 @@ def onboarding_veteran_profile_view(request):
         },
     )
 
+@verified_required
+def onboarding_upload_service_doc_view(request):
+    profile: Profile = request.user.profile
+    if previous_step := previous_step_response(request, profile):
+        return previous_step
+    veteran_profile = VeteranProfile.objects.get(user=request.user)
+    form = UploadServiceDocForm(
+        request.POST or None, files=request.FILES or None, instance=veteran_profile
+    )
+
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        profile.increment_step(OnboardingStep.UPLOAD_SERVICE_DOC)
+        return redirect("userprofile:onboarding_home")
+
+    step_name = ONBOARDING_STEP_NAMES[OnboardingStep.UPLOAD_SERVICE_DOC]
+    return render(
+        request,
+        "userprofile/onboarding_upload_service_doc.html",
+        {"form": form, "step_number": 3, "step_name": step_name, "profile": profile, "veteran_profile": veteran_profile},
+    )
 
 @verified_required
 def onboarding_upload_resume_view(request):
@@ -122,7 +146,7 @@ def onboarding_upload_resume_view(request):
     return render(
         request,
         "userprofile/onboarding_upload_resume.html",
-        {"form": form, "step_number": 3, "step_name": step_name},
+        {"form": form, "step_number": 4, "step_name": step_name},
     )
 
 
@@ -141,7 +165,7 @@ def onboarding_service_package_view(request):
     return render(
         request,
         "userprofile/onboarding_service_package.html",
-        {"form": form, "step_number": 4, "step_name": step_name},
+        {"form": form, "step_number": 5, "step_name": step_name},
     )
 
 
@@ -189,3 +213,15 @@ def profile_update_view(request):
         form.save()
         return redirect("userprofile:profile_view")
     return render(request, "userprofile/profile_update_view.html", {"form": form})
+
+
+@login_required
+def update_veteran_status_view(request, participant_id):
+    profile = Profile.objects.get(user=participant_id)
+    veteran_profile = VeteranProfile.objects.get(user=participant_id)
+    form = VeteranStatusUpdateForm(request.POST or None, instance=profile)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        return redirect("cold_apply:participant_detail", participant_id)
+    context = {"form": form, "profile": profile, "veteran_profile": veteran_profile}
+    return render(request, "userprofile/veteran_status_update_view.html", context)

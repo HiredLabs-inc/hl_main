@@ -73,7 +73,7 @@ class ProfileForm(forms.ModelForm):
         ]
 
         labels = {
-            "is_veteran": _("Are you a US Military Veteran?"),
+            "is_veteran": _("Are you a US Military Veteran? (We'll verify this in the next step)"),
             "phone": "Contact Number (optional)",
             "linkedin": "LinkedIn (optional)",
             "birthdate": "Birth date (required for veteran verification)",
@@ -159,6 +159,12 @@ class UploadResumeForm(forms.ModelForm):
         fields = ["resume"]
 
 
+class UploadServiceDocForm(forms.ModelForm):
+    class Meta:
+        model = VeteranProfile
+        fields = ["service_doc"]
+
+
 class ProfileServicePackageForm(forms.ModelForm):
     use_required_attribute = False
 
@@ -166,3 +172,9 @@ class ProfileServicePackageForm(forms.ModelForm):
         model = Profile
         fields = ["service_package"]
         widgets = {"service_package": ButtonRadioSelectWidget}
+
+
+class VeteranStatusUpdateForm(forms.ModelForm):
+    class Meta:
+        model = Profile
+        fields = ["veteran_verified", "is_veteran"]

@@ -1,0 +1,75 @@
+{% extends 'userprofile/onboarding_base.html' %}
+
+{% block form %}
+
+
+<form action="" method="POST" class="space-y-5" enctype="multipart/form-data">
+    {% csrf_token %}
+    {% if not profile.veteran_verified %}
+    <div role="alert" class="rounded border-s-4 border-red-500 bg-red-50 p-4 ">
+        <strong class="block font-medium text-red-800"> Verification Error </strong>
+        <div class="mt-2 text-sm text-red-700 space-y-2 ">
+            <div>
+                We were unable to automatically verify your Veteran status with the VA.
+            </div>
+            <div>
+                <p>Please try again, or upload a copy of your DD214 on the next page.</p>
+            </div>
+        </div>
+
+      </div>
+    {% else %}
+    <div role="alert" class="rounded border-s-4 border-green-500 bg-green-50 p-4">
+        <strong class="block font-medium text-green-800"> Verification Succeeded </strong>
+        <div class="mt-2 text-sm text-green-700 space-y-2 ">
+            <div>
+                <p class="mt-2 text-sm text-green-700">
+          We have successfully verified your Veteran status with the VA - Thank you for your service!
+        </p>
+            </div>
+            <div>
+                <p>You now have instant access to all of our features.</p>
+            </div>
+            <div>
+                <p>We also manually verify Veteran status; please upload a copy of your DD214 on the next page.</p>
+            </div>
+        </div>
+      </div>
+
+    {% endif %}
+    <div>
+        <strong class="block font-medium text-red-800"> Verification Error </strong>
+    </div>
+
+    <div x-data="{touched: false}">
+    <label for="id_service_doc" class="sr-only">Choose file</label>
+    <input @input="touched=true" type="file" name="service_doc" id="id_service_doc" class="block w-full border border-gray-200 shadow-sm rounded-md text-sm focus:z-10 focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400
+    
+        file:bg-transparent file:border-0
+        file:bg-gray-100 file:mr-4
+        file:py-3 file:px-4
+        dark:file:bg-gray-700 dark:file:text-gray-400">
+
+        {% if form.service_doc.errors %}
+        <div x-show="!touched" class="text-red-500 font-medium text-sm mt-2">
+            {{ form.service_doc.errors }}
+        </div>
+        {% endif %}
+    </div>
+    {% comment %} <div class="flex items-center justify-center w-full"  >
+        <label for="id_service_doc" class="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-bray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600">
+            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                <svg class="w-8 h-8 mb-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+                </svg>
+                <p class="mb-2 text-sm text-gray-500 dark:text-gray-400"><span class="font-semibold">Click to upload</span> or drag and drop</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">.pdf or .doc</p>
+            </div>
+               
+            <input id="id_service_doc" type="file" class="hidden" name="service_doc" />
+        </label>
+    </div>  {% endcomment %}
+    <button type="submit" class="auth-primary-button">Next</button>    
+</form>
+
+{% endblock form %}

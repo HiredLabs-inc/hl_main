@@ -25,6 +25,8 @@ urlpatterns = [
         views.onboarding_upload_resume_view,
         name="onboarding_upload_resume",
     ),
+    path("onboarding/upload_service_doc/", views.onboarding_upload_service_doc_view, name="onboarding_upload_service_doc"),
     path("profile/view/", views.profile_view, name="profile_view"),
     path("profile/update/", views.profile_update_view, name="profile_update_view"),
+    path("profile/update/veteran_status/<int:participant_id>/", views.update_veteran_status_view, name="veteran_status_update_view"),
 ]
