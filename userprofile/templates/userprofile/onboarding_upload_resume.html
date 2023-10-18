@@ -1,8 +1,9 @@
 {% extends 'userprofile/onboarding_base.html' %}
 
 {% block form %}
-
-
+<br>
+    <br>
+<h2>Upload a Resume</h2>
 <form action="" method="POST" class="space-y-5" enctype="multipart/form-data">
     {% csrf_token %}
     <div x-data="{touched: false}">

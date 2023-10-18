@@ -13,7 +13,7 @@
                 We were unable to automatically verify your Veteran status with the VA.
             </div>
             <div>
-                <p>Please try again, or upload a copy of your DD214 on the next page.</p>
+                <p>Please make sure the information entered on the previous screen is correct and try again, or upload a copy of your DD214 on the next page.</p>
             </div>
         </div>
        
@@ -37,6 +37,9 @@
       </div>
       
     {% endif %}
+    <div class="text-center">
+        <p>Tell us more about your service</p>
+    </div>
     {% for field in form %}
         {% include 'components/form_input.html' %}
     {% endfor %}

@@ -135,8 +135,9 @@ class ProfileForm(forms.ModelForm):
             except (BadRequest, VAApiException) as bad_request:
                 logger.error(
                     "is_veteran",
-                    f"An error occurred while confirming your veteran status: {bad_request}",
+                    f"Veteran Verification Error: {bad_request}",
                 )
+                print('error')
         return cleaned_data
 
 

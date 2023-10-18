@@ -2,6 +2,8 @@ import requests
 from django.conf import settings
 from django.core.exceptions import BadRequest
 
+# import userprofile.forms
+
 VA_CONFIRM_ENDPOINT = (
     "https://sandbox-api.va.gov/services/veteran-confirmation/v1/status"
 )
@@ -33,15 +35,14 @@ def confirm_veteran_status(user):
 
     if as_json.get("errors"):
         if response.status_code == 400:
-            raise BadRequest(
-                ", ".join(
+            error_message = ", ".join(
                     [
                         error["detail"]
                         for error in as_json["errors"]
                         if error["status"] == "400"
                     ]
-                )
             )
+            raise BadRequest(error_message)
         raise VAApiException(as_json["errors"][0]["detail"])
     else:
         raise VAApiException(as_json["message"])
