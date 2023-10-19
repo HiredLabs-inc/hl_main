@@ -35,7 +35,7 @@
                 {{ exp.end_date }}
             {% endif %}
             <br>
-            <a href="{% url 'cold_apply:update_experience' pk=exp.id %}"
+            <a href="{% url 'cold_apply:update_experience' pk=exp.id %}" target="_blank"
                >Update Experience</a>
             <br>
             <a href="{% url 'cold_apply:delete_experience' exp.id %}" onclick="return confirm('Delete experience?')">Delete Experience</a>

@@ -43,7 +43,8 @@ ALLOWED_HOSTS = [
     "run-service-dev-001-nfq35uocvq-uw.a.run.app"
     ]
 # Application definition
-
+MEDIA_URL = "media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media/")
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",

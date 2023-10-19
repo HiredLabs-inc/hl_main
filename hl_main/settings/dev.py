@@ -5,7 +5,7 @@ GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "")
 VA_API_KEY = os.environ.get("VA_API_KEY")
 
 # MEDIA_ROOT = os.path.join(BASE_DIR, "media/")
-MEDIA_URL = "media/"
+# MEDIA_URL = "media/"
 DEBUG = True
 
 INSTALLED_APPS += ["debug_toolbar", "django_extensions", "django_browser_reload"]
@@ -29,7 +29,7 @@ DATABASES = {
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "static/")
 
-MEDIA_ROOT = os.path.join(BASE_DIR, "tmp/")
+# MEDIA_ROOT = os.path.join(BASE_DIR, "tmp/")
 
 STORAGES = {
     "default": {
