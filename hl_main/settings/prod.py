@@ -123,7 +123,7 @@ DATABASES = {
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "static/")
 
-GS_BUCKET_NAME = f"{os.environ['GCP_PROJECT_ID']}-{os.environ['GCP_BUCKET_SUFFIX']}"
+GS_BUCKET_NAME = os.environ['GCP_BUCKET_NAME']
 GS_DEFAULT_ACL = "projectPrivate"
 GS_FILE_OVERWRITE = False
 
