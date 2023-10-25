@@ -4,11 +4,13 @@ from django import http
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.forms import models as model_forms
 from django.http import HttpResponse, JsonResponse
 from django.http.response import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.template import RequestContext
 from django.urls import Resolver404, resolve, reverse, reverse_lazy
 from django.utils import timezone
 from django.utils.decorators import method_decorator
@@ -48,6 +50,7 @@ from resume.models import (
 )
 from resume.pdf import RESUME_TEMPLATE_SECTIONS_JSON, write_template_to_pdf
 from userprofile.guards import verified_required
+from userprofile.models import Profile
 
 from .forms import (
     BulletCreateForm,
@@ -77,6 +80,7 @@ from .static.scripts.keyword_analyzer.keyword_analyzer import (
     hook_after_jd_analysis,
 )
 from .static.scripts.resume_writer.bullet_weighter import hook_after_weighting, weigh
+from .static.scripts.storage.generate_signed_urls import generate_signed_url
 
 
 @verified_required
@@ -186,7 +190,8 @@ class ParticipantDetailView(LoginRequiredMixin, FormMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
+        context['signed_url'] = 'None'
+        context['debug'] = settings.DEBUG
         latest_experience = (
             Experience.objects.filter(participant_id=self.kwargs["pk"])
             .order_by("-start_date")
@@ -202,6 +207,17 @@ class ParticipantDetailView(LoginRequiredMixin, FormMixin, DetailView):
             context["profile"] = self.request.user.profile
         except ObjectDoesNotExist:
             context["profile"] = None
+        if not settings.DEBUG and context['profile'] is not None:
+            context['signed_url'] = generate_signed_url(
+                service_account_file=settings.SERVICE_ACCOUNT_FILE,
+                bucket_name=settings.GCP_BUCKET_NAME,
+                object_name=context['profile'].resume.name,
+                subresource=None,
+                expiration=604_800,
+                http_method="GET",
+                query_parameters=None,
+                headers=None,
+            )
 
         return context
 
@@ -701,7 +717,7 @@ def tailored_resume_view(request, job_pk):
                 cert_section_title = cert_varities[0]
             else:
                 cert_section_title = (
-                    ", ".join(cert_varities[:-1]) + " & " + cert_varities[-1]
+                        ", ".join(cert_varities[:-1]) + " & " + cert_varities[-1]
                 )
             context["cert_section_title"] = cert_section_title
 
@@ -1081,8 +1097,8 @@ def get_task_status_view(request):
         request.session["task_request_time"] = datetime.timestamp(timezone.now())
 
     is_after_timeout = (
-        datetime.timestamp(timezone.now())
-        > request.session["task_request_time"] + timeout
+            datetime.timestamp(timezone.now())
+            > request.session["task_request_time"] + timeout
     )
 
     task = Task.objects.filter(id=task_id).first()
@@ -1118,3 +1134,25 @@ def task_get_jobs_for_participant(request):
         get_jobs_for_participant,
     )
     return JsonResponse({"status": "success"})
+
+
+def view_uploaded_resume(request, pk):
+    participant = get_object_or_404(Profile, pk=pk)
+    resume_name = participant.resume.name
+    if participant.uploaded_resume:
+        signed_url = generate_signed_url(
+            service_account_file=settings.SERVICE_ACCOUNT_FILE,
+            bucket_name=settings.BUCKET_NAME,
+            object_name=resume_name,
+            subresource=None,
+            expiration=604_800,
+            http_method="GET",
+            query_parameters=None,
+            headers=None,
+        )
+        print(signed_url)
+        return redirect(signed_url)
+    else:
+        return redirect(
+            reverse("cold_apply:participant_detail", kwargs={"pk": pk})
+        )

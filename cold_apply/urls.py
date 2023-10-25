@@ -45,6 +45,7 @@ from .views import (
     regenerate_bullet_view,
     tailored_resume_view,
     task_get_jobs_for_participant,
+    view_uploaded_resume,
 )
 
 app_name = "cold_apply"
@@ -314,3 +315,8 @@ urlpatterns += [
         name="task_get_jobs_for_participant",
     ),
 ]
+
+# Uploaded Resume
+urlpatterns += [
+    path("uploaded_resume/<int:pk>/", view_uploaded_resume, name="view_uploaded_resume"),
+    ]

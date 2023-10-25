@@ -57,7 +57,11 @@
         <div class="col-span-1">Highest Education:</div>
         <div class="col-span-5 text-gray-600">{{highest_edu}}</div>
         <div class="col-span-1">Uploaded Resume:</div>
-        <div class="col-span-5 text-gray-600"><a href="{{ MEDIA_PREFIX }}{{ object.user.profile.resume }}" target="_blank">View Uploaded Resume</a></div>
+        {% if debug %}
+            <div class="col-span-5 text-gray-600"><a href="{{ MEDIA_PREFIX }}{{ object.user.profile.resume }}" target="_blank">View Uploaded Resume</a></div>
+        {% else %}
+            <div class="col-span-5 text-gray-600"><a href="{{signed_url}}" target="_blank">View Uploaded Resume</a></div>
+        {% endif %}
         {% if user.is_staff %}
             <div class="col-span-1">Current Phase:</div>
             <div class="col-span-5 text-gray-600">{{ object.current_step.phase.title }}</div>

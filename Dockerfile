@@ -34,9 +34,7 @@ WORKDIR $APP_HOME
 
 # Removes output stream buffering, allowing for more efficient logging
 ENV PYTHONUNBUFFERED 1
-RUN apt-get update && apt-get upgrade && apt-get install -y software-properties-common
-RUN add-apt-repository --yes ppa:deadsnakes/ppa
-RUN apt-get update && apt-get install -y python3.8 python3-pip
+RUN apt-get -y update && apt-get -y upgrade && apt-get install -y software-properties-common && add-apt-repository --yes ppa:deadsnakes/ppa && apt-get update && apt-get install -y python3.8 python3-pip
 #python3-dev libcairo2-dev
 # update-alternatives --install /usr/bin/python python /usr/bin/python3.8 1
 

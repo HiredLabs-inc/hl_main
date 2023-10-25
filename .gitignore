@@ -144,3 +144,4 @@ gcloud
 .config/
 certs/
 cloud-sql-proxy
+*.pem
