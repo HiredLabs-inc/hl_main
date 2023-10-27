@@ -1,5 +1,6 @@
 from allauth.account.utils import send_email_confirmation
 from allauth.account.views import EmailView
+from django.conf import settings
 from allauth.decorators import rate_limit
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -21,6 +22,9 @@ from .forms import (
     VeteranStatusUpdateForm,
 )
 from .models import OnboardingStep, Profile, VeteranProfile
+
+from .static.scripts.storage.uploads import upload_file
+from .static.scripts.storage.generate_signed_urls import generate_signed_url
 
 ONBOARDING_STEP_NAMES = {value: label for value, label in OnboardingStep.choices}
 
@@ -120,6 +124,10 @@ def onboarding_upload_service_doc_view(request):
     if request.method == "POST" and form.is_valid():
         form.save()
         profile.increment_step(OnboardingStep.UPLOAD_SERVICE_DOC)
+        try:
+            upload_file(settings.GS_BUCKET_NAME, request.FILES["service_doc"].name, request.FILES["service_doc"].name)
+        except:
+            print("Error uploading file to GCS")
         return redirect("userprofile:onboarding_home")
 
     step_name = ONBOARDING_STEP_NAMES[OnboardingStep.UPLOAD_SERVICE_DOC]
@@ -220,8 +228,25 @@ def update_veteran_status_view(request, participant_id):
     profile = Profile.objects.get(user=participant_id)
     veteran_profile = VeteranProfile.objects.get(user=participant_id)
     form = VeteranStatusUpdateForm(request.POST or None, instance=profile)
+    signed_url = ''
+    if not settings.DEBUG and veteran_profile.service_doc:
+        signed_url = generate_signed_url(
+            service_account_file=settings.SERVICE_ACCOUNT_FILE,
+            bucket_name=settings.GS_BUCKET_NAME,
+            object_name=veteran_profile.service_doc.name,
+            subresource=None,
+            expiration=604_800,
+            http_method="GET",
+            query_parameters=None,
+            headers=None,
+        )
     if request.method == "POST" and form.is_valid():
         form.save()
         return redirect("cold_apply:participant_detail", participant_id)
-    context = {"form": form, "profile": profile, "veteran_profile": veteran_profile}
+    context = {
+        "form": form,
+        "profile": profile,
+        "veteran_profile": veteran_profile,
+        "signed_url": signed_url,
+    }
     return render(request, "userprofile/veteran_status_update_view.html", context)

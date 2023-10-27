@@ -43,7 +43,7 @@ ALLOWED_HOSTS = [
     "run-service-dev-001-nfq35uocvq-uw.a.run.app"
     ]
 # Application definition
-GCP_BUCKET_NAME = os.environ['GCP_BUCKET_NAME']
+GS_BUCKET_NAME = os.environ['GS_BUCKET_NAME']
 MEDIA_URL = "media/"
 MEDIA_ROOT = (os.path.join(BASE_DIR, "/media/"))
 
@@ -125,7 +125,6 @@ DATABASES = {
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "static/")
 
-GS_DEFAULT_ACL = "publicRead"
 GS_FILE_OVERWRITE = False
 
 STORAGES = {

@@ -5,7 +5,12 @@
     <p>Update the veteran status for {{ profile.user.get_full_name }}.</p>
     <p>Current veteran status: {{ profile.is_veteran }}</p>
     {% if veteran_profile.service_doc %}
-        <div class="col-span-5 text-gray-600"><a href="{{ MEDIA_PREFIX }}{{ veteran_profile.service_doc }}" target="_blank">View Uploaded Service Doc</a></div>
+        {% if debug %}
+            <div class="col-span-5 text-gray-600"><a href="{{ MEDIA_PREFIX }}{{ veteran_profile.service_doc }}" target="_blank">View Uploaded Service Doc</a></div>
+        {% else %}
+            <div class="col-span-5 text-gray-600"><a href="{{signed_url}}" target="_blank">View Uploaded Resume</a></div>
+        {% endif %}
+
     {% else %}
         <p>No service doc uploaded.</p>
     {% endif %}

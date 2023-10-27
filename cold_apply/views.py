@@ -210,7 +210,7 @@ class ParticipantDetailView(LoginRequiredMixin, FormMixin, DetailView):
         if not settings.DEBUG and context['profile'] is not None:
             context['signed_url'] = generate_signed_url(
                 service_account_file=settings.SERVICE_ACCOUNT_FILE,
-                bucket_name=settings.GCP_BUCKET_NAME,
+                bucket_name=settings.GS_BUCKET_NAME,
                 object_name=context['profile'].resume.name,
                 subresource=None,
                 expiration=604_800,
