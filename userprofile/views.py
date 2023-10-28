@@ -242,11 +242,12 @@ def update_veteran_status_view(request, participant_id):
         )
     if request.method == "POST" and form.is_valid():
         form.save()
-        return redirect("cold_apply:participant_detail", participant_id)
+        # return redirect("cold_apply:participant_detail", participant_id=profile.user.id)
     context = {
         "form": form,
         "profile": profile,
         "veteran_profile": veteran_profile,
         "signed_url": signed_url,
+        "debug": settings.DEBUG,
     }
     return render(request, "userprofile/veteran_status_update_view.html", context)

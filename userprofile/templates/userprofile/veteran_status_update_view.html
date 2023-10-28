@@ -3,14 +3,25 @@
 {% block content %}
     <h2>Update Veteran Status</h2>
     <p>Update the veteran status for {{ profile.user.get_full_name }}.</p>
-    <p>Current veteran status: {{ profile.is_veteran }}</p>
-    {% if veteran_profile.service_doc %}
-        {% if debug %}
-            <div class="col-span-5 text-gray-600"><a href="{{ MEDIA_PREFIX }}{{ veteran_profile.service_doc }}" target="_blank">View Uploaded Service Doc</a></div>
-        {% else %}
-            <div class="col-span-5 text-gray-600"><a href="{{signed_url}}" target="_blank">View Uploaded Resume</a></div>
-        {% endif %}
 
+    <p>Current veteran status:</p>
+    {% if profile.veteran_verified %}
+            <span class="rounded-md bg-green-100 text-green-700  p-1">Verified</span>
+            {% else %}
+            <span class="rounded-md bg-red-100 text-red-700 p-1">Not Verified</span>
+    {% endif %}
+    <br>
+    <br>
+    {% if veteran_profile.service_doc %}
+            <div class="col-span-5 text-gray-600">
+                {% if debug %}
+                    <a href="{{ MEDIA_PREFIX }}{{ veteran_profile.service_doc }}"target="_blank">
+                {% else %}
+                    <a href="{{ signed_url }}"target="_blank">
+                {% endif %}
+                    View Uploaded Service Doc
+                </a>
+            </div>
     {% else %}
         <p>No service doc uploaded.</p>
     {% endif %}
