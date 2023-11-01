@@ -1,5 +1,8 @@
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
 from allauth.account.utils import send_email_confirmation
-from allauth.account.views import EmailView
 from django.conf import settings
 from allauth.decorators import rate_limit
 from django.contrib import messages
@@ -40,7 +43,21 @@ def previous_step_response(request, profile):
 @rate_limit(action="manage_email")
 def verified_email_required_view(request):
     if "action_send" in request.POST:
+        # fromaddr = settings.EMAIL_HOST_USER
+        # toaddr = request.user.email
+        # msg = MIMEMultipart()
+        # msg["From"] = fromaddr
+        # msg["To"] = toaddr
+        # msg["Subject"] = "Verify your email"
+        # body = "Please verify your email by clicking the link below"
+        # msg.attach(MIMEText(body, "plain"))
+        # server = smtplib.SMTP(settings.EMAIL_HOST, settings.EMAIL_PORT)
+        # server.ehlo()
+        # server.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
         send_email_confirmation(request, request.user)
+        # text = msg.as_string()
+        # server.sendmail(fromaddr,toaddr,text)
+        # server.quit()
 
     request.user
     return render(request, "account/verified_email_required.html")

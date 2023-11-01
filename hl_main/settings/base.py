@@ -156,7 +156,7 @@ SERVICE_ACCOUNT_FILE = os.path.join(BASE_DIR, "creds/application_default_credent
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-DEFAULT_FROM_EMAIL = "jantonstock@gmail.com"
+
 # LOGIN_REDIRECT_URL = "staff"
 # LOGIN_URL = "userprofile:login"
 
@@ -180,8 +180,18 @@ ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
 ACCOUNT_LOGIN_ON_PASSWORD_RESET = True
 ACCOUNT_SESSION_REMEMBER = True
 
+# Writes to stdout instead of sending; only for development
+# EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+# Sends email to SMTP server
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+DEFAULT_FROM_EMAIL = "info@hiredlabs.org"
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
+
+
 LOGIN_REDIRECT_URL = "userprofile:user_home"
 
 ACCOUNT_ADAPTER = "hl_main.adapter.CustomAccountAdapter"
