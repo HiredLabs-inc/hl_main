@@ -29,6 +29,8 @@ urlpatterns = [
         name="account_verified_email_required",
     ),
     path("", userprofile_views.home, name="home"),
+    path("tos/", userprofile_views.terms_of_service, name="terms_of_service"),
+    path("privacy/", userprofile_views.privacy_policy, name="privacy_policy"),
     path("about/", userprofile_views.about, name="about"),
     path("staff/", userprofile_views.staff, name="staff"),
     path("userprofile/", include("userprofile.urls")),

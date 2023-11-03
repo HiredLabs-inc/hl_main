@@ -208,12 +208,17 @@ def user_home(request):
 
 
 def home(request):
-    return render(request, "home.html")
+    return render(request, "new_home_base.html")
 
 
 def about(request):
     return render(request, "about.html")
 
+def terms_of_service(request):
+    return render(request, "TOS.html")
+
+def privacy_policy(request):
+    return render(request, "privacy_policy.html")
 
 # All views below require login
 @login_required

@@ -1,0 +1,73 @@
+
+{% load static %}
+{% get_static_prefix as STATIC_PREFIX %}
+{% get_media_prefix as MEDIA_PREFIX %}
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hired Labs</title>
+</head>
+<!-- Google tag (gtag.js) -->
+{#<script async src="https://www.googletagmanager.com/gtag/js?id=G-4KYKKL0C1Y"></script>#}
+{#<script>#}
+{#  window.dataLayer = window.dataLayer || [];#}
+{#  function gtag(){dataLayer.push(arguments);}#}
+{#  gtag('js', new Date());#}
+{##}
+{#  gtag('config', 'G-4KYKKL0C1Y');#}
+{#</script>#}
+
+<body>
+<div>
+    <h1>Terms of Service</h1>
+    <h2>1. Acceptance of Terms</h2>
+    <p>
+        By accessing or using Hired Labs, Inc.'s ("we," "us," "our") services, websites, applications, and products, you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, please do not use our services.
+    </p>
+    <h2>2. Use of Services</h2>
+    <h3>2.1 Eligibiliity</h3>
+    <p>
+        You must be 18 years of age or older to use our services. By using our services, you represent and warrant that you meet this eligibility requirement.
+    </p>
+    <h3>2.2 User Accounts</h3>
+    <p>
+        You may need to create a user account to access certain features of our services. You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account.
+    </p>
+    <h3>2.3 Prohibited Activities</h3>
+    <p>
+        You agree not to:
+        <ul>
+            <li>Use our services for any illegal or unauthorized purpose</li>
+            <li>Violate any applicable laws or regulations</li>
+            <li>Impersonate or misrepresent your affiliation with us or others</li>
+            <li>Interfere with or disrupt our services or networks</li>
+            <li>Engage in any behavior that could harm our users or us</li>
+        </ul>
+    </p>
+    <h3>3. Intellectual Property</h3>
+    <p>Our services and all content, trademarks, logos, and intellectual property belong to us or our licensors. You may not use, reproduce, modify, distribute, or display any of our intellectual property without our prior written consent.</p>
+    <h3>4. Privacy</h3>
+    <p>Your use of our services is also governed by our
+        <a href="{% url 'privacy_policy' %}">Privacy Policy</a>
+        , which outlines how we collect, use, and protect your information.</p>
+    <h3>5. Disclaimer of Warranties</h3>
+    <p>Our services are provided "as is" and "as available." We make no warranties, express or implied, regarding the accuracy, reliability, or availability of our services.</p>
+    <h3>6. Limitation of Liability</h3>
+    <p>To the extent permitted by law, we shall not be liable for any direct, indirect, incidental, consequential, or special damages arising out of or in any way connected with your use of our services.</p>
+    <h3>7. Indemnification</h3>
+    <p>You agree to indemnify and hold us harmless from any claims, losses, liabilities, damages, costs, or expenses arising out of your use of our services or violation of these Terms.</p>
+    <h3>8. Governing Law and Jurisdiction</h3>
+    <p>These Terms are governed by the laws of The State of California. Any disputes arising from these Terms shall be subject to the exclusive jurisdiction of the courts in California.</p>
+    <h3>9. Changes to Terms</h3>
+    <p>We may update these Terms from time to time to reflect changes in our practices or legal requirements. Continued use of our services after such changes constitutes your acceptance of the updated Terms.</p>
+    <h3>10. Termination</h3>
+    <p>We reserve the right to terminate or suspend your access to our services, at our sole discretion, for any reason, without notice.</p>
+    <h3>11. Contact Us</h3>
+    <p>If you have any questions or concerns about these Terms, please contact us at info@hiredlabs.org.</p>
+
+</div>
+</body>
+</html>
