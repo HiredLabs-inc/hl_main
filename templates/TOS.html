@@ -1,15 +1,7 @@
-
+{% extends 'new_home_base.html' %}
 {% load static %}
 {% get_static_prefix as STATIC_PREFIX %}
 {% get_media_prefix as MEDIA_PREFIX %}
-<!DOCTYPE html>
-
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hired Labs</title>
-</head>
 <!-- Google tag (gtag.js) -->
 {#<script async src="https://www.googletagmanager.com/gtag/js?id=G-4KYKKL0C1Y"></script>#}
 {#<script>#}
@@ -20,8 +12,8 @@
 {#  gtag('config', 'G-4KYKKL0C1Y');#}
 {#</script>#}
 
-<body>
-<div>
+{% block body %}
+    <div>
     <h1>Terms of Service</h1>
     <h2>1. Acceptance of Terms</h2>
     <p>
@@ -69,5 +61,5 @@
     <p>If you have any questions or concerns about these Terms, please contact us at info@hiredlabs.org.</p>
 
 </div>
-</body>
-</html>
+{% endblock %}
+```
