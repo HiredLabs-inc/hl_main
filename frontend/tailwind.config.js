@@ -20,6 +20,14 @@ module.exports = {
       fontFamily: {
         sans: ['Inter var', ...defaultTheme.fontFamily.sans],
       },
+      colors: {
+        'orange': '#f7941d',
+        'hl-orange': '#fbb040',
+        'hl-black': '#0e1f33',
+        'hl-blue': '#1D80F7',
+        'dark-orange': '#D97A08',
+        'light-gray': '#c9cdd1',
+      },
     },
   },
   plugins: [
