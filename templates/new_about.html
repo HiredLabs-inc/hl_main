@@ -1,0 +1,92 @@
+{% extends 'new_home_base.html' %}
+{% load form_helpers %}
+{% load components %}
+{% include 'modal.html' %}
+
+    {% wrapper breadcrumbs %}
+    <div>
+        <nav class="flex container mx-auto p-2 text-sm" aria-label="Breadcrumb">
+            <ol class="inline-flex items-center space-x-1 md:space-x-3 overflow-x-auto">
+                {% block breadcrumbs %}
+                {% endblock breadcrumbs %}
+            </ol>
+        </nav>
+    </div>
+    {% endwrapper %}
+
+    {% block body %}
+        <div class="md:container grid grid-cols-1 gap-4 justify-items-center md:mx-auto px-4 max-w-3xl">
+                <p class="mb-3 first-line:uppercase first-line:tracking-widest first-letter:text-7xl first-letter:font-bold first-letter:mr-3 first-letter:float-left">
+                    At Hired Labs, we're committed to helping Veterans find meaningful employment. Veterans
+              experience underemployment more often than their peers and face unique challenges when it comes to
+              translating their experience into terms that corporate America can understand.
+                </p>
+
+                <p class="mb-3">
+                    Co-founders, Alan Kumar and Jeff Stock, totally get it. Jeff, a Marine Corps Veteran, was able to make
+              a successful career change thanks to Alan's open-mindedness and willingness to see the value of his
+              transferable skills. Through their own lived experience, Alan and Jeff know what it takes to make relevant
+              military experience understandable to non-vet hiring managers and recruiters.
+                </p>
+
+                <p class="mb-3">
+                    We offer high-touch job placement services for vets and training for non-Veteran hiring teams. Our goal is
+              to reframe the conversation around preconceived notions of an ideal candidate and make it easier for
+              Veterans to switch their code to better match that of hiring teams. We're all about leveling up the game
+              and making it easier for our vets to hustle in the corporate world.
+                </p>
+
+                <p class="mb-3">
+                    We're a small team of passionate people who are committed to helping Veterans find meaningful employment.
+                </p>
+                <h2>
+                    Leadership
+                </h2>
+                <div class="grid grid-cols-2 max-w-2xl">
+                    <p class="mb-3 pr-3">
+                        Jeff, a US Marine Corps Veteran, served for nearly a decade as an interpreter and intelligence
+                        collector in the Former Soviet Union, Europe, and the Middle East. He earned a B.A. in
+                        Linguistics at UC Berkeley built a successful career in tech creating and leading data analysis
+                        and operations teams.
+                    </p>
+                    <div class="items-center justify-center">
+                        <img src="/static/images/jeff.jpeg" alt="Jeff Stock" class="h-48 w-48 mx-auto">
+                        <h3 class="text-center">Jeff Stock</h3>
+                        <h5 class="text-center">Co-Founder/CEO</h5>
+                    </div>
+                    <p class="mb-3 pr-3">
+                        Passionate about helping Veterans gain confidence in their abilities and express themselves
+                        effectively in environments where Veterans are often misunderstood, Jeff co-founded Hired Labs
+                        where he leverages his experience in helping people from diverse backgrounds navigate the
+                        complexities of communication.
+                    </p>
+
+
+                </div>
+                <div class="grid grid-cols-2 max-w-2xl">
+                    <div class="items-center justify-center">
+                        <img src="/static/images/ak.jpeg" alt="Alan Kumar" class="h-48 w-48 mx-auto">
+                        <h3 class="text-center">Alan Kumar</h3>
+                        <h5 class="text-center">Co-Founder/Secretary</h5>
+                    </div>
+                    <p class="mb-3 pl-3">
+                        Alan is a seasoned talent acquisition professional, having spent time leading contingent
+                                workforce programs at Dolby Laboratories, Upwork, and Apple Inc. Throughout his
+                                professional career, Alan has specialized experience within agency, startup, and Fortune
+                                5 environments around staff augmentation, gig economy and distributed teams and
+                                platform-led solutions.
+                    </p>
+
+                    <p class="mb-3 col-start-2 pl-3">
+                        Alan’s dedication to combating underemployment comes from seeing
+                                directly how it has affected friends, family, and candidates he has worked with. The
+                                negative impacts financially and personally are what we hope to combat with HiredLabs
+                                through our experience and providing enablement and education solutions to previously
+                                enlisted veterans and corporate America.
+                    </p>
+
+
+                </div>
+        </div>
+    {% endblock body %}
+

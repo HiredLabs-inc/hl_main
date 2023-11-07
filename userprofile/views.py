@@ -208,11 +208,11 @@ def user_home(request):
 
 
 def home(request):
-    return render(request, "new_home_base.html")
+    return render(request, "new_home.html")
 
 
 def about(request):
-    return render(request, "about.html")
+    return render(request, "new_about.html")
 
 def terms_of_service(request):
     return render(request, "TOS.html")
