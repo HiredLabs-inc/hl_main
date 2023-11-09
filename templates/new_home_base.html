@@ -80,13 +80,6 @@
                 <li>
                     <a href="{% url 'terms_of_service' %}" class="mr-4 hover:underline md:mr-6 ">Terms of Service</a>
                 </li>
-                <li>
-                    {% if user.is_authenticated %}
-                    <a href="{% url 'cold_apply:index' %}" class="hover:underline">Staff Portal</a>
-                    {% else %}
-                    <a href="{% url 'account_login' %}" class="hover:underline">Login</a>
-                    {% endif %}
-                </li>
             </ul>
         </div>
         <hr class="my-6 border-gray-200 sm:mx-auto dark:border-gray-700 lg:my-8" />
