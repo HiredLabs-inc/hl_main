@@ -80,6 +80,18 @@
                 <li>
                     <a href="{% url 'terms_of_service' %}" class="mr-4 hover:underline md:mr-6 ">Terms of Service</a>
                 </li>
+                {% if user.is_authenticated %}
+                    <li>
+                    <a href="{% url 'staff' %}" class="mr-4 hover:underline md:mr-6 ">Admin Panel</a>
+                    </li>
+                    <li>
+                        <a href="{% url 'account_logout' %}" class="mr-4 hover:underline md:mr-6 ">Logout</a>
+                    </li>
+                <li>
+                    Logged in as {{ user.username }}
+                </li>
+                {% endif %}
+
             </ul>
         </div>
         <hr class="my-6 border-gray-200 sm:mx-auto dark:border-gray-700 lg:my-8" />
