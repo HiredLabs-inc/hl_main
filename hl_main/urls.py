@@ -33,6 +33,7 @@ urlpatterns = [
     path("privacy/", userprofile_views.privacy_policy, name="privacy_policy"),
     path("about/", userprofile_views.about, name="about"),
     path("how_it_works/", userprofile_views.how_it_works, name="how_it_works"),
+    path("donate/", userprofile_views.donate, name="donate"),
     path("staff/", userprofile_views.staff, name="staff"),
     path("userprofile/", include("userprofile.urls")),
     path("cold_apply/", include("cold_apply.urls")),

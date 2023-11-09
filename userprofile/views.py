@@ -223,6 +223,9 @@ def privacy_policy(request):
 def how_it_works(request):
     return render(request, "how_it_works.html")
 
+def donate(request):
+    return render(request, "secondary_actions.html")
+
 # All views below require login
 @login_required
 def staff(request):
