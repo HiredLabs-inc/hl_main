@@ -1,0 +1,63 @@
+{% extends 'new_home_base.html' %}
+{% load form_helpers %}
+{% load components %}
+{% include 'modal.html' %}
+
+    {% wrapper breadcrumbs %}
+    <div>
+        <nav class="flex container mx-auto p-2 text-sm" aria-label="Breadcrumb">
+            <ol class="inline-flex items-center space-x-1 md:space-x-3 overflow-x-auto">
+                {% block breadcrumbs %}
+                {% endblock breadcrumbs %}
+            </ol>
+        </nav>
+    </div>
+    {% endwrapper %}
+
+    {% block body %}
+        <div class="md:container grid grid-cols-1 gap-4 justify-items-center md:mx-auto px-4 max-w-3xl">
+               <H1>Operation Foot in the Door</H1>
+                <ol>
+                     <li class="py-4">
+                       <h2 class="text-2xl font-bold">1. Intake Call</h2>
+                       <p>Meet with us for a quick call, during which we'll find out more about your background, expereience, and what you're looking for in
+                           your next role.</p>
+                   </li>
+                   <li class="py-4">
+                       <h2 class="text-2xl font-bold">2. Resume Updates & Job Search</h2>
+                       <p>
+                           We update your resume for you, and conduct a preliminary search of best-fit open roles
+                           according to the intake interview. At the end of this step, you'll have a professionally
+                           updated resume, and a list of open jobs, for which you are a strong candidate.
+                       </p>
+                   </li>
+                   <li class="py-4">
+                       <h2 class="text-2xl font-bold">3. Application</h2>
+                       <p>
+                           Using the updated resume and list of job posts provided, you apply to the jobs.
+                       </p>
+                   </li>
+                   <li class="py-4">
+                       <h2 class="text-2xl font-bold">4. Record Results</h2>
+                       <p>
+                           We will provide a simple spreadsheet to track applications and their outcome. The goal is to
+                           get called back for an initial interview.
+                       </p>
+                   </li>
+                    <li class="py-4">
+                       <h2 class="text-2xl font-bold">5. Rinse & Repeat</h2>
+                       <p>
+                           Based on your feedback on the initial resume revision and set of open job posts, we'll provide
+                           updated lists of open jobs, and provide keyword optimized versions of your resume for any jobs
+                           you really like.
+                       </p>
+                        <br>
+                        <p>
+                            We'll continue to provide updated lists of open jobs, and keyword optimized versions of your
+                            resume, until you land a job.
+                        </p>
+                   </li>
+               </ol>
+        </div>
+    {% endblock body %}
+

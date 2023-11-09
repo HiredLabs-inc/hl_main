@@ -206,7 +206,7 @@ def user_home(request):
 
     return redirect("userprofile:onboarding_home")
 
-
+# Public views
 def home(request):
     return render(request, "new_home.html")
 
@@ -219,6 +219,9 @@ def terms_of_service(request):
 
 def privacy_policy(request):
     return render(request, "privacy_policy.html")
+
+def how_it_works(request):
+    return render(request, "how_it_works.html")
 
 # All views below require login
 @login_required
