@@ -15,7 +15,8 @@
     {% endwrapper %}
 
     {% block body %}
-        <div class="md:container grid grid-cols-1 gap-4 justify-items-center md:mx-auto px-4 max-w-3xl">
+{#        flex min-h-full flex-col px-6 py-12 lg:px-8 #}
+        <div class="flex min-h-full flex-col px-6 py-12 lg:px-8 justify-items-center md:mx-auto px-4 max-w-3xl">
         <form class="post-form space-y-4 max-w-md" method="post">
         {% csrf_token %}
         {% for field in form  %}
