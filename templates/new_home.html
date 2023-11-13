@@ -15,23 +15,27 @@
     {% endwrapper %}
 
     {% block body %}
-        <div class="md:container grid grid-cols-1 md:grid-cols-2 gap-4 justify-items-center md:mx-auto px-4">
+        <div class="md:container max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-4 justify-items-center md:mx-auto px-4">
                 <div class="mb-3 p-6 bg-white">
-                    <a href="#">
-                        <h3 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-                            Helping Veterans find meaningful employment
-                        </h3>
-                    </a>
+                        <h2 class="mb-2 text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
+                            Helping Veterans Find Meaningful Employment
+                        </h2>
                     <p class="mb-3 font-normal text-gray-700 dark:text-gray-400">
                         We understand the challenges Veterans face in building fullfilling careers after military service.
                     </p>
                     <p class="mb-3 font-normal text-gray-700 dark:text-gray-400">
                         We're here to help.
                     </p>
-                    <a href="{% url 'account_signup' %}" class="w-full sm:w-auto bg-white-800 hover:bg-gray-200 focus:ring-4 focus:outline-none focus:ring-gray-300 text-white rounded-lg inline-flex items-center justify-center px-4 py-2.5 dark:bg-gray-700 dark:hover:bg-gray-600 dark:focus:ring-gray-700">
-                        <img class="mr-3 w-7 h-7" src="/static/images/HiredLabs-Icon-trasnaprent.png" viewBox="0 0 384 512" type="image/png">
+                    <a href="{% url 'account_signup' %}" class="w-full sm:w-auto bg-hl-black hover:bg-gray-500 focus:ring-4 focus:outline-none focus:ring-gray-300 rounded-lg inline-flex items-center justify-center px-4 py-2.5 dark:bg-gray-700 dark:hover:bg-gray-600 dark:focus:ring-gray-700">
                             <div class="text-left">
-                                <div class="-mt-1 font-sans text-sm font-semibold">Sign Up Today!</div>
+                                <div class="-mt-1 font-sans text-sm font-semibold">Sign Up</div>
+                            </div>
+                    </a>
+                    <br>
+                    <br>
+                    <a href="{% url 'about' %}" class="sm:w-auto inline-flex justify-center px-4 py-2.5">
+                            <div class="text-center">
+                                <div class="-mt-1 italic font-sans text-sm">Learn More</div>
                             </div>
                     </a>
                 </div>
@@ -39,17 +43,16 @@
       <img src="/static/images/vets-moving.jpg" alt="Marines on the move">
     </div>
                 <div class="mb-3 p-4 text-center bg-white md:col-span-2">
-    <h6 class="mb-2 text-3xl text-gray-900 dark:text-white">
+    <h6 class="mb-2 text-2xl text-gray-900 dark:text-white">
         Join our community of mentors and volunteers!
     </h6>
     <p class="mb-5 text-base text-gray-500 sm:text-lg dark:text-gray-400">
         We'd love to have you on board!
     </p>
     <div class="items-center justify-center space-y-4 sm:flex sm:space-y-0 sm:space-x-4">
-        <a href="#" class="w-full sm:w-auto bg-white-800 hover:bg-gray-200 focus:ring-4 focus:outline-none focus:ring-gray-300 text-white rounded-lg inline-flex items-center justify-center px-4 py-2.5 dark:bg-gray-700 dark:hover:bg-gray-600 dark:focus:ring-gray-700">
-            <img class="mr-3 w-7 h-7" src="/static/images/HiredLabs-Icon-trasnaprent.png" viewBox="0 0 384 512" type="image/png">
+        <a href="{% url 'contact' %}" class="w-full sm:w-auto bg-gray-500 hover:bg-gray-500 focus:ring-4 focus:outline-none focus:ring-gray-300 text-white rounded-lg inline-flex items-center justify-center px-4 py-2.5 dark:bg-gray-700 dark:hover:bg-gray-600 dark:focus:ring-gray-700">
             <div class="text-left">
-                <div class="mb-1 text-xs">Join Us!</div>
+{#                <div class="mb-1 text-xs">Join Us!</div>#}
                 <div class="-mt-1 font-sans text-sm font-semibold">Click Here</div>
             </div>
         </a>

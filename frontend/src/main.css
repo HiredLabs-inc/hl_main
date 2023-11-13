@@ -5,7 +5,7 @@
 @tailwind utilities;
 
 a:not(.btn) {
-  @apply hover:underline text-blue-600;
+  @apply hover:underline text-orange;
 }
 
 @layer base {
