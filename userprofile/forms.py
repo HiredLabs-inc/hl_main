@@ -7,7 +7,7 @@ from django.utils.translation import gettext as _
 
 from userprofile.va_api import VAApiException, confirm_veteran_status
 
-from .models import Profile, VeteranProfile
+from .models import Profile, VeteranProfile, Comment
 
 logger = logging.getLogger(__name__)
 
@@ -179,3 +179,12 @@ class VeteranStatusUpdateForm(forms.ModelForm):
     class Meta:
         model = Profile
         fields = ["veteran_verified", "is_veteran"]
+
+
+class CommentForm(forms.ModelForm):
+    name = forms.CharField(max_length=200)
+    email = forms.EmailField()
+    comment = forms.CharField(widget=forms.Textarea)
+    class Meta:
+        model = Comment
+        fields = ["name", "email", "comment"]

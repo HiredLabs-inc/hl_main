@@ -22,7 +22,7 @@ from .forms import (
     UploadResumeForm,
     VeteranProfileForm,
     UploadServiceDocForm,
-    VeteranStatusUpdateForm,
+    VeteranStatusUpdateForm, CommentForm,
 )
 from .models import OnboardingStep, Profile, VeteranProfile
 
@@ -223,8 +223,15 @@ def privacy_policy(request):
 def how_it_works(request):
     return render(request, "how_it_works.html")
 
-def donate(request):
-    return render(request, "secondary_actions.html")
+def contact(request):
+    form = CommentForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        return redirect("thanks")
+    return render(request, "secondary_actions.html", {"form": form})
+
+def thanks(request):
+    return render(request, "thanks.html")
 
 # All views below require login
 @login_required

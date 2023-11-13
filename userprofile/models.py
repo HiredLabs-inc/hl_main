@@ -139,3 +139,12 @@ class ServicePackage(models.Model):
 
     def __str__(self) -> str:
         return self.name
+
+
+class Comment(models.Model):
+    name = models.CharField(max_length=200, default="None Entered")
+    email = models.EmailField(default="None Entered")
+    comment = models.TextField(default="None Entered")
+
+    def __str__(self) -> str:
+        return f'{self.name}, {self.email}'

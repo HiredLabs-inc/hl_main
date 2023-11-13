@@ -16,16 +16,9 @@
 
     {% block body %}
         <div class="md:container grid grid-cols-1 gap-4 justify-items-center md:mx-auto px-4 max-w-3xl">
-        <form class="post-form space-y-4 max-w-md" method="post">
-        {% csrf_token %}
-        {% for field in form  %}
-            {% include 'components/form_input.html' %}
-        {% endfor %}
-        <div>
-            <input class="btn btn-primary" type="submit" value="Save">
-            <a class="btn btn-primary" href="{% url 'home' %}">Cancel</a>
-        </div>
-    </form>
+               <p>
+                   Thank you!
+               </p>
         </div>
     {% endblock body %}
 

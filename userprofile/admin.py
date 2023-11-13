@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Profile, ServicePackage, VeteranProfile
+from .models import Profile, ServicePackage, VeteranProfile, Comment
 
 class VeteranProfileAdmin(admin.ModelAdmin):
     list_display = (
@@ -25,7 +25,6 @@ class ProfileAdmin(admin.ModelAdmin):
         "is_veteran",
         "is_onboarded",
         "veteran_verified",
-        "service_branch",
         "dnc"
         )
     list_filter = (
@@ -36,7 +35,6 @@ class ProfileAdmin(admin.ModelAdmin):
         "is_veteran",
         "veteran_verified",
         "is_onboarded",
-        "service_branch",
         "dnc"
         )
     search_fields = (
@@ -47,10 +45,35 @@ class ProfileAdmin(admin.ModelAdmin):
         "is_veteran",
         "veteran_verified",
         "is_onboarded",
-        "service_branch",
         "dnc"
         )
 
-admin.site.register(Profile)
-admin.site.register(ServicePackage)
-admin.site.register(VeteranProfile)
+class ServicePackageAdmin(admin.ModelAdmin):
+    list_display = (
+        "name",
+    )
+    list_filter = (
+        "name",
+    )
+    search_fields = (
+        "name",
+    )
+
+class CommentAdmin(admin.ModelAdmin):
+    list_display = (
+        "name",
+        "email",
+    )
+    list_filter = (
+        "name",
+        "email",
+    )
+    search_fields = (
+        "name",
+        "email",
+    )
+
+admin.site.register(Comment, CommentAdmin)
+admin.site.register(Profile, ProfileAdmin)
+admin.site.register(ServicePackage, ServicePackageAdmin)
+admin.site.register(VeteranProfile, VeteranProfileAdmin)
