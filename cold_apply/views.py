@@ -202,9 +202,10 @@ class ParticipantDetailView(LoginRequiredMixin, FormMixin, DetailView):
         context["highest_edu"] = Education.objects.filter(
             participant_id=self.kwargs["pk"]
         ).first()
+        participant = Participant.objects.get(id=self.kwargs["pk"])
         context["now"] = timezone.now()
         try:
-            context["profile"] = self.request.user.profile
+            context["profile"] = participant.user.profile
         except ObjectDoesNotExist:
             context["profile"] = None
         if not settings.DEBUG and context['profile'] is not None:
