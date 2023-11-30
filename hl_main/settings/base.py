@@ -180,6 +180,11 @@ ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
 ACCOUNT_LOGIN_ON_PASSWORD_RESET = True
 ACCOUNT_SESSION_REMEMBER = True
 
+# Use custom form for signup to use only email verification without a password
+ACCOUNT_FORMS = {
+    "signup": "userprofile.forms.CustomSignupForm",
+}
+
 # Writes to stdout instead of sending; only for development
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 

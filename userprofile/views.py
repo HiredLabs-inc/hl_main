@@ -3,6 +3,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 from allauth.account.utils import send_email_confirmation
+from allauth.account.views import SignupView
 from django.conf import settings
 from allauth.decorators import rate_limit
 from django.contrib import messages
@@ -22,7 +23,9 @@ from .forms import (
     UploadResumeForm,
     VeteranProfileForm,
     UploadServiceDocForm,
-    VeteranStatusUpdateForm, CommentForm,
+    VeteranStatusUpdateForm,
+    CommentForm,
+    CustomSignupForm,
 )
 from .models import OnboardingStep, Profile, VeteranProfile
 
@@ -84,6 +87,8 @@ def onboarding_home_view(request):
 
     return redirect("cold_apply:participant_detail", request.user.participant.id)
 
+class CustomSignupView(SignupView):
+     form_class = CustomSignupForm
 
 @verified_required
 def onboarding_profile_view(request):

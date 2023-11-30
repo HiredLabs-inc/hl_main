@@ -23,6 +23,7 @@ from userprofile import views as userprofile_views
 urlpatterns = [
     path("admin/", admin.site.urls, name="admin"),
     path("accounts/", include("allauth.urls")),
+    path("accounts/sign-up/", userprofile_views.CustomSignupView.as_view(), name="custom_account_signup"),
     path(
         "accounts/verified_email_required",
         userprofile_views.verified_email_required_view,

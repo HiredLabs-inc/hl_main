@@ -17,32 +17,44 @@ class OnboardingStep(models.TextChoices):
 
 class Profile(TrackedModel):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
+    # Remove
     nickname = models.CharField(max_length=300)
+    # end remove
     phone = models.CharField(max_length=200, blank=True)
+    # Remove
     address = models.CharField(max_length=200, default="None Entered")
+    # end remove
     state = models.CharField(max_length=2)
     city = models.CharField(max_length=100)
+    # Remove
     country = models.CharField(max_length=200, default="USA")
     zip_code = models.CharField(max_length=200)
     birthdate = models.DateField(null=True, blank=True)
+    # end remove
     linkedin = models.URLField(max_length=200, blank=True)
-
+    # set default, will not be used for MVP immediately after, but want to keep available
     service_package = models.ForeignKey(
         "ServicePackage", on_delete=models.SET_NULL, null=True
     )
+    # set default to True; will not be used for MVP immediately after, but want to keep available
     is_veteran = models.BooleanField(null=True)
+    # Leave as is; Veterans still need to be verified
     veteran_verified = models.BooleanField(default=False)
+    # Revisit this logic. Can be used as a flag to initiate admin steps, rather than complete signup.
     is_onboarded = models.BooleanField(default=False)
+    # Leave optional
     resume = models.FileField(upload_to="uploads/", null=True)
-
     special_training = models.TextField(blank=True, null=True)
     special_skills = models.TextField(blank=True, null=True)
     job_links = models.TextField(blank=True, null=True)
     work_preferences = models.TextField(blank=True, null=True)
-
+    # Revisit logic.
+    # possible solution:
+    ## - add an onboarding step and associated logic to increment/decrement, then set that as default
     onboarding_step = models.CharField(
         max_length=20, choices=OnboardingStep.choices, default=OnboardingStep.PROFILE
     )
+    # Leave as is.
     dnc = models.BooleanField(default=False)
 
     def decrement_step(self, current_step=None):
@@ -104,7 +116,9 @@ class Profile(TrackedModel):
         participant, _ = Participant.objects.get_or_create(
             user=self.user, current_step=step
         )
-        # add to cold_apply_user group
+        # Add to cold_apply_user group
+        # Remove this, but keep the code handy for future use. This will be good for self-service, and can be used for
+        #   other applications
         group = Group.objects.get(name="cold_apply_user")
         self.user.groups.add(group)
         # do service package stuff

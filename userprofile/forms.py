@@ -4,13 +4,28 @@ from typing import Any
 from django import forms
 from django.core.exceptions import BadRequest
 from django.utils.translation import gettext as _
+from django.contrib.auth.models import User
 
 from userprofile.va_api import VAApiException, confirm_veteran_status
-
+from allauth.account.forms import SignupForm
 from .models import Profile, VeteranProfile, Comment
 
 logger = logging.getLogger(__name__)
 
+class CustomSignupForm(SignupForm):
+    class Meta:
+        model = User
+        fields = ["email"]
+
+    def __init__(self, *args, **kwargs):
+        super(CustomSignupForm, self).__init__(*args, **kwargs)
+        self.fields.pop('password1')
+        self.fields.pop('password2')
+    def save(self, request):
+        user = super(CustomSignupForm, self).save(request)
+        user.set_unusable_password()
+        user.save()
+        return user
 
 class ButtonRadioSelectWidget(forms.RadioSelect):
     template_name = "forms/widgets/button_radio_select.html"

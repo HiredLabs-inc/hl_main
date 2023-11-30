@@ -8,7 +8,7 @@
 <h1 class="text-center">{% trans "Beta Trials Sign Up" %}</h1>
 
 
-<form class="signup space-y-6" id="signup_form" method="post" action="{% url 'account_signup' %}">
+<form class="signup space-y-6" id="signup_form" method="post" action="{% url 'custom_account_signup' %}">
   {% csrf_token %}
   {% for field in form %}
     {% include 'components/form_input.html' %}
