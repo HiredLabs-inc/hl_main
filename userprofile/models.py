@@ -16,34 +16,39 @@ class OnboardingStep(models.TextChoices):
 
 
 class Profile(TrackedModel):
+    SERVICE_BRANCHES = [
+        ("ARMY", "US Army"),
+        ("NAVY", "US Navy"),
+        ("AIR_FORCE", "US Air Force"),
+        ("MARINE CORPS", "US Marine Corps"),
+        ("COAST_GUARD", "US Coast Guard"),
+        ("SPACE_FORCE", "Space Force"),
+    ]
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     # Remove
-    nickname = models.CharField(max_length=300)
+    # nickname = models.CharField(max_length=300)
     # end remove
-    phone = models.CharField(max_length=200, blank=True)
-    # Remove
+    phone = models.CharField(max_length=200, default="None Entered")
     address = models.CharField(max_length=200, default="None Entered")
-    # end remove
     state = models.CharField(max_length=2)
     city = models.CharField(max_length=100)
     # Remove
-    country = models.CharField(max_length=200, default="USA")
-    zip_code = models.CharField(max_length=200)
-    birthdate = models.DateField(null=True, blank=True)
+    # country = models.CharField(max_length=200, default="USA")
+    # zip_code = models.CharField(max_length=200)
+    # birthdate = models.DateField(null=True, blank=True)
     # end remove
-    linkedin = models.URLField(max_length=200, blank=True)
+    linkedin = models.URLField(max_length=200, default="https://www.linkedin.com/")
     # set default, will not be used for MVP immediately after, but want to keep available
     service_package = models.ForeignKey(
-        "ServicePackage", on_delete=models.SET_NULL, null=True
+        "ServicePackage", on_delete=models.SET_NULL, null=True, default=1
     )
     # set default to True; will not be used for MVP immediately after, but want to keep available
-    is_veteran = models.BooleanField(null=True)
+    is_veteran = models.BooleanField(null=True, default=True)
     # Leave as is; Veterans still need to be verified
     veteran_verified = models.BooleanField(default=False)
     # Revisit this logic. Can be used as a flag to initiate admin steps, rather than complete signup.
     is_onboarded = models.BooleanField(default=False)
-    # Leave optional
-    resume = models.FileField(upload_to="uploads/", null=True)
+
     special_training = models.TextField(blank=True, null=True)
     special_skills = models.TextField(blank=True, null=True)
     job_links = models.TextField(blank=True, null=True)
@@ -56,6 +61,18 @@ class Profile(TrackedModel):
     )
     # Leave as is.
     dnc = models.BooleanField(default=False)
+    service_branch = models.CharField(
+        max_length=200,
+        choices=SERVICE_BRANCHES,
+        null=True,
+        default="Not a Veteran",
+    )
+    military_specialiaty = models.CharField(max_length=200, null=True)
+    years_of_service = models.IntegerField(null=True)
+    rank_at_separation = models.CharField(max_length=200, null=True)
+    # Leave optional
+    resume = models.FileField(upload_to="uploads/", default=None, null=True)
+    service_doc = models.FileField(upload_to="uploads/", default=None, null=True)
 
     def decrement_step(self, current_step=None):
         if current_step is None:

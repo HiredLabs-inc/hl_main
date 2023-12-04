@@ -13,6 +13,7 @@ from .models import Profile, VeteranProfile, Comment
 logger = logging.getLogger(__name__)
 
 class CustomSignupForm(SignupForm):
+    # Needed for verifying email address without password
     class Meta:
         model = User
         fields = ["email"]
@@ -37,33 +38,40 @@ class ProfileForm(forms.ModelForm):
     first_name = forms.CharField(max_length=101)
     last_name = forms.CharField(max_length=101)
 
+    # Set user first and last name
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["first_name"].initial = self.instance.user.first_name
         self.fields["last_name"].initial = self.instance.user.last_name
 
-    def clean_is_veteran(self):
-        is_veteran = self.cleaned_data["is_veteran"]
-        if is_veteran is None:
-            raise forms.ValidationError("This field is required.")
-        return is_veteran
+    # def clean_is_veteran(self):
+    #     is_veteran = self.cleaned_data["is_veteran"]
+    #     if is_veteran is None:
+    #         raise forms.ValidationError("This field is required.")
+    #     return is_veteran
 
     field_order = [
         "first_name",
         "last_name",
-        "birthdate",
-        "address",
+        # "birthdate",
+        # "address",
         "city",
         "state",
-        "zip_code",
-        "country",
+        # "zip_code",
+        # "country",
         "phone",
         "linkedin",
+        "resume",
+        "service_branch",
+        "military_specialiaty",
+        "years_of_service",
+        "rank_at_separation",
+        "service_doc",
         "special_training",
         "special_skills",
         "job_links",
         "work_preferences",
-        "is_veteran",
+        # "is_veteran",
     ]
 
     class Meta:
@@ -71,34 +79,41 @@ class ProfileForm(forms.ModelForm):
 
         fields = [
             "first_name",
-            "last_name",
-            "birthdate",
-            "address",
-            "city",
-            "state",
-            "zip_code",
-            "country",
-            "phone",
-            "linkedin",
-            "special_training",
-            "special_skills",
-            "job_links",
-            "work_preferences",
-            "is_veteran",
+        "last_name",
+        # "birthdate",
+        # "address",
+        "city",
+        "state",
+        # "zip_code",
+        # "country",
+        "phone",
+        "linkedin",
+        "special_training",
+        "special_skills",
+        "job_links",
+        "work_preferences",
+        # "is_veteran",
+        "service_branch",
+        "military_specialiaty",
+        "years_of_service",
+        "rank_at_separation",
+        "resume",
+        "service_doc",
         ]
 
         labels = {
-            "is_veteran": _("Are you a US Military Veteran? (We'll verify this in the next step)"),
-            "phone": "Contact Number (optional)",
-            "linkedin": "LinkedIn (optional)",
-            "birthdate": "Birth date (required for veteran verification)",
+            # "is_veteran": _("Are you a US Military Veteran? (We'll verify this in the next step)"),
+            "phone": "Phone Number",
+            "linkedin": "LinkedIn",
+            # "birthdate": "Birth date (required for veteran verification)",
+            "service_doc": "DD214 or other service documentation",
         }
         widgets = {
             "special_training": forms.Textarea(
                 attrs={
                     "rows": 3,
                     "class": "form-control",
-                    "placeholder": "Please list any special training or certifications.",
+                    "placeholder": "Please list any special training or certifications that you have or are working towards.",
                 }
             ),
             "location": forms.TextInput(
@@ -126,9 +141,10 @@ class ProfileForm(forms.ModelForm):
                                    "level, etc.).",
                 }
             ),
-            "is_veteran": ButtonRadioSelectWidget(
-                choices=((True, "Yes"), (False, "No"))
-            ),
+            # "is_veteran": ButtonRadioSelectWidget(
+            #     choices=((True, "Yes"), (False, "No"))
+            # ),
+
         }
 
     def save(self, commit: bool = ...) -> Any:
@@ -138,22 +154,22 @@ class ProfileForm(forms.ModelForm):
         instance.user.save()
         return instance
 
-    def clean(self):
-        cleaned_data = super().clean()
-        is_veteran = cleaned_data.get("is_veteran")
-        if is_veteran:
-            try:
-                self.instance.veteran_verified = confirm_veteran_status(
-                    self.instance.user
-                )
-
-            except (BadRequest, VAApiException) as bad_request:
-                logger.error(
-                    "is_veteran",
-                    f"Veteran Verification Error: {bad_request}",
-                )
-                print('error')
-        return cleaned_data
+    # def clean(self):
+    #     cleaned_data = super().clean()
+    #     is_veteran = cleaned_data.get("is_veteran")
+    #     if is_veteran:
+    #         try:
+    #             self.instance.veteran_verified = confirm_veteran_status(
+    #                 self.instance.user
+    #             )
+    #
+    #         except (BadRequest, VAApiException) as bad_request:
+    #             logger.error(
+    #                 "is_veteran",
+    #                 f"Veteran Verification Error: {bad_request}",
+    #             )
+    #             print('error')
+    #     return cleaned_data
 
 
 class VeteranProfileForm(forms.ModelForm):
