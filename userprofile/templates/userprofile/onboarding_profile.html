@@ -3,7 +3,7 @@
 {% block form %}
 
 
-<form action="" method="POST" class="space-y-5">
+<form action="" method="POST" class="space-y-5 mb-auto">
     {% csrf_token %}
     {% if form.errors %}
         <div class="bg-red-100 border border-red-500 p-3 rounded text-red-800 text-sm font-medium">
