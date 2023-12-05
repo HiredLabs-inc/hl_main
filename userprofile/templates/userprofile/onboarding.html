@@ -1,0 +1,24 @@
+{% extends 'userprofile/new_onboarding_base.html' %}
+
+{% block form %}
+<form action="" method="POST" class="space-y-5 mb-auto" enctype="multipart/form-data">
+    {% csrf_token %}
+    {% if form.errors %}
+        <div class="bg-red-100 border border-red-500 p-3 rounded text-red-800 text-sm font-medium">
+            Please correct the errors below.
+        </div>
+    {% endif %}
+    {% for field in form %}
+        {% include 'components/form_input.html' %}
+    {% endfor %}
+    
+    <button type="submit" class="auth-primary-button">Submit</button>
+</form>
+
+{% endblock form %}
+
+{#{% block bottom_nav %}#}
+{#    <div class="mt-5 flex flex-col md:flex-row justify-end text-sm gap-3">#}
+{#        <a href="{% url 'account_logout' %}" class="font-semibold text-blue-600 hover:text-blue-500">Logout</a>#}
+{#    </div>#}
+{#{% endblock bottom_nav %}#}

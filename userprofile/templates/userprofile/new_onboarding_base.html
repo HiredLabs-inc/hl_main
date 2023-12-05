@@ -1,0 +1,27 @@
+{% extends 'account/base.html' %}
+
+{% block content %}
+<h1 class="text-center">Complete your profile</h1>
+    {% block form %}
+
+
+    <form action="" method="POST" class="space-y-5" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% for field in form %}
+            {% include 'components/form_input.html' %}
+        {% endfor %}
+        <button type="submit" class="auth-primary-button">Submit</button>
+    </form>
+    {% endblock form %}
+
+{% endblock content %}
+
+{#{% block bottom_nav %}#}
+{#<div class="mt-5 flex flex-col md:flex-row justify-between text-sm gap-3">#}
+{#    <form action="" method="post">#}
+{#        {% csrf_token %}#}
+{#        <button name="previous_step" class="font-semibold text-blue-600 hover:text-blue-500" >Previous Step</button>#}
+{#    </form>#}
+{#    <a href="{% url 'account_logout' %}" class="font-semibold text-blue-600 hover:text-blue-500">Logout</a>#}
+{#  </div>#}
+{#{% endblock bottom_nav %}#}

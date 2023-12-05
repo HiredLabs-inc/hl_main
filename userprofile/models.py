@@ -55,10 +55,10 @@ class Profile(TrackedModel):
     work_preferences = models.TextField(blank=True, null=True)
     # Revisit logic.
     # possible solution:
-    ## - add an onboarding step and associated logic to increment/decrement, then set that as default
-    onboarding_step = models.CharField(
-        max_length=20, choices=OnboardingStep.choices, default=OnboardingStep.PROFILE
-    )
+    # ## - add an onboarding step and associated logic to increment/decrement, then set that as default
+    # onboarding_step = models.CharField(
+    #     max_length=20, choices=OnboardingStep.choices, default=OnboardingStep.PROFILE
+    # )
     # Leave as is.
     dnc = models.BooleanField(default=False)
     service_branch = models.CharField(
@@ -74,57 +74,58 @@ class Profile(TrackedModel):
     resume = models.FileField(upload_to="uploads/", default=None, null=True)
     service_doc = models.FileField(upload_to="uploads/", default=None, null=True)
 
-    def decrement_step(self, current_step=None):
-        if current_step is None:
-            current_step = self.onboarding_step
-        if current_step == OnboardingStep.PROFILE:
-            return False
+    # def decrement_step(self, current_step=None):
+    #     if current_step is None:
+    #         current_step = self.onboarding_step
+    #     if current_step == OnboardingStep.PROFILE:
+    #         return False
+    #
+    #     if current_step == OnboardingStep.VETERAN_PROFILE:
+    #         self.onboarding_step = OnboardingStep.PROFILE
+    #
+    #     elif current_step == OnboardingStep.UPLOAD_RESUME:
+    #         if self.is_veteran:
+    #             self.onboarding_step = OnboardingStep.UPLOAD_SERVICE_DOC
+    #         else:
+    #             self.onboarding_step = OnboardingStep.PROFILE
+    #
+    #     elif current_step == OnboardingStep.UPLOAD_SERVICE_DOC:
+    #         self.onboarding_step = OnboardingStep.VETERAN_PROFILE
+    #
+    #     elif current_step == OnboardingStep.SERVICE_PACKAGE:
+    #         self.onboarding_step = OnboardingStep.UPLOAD_RESUME
+    #
+    #     elif current_step == OnboardingStep.COMPLETE:
+    #         self.onboarding_step = OnboardingStep.SERVICE_PACKAGE
+    #
+    #     self.save()
+    #     return True
 
-        if current_step == OnboardingStep.VETERAN_PROFILE:
-            self.onboarding_step = OnboardingStep.PROFILE
-
-        elif current_step == OnboardingStep.UPLOAD_RESUME:
-            if self.is_veteran:
-                self.onboarding_step = OnboardingStep.UPLOAD_SERVICE_DOC
-            else:
-                self.onboarding_step = OnboardingStep.PROFILE
-
-        elif current_step == OnboardingStep.UPLOAD_SERVICE_DOC:
-            self.onboarding_step = OnboardingStep.VETERAN_PROFILE
-
-        elif current_step == OnboardingStep.SERVICE_PACKAGE:
-            self.onboarding_step = OnboardingStep.UPLOAD_RESUME
-
-        elif current_step == OnboardingStep.COMPLETE:
-            self.onboarding_step = OnboardingStep.SERVICE_PACKAGE
-
-        self.save()
-        return True
-
-    def increment_step(self, current_step=None):
-        if current_step is None:
-            current_step = self.onboarding_step
-
-        if current_step == OnboardingStep.PROFILE:
-            if self.is_veteran:
-                self.onboarding_step = OnboardingStep.VETERAN_PROFILE
-            else:
-                self.onboarding_step = OnboardingStep.UPLOAD_RESUME
-
-        elif current_step == OnboardingStep.VETERAN_PROFILE:
-            self.onboarding_step = OnboardingStep.UPLOAD_SERVICE_DOC
-
-        elif current_step == OnboardingStep.UPLOAD_SERVICE_DOC:
-            self.onboarding_step = OnboardingStep.UPLOAD_RESUME
-
-        elif current_step == OnboardingStep.UPLOAD_RESUME:
-            self.onboarding_step = OnboardingStep.SERVICE_PACKAGE
-
-        elif current_step == OnboardingStep.SERVICE_PACKAGE:
-            self.onboarding_step = OnboardingStep.COMPLETE
-            return self.handle_onboard_complete()
-
-        return self.save()
+    # def increment_step(self, current_step=None):
+    #     if current_step is None:
+    #         current_step = self.onboarding_step
+    #
+    #     if current_step == OnboardingStep.PROFILE:
+    #         if self.is_veteran:
+    #
+    #             self.onboarding_step = OnboardingStep.VETERAN_PROFILE
+    #         else:
+    #             self.onboarding_step = OnboardingStep.UPLOAD_RESUME
+    #
+    #     elif current_step == OnboardingStep.VETERAN_PROFILE:
+    #         self.onboarding_step = OnboardingStep.UPLOAD_SERVICE_DOC
+    #
+    #     elif current_step == OnboardingStep.UPLOAD_SERVICE_DOC:
+    #         self.onboarding_step = OnboardingStep.UPLOAD_RESUME
+    #
+    #     elif current_step == OnboardingStep.UPLOAD_RESUME:
+    #         self.onboarding_step = OnboardingStep.SERVICE_PACKAGE
+    #
+    #     elif current_step == OnboardingStep.SERVICE_PACKAGE:
+    #         self.onboarding_step = OnboardingStep.COMPLETE
+    #         return self.handle_onboard_complete()
+    #
+    #     return self.save()
 
     def handle_onboard_complete(self):
         self.is_onboarded = True
@@ -136,8 +137,8 @@ class Profile(TrackedModel):
         # Add to cold_apply_user group
         # Remove this, but keep the code handy for future use. This will be good for self-service, and can be used for
         #   other applications
-        group = Group.objects.get(name="cold_apply_user")
-        self.user.groups.add(group)
+        # group = Group.objects.get(name="cold_apply_user")
+        # self.user.groups.add(group)
         # do service package stuff
         return self.save()
 
