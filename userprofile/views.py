@@ -72,7 +72,7 @@ def verified_email_required_view(request):
 def onboarding_view(request):
     user = request.user
     profile, _ = Profile.objects.get_or_create(user=user)
-    form = ProfileForm(request.POST, request.FILES, instance=profile)
+    form = ProfileForm(request.POST or None, request.FILES or None, instance=profile)
     if request.method == "POST" and form.is_valid():
         form.save()
         profile.handle_onboard_complete()
