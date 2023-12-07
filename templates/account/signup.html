@@ -17,8 +17,6 @@
   <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
   {% endif %}
   <button type="submit" class="auth-primary-button">{% trans "Sign Up" %}</button>
-  <p class="mt-10 text-center text-sm text-gray-500">{% blocktrans %}Already have an account? Then please
-    <a href="{{ login_url }}" class="font-semibold leading-6 text-blue-600 hover:text-blue-500">sign in</a>.{% endblocktrans %}</p>
 </form>
 
 {% endblock %}

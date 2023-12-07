@@ -1,0 +1,39 @@
+{% extends 'new_home_base.html' %}
+{% load form_helpers %}
+{% load components %}
+{% include 'modal.html' %}
+
+    {% wrapper breadcrumbs %}
+    <div>
+        <nav class="flex container mx-auto p-2 text-sm" aria-label="Breadcrumb">
+            <ol class="inline-flex items-center space-x-1 md:space-x-3 overflow-x-auto">
+                {% block breadcrumbs %}
+                {% endblock breadcrumbs %}
+            </ol>
+        </nav>
+    </div>
+    {% endwrapper %}
+
+    {% block body %}
+        <div class="md:container grid grid-cols-1 gap-4 justify-items-center md:mx-auto px-4 max-w-3xl">
+               <p>
+                  Thank you for confirming your email and joining our community!
+                </p>
+                  <p>
+                    We’ve received your information and will reach out to you via email
+                      in the next 2-3 business days.
+                    </p>
+                      <p>
+                      If you do not receive an email or have any questions,
+                          please feel free to contact us at: info@hiredlabs.org.
+                    </p>
+        </div>
+        <form method="post" action="{% url 'account_logout' %}">
+            {% csrf_token %}
+            {% if redirect_field_value %}
+            <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}"/>
+            {% endif %}
+            <button class="auth-primary-button" type="submit">Exit</button>
+        </form>
+    {% endblock body %}
+

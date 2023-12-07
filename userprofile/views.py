@@ -76,7 +76,7 @@ def onboarding_view(request):
     if request.method == "POST" and form.is_valid():
         form.save()
         profile.handle_onboard_complete()
-        return redirect("thanks")
+        return redirect("welcome")
     return render(request, "userprofile/onboarding.html", {"form": form})
 
 # @verified_required
@@ -221,7 +221,7 @@ def user_home(request):
         return redirect("staff")
 
     if hasattr(user, "profile") and user.profile.is_onboarded:
-        return redirect("thanks")
+        return redirect("welcome")
 
     return redirect("userprofile:onboarding_view")
 
@@ -251,6 +251,9 @@ def contact(request):
 
 def thanks(request):
     return render(request, "thanks.html")
+
+def welcome(request):
+    return render(request, "welcome.html")
 
 # All views below require login
 @login_required
