@@ -41,6 +41,18 @@ STORAGES = {
 }
 ACCOUNT_LOGIN_ATTEMPTS = None
 
+# Writes to stdout instead of sending; only for development
+# EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+DEFAULT_FROM_EMAIL = "info@hiredlabs.org"
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
+
 # CACHES = {
 #     "default": {
 #         "BACKEND": "django.core.cache.backends.dummy.DummyCache",

@@ -62,6 +62,7 @@ def verified_email_required_view(request):
         # server.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
         send_email_confirmation(request, request.user)
         # text = msg.as_string()
+        # server.set_debuglevel(1)
         # server.sendmail(fromaddr,toaddr,text)
         # server.quit()
 

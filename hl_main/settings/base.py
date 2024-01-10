@@ -185,18 +185,6 @@ ACCOUNT_FORMS = {
     "signup": "userprofile.forms.CustomSignupForm",
 }
 
-# Writes to stdout instead of sending; only for development
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-
-# Sends email to SMTP server
-# EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-# EMAIL_HOST = "smtp.gmail.com"
-# EMAIL_PORT = 587
-# DEFAULT_FROM_EMAIL = "info@hiredlabs.org"
-# EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
-# EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
-
-
 LOGIN_REDIRECT_URL = "userprofile:user_home"
 
 ACCOUNT_ADAPTER = "hl_main.adapter.CustomAccountAdapter"
