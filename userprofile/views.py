@@ -58,6 +58,7 @@ def verified_email_required_view(request):
         # body = "Please verify your email by clicking the link below"
         # msg.attach(MIMEText(body, "plain"))
         # server = smtplib.SMTP(settings.EMAIL_HOST, settings.EMAIL_PORT)
+        # server.starttls()
         # server.ehlo()
         # server.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
         send_email_confirmation(request, request.user)
