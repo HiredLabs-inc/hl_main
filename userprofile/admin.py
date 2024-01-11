@@ -19,7 +19,6 @@ class VeteranProfileAdmin(admin.ModelAdmin):
 class ProfileAdmin(admin.ModelAdmin):
     list_display = (
         "user",
-        # "nickname",
         "state",
         "city",
         "is_veteran",
@@ -29,7 +28,6 @@ class ProfileAdmin(admin.ModelAdmin):
         )
     list_filter = (
         "user",
-        # "nickname",
         "state",
         "city",
         "is_veteran",
