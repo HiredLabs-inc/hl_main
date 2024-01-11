@@ -72,9 +72,26 @@
       return {
         currentIndex: 0,
         testimonials: [
-          { quote: "Testimonial 1", user: "John Doe", company: "ABC Inc" },
-          { quote: "I'm the second quote. Just awesome.", user: "Jane Smith", company: "XYZ Corp" },
-          { quote: "Testimonial 3", user: "Bob Johnson", company: "123 Company" },
+            {
+              quote: "Your team's dedication and sincere effort in partnering with me throughout the journey of securing a new job have made a significant impact on my career transition.",
+              user: "Eddie Lemus",
+              company: "USMC Veteran"
+          },
+          {
+              quote: "The resume writing and tailoring were extremely helpful, as well as the job search guidance and feedback. I believe these all contributed most to me finding a job.",
+              user: "Kyle Vandenbrandhorninge",
+              company: "USMC Veteran"
+          },
+          {
+              quote: "I had a great time with everyone on the team. Everyone is eager to help and extremely knowledgable about the current job market and hiring trends. I will definitely be reaching out when I am in the job market again.",
+              user: "Kyle Vandenbrandhorninge",
+              company: "USMC Veteran"
+          },
+          {#  {#}
+          {#    quote: "Weekly tailored jobs helped organize all jobs that I applied to and having a job sourced in my behalf was invaluable.",#}
+          {#    user: "Eddie Lemus",#}
+          {#    company: "USMC Veteran"#}
+          {#},#}
           // Add more testimonials as needed
         ],
         intervalId: null,
@@ -96,7 +113,7 @@
         transitionClass(index) {
           const classes = ['mb-3', 'p-4', 'text-center', 'bg-white'];
           if (this.currentIndex !== index) {
-            classes.push('opacity-0', 'transform', 'scale-90');
+            classes.push('opacity-0', 'transform', 'scale-90', 'transition-transform' ,'ease-out', 'duration-100');
           }
           return classes.join(' ');
         },
