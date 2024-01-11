@@ -47,6 +47,7 @@
                 <div
                         x-bind:class="transitionClass(currentIndex)"
                         class="mb-3 p-4 text-center bg-white md:col-span-2"
+                        style="animation: fade 2s ease-in-out forwards @keyframes fade from { opacity: 0; } to { opacity: 1; }
                 >
                     <figure class="max-w-screen-md mx-auto text-center">
                         <svg class="w-10 h-10 mx-auto mb-3 text-gray-400 dark:text-gray-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 18 14">
@@ -104,20 +105,18 @@
         startCarousel() {
           this.intervalId = setInterval(() => {
             this.showNextTestimonial();
-          }, 5000); // Adjust the time interval (in milliseconds) as needed
+          }, 10000); // Adjust the time interval (in milliseconds) as needed
         },
 
         showNextTestimonial() {
           this.currentIndex = (this.currentIndex + 1) % this.testimonials.length;
         },
 
-        transitionClass(index) {
-          const classes = ['mb-3', 'p-4', 'text-center', 'bg-white'];
-          if (this.currentIndex !== index) {
-            classes.push('opacity-0', 'transform', 'scale-90', 'transition-transform' ,'ease-out', 'duration-100');
-          }
-          return classes.join(' ');
-        },
+          transitionClass(index) {
+            return {
+                'opacity-0': this.currentIndex !== index,
+            };
+          },
 
         get currentTestimonial() {
           return this.testimonials[this.currentIndex];
