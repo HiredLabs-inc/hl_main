@@ -13,6 +13,7 @@
         <link rel="stylesheet" href="https://unpkg.com/flowbite@1.5.1/dist/flowbite.min.css" />
 
         <link rel="icon" type="image/png" sizes="16x16" href="{% static 'images/HiredLabs-Icon-trasnaprent.png' %}">
+
         {% load_vite_js 'src/main.js' %}
         {% block head %}
         {% endblock %}
@@ -26,8 +27,15 @@
                 <a href="{% url 'home' %}" class="flex items-center">
                 <img src="/static/images/HiredLabs1.png" class="h-8 mr-3" alt="Hired Labs Logo" />Beta
                 </a>
-
-                <button data-collapse-toggle="navbar-default" type="button" class="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg md:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600" aria-controls="navbar-default" aria-expanded="false">
+                {% comment %}
+                JavaScript equired to make the navbar open and collapse on small screens on the home page.
+                Without this script, the 'hamburger' menu won't open on the home page, but works everywhere else.
+                This definition must come before the button that calls it.
+                {% endcomment %}
+                <script>
+                    const toggle = () => menu.classList.toggle("hidden");
+                </script>
+                <button onclick="toggle()" data-collapse-toggle="navbar-default" type="button" class="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg md:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600" aria-controls="navbar-default" aria-expanded="false">
                     <span class="sr-only">Open main menu</span>
                     <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 17 14">
                         <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 1h15M1 7h15M1 13h15"/>
@@ -54,6 +62,16 @@
                 </div>
             </div>
         </nav>
+        {% comment %}
+        JavaScript equired to make the navbar open and collapse on small screens on the home page.
+        Without this script, the 'hamburger' menu won't open on the home page, but works everywhere else.
+        This definition must come after the div has been rendered, or else it cannot be found when the script above
+          references it.d
+        {% endcomment %}
+        <script>
+                const menu = document.getElementById('navbar-default');
+                console.log(menu.classList.keys());
+        </script>
 
         {% block body %}
 
@@ -95,6 +113,7 @@
         </footer>
 
         {% block scripts %}
+
             <script src="https://unpkg.com/flowbite@1.5.1/dist/flowbite.js"></script>
         {% endblock scripts %}
         {% include 'components/toaster.html' %}
