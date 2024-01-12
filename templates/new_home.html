@@ -15,11 +15,9 @@
     {% endwrapper %}
 
     {% block body %}
-
-
-        </style>
         <div class="md:container max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-4 justify-items-center md:mx-auto px-4">
-                <div class="mb-3 p-6 bg-white">
+{#            # CTA Block#}
+            <div class="mb-3 p-6 bg-white">
                         <h2 class="mb-2 text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
                             Helping Enlisted Veterans find meaningful employment.
                         </h2>
@@ -42,12 +40,13 @@
                             </div>
                     </a>
                 </div>
+{#            # Image Block#}
             <div class="mb-3 p-6">
       <img src="/static/images/vets-moving.jpg" alt="Marines on the move">
     </div>
-
+{#            # Testimonial Block#}
             <div x-data="testimonialCarousel()" x-init="init()" class="mb-3 p-4 text-center bg-white md:col-span-2">
-                <div
+                    <div
                         x-bind:class="transitionClass(currentIndex)"
                         class="mb-3 p-4 text-center bg-white md:col-span-2"
                 >
@@ -67,8 +66,8 @@
                         </figcaption>
                     </figure>
                 </div>
-  </div>
             </div>
+        </div>
     {% endblock body %}
 {% block scripts %}
 <script>
@@ -77,23 +76,28 @@
         currentIndex: 0,
         testimonials: [
             {
-              quote: "1 The resume writing and tailoring were extremely helpful, as well as the job search guidance and feedback. I believe these all contributed most to me finding a job.",
+              quote: "The resume writing and tailoring were extremely helpful, as well as the job search guidance and feedback. I believe these all contributed most to me finding a job.",
+              user: "Kyle Vandenbrandhorninge",
+              company: "USMC Veteran"
+            },
+            {
+              quote: "I had a great time with everyone on the team. Everyone is eager to help and extremely knowledgable about the current job market and hiring trends.",
               user: "Kyle Vandenbrandhorninge",
               company: "USMC Veteran"
             },
             {
               quote:
-                  "2 Your team's dedication and sincere effort in partnering with me throughout the journey of securing a new job have made a significant impact on my career transition.",
+                  "Your team's dedication and sincere effort in partnering with me throughout the journey of securing a new job have made a significant impact on my career transition.",
               user: "Eddie Lemus",
               company: "USMC Veteran"
             },
             {
-              quote: "3 I had a great time with everyone on the team. Everyone is eager to help and extremely knowledgable about the current job market and hiring trends.",
-              user: "Kyle Vandenbrandhorninge",
+              quote: "Weekly tailored jobs helped organize all jobs that I applied to and having a job sourced in my behalf was invaluable.",
+              user: "Eddie Lemus",
               company: "USMC Veteran"
             },
             {
-              quote: "4 Weekly tailored jobs helped organize all jobs that I applied to and having a job sourced in my behalf was invaluable.",
+              quote: "The experience has been both challenging and humbling...I extend my heartfelt thanks for the invaluable support.",
               user: "Eddie Lemus",
               company: "USMC Veteran"
             },

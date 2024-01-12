@@ -11,8 +11,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>Hired Labs</title>
         <link rel="stylesheet" href="https://unpkg.com/flowbite@1.5.1/dist/flowbite.min.css" />
+
         <link rel="icon" type="image/png" sizes="16x16" href="{% static 'images/HiredLabs-Icon-trasnaprent.png' %}">
-        <script src="https://cdn.jsdelivr.net/npm/alpinejs@2.8.2/dist/alpine.min.js" defer></script>
         {% load_vite_js 'src/main.js' %}
         {% block head %}
         {% endblock %}
@@ -66,6 +66,7 @@
                     <a href="{% url 'home' %}" class="flex items-center">
                         <img src="/static/images/HiredLabs1.png" class="h-8 mr-3" alt="Hired Labs Logo" /> Beta
                     </a>
+
                     <ul class="font-medium flex flex-col md:p-0 mt-4 md:flex-row md:space-x-8 md:mt-0 md:border-0 md:bg-blue-900">
                         <li>
                     <a href="{% url 'about' %}" class="mr-4 hover:underline md:mr-6 ">About</a>
