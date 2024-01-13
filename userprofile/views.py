@@ -117,14 +117,14 @@ def profile_update_view(request):
 @login_required
 def update_veteran_status_view(request, participant_id):
     profile = Profile.objects.get(user=participant_id)
-    veteran_profile = VeteranProfile.objects.get(user=participant_id)
+    # veteran_profile = VeteranProfile.objects.get(user=participant_id)
     form = VeteranStatusUpdateForm(request.POST or None, instance=profile)
     signed_url = ''
-    if not settings.DEBUG and veteran_profile.service_doc:
+    if not settings.DEBUG and profile.service_doc:
         signed_url = generate_signed_url(
             service_account_file=settings.SERVICE_ACCOUNT_FILE,
             bucket_name=settings.GS_BUCKET_NAME,
-            object_name=veteran_profile.service_doc.name,
+            object_name=profile.service_doc.name,
             subresource=None,
             expiration=604_800,
             http_method="GET",
@@ -136,7 +136,7 @@ def update_veteran_status_view(request, participant_id):
     context = {
         "form": form,
         "profile": profile,
-        "veteran_profile": veteran_profile,
+        # "veteran_profile": veteran_profile,
         "signed_url": signed_url,
         "debug": settings.DEBUG,
     }
