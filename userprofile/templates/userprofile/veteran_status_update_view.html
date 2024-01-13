@@ -26,11 +26,7 @@
         <p>No service doc uploaded.</p>
     {% endif %}
     <div class="container">
-    {% if user.is_staff %}
-        {% url "cold_apply:index" as cancel_url %}
-    {% else %}
-        {% url "cold_apply:home" as cancel_url %}
-    {% endif %}
+        {% url 'cold_apply:index' as cancel_url %}
         {% include "forms/standard_form.html" with form=form %}
     </div>
 
