@@ -38,8 +38,8 @@ env.read_env(StringIO(payload))
 
 SECRET_KEY = env("DJANGO_SECRET_KEY")
 ALLOWED_HOSTS = [
-    # "www.hiredlabs.org",
-    # "hiredlabs.org",
+    "www.hiredlabs.org",
+    "hiredlabs.org",
     "run-service-dev-001-nfq35uocvq-uw.a.run.app"
     ]
 # Application definition
