@@ -37,8 +37,7 @@ def rewrite_bullet_for_job(bullet, job):
 
 def generate_overview(position: Position, job: Job = None):
     prompt = (
-        ""
-        "Write an overview section for a CV. The overview needs to be a minimum of 150 word and maximum 200 words with no personal pronouns and no text decoration."
+        "Write a resume overview between 150 and 200 words long with no personal pronouns and no text decoration."
         "The overview should be tailored to this job title: "
         f"{position.title}."
     )
@@ -49,7 +48,11 @@ def generate_overview(position: Position, job: Job = None):
         bigrams_list = "\n".join(bigrams)
         trigrams_list = "\n".join(trigrams)
 
-        prompt += f"\n\nThe overview should focus on these keywords: {unigrams_list}"
+        prompt += f"\n\nThe overview should focus on these keywords: {unigrams_list}, {bigrams_list}, {trigrams_list}"
+        prompt += f"\n\nThe overview should be tailored to this job description: \n{job.description[:1000]}"
+
+
+
 
     return generate_text(prompt)
 
