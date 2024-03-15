@@ -15,8 +15,11 @@
     {% endwrapper %}
 
     {% block body %}
+        <br>
+        <br>
         <div class="md:container grid grid-cols-1 gap-4 justify-items-center md:mx-auto px-4 max-w-3xl">
-               <H1>Operation Foot in the Door</H1>
+               <H1>Hi-touch Employment Services</H1>
+            <p>We provide a high-touch, personalized service to help you land your next job and level up your career. We'll help you with resume updates, job search, and application tracking. We'll provide you with a list of open jobs, for which you are a strong candidate, and help you apply to them. We'll also provide a simple spreadsheet to track applications and their outcome. The goal is to get called back for an initial interview. We'll continue to provide updated lists of open jobs, and keyword optimized versions of your resume, until you land a job.</p>
                 <ol>
                      <li class="py-4">
                        <h2 class="text-2xl font-bold">1. Intake Call</h2>
@@ -58,6 +61,75 @@
                         </p>
                    </li>
                </ol>
+        </div>
+        <br>
+        <div class="mb-3 p-6 bg-white min-w-full flex flex-col items-center">
+        <a href="{% url 'custom_account_signup' %}" class="bg-hl-black hover:bg-gray-500 focus:ring-4 focus:outline-none focus:ring-gray-300 rounded-lg inline-flex items-center justify-center px-4 py-2.5 dark:bg-gray-700 dark:hover:bg-gray-600 dark:focus:ring-gray-700">
+                            <div class="text-left">
+                                <div class="-mt-1 font-sans text-sm font-semibold">Sign Up</div>
+                            </div>
+                    </a>
+        </div>
+        <br>
+        <div class="md:container grid grid-cols-1 gap-4 justify-items-center md:mx-auto px-4 max-w-3xl">
+               <H1>Coding Bootcamp</H1>
+            <p>Go from zero to creating functional web applications using Python in 6 weeks. We'll show you the basics,
+                then guide you through building a full-stack web application. We'll use free online resources that can be accessed
+                from any browser, so you don't need your own computer. You'll learn how to use Python, JavaScript,
+                HTML, CSS, and framewokrs like Django and React to build anything you can imagine.
+            </p>
+            <p>
+                At the end, you'll have your own website with a functioning backend web applciation, and the knowledge to
+                customize all of it and build further. Along the way we'll show you how to use git, text-generating AI,
+                and other tools.
+            </p>
+                <ol>
+                     <li class="py-4">
+                       <h2 class="text-2xl font-bold">No Experience Required</h2>
+                       <p>If you can read and write emails, you can code. Even if you've never written (or read) any code,
+                       our bootcamp is for you. We'll show you the concepts behind coding, and point you toward resources
+                       to learn more, while building practical experience. </p>
+                   </li>
+                   <li class="py-4">
+                       <h2 class="text-2xl font-bold">No Math Required</h2>
+                       <p>
+                            You don't need to be a math whiz to code. We'll show you how to use code to solve problems, and
+                            how to use code to make functional things. Math is definitely useful, but not required to learn
+                           how to write functional code, and our bootcamp is focused on practical skills.
+
+                       </p>
+                   </li>
+                   <li class="py-4">
+                       <h2 class="text-2xl font-bold">No Laptop Required</h2>
+                       <p>
+                           If you have a computer, great! If not, we'll show you how to use free online resources that
+                           can be accessed from any browser, so you don't need your own computer - a library or internet
+                           cafe will do. We'll build our web application directly in the browser, so you'll be able to
+                           save your work and access it from anywhere. Mobile phones might be a struggle, because
+                           typing on a small device and reading on a small screen is uncomfortable, but it's possible.
+                       </p>
+                   </li>
+                   <li class="py-4">
+                       <h2 class="text-2xl font-bold">Commitment Required</h2>
+                       <p>
+                           We'll meet twice a week, on Tuesdays and Thursdays from 6:00 pm to 7:30 pm Pacific for 6 weeks. Commiting to
+                       at least that much time is the first step, but you'll need to make coding a daily habit to really learn.
+                   </li>
+                    <li class="py-4">
+                       <h2 class="text-2xl font-bold">Next Session Starts April 16th, 2024</h2>
+                       <p>
+                       </p>
+                   </li>
+               </ol>
+        <br>
+        <div class="mb-3 p-6 bg-white min-w-full flex flex-col items-center">
+        <a href="{% url 'custom_account_signup' %}" class="bg-hl-black hover:bg-gray-500 focus:ring-4 focus:outline-none focus:ring-gray-300 rounded-lg inline-flex items-center justify-center px-4 py-2.5 dark:bg-gray-700 dark:hover:bg-gray-600 dark:focus:ring-gray-700">
+                            <div class="text-left">
+                                <div class="-mt-1 font-sans text-sm font-semibold">Sign Up</div>
+                            </div>
+                    </a>
+        </div>
+        <br>
         </div>
     {% endblock body %}
 
