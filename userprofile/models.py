@@ -50,6 +50,7 @@ class Profile(TrackedModel):
     rank_at_separation = models.CharField(max_length=200, null=True)
     resume = models.FileField(upload_to="uploads/", default=None, null=True)
     service_doc = models.FileField(upload_to="uploads/", default=None, null=True)
+    bootcamp = models.BooleanField(default=False)
 
     def handle_onboard_complete(self):
         self.is_onboarded = True

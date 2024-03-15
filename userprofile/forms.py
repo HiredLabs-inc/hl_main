@@ -63,7 +63,7 @@ class ProfileForm(forms.ModelForm):
 
     class Meta:
         model = Profile
-
+        CHOICES = {"True": "Yes", "False": "No"}
         fields = [
             "first_name",
             "last_name",
@@ -81,12 +81,14 @@ class ProfileForm(forms.ModelForm):
             "rank_at_separation",
             "resume",
             "service_doc",
+            "bootcamp",
         ]
 
         labels = {
             "phone": "Phone Number",
             "linkedin": "LinkedIn",
             "service_doc": "DD214 or other service documentation",
+            "bootcamp": "Are you interested in a free coding bootcamp?",
         }
         widgets = {
             "special_training": forms.Textarea(
@@ -120,6 +122,7 @@ class ProfileForm(forms.ModelForm):
                     "placeholder": "Please list any preferences you have for your next job (e.g. location, industry, hours, level, etc.).",
                 }
             ),
+            "bootcamp": forms.RadioSelect(choices=CHOICES.items()),
         }
 
     def save(self, commit: bool = ...) -> Any:
