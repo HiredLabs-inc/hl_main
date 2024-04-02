@@ -101,7 +101,7 @@ class ParticipantListView(LoginRequiredMixin, ListView):
     queryset = (
         Participant.objects.all()
         .select_related("user__profile")
-        .order_by("-created_at")
+        .order_by("current_step__order")
     )
 
     def get_context_data(self, **kwargs):
