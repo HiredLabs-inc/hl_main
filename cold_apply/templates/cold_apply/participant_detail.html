@@ -28,6 +28,7 @@
     <div class="font-bold">
         {% if object.user.profile.is_veteran %}
         {{object.user.profile.service_branch}} Veteran
+             ({{ object.user.profile.rank_at_separation}})
             {% if object.user.profile.veteran_verified %}
             <span class="rounded-md bg-green-100 text-green-700  p-1">Verified</span>
             {% else %}
@@ -57,16 +58,26 @@
         <div class="col-span-1">Highest Education:</div>
         <div class="col-span-5 text-gray-600">{{highest_edu}}</div>
         <div class="col-span-1">Uploaded Resume:</div>
+
         {% if debug %}
             <div class="col-span-5 text-gray-600"><a href="{{ MEDIA_PREFIX }}{{ object.user.profile.resume }}" target="_blank">View Uploaded Resume</a></div>
         {% else %}
             <div class="col-span-5 text-gray-600"><a href="{{signed_url}}" target="_blank">View Uploaded Resume</a></div>
         {% endif %}
         {% if user.is_staff %}
+            <br>
             <div class="col-span-1">Current Phase:</div>
             <div class="col-span-5 text-gray-600">{{ object.current_step.phase.title }}</div>
             <div class="col-span-1">Current Step:</div>
             <div class="col-span-5 text-gray-600">{{ object.current_step.title }}</div>
+            <br>
+            <br>
+            <div class="col-span-1">Special Training:</div>
+            <div class="col-span-5 text-gray-600">{{ object.user.profile.special_training }}</div>
+            <div class="col-span-1">Special Skills:</div>
+            <div class="col-span-5 text-gray-600">{{ object.user.profile.special_skills }}</div>
+            <div class="col-span-1">Job Links:</div>
+            <div class="col-span-5 text-gray-600">{{ object.user.profile.job_links }}</div>
         {% endif %}
     </div>
     <p>
