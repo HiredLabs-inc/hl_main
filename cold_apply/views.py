@@ -95,7 +95,7 @@ def home_view(request):
 # @method_decorator(sign_up_completed, name="dispatch")
 class ParticipantListView(LoginRequiredMixin, ListView):
     model = Phase
-    template_name = "cold_apply/pipeline.html"
+    template_name = "cold_apply/participant_list.html"
     context_object_name = "participants"
 
     queryset = (
@@ -106,7 +106,7 @@ class ParticipantListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # context["phases"] = Phase.objects.all()
+        context["phases"] = Phase.objects.all()
         context["now"] = timezone.now()
 
         return context
