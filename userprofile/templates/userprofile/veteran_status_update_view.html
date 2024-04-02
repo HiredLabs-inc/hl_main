@@ -12,10 +12,10 @@
     {% endif %}
     <br>
     <br>
-    {% if veteran_profile.service_doc %}
+    {% if profile.service_doc %}
             <div class="col-span-5 text-gray-600">
                 {% if debug %}
-                    <a href="{{ MEDIA_PREFIX }}{{ veteran_profile.service_doc }}"target="_blank">
+                    <a href="{{ MEDIA_PREFIX }}{{ profile.service_doc }}"target="_blank">
                 {% else %}
                     <a href="{{ signed_url }}"target="_blank">
                 {% endif %}
