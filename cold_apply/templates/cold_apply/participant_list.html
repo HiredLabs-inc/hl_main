@@ -65,9 +65,11 @@
                     <thead>
                     <tr>
                         <th class="th">Name</th>
-                        <th class="th">Current Step</th>
-                        <th class="th">Last Updated</th>
-                        <th class="th">Updated by</th>
+                        <th  class="th">Current Step</th>
+                        <th  class="th">Email</th>
+                        <th  class="th">Veteran Status Varified</th>
+                        <th  class="th">Is Veteran</th>
+                        <th  class="th">Bootcamp Interest</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -77,9 +79,11 @@
                                 <td class="td">
                                     <a href="{% url 'cold_apply:participant_detail' participant.id %}">{{ participant.user.get_full_name }}</a>
                                 </td>
-                                <td class="td">{{ participant.current_step.title }}</td>
-                                <td class="td">{{ participant.updated_at|date }}</td>
-                                <td class="td">{{ participant.updated_by }}</td>
+                                <td  class="td">{{ participant.current_step.title }}</td>
+                                <td  class="td">{{ participant.user.email }}</td>
+                                <td  class="td">{{ participant.user.profile.veteran_verified }}</td>
+                                <td  class="td">{{ participant.user.profile.is_veteran }}</td>
+                                <td  class="td">{{ participant.user.profile.bootcamp }}</td>
                             </tr>
                         {% endif %}
                     {% endfor %}
