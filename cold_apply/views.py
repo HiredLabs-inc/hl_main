@@ -95,23 +95,22 @@ def home_view(request):
 # @method_decorator(sign_up_completed, name="dispatch")
 class ParticipantListView(LoginRequiredMixin, ListView):
     model = Phase
-    template_name = "cold_apply/participant_list.html"
+    template_name = "cold_apply/pipeline.html"
     context_object_name = "participants"
     paginate_by = 10
 
     queryset = (
         Participant.objects.all()
-        # .select_related("user__profile", "user__veteranprofile")
+        .select_related("user__profile")
         .order_by("-created_at")
     )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["phases"] = Phase.objects.all()
+        # context["phases"] = Phase.objects.all()
         context["now"] = timezone.now()
 
         return context
-
 
 # process/
 class PhaseListView(LoginRequiredMixin, ListView):
