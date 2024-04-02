@@ -97,7 +97,6 @@ class ParticipantListView(LoginRequiredMixin, ListView):
     model = Phase
     template_name = "cold_apply/pipeline.html"
     context_object_name = "participants"
-    paginate_by = 10
 
     queryset = (
         Participant.objects.all()
