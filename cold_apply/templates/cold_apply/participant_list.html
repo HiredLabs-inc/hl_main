@@ -31,6 +31,7 @@
                         <th  class="th">Is Veteran</th>
                         <th  class="th">Veteran Status Varified</th>
                         <th  class="th">Bootcamp Interest</th>
+                        <th  class="th">Registration Date</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -51,6 +52,7 @@
                                 {% endif %}
 
                                 <td  class="td">{{ participant.user.profile.bootcamp }}</td>
+                                <td  class="td">{{ participant.created_at|date:"F j, Y: H:m:s T" }}</td>
                             </tr>
                         {% endif %}
                     {% endfor %}
@@ -78,6 +80,7 @@
                         <th  class="th">Is Veteran</th>
                         <th  class="th">Veteran Status Varified</th>
                         <th  class="th">Bootcamp Interest</th>
+                        <th class="th">Registration Date</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -97,6 +100,7 @@
                                     <td  class="td">Not Verified</td>
                                 {% endif %}
                                 <td  class="td">{{ participant.user.profile.bootcamp }}</td>
+                                <td  class="td">{{ participant.created_at|date:"F j, Y: H:m:s T" }}</td>
                             </tr>
                         {% endif %}
                     {% endfor %}
