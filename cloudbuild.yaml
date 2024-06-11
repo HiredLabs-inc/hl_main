@@ -1,0 +1,46 @@
+steps:
+# Use cached images to speed the build process
+- name: 'gcr.io/cloud-builders/docker'
+  entrypoint: 'bash'
+  args: ['-c', 'docker pull us-west1-docker.pkg.dev/hl-main-dev/hl-dev-repo/hl_main_django:latest || exit 0']
+  id: 'Pull'
+
+# Build container image with Cloud Build from Dockerfile
+- name: 'gcr.io/cloud-builders/docker'
+  args: [
+          'build',
+          '-t', 'us-west1-docker.pkg.dev/hl-main-dev/hl-dev-repo/hl_main_django:latest',
+          '--cache-from', 'us-west1-docker.pkg.dev/hl-main-dev/hl-dev-repo/hl_main_django:latest',
+          '.'
+    ]
+  id: 'Build'
+
+# Push the image to Artifact Registry
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'us-west1-docker.pkg.dev/hl-main-dev/hl-dev-repo/hl_main_django']
+  id: 'Push'
+
+# Deploy to Cloud Run
+- name: 'gcr.io/cloud-builders/gcloud'
+  args: [
+          'run',
+          'deploy',
+          'run-service-dev-001',
+          '--platform',
+          'managed',
+          '--region',
+          'us-west1',
+          '--image',
+          'us-west1-docker.pkg.dev/hl-main-dev/hl-dev-repo/hl_main_django',
+          '--service-account',
+          'dev-service-account@hl-main-dev.iam.gserviceaccount.com',
+          '--vpc-connector',
+          'projects/vpc-host-staging-yk380-hm150/locations/us-west1/connectors/dev-connector-1',
+          '--set-cloudsql-instances',
+          'hl-main-dev:us-west1:sql-dev-001',
+          '--allow-unauthenticated',
+    ]
+  id: 'Deploy'
+  entrypoint: gcloud
+images:
+- 'us-west1-docker.pkg.dev/hl-main-dev/hl-dev-repo/hl_main_django:latest'
