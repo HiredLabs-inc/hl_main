@@ -4,7 +4,7 @@
 @tailwind components;
 @tailwind utilities;
 
-a:not(.btn) {
+a:not(.btn):not(.admin_panel) {
   @apply hover:underline text-orange;
 }
 

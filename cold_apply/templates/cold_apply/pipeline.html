@@ -32,7 +32,7 @@
                     {% for participant in participants %}
                             <tr class="tr">
                                 <td class="td">
-                                    <a href="{% url 'cold_apply:participant_detail' participant.id %}">{{ participant.user.get_full_name }}</a>
+                                    <a class="admin_panel" href="{% url 'cold_apply:participant_detail' participant.id %}">{{ participant.user.get_full_name }}</a>
                                 </td>
                                 <td  class="td">{{ participant.current_step.title }}</td>
                                 <td  class="td">{{ participant.updated_at|date }}</td>

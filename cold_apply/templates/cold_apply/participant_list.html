@@ -39,7 +39,7 @@
                         {% if participant.current_step.phase == phase %}
                             <tr class="tr">
                                 <td class="td">
-                                    <a href="{% url 'cold_apply:participant_detail' participant.id %}">{{ participant.user.get_full_name }}</a>
+                                    <a class="admin_panel" href="{% url 'cold_apply:participant_detail' participant.id %}">{{ participant.user.get_full_name }}</a>
                                 </td>
                                 <td  class="td">{{ participant.user.profile.rank_at_separation }}</td>
                                 <td  class="td">{{ participant.current_step.title }}</td>
@@ -78,8 +78,7 @@
                         <th  class="th">Current Step</th>
                         <th  class="th">Email</th>
                         <th  class="th">Is Veteran</th>
-                        <th  class="th">Veteran Status Varified</th>
-                        <th  class="th">Bootcamp Interest</th>
+                        <th  class="th">Veteran Status Verified</th>
                         <th class="th">Registration Date</th>
                     </tr>
                     </thead>
@@ -88,7 +87,7 @@
                         {% if participant.current_step.phase == phase %}
                             <tr class="tr">
                                 <td class="td">
-                                    <a href="{% url 'cold_apply:participant_detail' participant.id %}">{{ participant.user.get_full_name }}</a>
+                                    <a class="admin_panel" href="{% url 'cold_apply:participant_detail' participant.id %}">{{ participant.user.get_full_name }}</a>
                                 </td>
                                 <td  class="td">{{ participant.user.profile.rank_at_separation }}</td>
                                 <td  class="td">{{ participant.current_step.title }}</td>
@@ -99,7 +98,6 @@
                                 {% else %}
                                     <td  class="td">Not Verified</td>
                                 {% endif %}
-                                <td  class="td">{{ participant.user.profile.bootcamp }}</td>
                                 <td  class="td">{{ participant.created_at|date:"F j, Y: H:m:s T" }}</td>
                             </tr>
                         {% endif %}
