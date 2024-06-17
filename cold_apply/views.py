@@ -106,7 +106,7 @@ class ParticipantListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["phases"] = Phase.objects.all()
+        context["phases"] = Phase.objects.all().order_by("order")
         context["now"] = timezone.now()
 
         return context
