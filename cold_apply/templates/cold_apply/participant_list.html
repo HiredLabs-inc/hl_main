@@ -15,26 +15,63 @@
         <p class="text-gray-500">Data retrieved on {{ now|date }} at {{ now|time }} {{ TIME_ZONE }}</p>
     </div>
     <div  class="pt-3 space-y-5">
-        
+
         <h2 class="text-xl font-bold">Active Participants</h2>
         {% for phase in phases %}
         <div class="space-y-2">
             {% if phase.active %}
-                <h4 class="text-lg">{{ phase.title }}</h4>
-                <table class="table table-fixed w-full border">
-                    <thead>
+                {% if phase.title == 'Boot Camp On-boarding' or phase.title == 'Boot Camp Wait List' %}
+                    <h4 class="text-lg">{{ phase.title }}</h4>
+                    <table class="table table-fixed w-full border">
+                        <thead>
                     <tr >
                         <th class="th">Name</th>
                         <th class="th">Rank At Separation</th>
                         <th  class="th">Current Step</th>
                         <th  class="th">Email</th>
                         <th  class="th">Is Veteran</th>
-                        <th  class="th">Veteran Status Varified</th>
+                        <th  class="th">Veteran Status Verified</th>
+                        <th  class="th">Registration Date</th>
+                    </tr>
+                    </thead>
+                        <tbody>
+                    {% for participant in participants %}
+                        {% if participant.current_step.phase == phase %}
+                            <tr class="tr">
+                                <td class="td">
+                                    <a class="admin_panel" href="{% url 'cold_apply:participant_detail' participant.id %}">{{ participant.user.get_full_name }}</a>
+                                </td>
+                                <td  class="td">{{ participant.user.profile.rank_at_separation }}</td>
+                                <td  class="td">{{ participant.current_step.title }}</td>
+                                <td  class="td">{{ participant.user.email }}</td>
+                                <td  class="td">{{ participant.user.profile.is_veteran }}</td>
+                                {% if participant.user.profile.veteran_verified %}
+                                    <td  class="td">Verified</td>
+                                {% else %}
+                                    <td  class="td">Not Verified</td>
+                                {% endif %}
+                                <td  class="td">{{ participant.created_at|date:"F j, Y: H:m:s T" }}</td>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+                    </tbody>
+                    </table>
+                {% else %}
+                    <h4 class="text-lg">{{ phase.title }}</h4>
+                    <table class="table table-fixed w-full border">
+                        <thead>
+                    <tr >
+                        <th class="th">Name</th>
+                        <th class="th">Rank At Separation</th>
+                        <th  class="th">Current Step</th>
+                        <th  class="th">Email</th>
+                        <th  class="th">Is Veteran</th>
+                        <th  class="th">Veteran Status Verified</th>
                         <th  class="th">Bootcamp Interest</th>
                         <th  class="th">Registration Date</th>
                     </tr>
                     </thead>
-                    <tbody>
+                        <tbody>
                     {% for participant in participants %}
                         {% if participant.current_step.phase == phase %}
                             <tr class="tr">
@@ -57,12 +94,13 @@
                         {% endif %}
                     {% endfor %}
                     </tbody>
-                </table>
-
+                    </table>
+                {% endif %}
             {% endif %}
         </div>
         {% endfor %}
     </div>
+
     <div class="pt-3 space-y-5">
         <h2 class="text-xl font-bold">Inactive Participants</h2>
         {% for phase in phases %}
