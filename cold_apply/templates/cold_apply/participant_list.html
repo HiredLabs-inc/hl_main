@@ -22,7 +22,7 @@
             {% if phase.active %}
                 {% if phase.title == 'Boot Camp On-boarding' or phase.title == 'Boot Camp Wait List' %}
                     <h4 class="text-lg">{{ phase.title }}</h4>
-                    <table class="table table-fixed w-full border">
+                    <table class="table table-auto w-full border">
                         <thead>
                     <tr >
                         <th class="th">Name</th>
@@ -58,7 +58,7 @@
                     </table>
                 {% else %}
                     <h4 class="text-lg">{{ phase.title }}</h4>
-                    <table class="table table-fixed w-full border">
+                    <table class="table table-auto w-full border">
                         <thead>
                     <tr >
                         <th class="th">Name</th>
