@@ -26,7 +26,7 @@
                 <tr class="tr">
                     <td class="td">
                         {% if user.is_staff %}
-                        <a href="{% url app.name|add:':index' %}">{{ app.name }}</a>
+                        <a class="admin_panel" href="{% url app.name|add:':index' %}">{{ app.name }}</a>
                         {% else %}
                         <a href="{% url app.name|add:':home' %}">{{ app.name }}</a>
                         {% endif %}
@@ -36,7 +36,7 @@
                     </td>
                     <td class="td">{{ app.description }}</td>
                     <td class="td">{{ app.release_set.values.first.date }}</td>
-                    <td class="td"><a href="{% url 'releases:index' app.id %}">Go To Notes</a></td>
+                    <td class="td"><a class="admin_panel" href="{% url 'releases:index' app.id %}">Go To Notes</a></td>
                 </tr>
             {% endif %}
         {% endfor %}
