@@ -181,9 +181,9 @@ def get_chip_url_params(chip_filters: dict) -> str:
     chip_htis_url_params = ",".join(
         [f"{key};{';'.join(values)}" for key, values in chip_filters.items() if values]
     )
-    search_radius_km = 48.2802
-
-    return f"#htivrt=jobs&htilrad={search_radius_km}&htichips={chip_hti_url_params}&htischips={chip_htis_url_params}"
+    # search_radius_km = 48.2802
+    # {search_radius_km}&
+    return f"#htivrt=jobs&htilrad=htichips={chip_hti_url_params}&htischips={chip_htis_url_params}"
 
 
 def get_relative_time(time_posted_str):

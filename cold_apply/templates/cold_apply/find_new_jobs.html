@@ -21,11 +21,11 @@
             {% include 'components/form_input.html' %}
         {% endfor %}
         <div class="row">
-        <div class="col-3">
-            Search Radius
-        </div>
-            <div class="col-3">30 miles (48km)</div>
-        </div>
+{#        <div class="col-3">#}
+{#            Search Radius#}
+{#        </div>#}
+{#            <div class="col-3">30 miles (48km)</div>#}
+{#        </div>#}
         <div class="text-end">
             <a href="{% url 'cold_apply:participant_detail' participant.id %}" class="btn btn-outline-primary">Cancel</a>
             <button class="btn btn-primary" type="submit">Search</button>
@@ -88,7 +88,7 @@
                 <th class="th">Search Query</th>
                 <th class="th">Keywords</th>
                 <th class="th">Date Posted</th>
-                <th class="th">Search Radius</th>
+{#                <th class="th">Search Radius</th>#}
                 <th class="th">Run By</th>
             </tr>
         </thead>
@@ -101,7 +101,7 @@
                     <td class="td">{{search.search_query}}</td>
                     <td class="td">{{search.keywords_csv}}</td>
                     <td class="td">{{search.date_posted}}</td>
-                    <td class="td">{{search.distance_miles}}</td>
+{#                    <td class="td">{{search.distance_miles}}</td>#}
                     <td class="td">{{search.run_by}}</td>
                 </tr>
             {% endfor %}
