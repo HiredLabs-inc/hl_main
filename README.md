@@ -1,4 +1,4 @@
-# Hired Labs, Inc. Main Website and Tools
+_# Hired Labs, Inc. Main Website and Tools
 
 This is the main website for Hired Labs, Inc. It serves as a platform for web applications and tools to help accomplish
 our mission of ending veteran underemployment.
@@ -83,4 +83,4 @@ CODE_OF_CONDUCT.md for details on our code of conduct.
 
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](code_of_conduct.md)
 ## License
-[GPL-3.0 license](https://www.gnu.org/licenses/gpl-3.0.en.html)
+[GPL-3.0 license](https://www.gnu.org/licenses/gpl-3.0.en.html)_
