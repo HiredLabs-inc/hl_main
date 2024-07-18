@@ -87,7 +87,7 @@ class ProfileForm(forms.ModelForm):
         labels = {
             "phone": "Phone Number",
             "linkedin": "LinkedIn",
-            "service_doc": "DD214 or other service documentation",
+            "service_doc": "DD214 or other service documentation REDACT SSN BEFORE UPLOADING",
             "bootcamp": "Are you interested in a free coding bootcamp?",
         }
         widgets = {
