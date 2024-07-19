@@ -87,6 +87,7 @@ from .static.scripts.storage.generate_signed_urls import generate_signed_url
 def home_view(request):
     if request.user.is_staff:
         return redirect("cold_apply:index")
+
     # TODO handle no profile
     return redirect("cold_apply:participant_detail", request.user.participant.id)
 
