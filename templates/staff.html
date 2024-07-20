@@ -29,7 +29,7 @@
                                     <li><a class="dropdown-item" href="{% url 'rates:index' %}">World Rates</a></li>
                                 {% endif %}
                                 <li><a class="dropdown-item" href="{% url 'home' %}">View Public Site</a></li>
-                                {% if user.is_staff %}
+                                {% if user.is_superuser %}
                                     <li><a class="dropdown-item" href="{% url 'admin:index' %}">Admin Panel</a></li>
                                 {% endif %}
                             </ul>
