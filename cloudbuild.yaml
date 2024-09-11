@@ -10,7 +10,6 @@ steps:
   args: [
           'build',
           '-t', 'us-west1-docker.pkg.dev/hl-main-dev/hl-dev-repo/hl_main_django:latest',
-#          '--cache-from', 'us-west1-docker.pkg.dev/hl-main-dev/hl-dev-repo/hl_main_django:latest',
           '.'
     ]
   id: 'Build'
