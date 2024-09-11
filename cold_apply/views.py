@@ -342,7 +342,7 @@ class JobDetailView(LoginRequiredMixin, DetailView):
     model = Job
     template_name = "cold_apply/job_detail.html"
     context_object_name = "jobs"
-    paginate_by = 10
+    # paginate_by = 10
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -430,7 +430,7 @@ class ParticipantExperienceListView(LoginRequiredMixin, ListView):
     model = Experience
     template_name = "cold_apply/participant_experience_list.html"
     context_object_name = "experiences"
-    paginate_by = 10
+    # paginate_by = 10
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
