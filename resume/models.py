@@ -79,7 +79,7 @@ class Experience(models.Model):
 
 class Bullet(models.Model):
     BULLET_TYPES = [("Work", "Work"), ("Summary", "Summary")]
-    MAX_PER_PARTICIPANT = 40
+    MAX_PER_PARTICIPANT = 400
     experience = models.ForeignKey(Experience, on_delete=models.CASCADE)
     text = models.TextField()
     type = models.CharField(max_length=20, choices=BULLET_TYPES)
