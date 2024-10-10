@@ -8,7 +8,7 @@ steps:
           '$GCP_REGION-docker.pkg.dev/$GCP_PROJECT_ID/$GCP_REPO_NAME/$GCP_IMAGE_NAME:latest',
           '.'
     ]
-  id: '$GCP_REGION Build'
+  id: 'Build'
 
 # Push the image to Artifact Registry
 - name: 'gcr.io/cloud-builders/docker'
@@ -16,7 +16,7 @@ steps:
     'push',
     '$GCP_REGION-docker.pkg.dev/$GCP_PROJECT_ID/$GCP_REPO_NAME/$GCP_IMAGE_NAME'
   ]
-  id: '$GCP_REGION Push'
+  id: 'Push'
 
 # Deploy to Cloud Run
 - name: 'gcr.io/cloud-builders/gcloud'
@@ -38,7 +38,7 @@ steps:
           '$MAIN_CLOUDSQL_INSTANCE',
           '--allow-unauthenticated',
     ]
-  id: '$GCP_REGION Deploy'
+  id: 'Deploy'
   entrypoint: gcloud
 images:
 - '$GCP_REGION-docker.pkg.dev/$GCP_PROJECT_ID/$GCP_REPO_NAME/$GCP_IMAGE_NAME:latest'
