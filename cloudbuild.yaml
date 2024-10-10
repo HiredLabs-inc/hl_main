@@ -5,7 +5,7 @@ steps:
   args: [
           'build',
           '-t',
-          '$GCP_REGION-docker.pkg.dev/$GCP_PROJECT_ID/$GCP_REPO_NAME/$GCP_IMAGE_NAME:latest',
+          '$_GCP_REGION-docker.pkg.dev/$_GCP_PROJECT_ID/$_GCP_REPO_NAME/$_GCP_IMAGE_NAME:latest',
           '.'
     ]
   id: 'Build'
@@ -14,7 +14,7 @@ steps:
 - name: 'gcr.io/cloud-builders/docker'
   args: [
     'push',
-    '$GCP_REGION-docker.pkg.dev/$GCP_PROJECT_ID/$GCP_REPO_NAME/$GCP_IMAGE_NAME'
+    '$_GCP_REGION-docker.pkg.dev/$_GCP_PROJECT_ID/$_GCP_REPO_NAME/$_GCP_IMAGE_NAME'
   ]
   id: 'Push'
 
@@ -23,22 +23,22 @@ steps:
   args: [
           'run',
           'deploy',
-          '$GCP_CLOUDRUN_NAME',
+          '$_GCP_CLOUDRUN_NAME',
           '--platform',
           'managed',
           '--region',
-          '$GCP_REGION',
+          '$_GCP_REGION',
           '--image',
-          '$GCP_REGION-docker.pkg.dev/$GCP_PROJECT_ID/$GCP_REPO_NAME/$GCP_IMAGE_NAME',
+          '$_GCP_REGION-docker.pkg.dev/$_GCP_PROJECT_ID/$_GCP_REPO_NAME/$_GCP_IMAGE_NAME',
           '--service-account',
-          '$GCP_SERVICE_ACCOUNT',
+          '$_GCP_SERVICE_ACCOUNT',
           '--vpc-connector',
-          'projects/$VPC_HOST_PROJECT/locations/$GCP_REGION/connectors/$SERVERLESS_VPC_CONNECTOR',
+          'projects/$_VPC_HOST_PROJECT/locations/$_GCP_REGION/connectors/$_SERVERLESS_VPC_CONNECTOR',
           '--set-cloudsql-instances',
-          '$MAIN_CLOUDSQL_INSTANCE',
+          '$_MAIN_CLOUDSQL_INSTANCE',
           '--allow-unauthenticated',
     ]
   id: 'Deploy'
   entrypoint: gcloud
 images:
-- '$GCP_REGION-docker.pkg.dev/$GCP_PROJECT_ID/$GCP_REPO_NAME/$GCP_IMAGE_NAME:latest'
+- '$_GCP_REGION-docker.pkg.dev/$_GCP_PROJECT_ID/$_GCP_REPO_NAME/$_GCP_IMAGE_NAME:latest'
