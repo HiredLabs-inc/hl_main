@@ -26,13 +26,16 @@ from .base import *
 PRODUCTION = True
 DEBUG = False
 
-GCP_PROJECT_ID = os.environ["GCP_PROJECT_ID"]
-GCP_SETTINGS_NAME = os.environ["GCP_SECRETS_NAME"]
+GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID")
+GCP_SETTINGS_NAME = os.environ.get("GCP_SECRETS_NAME")
 
 # get secrets from gcp secret manager
 client = secretmanager.SecretManagerServiceClient()
 name = f"projects/{GCP_PROJECT_ID}/secrets/{GCP_SETTINGS_NAME}/versions/latest"
 payload = client.access_secret_version(name=name).payload.data.decode("UTF-8")
+
+GCP_PROJECT_ID = env("GCP_PROJECT_ID")
+GCP_SETTINGS_NAME = env("GCP_SECRETS_NAME")
 
 env.read_env(StringIO(payload))
 
@@ -40,10 +43,12 @@ SECRET_KEY = env("DJANGO_SECRET_KEY")
 ALLOWED_HOSTS = [
     "www.hiredlabs.org",
     "hiredlabs.org",
-    "run-service-dev-001-nfq35uocvq-uw.a.run.app"
+    "run-service-dev-001-nfq35uocvq-uw.a.run.app",
+    "run-service-prod-2-676530430552.asia-east1.run.app",
+    "run-service-dev-001-676530430552.us-west1.run.app"
     ]
 # Application definition
-GS_BUCKET_NAME = os.environ['GS_BUCKET_NAME']
+GS_BUCKET_NAME = env('GS_BUCKET_NAME')
 MEDIA_URL = "media/"
 MEDIA_ROOT = (os.path.join(BASE_DIR, "/media/"))
 
