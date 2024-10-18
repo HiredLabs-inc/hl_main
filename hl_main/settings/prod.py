@@ -43,9 +43,10 @@ SECRET_KEY = env("DJANGO_SECRET_KEY")
 ALLOWED_HOSTS = [
     "www.hiredlabs.org",
     "hiredlabs.org",
-    "run-service-dev-001-nfq35uocvq-uw.a.run.app",
-    "run-service-prod-2-676530430552.asia-east1.run.app",
-    "run-service-dev-001-676530430552.us-west1.run.app"
+    # "run-service-dev-001-nfq35uocvq-uw.a.run.app",
+    # "run-service-prod-2-676530430552.asia-east1.run.app",
+    # "run-service-dev-001-676530430552.us-west1.run.app",
+    "34.95.124.115"
     ]
 # Application definition
 GS_BUCKET_NAME = env('GS_BUCKET_NAME')
