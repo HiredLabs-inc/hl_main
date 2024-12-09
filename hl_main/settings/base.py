@@ -14,6 +14,16 @@ from pathlib import Path
 
 from environ import Env
 
+# Utility function to get secrets from GCP Secret Manager
+# from hl_main.secret_loader import get_secrets
+
+# Load secrets from GCP Secret Manager
+# secrets = get_secrets()
+
+# Set environment variables
+# os.environ['GCP_REGION'] = secrets.get('GCP_REGION')
+# os.environ['CLOUDRUN_WORKER_URL'] = secrets.get('CLOUDRUN_WORKER_URL')
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -61,6 +71,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    # Custom middleware
+    # "hl_main.middleware.RegionMiddleware",
 ]
 
 

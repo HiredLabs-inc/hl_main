@@ -42,3 +42,4 @@ steps:
   entrypoint: gcloud
 images:
 - '$_GCP_REGION-docker.pkg.dev/$_GCP_PROJECT_ID/$_GCP_REPO_NAME/$_GCP_IMAGE_NAME:latest'
+
