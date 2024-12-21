@@ -24,6 +24,7 @@ class ProfileAdmin(admin.ModelAdmin):
         "is_veteran",
         "is_onboarded",
         "veteran_verified",
+        "bootcamp",
         "dnc"
         )
     list_filter = (
@@ -33,6 +34,7 @@ class ProfileAdmin(admin.ModelAdmin):
         "is_veteran",
         "veteran_verified",
         "is_onboarded",
+        "bootcamp",
         "dnc"
         )
     search_fields = (
@@ -43,6 +45,7 @@ class ProfileAdmin(admin.ModelAdmin):
         "is_veteran",
         "veteran_verified",
         "is_onboarded",
+        "bootcamp",
         "dnc"
         )
 
