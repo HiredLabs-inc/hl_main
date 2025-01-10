@@ -20,14 +20,9 @@ FROM ubuntu:jammy
 ARG DEBIAN_FRONTEND=noninteractive
 ARG TZ=America/Los_Angeles
 ARG DOCKER_IMAGE_NAME_TEMPLATE="mcr.microsoft.com/playwright:v1.35.0-jammy"
-ARG GCP_PROJECT_ID=hl-main-dev
-
-# ENV GCP_PROJECT_ID=$GCP_PROJECT_ID
-
-ARG GCP_SECRETS_NAME=squirrel-dev-002
-# ENV GCP_SECRETS_NAME=$GCP_SECRETS_NAME
-
-ARG GCP_SECRETS_NAME=squirrel-dev-002
+ARG DJANGO_SETTINGS_MODULE=$DJANGO_SETTINGS_MODULE
+ARG GCP_PROJECT_ID=$GCP_PROJECT_ID
+ARG GCP_SECRETS_NAME=$GCP_SECRETS_NAME
 
 ENV APP_HOME /app
 WORKDIR $APP_HOME
@@ -92,9 +87,7 @@ COPY --from=frontend_builder /app/frontend/build ./frontend/build
 RUN python -m nltk.downloader stopwords -d /usr/local/nltk_data
 
 # arg DJANGO_SETTINGS_MODULE needed to run collectstatic in docker build step
-ARG DJANGO_SETTINGS_MODULE
-ARG GS_BUCKET_NAME=hl-main-dev-media
-ENV GS_BUCKET_NAME=$GS_BUCKET_NAME
+
 COPY ./creds ./creds
 ARG GOOGLE_APPLICATION_CREDENTIALS=./creds/application_default_credentials.json
 RUN python manage.py collectstatic --no-input

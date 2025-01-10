@@ -6,6 +6,12 @@ steps:
           'build',
           '-t',
           '$_GCP_REGION-docker.pkg.dev/$_GCP_PROJECT_ID/$_GCP_REPO_NAME/$_GCP_IMAGE_NAME:latest',
+          '--build-arg',
+          'DJANGO_SETTINGS_MODULE=$_DJANGO_SETTINGS_MODULE',
+          '--build-arg',
+          'GCP_SECRETS_NAME=$_GCP_SECRETS_NAME',
+          '--build-arg',
+          'GCP_PROJECT_ID=$_GCP_PROJECT_ID',
           '.'
     ]
   id: 'Build'
