@@ -20,9 +20,12 @@ FROM ubuntu:jammy
 ARG DEBIAN_FRONTEND=noninteractive
 ARG TZ=America/Los_Angeles
 ARG DOCKER_IMAGE_NAME_TEMPLATE="mcr.microsoft.com/playwright:v1.35.0-jammy"
+
+# Build args for Django and GCP settings
 ARG DJANGO_SETTINGS_MODULE=$DJANGO_SETTINGS_MODULE
 ARG GCP_PROJECT_ID=$GCP_PROJECT_ID
 ARG GCP_SECRETS_NAME=$GCP_SECRETS_NAME
+ARG GOOGLE_APPLICATION_CREDENTIALS=$GOOGLE_APPLICATION_CREDENTIALS
 
 ENV APP_HOME /app
 WORKDIR $APP_HOME
@@ -86,10 +89,7 @@ COPY --from=frontend_builder /app/frontend/build ./frontend/build
 
 RUN python -m nltk.downloader stopwords -d /usr/local/nltk_data
 
-# arg DJANGO_SETTINGS_MODULE needed to run collectstatic in docker build step
-
 COPY ./creds ./creds
-ARG GOOGLE_APPLICATION_CREDENTIALS=./creds/application_default_credentials.json
 RUN python manage.py collectstatic --no-input
 
 

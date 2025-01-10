@@ -12,6 +12,8 @@ steps:
           'GCP_SECRETS_NAME=$_GCP_SECRETS_NAME',
           '--build-arg',
           'GCP_PROJECT_ID=$_GCP_PROJECT_ID',
+          '--build-arg',
+          'GOOGLE_APPLICATION_CREDENTIALS=$_GOOGLE_APPLICATION_CREDENTIALS',
           '.'
     ]
   id: 'Build'
