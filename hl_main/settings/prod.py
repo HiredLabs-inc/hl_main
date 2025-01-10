@@ -55,16 +55,16 @@ GS_BUCKET_NAME = env('GS_BUCKET_NAME')
 MEDIA_URL = "media/"
 MEDIA_ROOT = (os.path.join(BASE_DIR, "/media/"))
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": env("GCP_CLOUDSQL_DB_NAME"),
-        "USER": env("GCP_CLOUDSQL_USER"),
-        "PASSWORD": env("GCP_CLOUDSQL_PASSWORD"),
-        "HOST": env("GCP_CLOUDSQL_PRIVATE_IP"),
-        "PORT": 5432,
-    }
-}
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.postgresql",
+#         "NAME": env("GCP_CLOUDSQL_DB_NAME"),
+#         "USER": env("GCP_CLOUDSQL_USER"),
+#         "PASSWORD": env("GCP_CLOUDSQL_PASSWORD"),
+#         "HOST": env("GCP_CLOUDSQL_PRIVATE_IP"),
+#         "PORT": 5432,
+#     }
+# }
 
 
 CACHES = {
