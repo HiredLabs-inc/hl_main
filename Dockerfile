@@ -24,10 +24,8 @@ ARG GCP_PROJECT_ID=hl-main-dev
 
 # ENV GCP_PROJECT_ID=$GCP_PROJECT_ID
 
-ARG GCP_SECRETS_NAME=squirrel-dev-002
+ARG GCP_SECRETS_NAME=staging-secrets
 # ENV GCP_SECRETS_NAME=$GCP_SECRETS_NAME
-
-ARG GCP_SECRETS_NAME=squirrel-dev-002
 
 ENV APP_HOME /app
 WORKDIR $APP_HOME
@@ -93,7 +91,7 @@ RUN python -m nltk.downloader stopwords -d /usr/local/nltk_data
 
 # arg DJANGO_SETTINGS_MODULE needed to run collectstatic in docker build step
 ARG DJANGO_SETTINGS_MODULE
-ARG GS_BUCKET_NAME=hl-main-dev-media
+ARG GS_BUCKET_NAME=hl-stage-media
 ENV GS_BUCKET_NAME=$GS_BUCKET_NAME
 COPY ./creds ./creds
 ARG GOOGLE_APPLICATION_CREDENTIALS=./creds/application_default_credentials.json
