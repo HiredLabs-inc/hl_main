@@ -46,7 +46,9 @@ ALLOWED_HOSTS = [
     "www.hiredlabs.org",
     "hiredlabs.org",
     "34.95.124.115",
-    "task-service-dev-001-nfq35uocvq-uw.a.run.app"
+    "task-service-dev-001-nfq35uocvq-uw.a.run.app",
+    "run-service-stage-001-676530430552.us-west1.run.app",
+    "task-service-stage-001-676530430552.us-west1.run.app",
     ]
 # Application definition
 GS_BUCKET_NAME = env('GS_BUCKET_NAME')
