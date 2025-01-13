@@ -42,7 +42,14 @@
                 </div>
 {#            # Image Block#}
             <div class="mb-3 p-6">
-      <img class="rounded-lg shadow-lg" src="/static/images/vets-moving.jpg" alt="Marine Trying on Alphas">
+{#      <img class="rounded-lg shadow-lg" src="/static/images/vets-moving.jpg" alt="Marine Trying on Alphas">#}
+        <video controls autoplay muted playsinline>
+            <source src="/static/video/optimized_720p.webm" type="video/webm">
+            <source src="/static/video/optimized_720p.mp4" type="video/mp4">
+            <source src="/static/video/optimized_720p.ogv" type="video/ogg">
+            <track src="/static/video/promo-24.vtt" kind="subtitles" srclang="en" label="English">
+            Your browser does not support the video tag.
+        </video>
     </div>
 {#            # Testimonial Block#}
             <div x-data="testimonialCarousel()" x-init="init()" class="mb-3 p-4 text-center bg-white md:col-span-2">

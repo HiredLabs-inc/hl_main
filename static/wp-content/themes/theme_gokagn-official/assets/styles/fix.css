@@ -1,0 +1,55 @@
+.formRow.is-error .form-text,
+.formRow.is-error .form-textarea {
+  border-color: #f7941d;
+}
+
+.formRow .is-error .mwform-checkbox-field-text::before {
+  border-color: #f7941d;
+}
+
+.mw_wp_form .error {
+  display: none;
+}
+
+.ob-contactCheck_form .formRow.privacypolicy {
+  display: none;
+}
+.ob-contactCheck_form .backToForm {
+  display: block;
+  margin-right: 0;
+  margin-left: auto;
+}
+
+.ob-contact_container .c-buttonSlide_anchor {
+  opacity: 0;
+}
+
+.ob-projectsDetail_slider_wrapper .slideItem video {
+  width: 100%;
+  height: 100%;
+}
+
+.ob-homeProjects_list .c-projectsArchive {
+  display: none;
+}
+.ob-homeProjects_list .c-projectsArchive:nth-child(1),
+.ob-homeProjects_list .c-projectsArchive:nth-child(2),
+.ob-homeProjects_list .c-projectsArchive:nth-child(3),
+.ob-homeProjects_list .c-projectsArchive:nth-child(4) {
+  display: block;
+}
+
+/* quicksand */
+.ob-projectsDetail_content .contentDetail_row dt,
+.ob-projectsDetail_content .contentDetail_row dd.service {
+  font-family: Quicksand, "Hiragino Kaku Gothic Pro", "ヒラギノ角ゴ Pro W2",
+    "Noto Sans JP", sans-serif;
+}
+.ob-projectsDetail_content .contentDetail_row dd.service {
+  font-size: 15px;
+}
+@media screen and (max-width: 835px) {
+  .ob-projectsDetail_content .contentDetail_row dd.service {
+    font-size: 12px;
+  }
+}

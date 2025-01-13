@@ -1,0 +1,631 @@
+{
+  "v": "5.6.10",
+  "fr": 24,
+  "ip": 76,
+  "op": 197,
+  "w": 1920,
+  "h": 976,
+  "nm": "pg2_waveStrokeBottom",
+  "ddd": 0,
+  "assets": [],
+  "layers": [
+    {
+      "ddd": 0,
+      "ind": 1,
+      "ty": 3,
+      "nm": "NULL CONTROL",
+      "sr": 1,
+      "ks": {
+        "o": { "a": 0, "k": 0, "ix": 11 },
+        "r": { "a": 0, "k": 0.2, "ix": 10 },
+        "p": { "a": 0, "k": [986.674, 478.621, 0], "ix": 2 },
+        "a": { "a": 0, "k": [1763.423, 596.746, 0], "ix": 1 },
+        "s": { "a": 0, "k": [100, 100, 100], "ix": 6 }
+      },
+      "ao": 0,
+      "ip": 0,
+      "op": 720,
+      "st": 0,
+      "bm": 0
+    },
+    {
+      "ddd": 0,
+      "ind": 3,
+      "ty": 3,
+      "nm": "landing_page_wave_stroke_wide Outlines: Path 1 [1.1.0]",
+      "cl": "1 0",
+      "parent": 1,
+      "sr": 1,
+      "ks": {
+        "o": { "a": 0, "k": 0, "ix": 11 },
+        "r": { "a": 0, "k": 0, "ix": 10 },
+        "p": {
+          "a": 1,
+          "k": [
+            {
+              "i": { "x": 0.667, "y": 1 },
+              "o": { "x": 0.333, "y": 0 },
+              "t": 85,
+              "s": [1732.9, -758.033, 0],
+              "to": [0, 0, 0],
+              "ti": [0, 0, 0]
+            },
+            {
+              "i": { "x": 0.667, "y": 1 },
+              "o": { "x": 0.333, "y": 0 },
+              "t": 142,
+              "s": [1708.9, -782.033, 0],
+              "to": [0, 0, 0],
+              "ti": [0, 0, 0]
+            },
+            { "t": 205, "s": [1732.9, -758.033, 0] }
+          ],
+          "ix": 2,
+          "x": "var $bm_rt;\n$bm_rt = loopOut();"
+        },
+        "a": { "a": 0, "k": [0, 0, 0], "ix": 1 },
+        "s": { "a": 0, "k": [100, 100, 100], "ix": 6 }
+      },
+      "ao": 0,
+      "ip": 0,
+      "op": 720,
+      "st": 0,
+      "bm": 0
+    },
+    {
+      "ddd": 0,
+      "ind": 4,
+      "ty": 3,
+      "nm": "landing_page_wave_stroke_wide Outlines: Path 1 [1.1.1]",
+      "cl": "1 1",
+      "parent": 1,
+      "sr": 1,
+      "ks": {
+        "o": { "a": 0, "k": 0, "ix": 11 },
+        "r": { "a": 0, "k": 0, "ix": 10 },
+        "p": {
+          "a": 1,
+          "k": [
+            {
+              "i": { "x": 0.667, "y": 1 },
+              "o": { "x": 0.333, "y": 0 },
+              "t": 80,
+              "s": [1198.963, -689.846, 0],
+              "to": [0, 0, 0],
+              "ti": [0, 0, 0]
+            },
+            {
+              "i": { "x": 0.667, "y": 1 },
+              "o": { "x": 0.333, "y": 0 },
+              "t": 137,
+              "s": [1174.963, -713.846, 0],
+              "to": [0, 0, 0],
+              "ti": [0, 0, 0]
+            },
+            { "t": 200, "s": [1198.963, -689.846, 0] }
+          ],
+          "ix": 2,
+          "x": "var $bm_rt;\n$bm_rt = loopOut();"
+        },
+        "a": { "a": 0, "k": [0, 0, 0], "ix": 1 },
+        "s": { "a": 0, "k": [100, 100, 100], "ix": 6 }
+      },
+      "ao": 0,
+      "ip": 0,
+      "op": 720,
+      "st": 0,
+      "bm": 0
+    },
+    {
+      "ddd": 0,
+      "ind": 5,
+      "ty": 3,
+      "nm": "landing_page_wave_stroke_wide Outlines: Path 1 [1.1.2]",
+      "cl": "1 2",
+      "parent": 1,
+      "sr": 1,
+      "ks": {
+        "o": { "a": 0, "k": 0, "ix": 11 },
+        "r": { "a": 0, "k": 0, "ix": 10 },
+        "p": {
+          "a": 1,
+          "k": [
+            {
+              "i": { "x": 0.667, "y": 1 },
+              "o": { "x": 0.333, "y": 0 },
+              "t": 67,
+              "s": [798.088, -330.596, 0],
+              "to": [0, 0, 0],
+              "ti": [0, 0, 0]
+            },
+            {
+              "i": { "x": 0.667, "y": 1 },
+              "o": { "x": 0.333, "y": 0 },
+              "t": 124,
+              "s": [774.088, -354.596, 0],
+              "to": [0, 0, 0],
+              "ti": [0, 0, 0]
+            },
+            { "t": 187, "s": [798.088, -330.596, 0] }
+          ],
+          "ix": 2,
+          "x": "var $bm_rt;\n$bm_rt = loopOut();"
+        },
+        "a": { "a": 0, "k": [0, 0, 0], "ix": 1 },
+        "s": { "a": 0, "k": [100, 100, 100], "ix": 6 }
+      },
+      "ao": 0,
+      "ip": 0,
+      "op": 720,
+      "st": 0,
+      "bm": 0
+    },
+    {
+      "ddd": 0,
+      "ind": 6,
+      "ty": 3,
+      "nm": "landing_page_wave_stroke_wide Outlines: Path 1 [1.1.3]",
+      "cl": "1 3",
+      "parent": 1,
+      "sr": 1,
+      "ks": {
+        "o": { "a": 0, "k": 0, "ix": 11 },
+        "r": { "a": 0, "k": 0, "ix": 10 },
+        "p": {
+          "a": 1,
+          "k": [
+            {
+              "i": { "x": 0.667, "y": 1 },
+              "o": { "x": 0.333, "y": 0 },
+              "t": 54,
+              "s": [264.088, -262.408, 0],
+              "to": [0, 0, 0],
+              "ti": [0, 0, 0]
+            },
+            {
+              "i": { "x": 0.667, "y": 1 },
+              "o": { "x": 0.333, "y": 0 },
+              "t": 111,
+              "s": [240.088, -286.408, 0],
+              "to": [0, 0, 0],
+              "ti": [0, 0, 0]
+            },
+            { "t": 174, "s": [264.088, -262.408, 0] }
+          ],
+          "ix": 2,
+          "x": "var $bm_rt;\n$bm_rt = loopOut();"
+        },
+        "a": { "a": 0, "k": [0, 0, 0], "ix": 1 },
+        "s": { "a": 0, "k": [100, 100, 100], "ix": 6 }
+      },
+      "ao": 0,
+      "ip": 0,
+      "op": 720,
+      "st": 0,
+      "bm": 0
+    },
+    {
+      "ddd": 0,
+      "ind": 7,
+      "ty": 3,
+      "nm": "landing_page_wave_stroke_wide Outlines: Path 1 [1.1.4]",
+      "cl": "1 4",
+      "parent": 1,
+      "sr": 1,
+      "ks": {
+        "o": { "a": 0, "k": 0, "ix": 11 },
+        "r": { "a": 0, "k": 0, "ix": 10 },
+        "p": {
+          "a": 1,
+          "k": [
+            {
+              "i": { "x": 0.667, "y": 1 },
+              "o": { "x": 0.333, "y": 0 },
+              "t": 43,
+              "s": [-136.787, 96.842, 0],
+              "to": [0, 0, 0],
+              "ti": [0, 0, 0]
+            },
+            {
+              "i": { "x": 0.667, "y": 1 },
+              "o": { "x": 0.333, "y": 0 },
+              "t": 100,
+              "s": [-160.787, 72.842, 0],
+              "to": [0, 0, 0],
+              "ti": [0, 0, 0]
+            },
+            { "t": 163, "s": [-136.787, 96.842, 0] }
+          ],
+          "ix": 2,
+          "x": "var $bm_rt;\n$bm_rt = loopOut();"
+        },
+        "a": { "a": 0, "k": [0, 0, 0], "ix": 1 },
+        "s": { "a": 0, "k": [100, 100, 100], "ix": 6 }
+      },
+      "ao": 0,
+      "ip": 0,
+      "op": 720,
+      "st": 0,
+      "bm": 0
+    },
+    {
+      "ddd": 0,
+      "ind": 8,
+      "ty": 3,
+      "nm": "landing_page_wave_stroke_wide Outlines: Path 1 [1.1.5]",
+      "cl": "1 5",
+      "parent": 1,
+      "sr": 1,
+      "ks": {
+        "o": { "a": 0, "k": 0, "ix": 11 },
+        "r": { "a": 0, "k": 0, "ix": 10 },
+        "p": {
+          "a": 1,
+          "k": [
+            {
+              "i": { "x": 0.667, "y": 1 },
+              "o": { "x": 0.333, "y": 0 },
+              "t": 28,
+              "s": [-670.725, 165.029, 0],
+              "to": [0, 0, 0],
+              "ti": [0, 0, 0]
+            },
+            {
+              "i": { "x": 0.667, "y": 1 },
+              "o": { "x": 0.333, "y": 0 },
+              "t": 85,
+              "s": [-694.725, 141.029, 0],
+              "to": [0, 0, 0],
+              "ti": [0, 0, 0]
+            },
+            { "t": 148, "s": [-670.725, 165.029, 0] }
+          ],
+          "ix": 2,
+          "x": "var $bm_rt;\n$bm_rt = loopOut();"
+        },
+        "a": { "a": 0, "k": [0, 0, 0], "ix": 1 },
+        "s": { "a": 0, "k": [100, 100, 100], "ix": 6 }
+      },
+      "ao": 0,
+      "ip": 0,
+      "op": 720,
+      "st": 0,
+      "bm": 0
+    },
+    {
+      "ddd": 0,
+      "ind": 9,
+      "ty": 3,
+      "nm": "landing_page_wave_stroke_wide Outlines: Path 1 [1.1.6]",
+      "cl": "1 6",
+      "parent": 1,
+      "sr": 1,
+      "ks": {
+        "o": { "a": 0, "k": 0, "ix": 11 },
+        "r": { "a": 0, "k": 0, "ix": 10 },
+        "p": {
+          "a": 1,
+          "k": [
+            {
+              "i": { "x": 0.667, "y": 1 },
+              "o": { "x": 0.333, "y": 0 },
+              "t": 11,
+              "s": [-1071.662, 524.279, 0],
+              "to": [0, 0, 0],
+              "ti": [0, 0, 0]
+            },
+            {
+              "i": { "x": 0.667, "y": 1 },
+              "o": { "x": 0.333, "y": 0 },
+              "t": 68,
+              "s": [-1095.662, 500.279, 0],
+              "to": [0, 0, 0],
+              "ti": [0, 0, 0]
+            },
+            { "t": 131, "s": [-1071.662, 524.279, 0] }
+          ],
+          "ix": 2,
+          "x": "var $bm_rt;\n$bm_rt = loopOut();"
+        },
+        "a": { "a": 0, "k": [0, 0, 0], "ix": 1 },
+        "s": { "a": 0, "k": [100, 100, 100], "ix": 6 }
+      },
+      "ao": 0,
+      "ip": 0,
+      "op": 720,
+      "st": 0,
+      "bm": 0
+    },
+    {
+      "ddd": 0,
+      "ind": 10,
+      "ty": 3,
+      "nm": "landing_page_wave_stroke_wide Outlines: Path 1 [1.1.7]",
+      "cl": "1 7",
+      "parent": 1,
+      "sr": 1,
+      "ks": {
+        "o": { "a": 0, "k": 0, "ix": 11 },
+        "r": { "a": 0, "k": 0, "ix": 10 },
+        "p": {
+          "a": 1,
+          "k": [
+            {
+              "i": { "x": 0.667, "y": 1 },
+              "o": { "x": 0.333, "y": 0 },
+              "t": 0,
+              "s": [-1605.6, 592.467, 0],
+              "to": [0, 0, 0],
+              "ti": [0, 0, 0]
+            },
+            {
+              "i": { "x": 0.667, "y": 1 },
+              "o": { "x": 0.333, "y": 0 },
+              "t": 57,
+              "s": [-1629.6, 568.467, 0],
+              "to": [0, 0, 0],
+              "ti": [0, 0, 0]
+            },
+            { "t": 120, "s": [-1605.6, 592.467, 0] }
+          ],
+          "ix": 2,
+          "x": "var $bm_rt;\n$bm_rt = loopOut();"
+        },
+        "a": { "a": 0, "k": [0, 0, 0], "ix": 1 },
+        "s": { "a": 0, "k": [100, 100, 100], "ix": 6 }
+      },
+      "ao": 0,
+      "ip": 0,
+      "op": 720,
+      "st": 0,
+      "bm": 0
+    },
+    {
+      "ddd": 0,
+      "ind": 11,
+      "ty": 4,
+      "nm": "landing_page_wave_stroke_wide Outlines",
+      "parent": 1,
+      "sr": 1,
+      "ks": {
+        "o": { "a": 0, "k": 100, "ix": 11 },
+        "r": { "a": 0, "k": 0, "ix": 10 },
+        "p": { "a": 0, "k": [1737.915, 636.116, 0], "ix": 2 },
+        "a": { "a": 0, "k": [1674.265, 718.899, 0], "ix": 1 },
+        "s": { "a": 0, "k": [100, 100, 100], "ix": 6 }
+      },
+      "ao": 0,
+      "ef": [
+        {
+          "ty": 5,
+          "nm": "landing_page_wave_stroke_wide Outlines: Path 1 [1.1.0]",
+          "np": 3,
+          "mn": "ADBE Layer Control",
+          "ix": 1,
+          "en": 1,
+          "ef": [
+            {
+              "ty": 10,
+              "nm": "Layer",
+              "mn": "ADBE Layer Control-0001",
+              "ix": 1,
+              "v": { "a": 0, "k": 3, "ix": 1 }
+            }
+          ]
+        },
+        {
+          "ty": 5,
+          "nm": "landing_page_wave_stroke_wide Outlines: Path 1 [1.1.1]",
+          "np": 3,
+          "mn": "ADBE Layer Control",
+          "ix": 2,
+          "en": 1,
+          "ef": [
+            {
+              "ty": 10,
+              "nm": "Layer",
+              "mn": "ADBE Layer Control-0001",
+              "ix": 1,
+              "v": { "a": 0, "k": 4, "ix": 1 }
+            }
+          ]
+        },
+        {
+          "ty": 5,
+          "nm": "landing_page_wave_stroke_wide Outlines: Path 1 [1.1.2]",
+          "np": 3,
+          "mn": "ADBE Layer Control",
+          "ix": 3,
+          "en": 1,
+          "ef": [
+            {
+              "ty": 10,
+              "nm": "Layer",
+              "mn": "ADBE Layer Control-0001",
+              "ix": 1,
+              "v": { "a": 0, "k": 5, "ix": 1 }
+            }
+          ]
+        },
+        {
+          "ty": 5,
+          "nm": "landing_page_wave_stroke_wide Outlines: Path 1 [1.1.3]",
+          "np": 3,
+          "mn": "ADBE Layer Control",
+          "ix": 4,
+          "en": 1,
+          "ef": [
+            {
+              "ty": 10,
+              "nm": "Layer",
+              "mn": "ADBE Layer Control-0001",
+              "ix": 1,
+              "v": { "a": 0, "k": 6, "ix": 1 }
+            }
+          ]
+        },
+        {
+          "ty": 5,
+          "nm": "landing_page_wave_stroke_wide Outlines: Path 1 [1.1.4]",
+          "np": 3,
+          "mn": "ADBE Layer Control",
+          "ix": 5,
+          "en": 1,
+          "ef": [
+            {
+              "ty": 10,
+              "nm": "Layer",
+              "mn": "ADBE Layer Control-0001",
+              "ix": 1,
+              "v": { "a": 0, "k": 7, "ix": 1 }
+            }
+          ]
+        },
+        {
+          "ty": 5,
+          "nm": "landing_page_wave_stroke_wide Outlines: Path 1 [1.1.5]",
+          "np": 3,
+          "mn": "ADBE Layer Control",
+          "ix": 6,
+          "en": 1,
+          "ef": [
+            {
+              "ty": 10,
+              "nm": "Layer",
+              "mn": "ADBE Layer Control-0001",
+              "ix": 1,
+              "v": { "a": 0, "k": 8, "ix": 1 }
+            }
+          ]
+        },
+        {
+          "ty": 5,
+          "nm": "landing_page_wave_stroke_wide Outlines: Path 1 [1.1.6]",
+          "np": 3,
+          "mn": "ADBE Layer Control",
+          "ix": 7,
+          "en": 1,
+          "ef": [
+            {
+              "ty": 10,
+              "nm": "Layer",
+              "mn": "ADBE Layer Control-0001",
+              "ix": 1,
+              "v": { "a": 0, "k": 9, "ix": 1 }
+            }
+          ]
+        },
+        {
+          "ty": 5,
+          "nm": "landing_page_wave_stroke_wide Outlines: Path 1 [1.1.7]",
+          "np": 3,
+          "mn": "ADBE Layer Control",
+          "ix": 8,
+          "en": 1,
+          "ef": [
+            {
+              "ty": 10,
+              "nm": "Layer",
+              "mn": "ADBE Layer Control-0001",
+              "ix": 1,
+              "v": { "a": 0, "k": 10, "ix": 1 }
+            }
+          ]
+        }
+      ],
+      "shapes": [
+        {
+          "ty": "gr",
+          "it": [
+            {
+              "ind": 0,
+              "ty": "sh",
+              "ix": 1,
+              "ks": {
+                "a": 0,
+                "k": {
+                  "i": [
+                    [0, 0],
+                    [233.713, -106.857],
+                    [233.713, -106.857],
+                    [233.715, -106.858],
+                    [233.711, -106.855],
+                    [233.716, -106.857],
+                    [233.717, -106.859],
+                    [233.716, -106.858]
+                  ],
+                  "o": [
+                    [-233.713, 106.856],
+                    [-233.713, 106.856],
+                    [-233.715, 106.857],
+                    [-233.711, 106.855],
+                    [-233.716, 106.858],
+                    [-233.716, 106.859],
+                    [-233.716, 106.858],
+                    [0, 0]
+                  ],
+                  "v": [
+                    [1669.265, -675.243],
+                    [1135.309, -607.042],
+                    [734.413, -247.817],
+                    [200.453, -179.614],
+                    [-200.438, 179.609],
+                    [-734.4, 247.812],
+                    [-1135.303, 607.041],
+                    [-1669.265, 675.245]
+                  ],
+                  "c": false
+                },
+                "ix": 2,
+                "x": "var $bm_rt;\nvar nullLayerNames = [\n        'landing_page_wave_stroke_wide Outlines: Path 1 [1.1.0]',\n        'landing_page_wave_stroke_wide Outlines: Path 1 [1.1.1]',\n        'landing_page_wave_stroke_wide Outlines: Path 1 [1.1.2]',\n        'landing_page_wave_stroke_wide Outlines: Path 1 [1.1.3]',\n        'landing_page_wave_stroke_wide Outlines: Path 1 [1.1.4]',\n        'landing_page_wave_stroke_wide Outlines: Path 1 [1.1.5]',\n        'landing_page_wave_stroke_wide Outlines: Path 1 [1.1.6]',\n        'landing_page_wave_stroke_wide Outlines: Path 1 [1.1.7]'\n    ];\nvar origPath = thisProperty;\nvar origPoints = origPath.points();\nvar origInTang = origPath.inTangents();\nvar origOutTang = origPath.outTangents();\nvar getNullLayers = [];\nfor (var i = 0, il = nullLayerNames.length; i < il; i++) {\n    try {\n        getNullLayers.push(effect(nullLayerNames[i])('ADBE Layer Control-0001'));\n    } catch (err) {\n        getNullLayers.push(null);\n    }\n}\nfor (var i = 0, il = getNullLayers.length; i < il; i++) {\n    if (getNullLayers[i] != null && getNullLayers[i].index != thisLayer.index) {\n        origPoints[i] = fromCompToSurface(getNullLayers[i].toComp(getNullLayers[i].anchorPoint));\n    }\n}\n$bm_rt = createPath(origPoints, origInTang, origOutTang, origPath.isClosed());"
+              },
+              "nm": "Path 1",
+              "mn": "ADBE Vector Shape - Group",
+              "hd": false
+            },
+            {
+              "ty": "st",
+              "c": {
+                "a": 0,
+                "k": [0.984000052658, 0.984000052658, 0.984000052658, 1],
+                "ix": 3
+              },
+              "o": { "a": 0, "k": 100, "ix": 4 },
+              "w": { "a": 0, "k": 2, "ix": 5 },
+              "lc": 1,
+              "lj": 1,
+              "ml": 10,
+              "bm": 0,
+              "nm": "Stroke 1",
+              "mn": "ADBE Vector Graphic - Stroke",
+              "hd": false
+            },
+            {
+              "ty": "tr",
+              "p": { "a": 0, "k": [1674.265, 718.899], "ix": 2 },
+              "a": { "a": 0, "k": [0, 0], "ix": 1 },
+              "s": { "a": 0, "k": [100, 100], "ix": 3 },
+              "r": { "a": 0, "k": 0, "ix": 6 },
+              "o": { "a": 0, "k": 100, "ix": 7 },
+              "sk": { "a": 0, "k": 0, "ix": 4 },
+              "sa": { "a": 0, "k": 0, "ix": 5 },
+              "nm": "Transform"
+            }
+          ],
+          "nm": "Group 1",
+          "np": 2,
+          "cix": 2,
+          "bm": 0,
+          "ix": 1,
+          "mn": "ADBE Vector Group",
+          "hd": false
+        }
+      ],
+      "ip": 0,
+      "op": 720,
+      "st": 0,
+      "bm": 0
+    }
+  ],
+  "markers": []
+}
