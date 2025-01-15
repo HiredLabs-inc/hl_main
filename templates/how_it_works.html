@@ -19,10 +19,11 @@
         <br>
 
 
-        <div class="md:container grid grid-cols-1 gap-4 justify-items-center md:mx-auto px-4 max-w-3xl">
+        <div class="md:container justify-items-center md:mx-auto px-4">
+            <div class="grid grid-cols-1 max-w-2xl">
             <h1>Who We Serve</h1>
-        <p>At Hired Labs, we're on a mission to end Veteran underemployment, particularly among enlisted Veterans.
-            All of our services are designed to help United States Military Veterans who completed active duty with a rank between E-1 and E-9, and whose service was characterized as anything other than dishonorable.</p>
+                <p>At Hired Labs, we're on a mission to end Veteran underemployment, particularly among enlisted Veterans.
+                All of our services are designed to help United States Military Veterans who completed active duty with a rank between E-1 and E-9, and whose service was characterized as anything other than dishonorable.</p>
             <br>
             <p>Veterans who completed active duty as Commissioned Officers and Warrant Officers are welcome to apply, but will be added to our waitlist and only enrolled in services as space becomes available.
                 We do not provide services to non-Veterans, or Veterans of countries other than the United States of America.</p>
@@ -70,7 +71,6 @@
         <br>
                         <h3>Optional Additional 6-Week Extension</h3>
                         <p>For those who are actively engaged and would like additional support, we offer an additional 6-week extension. During this period, services will be provided bi-weekly to review your progress, ensure engagement, and continue supporting your search!</p>
-        </div>
         <br>
         <div class="mb-3 p-6 bg-white min-w-full flex flex-col items-center">
         <a href="{% url 'custom_account_signup' %}" class="bg-hl-black hover:bg-gray-500 focus:ring-4 focus:outline-none focus:ring-gray-300 rounded-lg inline-flex items-center justify-center px-4 py-2.5 dark:bg-gray-700 dark:hover:bg-gray-600 dark:focus:ring-gray-700">
@@ -80,7 +80,6 @@
                     </a>
         </div>
         <br>
-        <div class="md:container grid grid-cols-1 gap-4 justify-items-center md:mx-auto px-4 max-w-3xl">
                <H2>Coding Boot Camp</H2>
             <p><b>Go from zero</b> to creating functional web applications using Python in 6 weeks. We'll show you the basics,
                 then guide you through building a full-stack web application. We'll use free online resources that can be accessed
@@ -148,6 +147,8 @@
                     </a>
         </div>
         <br>
+
+            </div>
         </div>
     {% endblock body %}
 
