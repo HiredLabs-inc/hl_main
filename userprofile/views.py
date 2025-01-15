@@ -81,6 +81,9 @@ def privacy_policy(request):
 def how_it_works(request):
     return render(request, "how_it_works.html")
 
+def impact(request):
+    return render(request, 'impact.html')
+
 def contact(request):
     form = CommentForm(request.POST or None)
     if request.method == "POST" and form.is_valid():

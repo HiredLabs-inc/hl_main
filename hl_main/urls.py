@@ -36,6 +36,7 @@ urlpatterns = [
     path("how_it_works/", userprofile_views.how_it_works, name="how_it_works"),
     path("contact/", userprofile_views.contact, name="contact"),
     path("donate/", userprofile_views.contact, name="donate"),
+    path("impact/", userprofile_views.impact, name="impact"),
     path("volunteer/", userprofile_views.contact, name="volunteer"),
     path("thank-you/", userprofile_views.thanks, name="thanks"),
     path("welcome/", userprofile_views.welcome, name="welcome"),
