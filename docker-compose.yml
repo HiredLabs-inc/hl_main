@@ -18,8 +18,6 @@ services:
     working_dir: /app
     profiles:
       - 'gcloud'
-    env_file:
-      - .env
     # don't need to run gcloud in dev environment
     # so just run a command that does nothing and exits
     command: echo ''
@@ -32,13 +30,10 @@ services:
       # - django-tasks
       - db
     volumes:
-      - ~/.config/gcloud/application_default_credentials.json:/gcloud/application_default_credentials.json:ro
       - .:/app
     ports:
       - 8000:8000
     command: python manage.py runserver_plus 0.0.0.0:8000
-    env_file:
-      - .env.dev
     environment:
       - DJANGO_SETTINGS_MODULE=hl_main.settings.dev
 
@@ -54,12 +49,9 @@ services:
     depends_on:
       - db
     volumes:
-      - ~/.config/gcloud/application_default_credentials.json:/gcloud/application_default_credentials.json:ro
       - .:/app
     ports:
       - "8001:8001"
     environment:
       - DJANGO_ROLE=tasks
     command: python manage.py runserver 0.0.0.0:8001
-    env_file:
-      - .env.dev
