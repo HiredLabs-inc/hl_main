@@ -44,8 +44,8 @@ SECRET_KEY = env("DJANGO_SECRET_KEY")
 CLOUDRUN_SERVICE_URL = env("CLOUDRUN_SERVICE_URL")
 CLOUDRUN_WORKER_URL = env("CLOUDRUN_WORKER_URL")
 ALLOWED_HOSTS = [
-    'run-service-stage-001-676530430552.us-west1.run.app',
-    'task-service-stage-001-676530430552.us-west1.run.app',
+    f'{CLOUDRUN_SERVICE_URL}',
+    f'{CLOUDRUN_WORKER_URL}',
                  ]
 # Application definition
 GS_BUCKET_NAME = env('GS_BUCKET_NAME')
@@ -63,8 +63,7 @@ CACHES = {
 # Caching
 # https://docs.djangoproject.com/en/4.1/topics/cache/#setting-up-the-cache
 
-STATICFILES_DIRS = (os.path.join(BASE_DIR, "main_static/"),
-                    os.path.join(BASE_DIR, "frontend/build/static")    )
+
 
 
 # RESUME write to gcloud storage
@@ -105,8 +104,7 @@ DATABASES = {
     }
 }
 
-STATIC_URL = "/static/"
-STATIC_ROOT = os.path.join(BASE_DIR, "static/")
+
 
 GS_FILE_OVERWRITE = False
 
@@ -143,3 +141,13 @@ EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = "info@hiredlabs.org"
 EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
+
+# DEFAULT_FILE_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
+# STATICFILES_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
+# GS_LOCATION = "static"
+
+STATIC_URL = "/static/"
+# STATIC_URL = f"https://storage.googleapis.com/{GS_BUCKET_NAME}/static/"
+STATIC_ROOT = os.path.join(BASE_DIR, "static/")
+STATICFILES_DIRS = (os.path.join(BASE_DIR, "main_static/"),
+                    os.path.join(BASE_DIR, "frontend/build/static")    )
