@@ -28,8 +28,8 @@ from .forms import (
 )
 from .models import OnboardingStep, Profile, VeteranProfile
 
-from .static.scripts.storage.uploads import upload_file
-from .static.scripts.storage.generate_signed_urls import generate_signed_url
+from .static.userprofile.scripts.storage.uploads import upload_file
+from .static.userprofile.scripts.storage.generate_signed_urls import generate_signed_url
 
 class CustomSignupView(SignupView):
     form_class = CustomSignupForm

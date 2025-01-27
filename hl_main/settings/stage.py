@@ -46,6 +46,7 @@ CLOUDRUN_WORKER_URL = env("CLOUDRUN_WORKER_URL")
 ALLOWED_HOSTS = [
     f'{CLOUDRUN_SERVICE_URL}',
     f'{CLOUDRUN_WORKER_URL}',
+    'run-service-stage-001-676530430552.us-west1.run.app'
                  ]
 # Application definition
 GS_BUCKET_NAME = env('GS_BUCKET_NAME')
@@ -148,6 +149,6 @@ EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
 
 STATIC_URL = "/static/"
 # STATIC_URL = f"https://storage.googleapis.com/{GS_BUCKET_NAME}/static/"
-STATIC_ROOT = os.path.join(BASE_DIR, "static/")
-STATICFILES_DIRS = (os.path.join(BASE_DIR, "main_static/"),
+STATIC_ROOT = os.path.join(BASE_DIR, "main_static/")
+STATICFILES_DIRS = (os.path.join(BASE_DIR, "static/"),
                     os.path.join(BASE_DIR, "frontend/build/static")    )
