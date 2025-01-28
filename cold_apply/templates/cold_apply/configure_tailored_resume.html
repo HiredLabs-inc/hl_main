@@ -25,7 +25,7 @@
             resume_template: '',
             preview_img_paths: {
                 {% for value, label in form.resume_template.field.choices %}
-                    {{value}}:'{% static 'images/resume_previews/resume_'|add:value|add:'.png' %}',
+                    {{value}}:'{% static 'resume/images/resume_previews/resume_'|add:value|add:'.png' %}',
                 {% endfor %}    
             },
             resume_template_sections,
