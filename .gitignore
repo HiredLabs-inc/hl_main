@@ -135,7 +135,7 @@ uploads/
 *.pdf
 output/
 
-main_static
+main_static/
 static_files/
 .idea/
 .vscode
