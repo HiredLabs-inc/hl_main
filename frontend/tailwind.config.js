@@ -31,14 +31,6 @@ module.exports = {
     },
   },
   plugins: [
-      function({ addUtilities }) {
-      addUtilities({
-        '.hide-play-button::-webkit-media-controls-start-playback-button': {
-          display: 'none',
-          '-webkit-appearance': 'none',
-        },
-      });
-    },
       require('@tailwindcss/forms'),
       require('preline/plugin'),
   ],
