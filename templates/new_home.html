@@ -44,7 +44,8 @@
 {#            # Image Block#}
             <div class="mb-3 p-6">
 {#      <img class="rounded-lg shadow-lg" src="/static/images/vets-moving.jpg" alt="Marine Trying on Alphas">#}
-        <video poster="{% static 'main/images/smith-1.png' %}" controls loop muted playsinline>
+        <video poster="{% static 'main/images/smith-1.png' %}" controls loop muted playsinline
+               controlslist="nodownload nofullscreen noremoteplayback">
             <source src="{% static 'main/videos/optimized_720p.webm' %}" type="video/webm">
             <source src="{% static 'main/videos/optimized_720p.mp4' %}" type="video/webm">
             <source src="{% static 'main/videos/optimized_720p.ogv' %}" type="video/webm">
