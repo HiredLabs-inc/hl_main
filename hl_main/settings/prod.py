@@ -75,9 +75,6 @@ CACHES = {
 # Caching
 # https://docs.djangoproject.com/en/4.1/topics/cache/#setting-up-the-cache
 
-STATICFILES_DIRS = (os.path.join(BASE_DIR, "main_static/"),
-                    os.path.join(BASE_DIR, "frontend/build/static")    )
-
 
 # RESUME write to gcloud storage
 
@@ -129,7 +126,9 @@ DATABASES = {
 }
 
 STATIC_URL = "/static/"
-STATIC_ROOT = os.path.join(BASE_DIR, "static/")
+STATIC_ROOT = os.path.join(BASE_DIR, "main_static/")
+STATICFILES_DIRS = (os.path.join(BASE_DIR, "static/"),
+                    os.path.join(BASE_DIR, "frontend/build/static")    )
 
 GS_FILE_OVERWRITE = False
 

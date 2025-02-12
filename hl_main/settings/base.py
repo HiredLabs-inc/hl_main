@@ -156,7 +156,7 @@ USE_THOUSAND_SEPARATOR = True
 
 
 STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, "main_static/"),
+    os.path.join(BASE_DIR, "static/"),
     BASE_DIR / "frontend" / "build" / "static",
 )
 

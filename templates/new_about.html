@@ -2,6 +2,7 @@
 {% load form_helpers %}
 {% load components %}
 {% include 'modal.html' %}
+{% load static %}
 
     {% wrapper breadcrumbs %}
     <div>
@@ -50,7 +51,7 @@
                         and operations teams.
                     </p>
                     <div class="items-center justify-center">
-                        <img src="/static/images/jeff.jpeg" alt="Jeff Stock" class="h-48 w-48 mx-auto">
+                        <img src="{% static 'main/images/jeff.jpeg' %}" alt="Jeff Stock" class="h-48 w-48 mx-auto">
                         <h3 class="text-center">Jeff Stock</h3>
                         <h5 class="text-center">Co-Founder/CEO</h5>
                     </div>
@@ -65,7 +66,7 @@
                 </div>
                 <div class="grid grid-cols-2 max-w-2xl">
                     <div class="items-center justify-center">
-                        <img src="/static/images/ak.jpeg" alt="Alan Kumar" class="h-48 w-48 mx-auto">
+                        <img src="{% static 'main/images/ak.jpeg' %}" alt="Alan Kumar" class="h-48 w-48 mx-auto">
                         <h3 class="text-center">Alan Kumar</h3>
                         <h5 class="text-center">Co-Founder/Secretary</h5>
                     </div>

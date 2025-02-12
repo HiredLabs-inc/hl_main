@@ -2,6 +2,7 @@
 {% load form_helpers %}
 {% load components %}
 {% include 'modal.html' %}
+{% load static %}
 
     {% wrapper breadcrumbs %}
     <div>
@@ -15,47 +16,56 @@
     {% endwrapper %}
 
     {% block body %}
-        <div class="md:container max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-4 justify-items-center md:mx-auto px-4">
+        <div class="container w-full max-w-screen-lg grid grid-cols-1 md:grid-cols-2 gap-4 justify-items-center px-4 mx-auto">
 {#            # CTA Block#}
-            <div class="mb-3 p-6 bg-white">
+            <div class="mb-3 p-6 shadow-lg">
                         <h2 class="mb-2 text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
                             Helping Enlisted Veterans Find Meaningful Employment
                         </h2>
                     <p class="mb-3 font-normal text-gray-700 dark:text-gray-400">
-                        We understand the challenges Veterans face building fulfilling careers after military service.
+                        We understand the challenges Veterans face building fulfilling careers after military service; we're here to help!
                     </p>
                     <p class="mb-3 font-normal text-gray-700 dark:text-gray-400">
-                        We're here to help.
+                        Resume Updates, Job Searches, & Coding Boot Camp - free for Veterans.
                     </p>
                     <a href="{% url 'custom_account_signup' %}" class="w-full bg-hl-black hover:bg-gray-500 focus:ring-4 focus:outline-none focus:ring-gray-300 rounded-lg inline-flex items-center justify-center px-4 py-2.5 dark:bg-gray-700 dark:hover:bg-gray-600 dark:focus:ring-gray-700">
                             <div class="text-left">
                                 <div class="-mt-1 font-sans text-sm font-semibold">Sign Up</div>
                             </div>
                     </a>
-                    <br>
-                    <br>
-                    <a href="{% url 'how_it_works' %}" class="sm:w-auto inline-flex justify-center px-4 py-2.5">
-                            <div class="text-center">
-                                <div class="-mt-1 italic font-sans text-sm">Learn More</div>
-                            </div>
-                    </a>
+{#                    <br>#}
+{#                    <br>#}
+
+
                 </div>
 {#            # Image Block#}
-            <div class="mb-3 p-6">
+            <div class="mb-3 p-6 shadow-lg">
 {#      <img class="rounded-lg shadow-lg" src="/static/images/vets-moving.jpg" alt="Marine Trying on Alphas">#}
-        <video controls loop muted playsinline>
-            <source src="/static/video/optimized_720p.webm" type="video/webm">
-            <source src="/static/video/optimized_720p.mp4" type="video/mp4">
-            <source src="/static/video/optimized_720p.ogv" type="video/ogg">
-            <track src="/static/video/promo-24.vtt" kind="subtitles" srclang="en" label="English" default>
+        <video poster="{% static 'main/images/smith-2.png' %}" controls loop muted playsinline>
+            <source src="{% static 'main/videos/optimized_720p.webm' %}" type="video/webm">
+            <source src="{% static 'main/videos/optimized_720p.mp4' %}" type="video/webm">
+            <source src="{% static 'main/videos/optimized_720p.ogv' %}" type="video/webm">
+            <track src="{% static 'main/videos/promo-24.vtt' %}" kind="subtitles" srclang="en" label="English" default>
             Your browser does not support the video tag.
         </video>
     </div>
-{#            # Testimonial Block#}
-            <div x-data="testimonialCarousel()" x-init="init()" class="mb-3 p-4 text-center bg-white md:col-span-2">
+{#            # Learn More Block #}
+            <div class="mb-3 p-4 text-center md:col-span-2 w-full bg-center bg-no-repeat bg-cover shadow-lg shadow-lg"
+                 style="background-image: url('{% static 'main/images/cta-background-4.png' %}'); background-size:
+                         contain; height: 400px;max-width: 650px; margin: 0 auto;">
+                <a href="{% url 'how_it_works' %}" class="sm:w-auto inline-flex justify-center px-4 py-2.5">
+
+
+                        <div class="text-center">
+                                <div class="w-full bg-hl-black hover:bg-gray-500 focus:ring-4 focus:outline-none focus:ring-gray-300 rounded-lg inline-flex items-center justify-center px-4 py-2.5 dark:bg-gray-700 dark:hover:bg-gray-600 dark:focus:ring-gray-700">Learn More</div>
+                            </div>
+                    </a>
+            </div>
+{#            # Testimonial Block #}
+            <div x-data="testimonialCarousel()" x-init="init()" class="mb-3 p-4 text-center md:col-span-2">
                     <div
                         x-bind:class="transitionClass(currentIndex)"
-                        class="mb-3 p-4 text-center bg-white md:col-span-2"
+                        class="mb-3 p-4 text-center md:col-span-2"
                 >
                     <figure class="max-w-screen-md mx-auto text-center">
                         <svg class="w-10 h-10 mx-auto mb-3 text-gray-400 dark:text-gray-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 18 14">
@@ -68,7 +78,7 @@
 {#                            <img class="w-6 h-6 rounded-full" src="https://flowbite.s3.amazonaws.com/blocks/marketing-ui/avatars/michael-gouch.png" alt="profile picture">#}
                             <div class="flex items-center divide-x-2 rtl:divide-x-reverse divide-gray-500 dark:divide-gray-700">
                                 <cite x-text="currentTestimonial.user" class="pe-3 font-medium text-gray-900 dark:text-white"></cite>
-                                <cite x-text="currentTestimonial.company" class="ps-3 text-sm text-gray-500 dark:text-gray-400"></cite>
+                                <cite x-text="currentTestimonial.company" class="ps-3 text-sm text-gray-800 dark:text-gray-400"></cite>
                             </div>
                         </figcaption>
                     </figure>

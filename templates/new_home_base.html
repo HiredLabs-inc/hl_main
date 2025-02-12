@@ -2,6 +2,7 @@
 {% load static %}
 {% get_static_prefix as STATIC_PREFIX %}
 {% load vite_assets %}
+{% load tailwind %}
 {% get_media_prefix as MEDIA_PREFIX %}
 
 <html lang="en" dir="ltr" class="h-full">
@@ -12,7 +13,7 @@
         <title>Hired Labs</title>
         <link rel="stylesheet" href="https://unpkg.com/flowbite@1.5.1/dist/flowbite.min.css" />
 
-        <link rel="icon" type="image/png" sizes="16x16" href="{% static 'images/HiredLabs-Icon-trasnaprent.png' %}">
+        <link rel="icon" type="image/png" sizes="16x16" href="{% static 'main/images/HiredLabs-Icon-transparent.png' %}">
 
         {% load_vite_js 'src/main.js' %}
         {% block head %}
@@ -20,12 +21,12 @@
 
     </head>
 
-    <body hx-headers='{"X-CSRFToken": "{{csrf_token}}"}' class="h-full" >
-    <div class="flex flex-col h-screen justify-between">
+    <body hx-headers='{"X-CSRFToken": "{{csrf_token}}"}' class="h-full bg-gradient-to-r from-blue-200 to-blue-400 >
+    <div class="flex flex-col h-screen justify-between ">
         <nav class="bg-blue-900 border-gray-200 dark:bg-gray-900">
             <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
                 <a href="{% url 'home' %}" class="flex items-center">
-                <img src="/static/images/HiredLabs1.png" class="h-8 mr-3" alt="Hired Labs Logo" />Beta
+                <img src="{% static 'main/images/HiredLabs1.png'%}" class="h-8 mr-3" alt="Hired Labs Logo" />Beta
                 </a>
                 {% comment %}
                 JavaScript equired to make the navbar open and collapse on small screens on the home page.
@@ -83,7 +84,7 @@
             <div class="bg-blue-900 w-full max-w-screen-xl mx-auto p-4 md:py-8 bottom-0">
                 <div class="sm:flex sm:items-center sm:justify-between bottom-0">
                     <a href="{% url 'home' %}" class="flex items-center">
-                        <img src="/static/images/HiredLabs1.png" class="h-8 mr-3" alt="Hired Labs Logo" /> Beta
+                        <img src="{% static 'main/images/HiredLabs1.png'%}" class="h-8 mr-3" alt="Hired Labs Logo" /> Beta
                     </a>
 
                     <ul class="font-medium flex flex-col md:p-0 mt-4 md:flex-row md:space-x-8 md:mt-0 md:border-0 md:bg-blue-900">
