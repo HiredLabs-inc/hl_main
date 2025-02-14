@@ -1,0 +1,778 @@
+[
+  {
+    "model": "releases.app",
+    "pk": 1,
+    "fields": {
+      "description": "Automated job search tools.",
+      "name": "cold_apply"
+    }
+  },
+  {
+    "model": "releases.app",
+    "pk": 2,
+    "fields": {
+      "description": "Global pay rate translator.",
+      "name": "rates"
+    }
+  },
+  {
+    "model": "releases.app",
+    "pk": 3,
+    "fields": {
+      "description": "Public-facing website areas",
+      "name": "public_site"
+    }
+  },
+  {
+    "model": "releases.release",
+    "pk": 1,
+    "fields": {
+      "app": "1",
+      "author": "1",
+      "date": "2023-03-13T00:00:00Z",
+      "major": 1,
+      "minor": 0,
+      "patch": 0,
+      "title": "Initial Release of Cold Apply App"
+    }
+  },
+  {
+    "model": "releases.release",
+    "pk": 2,
+    "fields": {
+      "app": "1",
+      "author": "1",
+      "date": "2023-04-10T00:00:00Z",
+      "major": 1,
+      "minor": 1,
+      "patch": 0,
+      "title": "Resume Writer Added"
+    }
+  },
+  {
+    "model": "releases.release",
+    "pk": 3,
+    "fields": {
+      "app": "2",
+      "author": "1",
+      "date": "2023-04-10T00:00:00Z",
+      "major": 1,
+      "minor": 0,
+      "patch": 0,
+      "title": "Initial Release of Rate Equity Translator"
+    }
+  },
+  {
+    "model": "releases.release",
+    "pk": 4,
+    "fields": {
+      "app": "1",
+      "author": "1",
+      "date": "2023-04-15T00:00:00Z",
+      "major": 1,
+      "minor": 1,
+      "patch": 1,
+      "title": "Patch Fixes 1"
+    }
+  },
+  {
+    "model": "releases.release",
+    "pk": 5,
+    "fields": {
+      "app": "1",
+      "author": "1",
+      "date": "2023-04-28T00:00:00Z",
+      "major": 1,
+      "minor": 1,
+      "patch": 2,
+      "title": "Patch Fixes 2"
+    }
+  },
+  {
+    "model": "releases.release",
+    "pk": 6,
+    "fields": {
+      "app": "1",
+      "author": "1",
+      "date": "2023-05-06T12:59:00Z",
+      "major": 1,
+      "minor": 1,
+      "patch": 3,
+      "title": "Patch Fixes 3"
+    }
+  },
+  {
+    "model": "releases.release",
+    "pk": 7,
+    "fields": {
+      "app": "1",
+      "author": "1",
+      "date": "2023-05-09T12:59:00Z",
+      "major": 1,
+      "minor": 1,
+      "patch": 4,
+      "title": "Patch Fixes 4"
+    }
+  },
+  {
+    "model": "releases.release",
+    "pk": 8,
+    "fields": {
+      "app": "1",
+      "author": "1",
+      "date": "2023-05-31T12:59:00Z",
+      "major": 2,
+      "minor": 0,
+      "patch": 0,
+      "title": "Database Restructuring"
+    }
+  },
+  {
+    "model": "releases.release",
+    "pk": 9,
+    "fields": {
+      "app": "1",
+      "author": "1",
+      "date": "2023-06-05T12:59:00Z",
+      "major": 2,
+      "minor": 1,
+      "patch": 0,
+      "title": "Database Restructuring"
+    }
+  },
+  {
+    "model": "releases.release",
+    "pk": 10,
+    "fields": {
+      "app": "1",
+      "author": "1",
+      "date": "2023-06-16T12:59:00Z",
+      "major": 2,
+      "minor": 2,
+      "patch": 0,
+      "title": "Job Search API Added"
+    }
+  },
+  {
+    "model": "releases.release",
+    "pk": 11,
+    "fields": {
+      "app": "1",
+      "author": "1",
+      "date": "2023-06-17T12:59:00Z",
+      "major": 2,
+      "minor": 2,
+      "patch": 1,
+      "title": "Job Search API Added"
+    }
+  },
+  {
+    "model": "releases.release",
+    "pk": 12,
+    "fields": {
+      "app": "1",
+      "author": "1",
+      "date": "2023-06-29T12:59:00Z",
+      "major": 2,
+      "minor": 2,
+      "patch": 2,
+      "title": "Hotfix 1"
+    }
+  },
+  {
+    "model": "releases.release",
+    "pk": 13,
+    "fields": {
+      "app": "3",
+      "author": "1",
+      "date": "2023-03-13T00:00:00Z",
+      "major": 1,
+      "minor": 0,
+      "patch": 0
+    }
+  },
+  {
+    "model": "releases.release",
+    "pk": 14,
+    "fields": {
+      "app": "3",
+      "author": "1",
+      "date": "2024-03-15T00:00:00Z",
+      "major": 2,
+      "minor": 0,
+      "patch": 0
+    }
+  },
+  {
+    "model": "releases.release",
+    "pk": 15,
+    "fields": {
+      "app": "3",
+      "author": "1",
+      "date": "2025-02-03T05:31:49Z",
+      "major": 3,
+      "minor": 0,
+      "patch": 0
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 1,
+    "fields": {
+      "release": "1",
+      "text": "added seed data for phases steps and participants in cold_apply"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 2,
+    "fields": {
+      "release": "1",
+      "text": "set minimum job description length to 30 words including stops"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 3,
+    "fields": {
+      "release": "1",
+      "text": "reduced autoclose time to 3 seconds"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 4,
+    "fields": {
+      "release": "1",
+      "text": "refactored and reduced the autoclose time to 5 seconds"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 5,
+    "fields": {
+      "release": "1",
+      "text": "added create title and company buttons to job update view"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 6,
+    "fields": {
+      "release": "1",
+      "text": "removed fk relationship between title and participant"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 7,
+    "fields": {
+      "release": "1",
+      "text": "added status reason to job create view"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 8,
+    "fields": {
+      "release": "1",
+      "text": "added seed data for organization and position in resume"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 9,
+    "fields": {
+      "release": "1",
+      "text": "added app seed data in releases"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 10,
+    "fields": {
+      "release": "1",
+      "text": "added company update link to job detail view"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 11,
+    "fields": {
+      "release": "1",
+      "text": "refactored cancel buttons to close browser tabs"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 12,
+    "fields": {
+      "release": "1",
+      "text": "title update link added to job detail view"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 13,
+    "fields": {
+      "release": "1",
+      "text": "refactored seed data into single call"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 14,
+    "fields": {
+      "release": "2",
+      "text": "created general feedback and feedback admin dashboards"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 15,
+    "fields": {
+      "release": "2",
+      "text": "added total and unread comment counter to release_list view for admins"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 16,
+    "fields": {
+      "release": "2",
+      "text": "fixed file uploads for new and updated participants"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 17,
+    "fields": {
+      "release": "2",
+      "text": "added tailored resumes including overview and bullet statements for each job"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 18,
+    "fields": {
+      "release": "2",
+      "text": "separated bullet_create template and adjusted job detail to show all keywords"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 19,
+    "fields": {
+      "release": "2",
+      "text": "added create company and title to experience_create page"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 20,
+    "fields": {
+      "release": "2",
+      "text": "added a button to create work experience for a participant on the targeted resume view"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 21,
+    "fields": {
+      "release": "2",
+      "text": "improved performance of weighting algorithm and refactored to use stems instead of whole words"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 22,
+    "fields": {
+      "release": "2",
+      "text": "added overview create to tailored resume page"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 23,
+    "fields": {
+      "release": "2",
+      "text": "limited bullet points per job"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 24,
+    "fields": {
+      "release": "2",
+      "text": "added experience and overview update functionality"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 25,
+    "fields": {
+      "release": "2",
+      "text": "added bullet edit button update functionality"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 26,
+    "fields": {
+      "release": "2",
+      "text": "improved experience creation flow"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 27,
+    "fields": {
+      "release": "2",
+      "text": "added create experience link to participant detail page"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 28,
+    "fields": {
+      "release": "2",
+      "text": "updated media url usage"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 29,
+    "fields": {
+      "release": "2",
+      "text": "made uploaded resume viewable on participant detail page"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 30,
+    "fields": {
+      "release": "2",
+      "text": "limited the number of bullets based on how old the experience"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 31,
+    "fields": {
+      "release": "2",
+      "text": "refactored main recommendation view"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 32,
+    "fields": {
+      "release": "2",
+      "text": "reordered participants orgs and position titles"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 33,
+    "fields": {
+      "release": "3",
+      "text": "Initial release of this app"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 34,
+    "fields": {
+      "release": "3",
+      "text": "Updated reference rate default to the U.S. but adjusts with level selection"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 35,
+    "fields": {
+      "release": "4",
+      "text": "limited page 1 to 3 jobs in chronological resumes"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 36,
+    "fields": {
+      "release": "4",
+      "text": "added education section and create flow"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 37,
+    "fields": {
+      "release": "4",
+      "text": "added education create button to experience list"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 38,
+    "fields": {
+      "release": "4",
+      "text": "added education to experience list view"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 39,
+    "fields": {
+      "release": "4",
+      "text": "added update and delete for participant experiences"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 40,
+    "fields": {
+      "release": "4",
+      "text": "added experience delete"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 41,
+    "fields": {
+      "release": "4",
+      "text": "added education section to participant detail page"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 42,
+    "fields": {
+      "release": "5",
+      "text": "added delete bullet function to participant experience list"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 43,
+    "fields": {
+      "release": "5",
+      "text": "added all bullets to experience list"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 44,
+    "fields": {
+      "release": "5",
+      "text": "added skill and skillbullet tables"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 45,
+    "fields": {
+      "release": "6",
+      "text": "added applicant list view"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 46,
+    "fields": {
+      "release": "6",
+      "text": "public-facing form updated"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 47,
+    "fields": {
+      "release": "6",
+      "text": "added location state and applicant tables"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 48,
+    "fields": {
+      "release": "7",
+      "text": "removed page break after 3rd professional experience"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 49,
+    "fields": {
+      "release": "7",
+      "text": "updated readme and created code of conduct"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 50,
+    "fields": {
+      "release": "7",
+      "text": "updated seed data for development"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 51,
+    "fields": {
+      "release": "7",
+      "text": "fixed resume upload"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 52,
+    "fields": {
+      "release": "8",
+      "text": "removed many to many relationships"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 53,
+    "fields": {
+      "release": "9",
+      "text": "added resume configuration page"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 54,
+    "fields": {
+      "release": "9",
+      "text": "- select a resume layout from several templates"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 55,
+    "fields": {
+      "release": "9",
+      "text": "- select sections to include on resume (e.g. overview, skills, certifications)"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 56,
+    "fields": {
+      "release": "9",
+      "text": "- choose between chronological or skills-based resume"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 57,
+    "fields": {
+      "release": "9",
+      "text": "- choose which experiences are included"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 58,
+    "fields": {
+      "release": "9",
+      "text": "- choose color or black & white format"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 59,
+    "fields": {
+      "release": "9",
+      "text": "- preview an editable version of the resume"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 60,
+    "fields": {
+      "release": "9",
+      "text": "- create a .pdf from the preview"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 61,
+    "fields": {
+      "release": "10",
+      "text": "Automated Job Search"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 62,
+    "fields": {
+      "release": "10",
+      "text": "- Returns 15 open jobs according to search queries"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 63,
+    "fields": {
+      "release": "10",
+      "text": "- Removes duplicate job posts that have been found already in previous searchesA65:AMJ65"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 64,
+    "fields": {
+      "release": "10",
+      "text": "- Improved navigation and cleaned up layout of participant detail page"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 65,
+    "fields": {
+      "release": "10",
+      "text": "- Single dashboard for managing job post pipeline"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 66,
+    "fields": {
+      "release": "11",
+      "text": "Fixed breadcrumbs"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 67,
+    "fields": {
+      "release": "12",
+      "text": "Removed superuser restriction on adding jobs."
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 68,
+    "fields": {
+      "release": "13",
+      "text": "Initial release of the Public Facing Site"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 69,
+    "fields": {
+      "release": "14",
+      "text": "Updated look and feel to make sign-up easier for participants"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 70,
+    "fields": {
+      "release": "15",
+      "text": "Updated look and feel to inspire donors while maintaining consistent branding from and ease of sign-up from v2.0.0"
+    }
+  }
+]
