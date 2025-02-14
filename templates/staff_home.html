@@ -25,7 +25,9 @@
             {% if app.name in perms %}
                 <tr class="tr">
                     <td class="td">
-                        {% if user.is_staff %}
+                        {% if app.name == 'public_site' %}
+                        <a href="{% url 'home' %}">{{ app.name }}</a>
+                        {% elif user.is_staff %}
                         <a class="admin_panel" href="{% url app.name|add:':index' %}">{{ app.name }}</a>
                         {% else %}
                         <a href="{% url app.name|add:':home' %}">{{ app.name }}</a>
