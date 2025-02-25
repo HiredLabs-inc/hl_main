@@ -216,6 +216,18 @@
     }
   },
   {
+    "model": "releases.release",
+    "pk": 16,
+    "fields": {
+      "app": "3",
+      "author": "1",
+      "date": "2025-02-24T22:58:34Z",
+      "major": 3,
+      "minor": 0,
+      "patch": 1
+    }
+  },
+  {
     "model": "releases.note",
     "pk": 1,
     "fields": {
@@ -773,6 +785,14 @@
     "fields": {
       "release": "15",
       "text": "Updated look and feel to inspire donors while maintaining consistent branding from and ease of sign-up from v2.0.0"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 71,
+    "fields": {
+      "release": "16",
+      "text": "Moved the donation screen to a separate tab when clicked"
     }
   }
 ]
