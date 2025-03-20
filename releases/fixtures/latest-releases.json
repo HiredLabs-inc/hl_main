@@ -228,6 +228,30 @@
     }
   },
   {
+    "model": "releases.release",
+    "pk": 17,
+    "fields": {
+      "app": "1",
+      "author": "1",
+      "date": "2025-02-27T19:56:00Z",
+      "major": 2,
+      "minor": 2,
+      "patch": 3
+    }
+  },
+  {
+    "model": "releases.release",
+    "pk": 18,
+    "fields": {
+      "app": "3",
+      "author": "1",
+      "date": "2025-03-20T19:57:00Z",
+      "major": 3,
+      "minor": 0,
+      "patch": 2
+    }
+  },
+  {
     "model": "releases.note",
     "pk": 1,
     "fields": {
@@ -793,6 +817,30 @@
     "fields": {
       "release": "16",
       "text": "Moved the donation screen to a separate tab when clicked"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 72,
+    "fields": {
+      "release": "17",
+      "text": "Removed calls to static assets that were breaking the resume preview and pdf pages"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 73,
+    "fields": {
+      "release": "18",
+      "text": "Updated coding boot camp dates"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 74,
+    "fields": {
+      "release": "19",
+      "text": "Updated \u201cImpact\u201d section"
     }
   }
 ]
