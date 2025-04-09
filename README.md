@@ -6,19 +6,26 @@ our mission of ending veteran underemployment.
 
 ## 1. Installation
 
-#### 1.1. Create a .env.dev file containing the environment variables below in the hl_main/ subdirectory
-
+#### 1.1. Preliminary Setup
+Create a .env.dev file containing the environment variables below in the hl_main/ subdirectory
 ```bash
 # hl_main/.env.dev
 DJANGO_SECRET_KEY=long-string-of-characters
 GCP_PROJECT_ID=whatever-project-id-you-want
 GOOGLE_APPLICATION_CREDENTIALS=gcloud/application_default_credentials.json
 ```
-#### 1.2. Install docker 
-https://docs.docker.com/
 
+Create /hl_main/creds subdirectory
+Create SSH key for local environment
+
+#### 1.2. Install docker, python, gitbash
+https://docs.docker.com/
+https://www.python.org/downloads/
+https://git-scm.com/downloads
 
 #### 1.3. Setup gcloud
+Create login for gcloud environment with IAM server credentials + billing account
+
 ```bash
 docker compose build
 docker compose run --rm gcloud bash
@@ -39,9 +46,14 @@ gcloud auth application-default login
 docker compose run --rm django python manage.py migrate
 ```
 
-#### 1.5. Load development seed data
+#### 1.5. Create a superuser
 ```bash
-docker compose run --rm django python manage.py loaddata dev_data
+docker compose run --rm django python manage.py createsuperuser
+```
+
+#### 1.6. Load development seed data
+```bash
+docker compose run --rm django python manage.py loaddata dev_seed
 ```
 
 ## 2. Usage
