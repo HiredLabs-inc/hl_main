@@ -188,7 +188,8 @@
       "date": "2023-03-13T00:00:00Z",
       "major": 1,
       "minor": 0,
-      "patch": 0
+      "patch": 0,
+      "title": "Public-Facing Page 1"
     }
   },
   {
@@ -200,7 +201,8 @@
       "date": "2024-03-15T00:00:00Z",
       "major": 2,
       "minor": 0,
-      "patch": 0
+      "patch": 0,
+      "title": "Public-Facing Page 2"
     }
   },
   {
@@ -212,7 +214,8 @@
       "date": "2025-02-03T05:31:49Z",
       "major": 3,
       "minor": 0,
-      "patch": 0
+      "patch": 0,
+      "title": "Public-Facing Page 3"
     }
   },
   {
@@ -224,7 +227,8 @@
       "date": "2025-02-24T22:58:34Z",
       "major": 3,
       "minor": 0,
-      "patch": 1
+      "patch": 1,
+      "title": "Public-Facing Page 4"
     }
   },
   {
@@ -236,7 +240,8 @@
       "date": "2025-02-27T19:56:00Z",
       "major": 2,
       "minor": 2,
-      "patch": 3
+      "patch": 3,
+      "title": "Hotfix 2"
     }
   },
   {
@@ -248,7 +253,21 @@
       "date": "2025-03-20T19:57:00Z",
       "major": 3,
       "minor": 0,
-      "patch": 2
+      "patch": 2,
+      "title": "Public-Facing Page 5"
+    }
+  },
+  {
+    "model": "releases.release",
+    "pk": 19,
+    "fields": {
+      "app": "3",
+      "author": "1",
+      "date": "2025-06-02T19:38:00Z",
+      "major": 3,
+      "minor": 0,
+      "patch": 3,
+      "title": "Public-Facing Page 6"
     }
   },
   {
@@ -840,7 +859,7 @@
     "pk": 74,
     "fields": {
       "release": "19",
-      "text": "Updated \u201cImpact\u201d section"
+      "text": "Updated copy on about page"
     }
   }
 ]
