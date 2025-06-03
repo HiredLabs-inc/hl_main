@@ -271,6 +271,18 @@
     }
   },
   {
+    "model": "releases.release",
+    "pk": 20,
+    "fields": {
+      "app": "3",
+      "author": "1",
+      "date": "2025-06-03T19:38:00Z",
+      "major": 3,
+      "minor": 0,
+      "patch": 4
+    }
+  },
+  {
     "model": "releases.note",
     "pk": 1,
     "fields": {
@@ -859,6 +871,14 @@
     "pk": 74,
     "fields": {
       "release": "19",
+      "text": "Updated copy on about page"
+    }
+  },
+  {
+    "model": "releases.note",
+    "pk": 75,
+    "fields": {
+      "release": "20",
       "text": "Updated copy on about page"
     }
   }
