@@ -195,10 +195,16 @@ class Step(models.Model):
 # Results of keyword analysis algorithm. There is one per job, and it is overwritten whenever a new keyword analysis
 # is run.
 class KeywordAnalysis(models.Model):
+    CATEGORY_CHOICES = [
+        ('nltk english stopwords', 'NLTK English Stopwords'),
+        ('low value', 'Low Value'),
+        ('industry protected', 'Industry Protected'),
+    ]
     job = models.ForeignKey(Job, on_delete=models.CASCADE)
-    unigram = models.CharField(max_length=200)
-    bigram = models.CharField(max_length=200)
-    trigram = models.CharField(max_length=200)
+    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
+    unigram = models.CharField(max_length=5000)
+    bigram = models.CharField(max_length=5000)
+    trigram = models.CharField(max_length=5000)
 
     def __str__(self):
         return f"{self.job}"
@@ -227,9 +233,9 @@ class WeightedBullet(models.Model):
 
 class BulletKeyword(models.Model):
     bullet = models.ForeignKey(Bullet, on_delete=models.CASCADE)
-    unigram = models.CharField(max_length=200)
-    bigram = models.CharField(max_length=200)
-    trigram = models.CharField(max_length=200)
+    unigram = models.CharField(max_length=5000)
+    bigram = models.CharField(max_length=5000)
+    trigram = models.CharField(max_length=5000)
 
     def __str__(self):
         return f"{self.bullet.text}: {self.unigram}, {self.bigram}, {self.trigram}"
@@ -318,3 +324,17 @@ class JobSearch(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     jobs = models.ManyToManyField(Job)
+
+class StopwordGroup(models.Model):
+    CATEGORY_CHOICES = [
+        ('nltk english stopwords', 'NLTK English Stopwords'),
+        ('low value', 'Low Value'),
+         ('industry protected', 'Industry Protected'),
+    ]
+
+    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, unique=True)
+    words = models.TextField(help_text="Comma-separated list of stopwords in this category.")
+    updated = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.category

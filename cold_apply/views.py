@@ -347,8 +347,10 @@ class JobDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         if KeywordAnalysis.objects.filter(job=self.object).exists():
+            print(f"DEBUG: Recalling existing keyword analysis for job {self.object.id}")
             context["keywords"] = KeywordAnalysis.objects.filter(job=self.object)
         else:
+            print(f"DEBUG: Running new keyword analysis for job {self.object.id}")
             analysis = analyze(self.object.description)
             hook_after_jd_analysis(analysis, self.object.id)
             context["keywords"] = KeywordAnalysis.objects.filter(job=self.object)
