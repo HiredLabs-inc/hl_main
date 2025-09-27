@@ -3,30 +3,17 @@
 import json
 import string
 import pandas as pd
-from django.core import serializers
 from sklearn.feature_extraction.text import TfidfVectorizer
-from cold_apply.models import KeywordAnalysis, Job, StopwordGroup
 
 
 
 class Analyzer:
-    def __init__(self, job_description: str, stopword_category: str):
-
+    def __init__(self, job_description: str, stopwords: list[str]):
         self.input_text = job_description.lower()
-        self.unigrams = []
-        self.bigrams = []
-        self.trigrams = []
-         # Load stopwords for the selected category
-        try:
-            group = StopwordGroup.objects.get(category=stopword_category)
-            stopwords_str = group.words
-            def normalize_stopword(word):
-                return ''.join([c for c in word.lower() if c not in string.punctuation])
-            self.stopwords = [normalize_stopword(w.strip()) for w in stopwords_str.split(',') if w.strip()]
-        except StopwordGroup.DoesNotExist:
-            self.stopwords = []
-        print(f"STOPWORDS LOADED for category '{stopword_category}':", self.stopwords)
-
+        self.stopwords = [
+                ''.join(c for c in w.lower() if c not in string.punctuation)
+                for w in (stopwords or [])
+        ]
         self.cleaned_words = self.parse()
 
 
@@ -57,27 +44,23 @@ class Analyzer:
 
 
 # Initialize analyzer
-def analyze(job_description: str):
-    # Instantiate analyzer with job description text
-    words = job_description.split(' ')
-    if len(words) < 5:
-        job_description += ' '
-        job_description *= 10
-
-    categories = [
-        "nltk english stopwords",
-        "low value",
-        "industry protected"
-    ]
-    results = {}
-    for cat in categories:
-        analyzer = Analyzer(job_description, stopword_category=cat)
-        results[cat] = {
-            'unigram': analyzer.find_keywords(1, 1),
-            'bigram': analyzer.find_keywords(2, 2),
-            'trigram': analyzer.find_keywords(3, 3)
+def analyze(job_description: str, *, stopwords_by_category: dict[str, list[str]]):
+    cats = ["nltk english stopwords", "low value", "industry protected"]
+    if len(job_description.split()) < 5:
+        job_description = (job_description + " ") * 10
+    out = {}
+    for cat in cats:
+        a = Analyzer(job_description, stopwords=stopwords_by_category.get(cat, []))
+        out[cat] = {
+            "unigram": a.find_keywords(1, 1),
+            "bigram":  a.find_keywords(2, 2),
+            "trigram": a.find_keywords(3, 3),
         }
-    return results
+    return out
+
+# Hooks allowed DB access
+from django.core import serializers
+from cold_apply.models import KeywordAnalysis, Job
 
 # Writes results to database
 def hook_after_jd_analysis(task, job_id: int):

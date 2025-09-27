@@ -1,0 +1,11 @@
+[run]
+source = hl_main
+omit =
+    */migrations/*
+    */tests/*
+    */management/*
+    */admin.py
+    */urls.py
+
+[report]
+show_missing = True

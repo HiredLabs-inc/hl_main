@@ -73,6 +73,7 @@ from .models import (
     Phase,
     Skill,
     Step,
+    StopwordGroup,
     WeightedBullet,
 )
 from .static.scripts.keyword_analyzer.keyword_analyzer import (
@@ -351,7 +352,16 @@ class JobDetailView(LoginRequiredMixin, DetailView):
             context["keywords"] = KeywordAnalysis.objects.filter(job=self.object)
         else:
             print(f"DEBUG: Running new keyword analysis for job {self.object.id}")
-            analysis = analyze(self.object.description)
+            # build stopwords_by_category from DB (view allowed to touch DB)
+            cats = ["nltk english stopwords", "low value", "industry protected"]
+            stopwords_by_category = {}
+            for cat in cats:
+                try:
+                    group = StopwordGroup.objects.get(category=cat)
+                    stopwords_by_category[cat] = [w.strip() for w in group.words.split(",") if w.strip()]
+                except StopwordGroup.DoesNotExist:
+                    stopwords_by_category[cat] = []
+            analysis = analyze(self.object.description, stopwords_by_category=stopwords_by_category)
             hook_after_jd_analysis(analysis, self.object.id)
             context["keywords"] = KeywordAnalysis.objects.filter(job=self.object)
 
