@@ -12,7 +12,7 @@ INSTALLED_APPS += ["debug_toolbar", "django_extensions", "django_browser_reload"
 INTERNAL_IPS = ["127.0.0.1"]
 MIDDLEWARE += [
     "debug_toolbar.middleware.DebugToolbarMiddleware",
-    "django_browser_reload.middleware.BrowserReloadMiddleware"
+    "django_browser_reload.middleware.BrowserReloadMiddleware",
 ]
 
 

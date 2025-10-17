@@ -1,5 +1,7 @@
 [run]
-source = hl_main
+source = 
+    hl_main
+    cold_apply
 omit =
     */migrations/*
     */tests/*

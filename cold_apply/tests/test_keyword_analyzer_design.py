@@ -9,12 +9,14 @@ def test_analyze_runs_without_db_access_now_pure():
         "low value": ["responsible", "various", "ability"],
         "industry protected": ["google", "microsoft"],
     }
-    result = analyze("Simple text with no dependency on DB.", stopwords_by_category=STOPWORDS)
-    assert set(result.keys()) == {
-        "nltk english stopwords",
-        "low value",
-        "industry protected",
-    }
-    for cat in result:
-        for ngram_type in ("unigram", "bigram", "trigram"):
-            assert isinstance(result[cat][ngram_type], list)
+    flat = sorted({w for lst in STOPWORDS.values() for w in lst})
+    result = analyze("Simple text with no dependency on DB.", stopwords=flat)
+    assert set(result.keys()) == {"unigram", "bigram", "trigram"}
+    # sanity: stopwords should not appear
+    for sw in flat:
+        assert sw not in result["unigram"]
+        assert sw not in result["bigram"]
+        assert sw not in result["trigram"]
+    for ngram_type, values in result.items():
+        assert ngram_type in {"unigram", "bigram", "trigram"}
+        assert isinstance(values, list)

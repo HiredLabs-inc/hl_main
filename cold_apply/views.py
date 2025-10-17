@@ -361,8 +361,13 @@ class JobDetailView(LoginRequiredMixin, DetailView):
                     stopwords_by_category[cat] = [w.strip() for w in group.words.split(",") if w.strip()]
                 except StopwordGroup.DoesNotExist:
                     stopwords_by_category[cat] = []
-            analysis = analyze(self.object.description, stopwords_by_category=stopwords_by_category)
-            hook_after_jd_analysis(analysis, self.object.id)
+            # flatten into one list for analyze()
+            flat = []
+            for words in stopwords_by_category.values():
+                flat.extend(words)
+            flat = sorted(set(s.lower() for s in flat))
+            analysis = analyze(self.object.description, stopwords=flat)
+            hook_after_jd_analysis(self.object.id, analysis)
             context["keywords"] = KeywordAnalysis.objects.filter(job=self.object)
 
         context["now"] = timezone.now()

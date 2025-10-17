@@ -195,16 +195,10 @@ class Step(models.Model):
 # Results of keyword analysis algorithm. There is one per job, and it is overwritten whenever a new keyword analysis
 # is run.
 class KeywordAnalysis(models.Model):
-    CATEGORY_CHOICES = [
-        ('nltk english stopwords', 'NLTK English Stopwords'),
-        ('low value', 'Low Value'),
-        ('industry protected', 'Industry Protected'),
-    ]
     job = models.ForeignKey(Job, on_delete=models.CASCADE)
-    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
-    unigram = models.CharField(max_length=5000)
-    bigram = models.CharField(max_length=5000)
-    trigram = models.CharField(max_length=5000)
+    unigram = models.CharField(max_length=200)
+    bigram = models.CharField(max_length=500)
+    trigram = models.CharField(max_length=800)
 
     def __str__(self):
         return f"{self.job}"
@@ -233,9 +227,9 @@ class WeightedBullet(models.Model):
 
 class BulletKeyword(models.Model):
     bullet = models.ForeignKey(Bullet, on_delete=models.CASCADE)
-    unigram = models.CharField(max_length=5000)
-    bigram = models.CharField(max_length=5000)
-    trigram = models.CharField(max_length=5000)
+    unigram = models.CharField(max_length=200)
+    bigram = models.CharField(max_length=200)
+    trigram = models.CharField(max_length=200)
 
     def __str__(self):
         return f"{self.bullet.text}: {self.unigram}, {self.bigram}, {self.trigram}"
