@@ -1,4 +1,3 @@
-
 # build frontend using node image
 FROM node as frontend_builder
 
@@ -84,6 +83,13 @@ RUN playwright install
 # Copy local code to the container image.
 COPY . .
 COPY --from=frontend_builder /app/frontend/build ./frontend/build
+
+# Make sure build and runtime know where to find ADC and which settings to use.
+# Allows passing DJANGO_SETTINGS_MODULE as a build-arg (docker build --build-arg) or
+# fall back to a reasonable default. The credentials file is copied into /app/creds
+# below and this ENV makes google.auth.default() pick it up during build/runtime.
+ENV GOOGLE_APPLICATION_CREDENTIALS=/app/creds/application_default_credentials.json
+ENV DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE:-hl_main.settings.stage}
 
 # https://github.com/canonical/base-2204-python38/blob/main/Dockerfile
 

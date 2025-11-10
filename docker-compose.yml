@@ -31,11 +31,16 @@ services:
       - db
     volumes:
       - .:/app
+      - ./creds:/app/creds:ro
+#      - ./creds:/app/creds
+      - $HOME/.config/gcloud:/root/.config/gcloud:ro
+
     ports:
       - 8000:8000
     command: python manage.py runserver_plus 0.0.0.0:8000
     environment:
       - DJANGO_SETTINGS_MODULE=hl_main.settings.dev
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/creds/application_default_credentials.json
 
   db:
     image: postgres
@@ -50,8 +55,11 @@ services:
       - db
     volumes:
       - .:/app
+      - ./creds:/app/creds:ro
     ports:
       - "8001:8001"
     environment:
       - DJANGO_ROLE=tasks
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/creds/application_default_credentials.json
+      - DJANGO_SETTINGS_MODULE=hl_main.settings.dev
     command: python manage.py runserver 0.0.0.0:8001
