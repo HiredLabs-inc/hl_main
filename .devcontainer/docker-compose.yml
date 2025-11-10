@@ -10,10 +10,16 @@ services:
     # build:
     #   context: .
     #   dockerfile: .devcontainer/Dockerfile
-
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/creds/application_default_credentials.json
+      # Add other necessary environment variables here
+      - DJANGO_SETTINGS_MODULE=hl_main.settings.dev
+      # - GCP_PROJECT_ID=your-gcp-project-id
+      # - GCP_SECRETS_NAME=your-secret-name
     volumes:
       # Update this to wherever you want VS Code to mount the folder of your project
       - .:/workspaces/hl_main:cached
+      - ./creds:/app/creds:ro
 
     # Uncomment the next four lines if you will use a ptrace-based debugger like C++, Go, and Rust.
     # cap_add:
