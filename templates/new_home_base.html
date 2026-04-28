@@ -104,7 +104,7 @@
                 </div>
                 <hr class="my-6 border-gray-200 sm:mx-auto dark:border-gray-700 lg:my-8" />
                 <span class="block text-sm text-gray-500 sm:text-center dark:text-gray-400">
-                    © 2025
+                    © <span id="current-year"></span>
                     <a href="{% url 'home' %}" class="hover:underline">Hired Labs, Inc.™</a>
                     is a nonprofit 501(c)(3) organization. EIN: 92-0765713.
                 </span>
@@ -120,6 +120,12 @@
         {% endblock scripts %}
         {% include 'components/toaster.html' %}
     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function (){
+            var el = document.getElementById("current-year");
+            if (el) el.textContent = new Date().getFullYear();
+        });
+    </script>
     </body>
 
 
