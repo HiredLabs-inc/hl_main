@@ -1,0 +1,12 @@
+[project]
+name = "hl_main"
+version = "3.0.3"
+description = "Main HiredLabs Site and Tools"
+readme = "README.md"
+authors = [
+  { name = "Jeff Stock", email = "jeff.stock@hiredlabs.org" },
+]
+license = { text = "GPL-3.0" }
+
+[project.urls]
+"Homepage" = "https://hiredlabs.org/"
