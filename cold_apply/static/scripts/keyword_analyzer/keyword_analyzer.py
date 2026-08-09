@@ -2,92 +2,42 @@
 
 import json
 import string
-
-import nltk
 import pandas as pd
-from django.core import serializers
 from sklearn.feature_extraction.text import TfidfVectorizer
+from cold_apply.models import KeywordAnalysis, Job, BulletKeyword
+
 
 
 class Analyzer:
-    def __init__(self, job_description: str):
-        super(Analyzer).__init__()
+    def __init__(self, job_description: str, stopwords: list[str]):
         self.input_text = job_description.lower()
-        self.unigrams = list()
-        self.bigrams = list()
-        self.trigrams = list()
-        self.eng_stop_words = nltk.corpus.stopwords.words('english')
         self.stopwords = [
-            'month',
-            'experience',
-            'etc',
-            'role',
-            'candidate',
-            'greenlight',
-            'preferred',
-            'qualifications',
-            'weekly',
-            'daily',
-            'monthly',
-            'quarterly',
-            'key',
-            'work',
-            'dollar',
-            'uber',
-            'next',
-            'com',
-            'jan',
-            'dec',
-            'jun',
-            '17',
-            '15',
-            'playstation',
-            'new',
-            'nextdoor',
-            'across',
-            'strong',
-            'skills',
-            'bosp',
-            'stanford',
-            'responsibilities',
-            'within',
-            'vpue',
-            'job'
-
+                ''.join(c for c in w.lower() if c not in string.punctuation)
+                for w in (stopwords or [])
         ]
         self.cleaned_words = self.parse()
 
-    def get_stops(self):
-        for w in self.eng_stop_words:
-            self.stopwords.append(w)
 
     def parse(self):
-        # Remove punctuation
         text = ''.join([c for c in self.input_text if c not in string.punctuation])
-        # Split description into words
         tokens = text.split()
-        # Remove stopwords
         words = [word for word in tokens if word not in self.stopwords]
-        # return cleaned data as a list of words
         return words
 
     def find_keywords(self, lower_bound, upper_bound):
-        """
-            takes a string, boundaries (upper and lower) for
-            the ngram_range parameter of TfidfVectorizer
-            returns list of the top 20 most important ngrams
-            lower_bound = integer representing the lower bound of ngram_range
-            upper_bound = integer representing the upper bound of ngram_range
-
-            """
-        vectorizer = TfidfVectorizer(input='content', ngram_range=(lower_bound, upper_bound), stop_words=self.stopwords)
-        X_tfidf = vectorizer.fit_transform([' '.join(self.cleaned_words)])
+        vectorizer = TfidfVectorizer(
+            input='content',
+            ngram_range=(lower_bound, upper_bound),
+            stop_words=self.stopwords
+        )
+        # Use cleaned words for TF-IDF
+        cleaned_text = ' '.join(self.cleaned_words)
+        X_tfidf = vectorizer.fit_transform([cleaned_text])
         feature_names = vectorizer.get_feature_names_out()
         X_tfidf_df = pd.DataFrame(X_tfidf.toarray())
         X_tfidf_df.columns = feature_names
         X_tfidf_df.sort_values(by=X_tfidf_df.index[0], axis=1, inplace=True, ascending=False)
         top_twenty = X_tfidf_df.iloc[:, :20].columns.tolist()
-        # Alphabetize multi-word ngrams
         for i in range(len(top_twenty)):
             if len(top_twenty[i].split(' ')) > 1:
                 top_twenty[i] = ' '.join(sorted(top_twenty[i].split(' ')))
@@ -95,70 +45,47 @@ class Analyzer:
 
 
 # Initialize analyzer
-def analyze(job_description: str):
-    # Instantiate analyzer with job description text
-    words = job_description.split(' ')
-    if len(words) < 5:
-        job_description += ' '
-        job_description *= 10
+# Pure analyzer: no DB, no categories
+def analyze(job_description: str, *, stopwords: list[str]):
+    if len(job_description.split()) < 5:
+        job_description = (job_description + " ") * 10
+    a = Analyzer(job_description, stopwords=stopwords or [])
+    return {
+        "unigram": a.find_keywords(1, 1),
+        "bigram":  a.find_keywords(2, 2),
+        "trigram": a.find_keywords(3, 3),
+        }
 
-    analyzer = Analyzer(job_description)
-    # Update stopword list with Enlgish from NLTK + custom stopwords
-    analyzer.get_stops()
-    # Parse job description and set class uni-, bi- and trigram attributes
-    # Ensure job eescription is long enough to analyze
-
-    analyzer.unigrams = analyzer.find_keywords(1, 1)
-    analyzer.bigrams = analyzer.find_keywords(2, 2)
-    analyzer.trigrams = analyzer.find_keywords(3, 3)
-    # turn class attributes into a json object
-    data = {
-        'unigram': analyzer.unigrams,
-        'bigram': analyzer.bigrams,
-        'trigram': analyzer.trigrams
-    }
-
-    shortest = 0
-    for key in data:
-        if len(data[key]) < shortest or shortest == 0:
-            shortest = len(data[key])
-
-    for key in data:
-        data[key] = data[key][:shortest]
-
-    main_df = pd.DataFrame.from_dict(data)
-    print('Keyword analysis completed successfully')
-    return main_df.to_json(orient='index')
-
+# Hooks allowed DB access
+from django.core import serializers
+from cold_apply.models import KeywordAnalysis, Job
 
 # Writes results to database
-def hook_after_jd_analysis(task, job_id: int):
-    data = json.loads(task)
-    serialized = list()
-    for line in data:
-        data[line]['job'] = job_id
-        formatted = dict(
-            model='cold_apply.keywordanalysis',
-            fields=data[line]
-        )
-        serialized.append(formatted)
-    result = json.dumps(serialized)
-    for obj in serializers.deserialize('json', result):
-        obj.save()
+# Persist one KeywordAnalysis row (no categories)
+def hook_after_jd_analysis(job_id: int, result: dict) -> None:
+    job = Job.objects.get(id=job_id)
+    KeywordAnalysis.objects.filter(job=job).delete()
+    KeywordAnalysis.objects.create(
+        job=job,
+        unigram=", ".join(result.get("unigram", [])),
+        bigram=", ".join(result.get("bigram", [])),
+        trigram=", ".join(result.get("trigram", [])),
+    )
     print('JD analysis hook completed successfully')
 
 
-def hook_after_bullet_analysis(task, bullet_id: int):
-    data = json.loads(task)
-    serialized = list()
-    for line in data:
-        data[line]['bullet'] = bullet_id
-        formatted = dict(
-            model='cold_apply.bulletkeyword',
-            fields=data[line]
+# Persist BulletKeyword entries (no categories)
+def hook_after_bullet_analysis(bullet_id: int, items: list[dict]) -> None:
+    """
+    items: iterable of dicts shaped for BulletKeyword, e.g.
+      {"unigram": "...", "bigram": "...", "trigram": "..."}
+    """
+    BulletKeyword.objects.filter(bullet_id=bullet_id).delete()
+    for it in items:
+        BulletKeyword.objects.create(
+            bullet_id=bullet_id,
+            unigram=it.get("unigram", ""),
+            bigram=it.get("bigram", ""),
+            trigram=it.get("trigram", ""),
         )
-        serialized.append(formatted)
-    result = json.dumps(serialized)
-    for obj in serializers.deserialize('json', result):
-        obj.save()
-    print('JD analysis hook completed successfully')
+    print("Bullet analysis hook completed successfully")

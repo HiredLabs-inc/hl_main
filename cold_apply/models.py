@@ -197,8 +197,8 @@ class Step(models.Model):
 class KeywordAnalysis(models.Model):
     job = models.ForeignKey(Job, on_delete=models.CASCADE)
     unigram = models.CharField(max_length=200)
-    bigram = models.CharField(max_length=200)
-    trigram = models.CharField(max_length=200)
+    bigram = models.CharField(max_length=500)
+    trigram = models.CharField(max_length=800)
 
     def __str__(self):
         return f"{self.job}"
@@ -318,3 +318,17 @@ class JobSearch(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     jobs = models.ManyToManyField(Job)
+
+class StopwordGroup(models.Model):
+    CATEGORY_CHOICES = [
+        ('nltk english stopwords', 'NLTK English Stopwords'),
+        ('low value', 'Low Value'),
+         ('industry protected', 'Industry Protected'),
+    ]
+
+    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, unique=True)
+    words = models.TextField(help_text="Comma-separated list of stopwords in this category.")
+    updated = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.category

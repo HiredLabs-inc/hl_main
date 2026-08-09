@@ -73,6 +73,7 @@ from .models import (
     Phase,
     Skill,
     Step,
+    StopwordGroup,
     WeightedBullet,
 )
 from .static.scripts.keyword_analyzer.keyword_analyzer import (
@@ -347,10 +348,26 @@ class JobDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         if KeywordAnalysis.objects.filter(job=self.object).exists():
+            print(f"DEBUG: Recalling existing keyword analysis for job {self.object.id}")
             context["keywords"] = KeywordAnalysis.objects.filter(job=self.object)
         else:
-            analysis = analyze(self.object.description)
-            hook_after_jd_analysis(analysis, self.object.id)
+            print(f"DEBUG: Running new keyword analysis for job {self.object.id}")
+            # build stopwords_by_category from DB (view allowed to touch DB)
+            cats = ["nltk english stopwords", "low value", "industry protected"]
+            stopwords_by_category = {}
+            for cat in cats:
+                try:
+                    group = StopwordGroup.objects.get(category=cat)
+                    stopwords_by_category[cat] = [w.strip() for w in group.words.split(",") if w.strip()]
+                except StopwordGroup.DoesNotExist:
+                    stopwords_by_category[cat] = []
+            # flatten into one list for analyze()
+            flat = []
+            for words in stopwords_by_category.values():
+                flat.extend(words)
+            flat = sorted(set(s.lower() for s in flat))
+            analysis = analyze(self.object.description, stopwords=flat)
+            hook_after_jd_analysis(self.object.id, analysis)
             context["keywords"] = KeywordAnalysis.objects.filter(job=self.object)
 
         context["now"] = timezone.now()
