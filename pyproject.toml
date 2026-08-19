@@ -1,6 +1,6 @@
 [project]
 name = "hl_main"
-version = "3.0.3"
+version = "3.0.4"
 description = "Main HiredLabs Site and Tools"
 readme = "README.md"
 authors = [
