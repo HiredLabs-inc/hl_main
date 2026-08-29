@@ -12,6 +12,7 @@ from .models import (
     Skill,
     State,
     Step,
+    StopwordGroup,
     WeightedBullet,
 )
 
@@ -117,6 +118,13 @@ class SkillAdmin(admin.ModelAdmin):
 @admin.register(Location)
 class LocationAdmin(admin.ModelAdmin):
     pass
+
+
+@admin.register(StopwordGroup)
+class StopwordGroupAdmin(admin.ModelAdmin):
+    list_display = ("category", "words")
+    list_filter = ("category",)
+    search_fields = ("category", "words")
 
 
 admin.site.register(State, StateAdmin)

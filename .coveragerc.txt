@@ -1,0 +1,13 @@
+[run]
+source = 
+    hl_main
+    cold_apply
+omit =
+    */migrations/*
+    */tests/*
+    */management/*
+    */admin.py
+    */urls.py
+
+[report]
+show_missing = True
