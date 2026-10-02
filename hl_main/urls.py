@@ -18,6 +18,7 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
+import hlagents
 from userprofile import views as userprofile_views
 
 urlpatterns = [
@@ -46,6 +47,7 @@ urlpatterns = [
     path("resume/", include("resume.urls")),
     path("releases/", include("releases.urls")),
     path("rates/", include("rates.urls")),
+    path("hlagents/", include("hlagents.urls")),
 ] + static(
     settings.MEDIA_URL, document_root=settings.MEDIA_ROOT
 )  # this only works in development
