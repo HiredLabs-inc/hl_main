@@ -187,7 +187,10 @@ resource "google_sql_database_instance" "db" {
     disk_type                   = var.sql_disk_type
     disk_size                   = 10
     disk_autoresize             = true
-    activation_policy           = var.sql_always_on ? "ALWAYS" : "NEVER"
+    # Always created running (the database and user can't be created on a
+    # stopped instance). Instances with sql_always_on = false are then stopped
+    # by the nightly scheduler job and started by stage deploys.
+    activation_policy           = "ALWAYS"
     deletion_protection_enabled = var.deletion_protection
 
     ip_configuration {
@@ -312,7 +315,8 @@ resource "google_cloud_run_v2_service" "web" {
   }
 
   lifecycle {
-    ignore_changes = [template[0].containers[0].image, client, client_version]
+    # scaling: service-level block the API echoes back empty (scaling lives in template).
+    ignore_changes = [template[0].containers[0].image, client, client_version, scaling]
   }
 
   depends_on = [google_project_service.apis, google_compute_subnetwork_iam_member.network_user]
@@ -361,7 +365,8 @@ resource "google_cloud_run_v2_service" "worker" {
   }
 
   lifecycle {
-    ignore_changes = [template[0].containers[0].image, client, client_version]
+    # scaling: service-level block the API echoes back empty (scaling lives in template).
+    ignore_changes = [template[0].containers[0].image, client, client_version, scaling]
   }
 
   depends_on = [google_project_service.apis, google_compute_subnetwork_iam_member.network_user]

@@ -124,3 +124,17 @@ There is no billing export, so every figure above is a list-price estimate. To c
 
 ## Implementation status
 Step 1 is on branch `infra/gcp-restructure`: keyless image (`Dockerfile`, `hl_main/gcs.py`), unified `hl_main/settings/cloud.py`, Terraform in `infra/terraform`, pipeline in `infra/cloudbuild/deploy.yaml`, and the runbook in `infra/README.md`. Nothing has been applied to GCP yet.
+
+## Implementation Updates
+
+These were made by me, the user, between sessions. They include what was done and any relevant issues that arose for notes, documentation, and review.
+
+Step 2 repo hygiene: needs checking, but most of the items should be complete. The superuser password is a non issue, since it's a generic one on stage, and stage never has any real user data; infra/terraform skeleton: ran terraform init in both infra/terraform/shared and infra/terraform/envs/stage - notes: ran into a policy conflict, and had to overide parent policy and set constraints/run.managed.requireInvokerIam to 'not enforced' on both hl-main-prod and hl-main-stage projects to get it work. Had to set 'sql_always_on = true' for the first terraform apply call to crete the resources, then reset to 'false' and re-apply to make the design work as intended.
+Completed the rest of the steps from README.md under the One-time Bootstrap, and steps 1. and 2. in the Stand up and Environment for stage only. Step 3 threw an error: "ERROR: (gcloud.builds.triggers.run) NOT_FOUND: File infra/cloudbuild/deploy.yaml not found. This command is authenticated as jeff.stock@hiredlabs.org which is the active account specified by the [core/account] property". This was when trying to run manually - haven't tried pushing to 'develop', but would like to do that as the first test. 
+
+Resolved (2026-10-15):
+- `sql_always_on` workaround: the module now always creates the instance running. The `false` re-apply had never actually been applied; it has been now (stage deploy SA has `cloudsql.editor`, trigger has `_START_SQL=true`).
+- `run.managed.requireInvokerIam`: now in Terraform (`shared/main.tf`). The stage override is imported. Prod had no override yet (its Org Policy API was disabled), and the next shared apply creates it.
+- Trigger "deploy.yaml not found": the file wasn't on `origin/develop` yet. Fixed by pushing this branch to `develop`.
+- The shared plan shows the **hl-main-prod Shared VPC attachment is missing**. It gets created with the prod apply (step 6).
+

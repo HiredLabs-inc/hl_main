@@ -82,7 +82,7 @@ variable "sql_disk_type" {
 }
 
 variable "sql_always_on" {
-  description = "false creates the instance stopped (activation policy NEVER); start it on demand."
+  description = "false: deploys start the instance (and the deploy SA may do so); combine with sql_nightly_stop to keep it off when idle."
   type        = bool
 }
 

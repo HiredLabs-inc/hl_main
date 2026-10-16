@@ -27,9 +27,10 @@ gcloud storage buckets update gs://hiredlabs-tf-state --versioning
 cd infra/terraform/shared && terraform init && terraform apply
 cd ../envs/stage          && terraform init && terraform apply
 ```
+The shared root's Org Policy resources bill quota to `hl-main-stage` (provider alias `google.quota`), because user ADC has no quota project.
+
 Then, using the values from `terraform output`:
-1. **DB user** (password stays out of state):
-   `gcloud sql instances patch hl-stage-sql --activation-policy=ALWAYS --project=hl-main-stage` (stage only), then
+1. **DB user** (password stays out of state). The instance is created running:
    `gcloud sql users create hiredlabs --instance=hl-stage-sql --password='<generated>' --project=hl-main-stage`
 2. **App secret:** write a `.env` file with the keys below, then run
    `gcloud secrets versions add hl-stage-app-env --data-file=.env --project=hl-main-stage` and delete the file.
@@ -50,13 +51,13 @@ Then, using the values from `terraform output`:
    CLOUDRUN_WORKER_URL=<output worker_url>
    ALLOWED_HOSTS=                # prod: hiredlabs.org,www.hiredlabs.org ; stage: leave empty
    ```
-3. **First deploy:** push to `develop`, or run the trigger by hand:
+3. **First deploy:** push to `develop` (stage) or `main` (prod). The trigger reads `infra/cloudbuild/deploy.yaml` from that branch on GitHub, so it has to be pushed there first. After that, you can re-run by hand:
    `gcloud builds triggers run hl-stage-deploy --branch=develop --project=hl-main-stage`
 4. **Seed stage data:**
    `gcloud run jobs execute hl-stage-manage --region=us-west1 --project=hl-main-stage --args=manage.py,loaddata,concentrations,degrees,titles,skills,states,countries_hdi,step_seed`
 
 ### Stage database on demand
-The stage database is created stopped and is stopped again every night at 02:00 PT. Deploys to stage start it automatically. To start it by hand:
+The stage database is created running and is stopped every night at 02:00 PT. Deploys to stage start it automatically. To start it by hand:
 `gcloud sql instances patch hl-stage-sql --activation-policy=ALWAYS --project=hl-main-stage` (use `NEVER` to stop it).
 
 ## Prod cut-over (TARGET_DESIGN.md §7, steps 3–6)

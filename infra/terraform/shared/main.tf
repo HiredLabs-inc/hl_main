@@ -20,12 +20,50 @@ provider "google" {
   region = "us-west1"
 }
 
+# The Org Policy API needs an explicit quota project when Terraform runs with
+# user Application Default Credentials.
+provider "google" {
+  alias                 = "quota"
+  region                = "us-west1"
+  billing_project       = "hl-main-stage"
+  user_project_override = true
+}
+
 locals {
   region = "us-west1"
   hosts = {
     prod  = { project = "vpc-host-prod-yk380-hm150", network = "vpc-prod-shared", service_project = "hl-main-prod" }
     stage = { project = "vpc-host-staging-yk380-hm150", network = "vpc-staging-shared", service_project = "hl-main-stage" }
   }
+}
+
+# The public web services use invoker_iam_disabled (no allUsers binding, so
+# domain-restricted sharing stays on). That requires relaxing this managed
+# constraint on the environment projects.
+resource "google_project_service" "env_orgpolicy" {
+  for_each           = local.hosts
+  project            = each.value.service_project
+  service            = "orgpolicy.googleapis.com"
+  disable_on_destroy = false
+}
+
+resource "google_org_policy_policy" "allow_invoker_iam_disabled" {
+  provider = google.quota
+  for_each = local.hosts
+  name     = "projects/${each.value.service_project}/policies/run.managed.requireInvokerIam"
+  parent   = "projects/${each.value.service_project}"
+  spec {
+    rules {
+      enforce = "FALSE"
+    }
+  }
+  depends_on = [google_project_service.env_orgpolicy]
+}
+
+# Set by hand on stage during the first apply (2026-10-14).
+import {
+  to = google_org_policy_policy.allow_invoker_iam_disabled["stage"]
+  id = "projects/hl-main-stage/policies/run.managed.requireInvokerIam"
 }
 
 resource "google_compute_shared_vpc_service_project" "env" {
