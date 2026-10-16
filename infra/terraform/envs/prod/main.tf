@@ -51,6 +51,9 @@ module "lb" {
   domains    = ["hiredlabs.org", "www.hiredlabs.org"]
   # DR: add us-east1 = "hl-prod-web" once a us-east1 service exists (docs/runbook).
   backends = { "us-west1" = module.env.web_service_name }
+
+  # module.env enables the project APIs (compute, etc.) the LB needs.
+  depends_on = [module.env]
 }
 
 output "env" {
