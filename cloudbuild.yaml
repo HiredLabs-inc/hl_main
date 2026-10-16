@@ -1,3 +1,7 @@
+# LEGACY: manual deploys to the old hl-main-dev stack. Superseded by
+# infra/cloudbuild/deploy.yaml (GitHub triggers). Delete after the old stack is
+# decommissioned (infra/TARGET_DESIGN.md step 7). Images built from this branch
+# contain no key file, so don't deploy them to the old stack.
 steps:
 
 # Build container image with Cloud Build from Dockerfile

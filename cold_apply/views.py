@@ -80,7 +80,7 @@ from .static.scripts.keyword_analyzer.keyword_analyzer import (
     hook_after_jd_analysis,
 )
 from .static.scripts.resume_writer.bullet_weighter import hook_after_weighting, weigh
-from .static.scripts.storage.generate_signed_urls import generate_signed_url
+from hl_main.gcs import generate_signed_url
 
 
 @verified_required
@@ -209,14 +209,8 @@ class ParticipantDetailView(LoginRequiredMixin, FormMixin, DetailView):
             context["profile"] = None
         if not settings.DEBUG and context['profile'] is not None:
             context['signed_url'] = generate_signed_url(
-                service_account_file=settings.SERVICE_ACCOUNT_FILE,
                 bucket_name=settings.GS_BUCKET_NAME,
                 object_name=context['profile'].resume.name,
-                subresource=None,
-                expiration=604_800,
-                http_method="GET",
-                query_parameters=None,
-                headers=None,
             )
 
         return context
@@ -1141,14 +1135,8 @@ def view_uploaded_resume(request, pk):
     resume_name = participant.resume.name
     if participant.uploaded_resume:
         signed_url = generate_signed_url(
-            service_account_file=settings.SERVICE_ACCOUNT_FILE,
-            bucket_name=settings.BUCKET_NAME,
+            bucket_name=settings.GS_BUCKET_NAME,
             object_name=resume_name,
-            subresource=None,
-            expiration=604_800,
-            http_method="GET",
-            query_parameters=None,
-            headers=None,
         )
         print(signed_url)
         return redirect(signed_url)

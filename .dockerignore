@@ -1,5 +1,8 @@
 gcp-creds
+creds
 .env
+.env.*
 gcloud
 frontend/node_modules
 **/node_modules
+infra

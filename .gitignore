@@ -146,3 +146,8 @@ gcloud
 certs/
 cloud-sql-proxy
 *.pem
+
+# GCP credentials: never commit key files (use ADC / gcloud auth application-default login)
+creds/
+*-credentials.json
+application_default_credentials.json

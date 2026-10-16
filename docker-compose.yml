@@ -31,8 +31,7 @@ services:
       - db
     volumes:
       - .:/app
-      - ./creds:/app/creds:ro
-#      - ./creds:/app/creds
+      # user ADC from `gcloud auth application-default login` (no key files)
       - $HOME/.config/gcloud:/root/.config/gcloud:ro
 
     ports:
@@ -40,7 +39,6 @@ services:
     command: python manage.py runserver_plus 0.0.0.0:8000
     environment:
       - DJANGO_SETTINGS_MODULE=hl_main.settings.dev
-      - GOOGLE_APPLICATION_CREDENTIALS=/app/creds/application_default_credentials.json
 
   db:
     image: postgres
@@ -55,11 +53,10 @@ services:
       - db
     volumes:
       - .:/app
-      - ./creds:/app/creds:ro
+      - $HOME/.config/gcloud:/root/.config/gcloud:ro
     ports:
       - "8001:8001"
     environment:
       - DJANGO_ROLE=tasks
-      - GOOGLE_APPLICATION_CREDENTIALS=/app/creds/application_default_credentials.json
       - DJANGO_SETTINGS_MODULE=hl_main.settings.dev
     command: python manage.py runserver 0.0.0.0:8001
