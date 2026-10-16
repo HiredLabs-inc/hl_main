@@ -9,11 +9,11 @@ from allauth.decorators import rate_limit
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
 from releases.models import App
-from userprofile.guards import verified_required
+from userprofile.guards import staff_required, verified_required
 from userprofile.va_api import confirm_veteran_status
 
 from .forms import (
@@ -28,7 +28,7 @@ from .forms import (
 )
 from .models import OnboardingStep, Profile, VeteranProfile
 
-from hl_main.gcs import generate_signed_url
+from hl_main.gcs import SIGNED_URL_EXPIRATION, generate_signed_url
 
 class CustomSignupView(SignupView):
     form_class = CustomSignupForm
@@ -97,7 +97,7 @@ def welcome(request):
     return render(request, "welcome.html")
 
 # All views below require login
-@login_required
+@staff_required
 def staff(request):
     context = {"apps": App.objects.all()}
     return render(request, "staff_home.html", context)
@@ -116,9 +116,9 @@ def profile_update_view(request):
         return redirect("userprofile:profile_view")
     return render(request, "userprofile/profile_update_view.html", {"form": form})
 
-@login_required
+@staff_required
 def update_veteran_status_view(request, participant_id):
-    profile = Profile.objects.get(user=participant_id)
+    profile = get_object_or_404(Profile, user=participant_id)
     # veteran_profile = VeteranProfile.objects.get(user=participant_id)
     form = VeteranStatusUpdateForm(request.POST or None, instance=profile)
     signed_url = ''
@@ -126,6 +126,7 @@ def update_veteran_status_view(request, participant_id):
         signed_url = generate_signed_url(
             bucket_name=settings.GS_BUCKET_NAME,
             object_name=profile.service_doc.name,
+            expiration=SIGNED_URL_EXPIRATION,
         )
     if request.method == "POST" and form.is_valid():
         form.save()

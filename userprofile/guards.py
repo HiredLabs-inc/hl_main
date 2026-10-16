@@ -1,6 +1,9 @@
+from functools import wraps
+
 from allauth.account.utils import has_verified_email
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.auth.views import redirect_to_login
+from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import redirect
 
@@ -45,3 +48,25 @@ class VerifiedRequiredMixin(UserPassesTestMixin):
 
     def handle_no_permission(self) -> HttpResponseRedirect:
         return self.unauthorised_response
+
+
+def staff_required(view):
+    """Decorator for staff-only views: anonymous users are sent to login,
+    logged-in non-staff users get a 403"""
+
+    @wraps(view)
+    def decorator(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect_to_login(request.get_full_path())
+        if not request.user.is_staff:
+            raise PermissionDenied
+        return view(request, *args, **kwargs)
+
+    return decorator
+
+
+class StaffRequiredMixin(UserPassesTestMixin):
+    """CBV version of staff_required"""
+
+    def test_func(self):
+        return self.request.user.is_staff

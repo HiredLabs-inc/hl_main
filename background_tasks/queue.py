@@ -1,11 +1,16 @@
 import json
+import logging
 import subprocess
 
 from django.conf import settings
 from django.db import transaction
+from google.auth.transport.requests import Request
 from google.cloud import tasks_v2
+from google.oauth2 import id_token
 
 from .models import Task
+
+logger = logging.getLogger(__name__)
 
 TASK_ID_HEADER = "X-Task-Id"
 
@@ -26,9 +31,31 @@ def make_cloud_task(task: Task):
             # body=json.dumps(task.payload).encode() if task.payload else None,
             oidc_token=tasks_v2.OidcToken(
                 service_account_email=settings.GCP_SERVICE_ACCOUNT,
+                audience=settings.CLOUDRUN_WORKER_URL,
             ),
         ),
     )
+
+
+def is_authorized_task_request(request):
+    """Check the OIDC token Cloud Tasks attaches (see make_cloud_task).
+    Locally, tasks are posted by the send_task_request command without a token."""
+    if settings.DEBUG or not getattr(settings, "PRODUCTION", False):
+        return True
+
+    auth_header = request.headers.get("Authorization", "")
+    if not auth_header.startswith("Bearer "):
+        return False
+    # Tasks queued before the audience was set carry the full target URL instead
+    audiences = [settings.CLOUDRUN_WORKER_URL, f"{settings.CLOUDRUN_WORKER_URL}{request.path}"]
+    try:
+        claims = id_token.verify_oauth2_token(
+            auth_header.removeprefix("Bearer "), Request(), audience=audiences
+        )
+    except ValueError:
+        logger.warning("Rejected task request with an invalid OIDC token")
+        return False
+    return claims.get("email") == settings.GCP_SERVICE_ACCOUNT and claims.get("email_verified", False)
 
 
 @transaction.atomic

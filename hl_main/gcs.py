@@ -14,6 +14,10 @@ from google.cloud import storage
 
 _credentials = None
 
+# Links to participant documents (resumes, DD214s) are short-lived so a leaked
+# or forwarded URL stops working quickly.
+SIGNED_URL_EXPIRATION = 600
+
 
 def _get_credentials():
     global _credentials
