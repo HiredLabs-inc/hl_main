@@ -22,6 +22,11 @@ class Command(BaseCommand):
         User.objects.all().delete()
         Phase.objects.all().delete()
 
+        # Profile.service_package defaults to pk=1, so packages must exist before any profile
+        ServicePackage.objects.all().delete()
+        for pk, name in enumerate(["Basic", "Managed", "Complete"], start=1):
+            ServicePackage.objects.create(pk=pk, name=name)
+
         admin_user = User.objects.create_superuser(
             username="admin@admin.com", email="admin@admin.com", password="admin"
         )
@@ -81,14 +86,3 @@ class Command(BaseCommand):
             participant = ParticipantFactory(user=user)
             print(participant.user.profile)
             job = JobFactory(participant=participant)
-
-        ServicePackage.objects.all().delete()
-        ServicePackage.objects.create(
-            name="Basic",
-        )
-        ServicePackage.objects.create(
-            name="Managed",
-        )
-        ServicePackage.objects.create(
-            name="Complete",
-        )

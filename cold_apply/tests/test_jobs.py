@@ -1,12 +1,15 @@
 from django.test import TestCase
-from django.contrib.auth.models import User
 
 from cold_apply.jobs import save_job_search
-from cold_apply.models import Job, JobSearch, Participant
+from cold_apply.models import Job, JobSearch
+from cold_apply.tests.factories import ParticipantFactory, UserFactory
 
 
 class JobSearchTestCase(TestCase):
-    fixtures = ["cold_apply/fixtures/dev_data.json"]
+    @classmethod
+    def setUpTestData(cls):
+        cls.run_by = UserFactory(is_staff=True)
+        cls.participant = ParticipantFactory(jobs=[], experiences=[])
 
     def test_save_job_search(self):
         scraped_jobs = [
@@ -42,12 +45,12 @@ class JobSearchTestCase(TestCase):
             },
         ]
 
-        run_by = User.objects.get(username="admin")
-        participant = Participant.objects.first()
+        run_by = self.run_by.id
+        participant = self.participant
 
         save_job_search(
             run_by,
-            participant,
+            participant.id,
             search_query="python developer london",
             scraped_jobs=scraped_jobs,
         )
@@ -86,18 +89,18 @@ class JobSearchTestCase(TestCase):
             },
         ]
 
-        run_by = User.objects.get(username="admin")
-        participant = Participant.objects.first()
+        run_by = self.run_by.id
+        participant = self.participant
 
         save_job_search(
             run_by,
-            participant,
+            participant.id,
             search_query="python developer london",
             scraped_jobs=scraped_jobs,
         )
         save_job_search(
             run_by,
-            participant,
+            participant.id,
             search_query="python developer london",
             scraped_jobs=[
                 *scraped_jobs,
