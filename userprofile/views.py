@@ -28,8 +28,7 @@ from .forms import (
 )
 from .models import OnboardingStep, Profile, VeteranProfile
 
-from .static.userprofile.scripts.storage.uploads import upload_file
-from .static.userprofile.scripts.storage.generate_signed_urls import generate_signed_url
+from hl_main.gcs import generate_signed_url
 
 class CustomSignupView(SignupView):
     form_class = CustomSignupForm
@@ -125,14 +124,8 @@ def update_veteran_status_view(request, participant_id):
     signed_url = ''
     if not settings.DEBUG and profile.service_doc:
         signed_url = generate_signed_url(
-            service_account_file=settings.SERVICE_ACCOUNT_FILE,
             bucket_name=settings.GS_BUCKET_NAME,
             object_name=profile.service_doc.name,
-            subresource=None,
-            expiration=604_800,
-            http_method="GET",
-            query_parameters=None,
-            headers=None,
         )
     if request.method == "POST" and form.is_valid():
         form.save()
