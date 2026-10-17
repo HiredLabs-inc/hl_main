@@ -157,8 +157,6 @@ class ProfileFactory(DjangoModelFactory):
     state = factory.Faker("state_abbr")
     city = factory.Faker("city")
     linkedin = factory.Faker("url")
-    # The model defaults to ServicePackage pk=1, which may not exist
-    service_package = None
     is_veteran = True
     veteran_verified = True
     is_onboarded = True

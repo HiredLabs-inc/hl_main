@@ -29,7 +29,7 @@ class Profile(TrackedModel):
     city = models.CharField(max_length=100)
     linkedin = models.URLField(max_length=200, default="https://www.linkedin.com/")
     service_package = models.ForeignKey(
-        "ServicePackage", on_delete=models.SET_NULL, null=True, default=1
+        "ServicePackage", on_delete=models.SET_NULL, null=True, default=None
     )
     is_veteran = models.BooleanField(null=True, default=True)
     veteran_verified = models.BooleanField(default=False)

@@ -22,10 +22,9 @@ class Command(BaseCommand):
         User.objects.all().delete()
         Phase.objects.all().delete()
 
-        # Profile.service_package defaults to pk=1, so packages must exist before any profile
         ServicePackage.objects.all().delete()
-        for pk, name in enumerate(["Basic", "Managed", "Complete"], start=1):
-            ServicePackage.objects.create(pk=pk, name=name)
+        for name in ["Basic", "Managed", "Complete"]:
+            ServicePackage.objects.create(name=name)
 
         admin_user = User.objects.create_superuser(
             username="admin@admin.com", email="admin@admin.com", password="admin"
