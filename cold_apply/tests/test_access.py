@@ -9,6 +9,7 @@ from cold_apply.tests.factories import (
     ExperienceFactory,
     JobFactory,
     ParticipantFactory,
+    PositionFactory,
     UserFactory,
 )
 from resume.models import Bullet, Concentration, Degree, Education, Experience, Overview
@@ -169,6 +170,32 @@ class ColdApplyAccessTest(TestCase):
         self.client.force_login(UserFactory())
         response = self.client.get(reverse("cold_apply:home"))
         self.assertRedirects(response, reverse("userprofile:user_home"), fetch_redirect_response=False)
+
+
+class OverviewDeleteTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.owner = make_participant()
+        cls.job = JobFactory(participant=cls.owner)
+
+    def test_redirects_to_tailored_resume_for_matching_job(self):
+        overview = Overview.objects.create(participant=self.owner, title=self.job.title, text="Summary")
+        self.client.force_login(self.owner.user)
+        response = self.client.post(reverse("cold_apply:delete_overview", args=[overview.pk]))
+        self.assertRedirects(
+            response, reverse("cold_apply:configure_tailored_resume", args=[self.job.pk]), fetch_redirect_response=False
+        )
+        self.assertFalse(Overview.objects.filter(pk=overview.pk).exists())
+
+    def test_redirects_to_participant_when_no_job_matches(self):
+        other_title = PositionFactory()
+        overview = Overview.objects.create(participant=self.owner, title=other_title, text="Summary")
+        self.client.force_login(self.owner.user)
+        response = self.client.post(reverse("cold_apply:delete_overview", args=[overview.pk]))
+        self.assertRedirects(
+            response, reverse("cold_apply:participant_detail", args=[self.owner.pk]), fetch_redirect_response=False
+        )
+        self.assertFalse(Overview.objects.filter(pk=overview.pk).exists())
 
 
 class TaskEndpointAuthTest(TestCase):

@@ -809,14 +809,10 @@ class OverviewDeleteView(HtmxViewMixin, OwnedObjectMixin, DeleteView):
     refresh_on_save = True
 
     def get_success_url(self) -> str:
-        return reverse(
-            "cold_apply:configure_tailored_resume",
-            args=[
-                self.object.participant.job_set.filter(title=self.object.title)
-                .first()
-                .id
-            ],
-        )
+        job = self.object.participant.job_set.filter(title=self.object.title).first()
+        if job is None:
+            return reverse("cold_apply:participant_detail", args=[self.object.participant_id])
+        return reverse("cold_apply:configure_tailored_resume", args=[job.id])
 
 
 class ExperienceCreateView(ParticipantAccessMixin, CreateView):
