@@ -29,6 +29,7 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 | BUG-013 | Low | Open | dev data | `load_dev_data` creates two superusers with the same email |
 | BUG-014 | Low | Open | frontend | `npm install` rewrites `package-lock.json` |
 | BUG-015 | Low | Open | hlagents | `hlagents` scaffold is half-wired (on `feature/hlagents-01`) |
+| BUG-016 | Low | Open | infra | Every push to `develop` deploys to stage; needs a `staging` branch |
 
 ---
 
@@ -132,3 +133,9 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
   - The `hlagents/` directory is owned by root.
   - Commit message "added urls" actually commented the include out.
 - **Fix idea:** add `urlpatterns = []`, register the app, and `chown` the directory.
+
+## BUG-016 — Every push to `develop` deploys to stage
+- **Severity:** Low · **Status:** Open · **Found:** 2026-10-17 · **Type:** design, not a code defect
+- **Where:** stage Cloud Build trigger, `deploy_branch = "develop"` in `infra/terraform/envs/stage/main.tf`
+- **Problem:** by design, every push to `develop` builds and deploys to the GCP staging environment, including small commits such as bug-log updates.
+- **Fix idea:** create a `staging` branch, point the stage trigger at it instead of `develop`, and update `infra/README.md` and `infra/cloudbuild/deploy.yaml` comments to match.
