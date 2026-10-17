@@ -20,17 +20,16 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 | BUG-004 | Medium | Fixed | cold_apply | `home_view` returns 500 for a non-staff user with no Participant |
 | BUG-005 | Medium | Fixed | userprofile | `Profile.service_package` hard-codes `default=1` |
 | BUG-006 | Medium | Fixed | settings | `manage.py` defaults to prod settings |
-| BUG-007 | Low | Open | settings | `PRODUCTION` is only defined in `cloud.py` |
-| BUG-008 | Low | Open | background_tasks | `work_task` crashes on a missing task and swallows task errors |
-| BUG-009 | Low | Open | cold_apply | `OverviewDeleteView.get_success_url` crashes when no job matches |
-| BUG-010 | Low | Open | cold_apply | Suspected: `JobUpdateView.get_success_url` with no `?from=` |
-| BUG-011 | Low | Open | cold_apply | Dead or broken code: `ConfigureTailoredResumeView`, `create_interaction`, unreachable branches |
-| BUG-012 | Low | Open | tests | Two stale test modules never run |
-| BUG-013 | Low | Open | dev data | `load_dev_data` creates two superusers with the same email |
-| BUG-014 | Low | Open | frontend | `npm install` rewrites `package-lock.json` |
-| BUG-015 | Low | Open | hlagents | `hlagents` scaffold is half-wired (on `feature/hlagents-01`) |
+| BUG-007 | Low | Fixed | settings | `PRODUCTION` is only defined in `cloud.py` |
+| BUG-008 | Low | Fixed | background_tasks | `work_task` crashes on a missing task and swallows task errors |
+| BUG-009 | Low | Fixed | cold_apply | `OverviewDeleteView.get_success_url` crashes when no job matches |
+| BUG-010 | Low | Won't fix | cold_apply | Suspected: `JobUpdateView.get_success_url` with no `?from=` |
+| BUG-011 | Low | Fixed | cold_apply | Dead or broken code: `ConfigureTailoredResumeView`, `create_interaction`, unreachable branches |
+| BUG-012 | Low | Fixed | tests | Two stale test modules never run |
+| BUG-013 | Low | Fixed | dev data | `load_dev_data` creates two superusers with the same email |
+| BUG-014 | Low | Fixed | frontend | `npm install` rewrites `package-lock.json` |
 | BUG-016 | Low | Open | infra | Every push to `develop` deploys to stage; needs a `staging` branch |
-| BUG-017 | Low | Open | settings | `asgi.py` defaults to `hl_main.settings`, which isn't a valid settings module |
+| BUG-017 | Low | Fixed | settings | `asgi.py` defaults to `hl_main.settings`, which isn't a valid settings module |
 
 ---
 
@@ -73,31 +72,32 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 - **Fix idea:** default to `hl_main.settings.dev`; Cloud Run already sets the variable explicitly.
 
 ## BUG-007 — `PRODUCTION` setting only defined in `cloud.py`
-- **Severity:** Low · **Status:** Open · **Found:** 2026-10-16
+- **Severity:** Low · **Status:** Fixed (`fix/low-bugs`, 98771fb; merged into `feature/signup-login-redesign`) · **Found:** 2026-10-16
 - **Where:** `hl_main/settings/cloud.py:16`; read in `background_tasks/queue.py` (`send_task_to_queue`, `delete_task`)
 - **Problem:** `base.py`, `dev.py` and `build.py` don't define `PRODUCTION`. With `DEBUG=False` under those settings (for example `delete_task` in tests), `settings.PRODUCTION` raises AttributeError. The new `is_authorized_task_request` uses `getattr(..., False)` to avoid this.
 - **Fix idea:** `PRODUCTION = False` in `base.py`.
 
 ## BUG-008 — `work_task` crashes on a missing task and swallows errors
-- **Severity:** Low · **Status:** Open · **Found:** 2026-10-16
+- **Severity:** Low · **Status:** Fixed (`fix/low-bugs`, 1e86a2e; merged into `feature/signup-login-redesign`) · **Found:** 2026-10-16
 - **Where:** `background_tasks/queue.py` `work_task`
 - **Problem:** a missing or wrong `X-Task-Id` gives `task = None`, so `task.start()` raises AttributeError and the request returns 500. If the task function raises, the error is recorded but the view still returns `{"status": "success"}`, so Cloud Tasks never retries.
 - **Fix idea:** return 404 for an unknown task. Return a non-2xx response on failure if retries are wanted.
+- **Fix notes:** worse than logged: `select_for_update()` ran outside a transaction, so every task request raised TransactionManagementError and returned 500 before the task ran. Background job searches never ran in dev or on Cloud Run. Fixed by locking only while marking the task as started. Unknown or missing `X-Task-Id` now returns 404. Task errors are logged and recorded, and the endpoint reports the real status, but still replies 2xx: the queue uses Cloud Tasks' default retry policy (up to 100 attempts), so an error response would re-run a failing scrape. Set a retry policy on the queue before switching failures to non-2xx.
 
 ## BUG-009 — `OverviewDeleteView.get_success_url` can crash
-- **Severity:** Low · **Status:** Open · **Found:** 2026-10-16
+- **Severity:** Low · **Status:** Fixed (`fix/low-bugs`, c341879; merged into `feature/signup-login-redesign`) · **Found:** 2026-10-16
 - **Where:** `cold_apply/views.py` `OverviewDeleteView.get_success_url`
 - **Problem:** `self.object.participant.job_set.filter(title=self.object.title).first().id` raises AttributeError when no job has that title. The overview is already deleted by then, so the user sees a 500 after a successful delete.
 - **Fix idea:** fall back to the participant detail page.
 
 ## BUG-010 — Suspected: `JobUpdateView.get_success_url` without `?from=`
-- **Severity:** Low · **Status:** Open (Suspected) · **Found:** 2026-10-16
+- **Severity:** Low · **Status:** Won't fix: not reproducible. `resolve(None)` raises `Resolver404`, which is caught, and external or `//host` values don't resolve, so they fall back too (checked 2026-10-17) · **Found:** 2026-10-16
 - **Where:** `cold_apply/views.py` `JobUpdateView.get_success_url`
 - **Problem:** `resolve(self.request.GET.get("from"))` only catches `Resolver404`. With no `from` parameter it calls `resolve(None)`, which may raise a different exception. Not reproduced.
 - **Fix idea:** check `from_url` before calling `resolve`, and use `url_has_allowed_host_and_scheme`.
 
 ## BUG-011 — Dead or broken code in cold_apply
-- **Severity:** Low · **Status:** Open · **Found:** 2026-10-16
+- **Severity:** Low · **Status:** Fixed (`fix/low-bugs`, f7f0e90; merged into `feature/signup-login-redesign`) · **Found:** 2026-10-16
 - **Where:** `cold_apply/views.py`
   - `ConfigureTailoredResumeView`: not routed, and uses `self.kwargs[""]`.
   - `create_interaction`: not routed.
@@ -107,33 +107,22 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 - **Fix idea:** delete the dead code; return a response in every branch.
 
 ## BUG-012 — Stale test modules never run
-- **Severity:** Low · **Status:** Open · **Found:** 2026-10-16
-- **Where:** `cold_apply/tests/cold_apply_models_test.py`, `userprofile/tests/up_models_test.py`
+- **Severity:** Low · **Status:** Fixed (`fix/low-bugs`, 3c255aa; merged into `feature/signup-login-redesign`) · **Found:** 2026-10-16
+- **Where:** `cold_apply/tests/cold_apply_models_test.py`, `userprofile/tests/up_models_test.py`, and also `releases/tests/releases_models_test.py`. All three were deleted
 - **Problem:** Django's test discovery only picks up `test*.py`, so these files never run. They also use fields that no longer exist (`Participant.name`, `email`, `uploaded_resume`; `Profile.nickname`).
 - **Fix idea:** delete them, or rename to `test_*.py` and rewrite with the factories in `cold_apply/tests/factories.py`.
 
 ## BUG-013 — `load_dev_data` creates two superusers with the same email
-- **Severity:** Low · **Status:** Open · **Found:** 2026-10-16
+- **Severity:** Low · **Status:** Fixed (`fix/low-bugs`, 9032f71; merged into `feature/signup-login-redesign`) · **Found:** 2026-10-16
 - **Where:** `cold_apply/management/commands/load_dev_data.py` (lines with `create_superuser`)
 - **Problem:** it creates usernames `admin@admin.com` and `admin`, both with email `admin@admin.com`. Login is by email through allauth, so which account you get is ambiguous. The README says to log in as `admin` / `admin`.
 - **Fix idea:** create one superuser and update the README.
 
 ## BUG-014 — `npm install` rewrites `package-lock.json`
-- **Severity:** Low · **Status:** Open · **Found:** 2026-10-16
+- **Severity:** Low · **Status:** Fixed (`fix/low-bugs`, 3efeef5; merged into `feature/signup-login-redesign`) · **Found:** 2026-10-16
 - **Where:** `frontend/package-lock.json`; the `frontend` service in `docker-compose.yml` runs `npm install` on every start
 - **Problem:** the committed lock file doesn't match what the container's npm produces, so every frontend start dirties the working tree. It also showed up in commit `3774ce6` on `feature/hlagents-01`.
 - **Fix idea:** regenerate and commit the lock file with the container's npm version, and use `npm ci` in the compose command.
-
-## BUG-015 — `hlagents` scaffold is half-wired
-- **Severity:** Low · **Status:** Open · **Found:** 2026-10-15 · **Branch:** `feature/hlagents-01`
-- **Where:** `hlagents/`, `hl_main/urls.py`
-- **Problem:**
-  - `hlagents/urls.py` is empty, so enabling the include raises ImproperlyConfigured.
-  - The app isn't in `INSTALLED_APPS`.
-  - `import hlagents` in `hl_main/urls.py` is unused.
-  - The `hlagents/` directory is owned by root.
-  - Commit message "added urls" actually commented the include out.
-- **Fix idea:** add `urlpatterns = []`, register the app, and `chown` the directory.
 
 ## BUG-016 — Every push to `develop` deploys to stage
 - **Severity:** Low · **Status:** Open · **Found:** 2026-10-17 · **Type:** design, not a code defect
@@ -142,7 +131,7 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 - **Fix idea:** create a `staging` branch, point the stage trigger at it instead of `develop`, and update `infra/README.md` and `infra/cloudbuild/deploy.yaml` comments to match.
 
 ## BUG-017 — `asgi.py` defaults to an invalid settings module
-- **Severity:** Low · **Status:** Open · **Found:** 2026-10-17, while fixing BUG-006
+- **Severity:** Low · **Status:** Fixed (`fix/low-bugs`, f670412; merged into `feature/signup-login-redesign`) · **Found:** 2026-10-17, while fixing BUG-006
 - **Where:** `hl_main/asgi.py:14` (`setdefault('DJANGO_SETTINGS_MODULE', 'hl_main.settings')`)
 - **Problem:** `hl_main/settings/` has no `__init__.py` defining settings, so running ASGI without `DJANGO_SETTINGS_MODULE` set fails at startup. Nothing runs ASGI today (Cloud Run uses WSGI), so it has no effect yet.
 - **Fix idea:** match `wsgi.py` (`hl_main.settings.prod`) or delete `asgi.py` if it isn't needed.
