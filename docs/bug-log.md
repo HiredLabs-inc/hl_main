@@ -43,7 +43,7 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 - **Fix idea:** add `@require_POST` and change the links to small POST forms (or `hx-post` with the CSRF header already set on `<body>`).
 
 ## BUG-002 — rates and releases views only require login
-- **Severity:** Medium · **Status:** Fixed (`fix/medium-bugs`, 6d34490; merged into `feature/signup-login-redesign`) · **Found:** 2026-10-16
+- **Severity:** Medium · **Status:** Fixed (`fix/bug-002-app-perms`, 16699d6; merged into `feature/signup-login-redesign`). Views now need app permissions, matching the nav: `perms.rates` / `perms.releases`. This replaces the staff-only fix in 6d34490 · **Found:** 2026-10-16
 - **Where:** `rates/views.py` (`RateRequestListView`, `RecommendationCreateView`, `world_rates`); `releases/views.py` (all views, including `AppCreateView` and `ReleaseCreateView`)
 - **Problem:** any logged-in user can use these, including an unverified self-signup. The "World Rates" nav link is hidden by `perms.rates` in `templates/base_app.html:63`, but the views don't check that permission.
 - **Fix idea:** decide who should use each view. Then apply `StaffRequiredMixin` (`userprofile/guards.py`) or `PermissionRequiredMixin` to match the nav.
