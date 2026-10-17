@@ -1,14 +1,15 @@
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils import timezone
 from django.views.generic import ListView, DetailView, CreateView, TemplateView, UpdateView
 from django.db.models import Count, Q
+from userprofile.guards import StaffRequiredMixin
+
 from .models import Release, App, Note, Feedback
 
 
 # Index: List of releases notes with most recent at the top.
-class ReleasesListView(LoginRequiredMixin, ListView):
+class ReleasesListView(StaffRequiredMixin, ListView):
     model = Release
     template_name = 'releases/releases_list.html'
     context_object_name = 'releases'
@@ -32,7 +33,7 @@ class ReleasesListView(LoginRequiredMixin, ListView):
 
 
 # General-use confirmation view for creating and updating.
-class ConfirmCreateView(LoginRequiredMixin, TemplateView):
+class ConfirmCreateView(StaffRequiredMixin, TemplateView):
     template_name = 'releases/confirm.html'
 
     def get_context_data(self, **kwargs):
@@ -43,7 +44,7 @@ class ConfirmCreateView(LoginRequiredMixin, TemplateView):
 
 
 # Releasess CRUD
-class ReleaseCreateView(LoginRequiredMixin, CreateView):
+class ReleaseCreateView(StaffRequiredMixin, CreateView):
     model = Release
     template_name = 'releases/create_update.html'
     fields = ['app', 'major', 'minor', 'patch']
@@ -64,7 +65,7 @@ class ReleaseCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class ReleaseDetailView(LoginRequiredMixin, DetailView):
+class ReleaseDetailView(StaffRequiredMixin, DetailView):
     model = Release
     template_name = 'releases/release_detail.html'
     context_object_name = 'release'
@@ -76,7 +77,7 @@ class ReleaseDetailView(LoginRequiredMixin, DetailView):
 
 
 # Notes and Apps C (no read, update, delete)
-class NoteCreateView(LoginRequiredMixin, CreateView):
+class NoteCreateView(StaffRequiredMixin, CreateView):
     model = Note
     template_name = 'releases/create_update.html'
     fields = ['release', 'text']
@@ -96,7 +97,7 @@ class NoteCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class AppCreateView(LoginRequiredMixin, CreateView):
+class AppCreateView(StaffRequiredMixin, CreateView):
     model = App
     template_name = 'releases/create_update.html'
     fields = ['name', 'description']
@@ -119,7 +120,7 @@ class AppCreateView(LoginRequiredMixin, CreateView):
 # Feedback CRUD
 
 
-class FeedbackCreateView(LoginRequiredMixin, CreateView):
+class FeedbackCreateView(StaffRequiredMixin, CreateView):
     model = Feedback
     template_name = 'releases/create_update.html'
     fields = ['app', 'short_description', 'text']
@@ -141,7 +142,7 @@ class FeedbackCreateView(LoginRequiredMixin, CreateView):
 
 
 # User-facing dashboard of all feedback from any user for a given app.
-class FeedbackDashboardView(LoginRequiredMixin, ListView):
+class FeedbackDashboardView(StaffRequiredMixin, ListView):
     model = Feedback
     template_name = 'releases/feedback_dashboard.html'
     context_object_name = 'feedback'
@@ -158,7 +159,7 @@ class FeedbackDashboardView(LoginRequiredMixin, ListView):
 
 
 # Admin and developer-facing list of all feedback in an actionable board.
-class FeedbackListView(LoginRequiredMixin, ListView):
+class FeedbackListView(StaffRequiredMixin, ListView):
     model = Feedback
     template_name = 'releases/feedback_list.html'
     context_object_name = 'feedback'
@@ -175,7 +176,7 @@ class FeedbackListView(LoginRequiredMixin, ListView):
 
 
 # Read details of a given comment, but no update or delete.
-class FeedbackDetailView(LoginRequiredMixin, DetailView):
+class FeedbackDetailView(StaffRequiredMixin, DetailView):
     model = Feedback
     template_name = 'releases/feedback_detail.html'
     context_object_name = 'feedback'
@@ -187,7 +188,7 @@ class FeedbackDetailView(LoginRequiredMixin, DetailView):
 
 
 # Update a given feedback item.
-class FeedbackUpdateView(LoginRequiredMixin, UpdateView):
+class FeedbackUpdateView(StaffRequiredMixin, UpdateView):
     model = Feedback
     template_name = 'releases/create_update.html'
     fields = ['app', 'short_description', 'text', 'status']

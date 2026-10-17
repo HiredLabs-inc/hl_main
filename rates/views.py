@@ -2,7 +2,8 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, reverse
 from django.utils import timezone
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+
+from userprofile.guards import StaffRequiredMixin, staff_required
 
 from .forms import RateRequestForm
 
@@ -11,7 +12,7 @@ from .models import RateRequest, RateResponse
 from rates.static.scripts.rate_core.main import recommend, hook_after_recommendation, ref_rate_recommend
 
 
-class RateRequestListView(LoginRequiredMixin, ListView):
+class RateRequestListView(StaffRequiredMixin, ListView):
     model = RateRequest
     paginate_by = 5
     template_name = 'rates/index.html'
@@ -42,7 +43,7 @@ class RateRequestListView(LoginRequiredMixin, ListView):
 #     return render(request, 'rates/world_rates.html', context)
 
 
-class RecommendationCreateView(LoginRequiredMixin, CreateView):
+class RecommendationCreateView(StaffRequiredMixin, CreateView):
     model = RateRequest
     template_name = 'rates/recommendation.html'
     fields = ['level', 'skill', 'worker_country']
@@ -79,6 +80,6 @@ class RecommendationCreateView(LoginRequiredMixin, CreateView):
             print(form.errors)
         return super().form_valid(form)
 
-@login_required
+@staff_required
 def world_rates(request):
     return render(request, 'rates/world_rates.html', {'title': 'Process'})
