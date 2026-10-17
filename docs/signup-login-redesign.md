@@ -3,7 +3,7 @@
 ## Context
 Signup currently creates a `User` the moment an email is entered, strips the password, and sends an optional confirmation email over Gmail SMTP. This fills the DB with bots, strands real users who get interrupted, and leaves no homepage login. Review also found authorization holes that let any self-signup see other veterans' data.
 
-Decisions: password is set **after** email verification; **no volunteer login yet**; **Cloudflare Turnstile + honeypot**; purge existing junk, but give stuck people a way back; **move off Gmail SMTP**.
+Decisions: password is set **after** email verification; **no volunteer login yet**; **Cloudflare Turnstile + honeypot**; purge existing junk, but give stuck people a way back; **stay on Google SMTP** (Postmark dropped 2026-10-17, see Step 2).
 
 ## Shortcomings
 1. User created before email confirmed → bot accounts pile up.
@@ -38,26 +38,14 @@ Decisions: password is set **after** email verification; **no volunteer login ye
 - Add auth + `require_POST` to unauthenticated cold_apply views; verify Cloud Tasks OIDC token on `task_get_jobs_for_participant`.
 - Shorten DD214 signed-URL expiry to ~10 minutes.
 
-### Step 2 — Switch email provider (fixes 14)
-- **Postmark** via **django-anymail 14.0**, the last version that supports Django 4.2 (15.x needs Django 5).
-- `hl_main/settings/cloud.py` (shared by stage and prod):
-  - Uses `anymail.backends.postmark.EmailBackend` when `POSTMARK_SERVER_TOKEN` is set in the Secret Manager secret.
-  - Otherwise falls back to the existing Gmail SMTP settings, so deploying before the secret exists never stops mail.
-  - Dev keeps the console backend.
-- **Bounce and complaint handling:**
-  - The anymail tracking webhook is at `/anymail/postmark/tracking/`, protected by HTTP basic auth from `ANYMAIL_WEBHOOK_SECRET` (`user:password`).
-  - The URL is only mounted when a secret is set. Dev uses `dev:dev`.
-  - `userprofile/signals.py` records spam complaints, and any bounce after which Postmark marks the address `Inactive`, in the new `EmailSuppression` model (also shown in admin).
-  - Soft bounces are ignored. Step 6 reminders will skip suppressed addresses.
-- Tests: `userprofile/tests/test_email.py` covers the webhook (hard bounce, soft bounce, spam complaint, delivery ignored, bad credentials) and sending through the Postmark API.
-- **Manual setup (outside the code):**
-  1. Create a Postmark account and server. Use the default "outbound" transactional stream.
-  2. Add `hiredlabs.org` as a sender signature domain, then add Postmark's DKIM TXT record and Return-Path CNAME in DNS.
-  3. Make sure SPF covers both Google and Postmark while both are in use. Add a DMARC record (start with `p=none` plus a `rua` report address, and tighten later).
-  4. While the Postmark account is pending approval, it can only send to addresses on its own domain. Test on stage first.
-  5. Add `POSTMARK_SERVER_TOKEN` and `ANYMAIL_WEBHOOK_SECRET` to the stage secret, deploy, and send a test (for example a password reset). Check delivery and DKIM in Postmark's activity view.
-  6. In Postmark, add a webhook to `https://<host>/anymail/postmark/tracking/` with basic auth from the secret. Enable Bounce and Spam Complaint events.
-  7. Repeat steps 5 and 6 for prod. Once Postmark is confirmed working, remove `EMAIL_HOST_USER` and `EMAIL_HOST_PASSWORD` and the SMTP fallback.
+### Step 2 — Email delivery (fixes 14)
+**Decision (2026-10-17): stay on Google Workspace SMTP; Postmark is dropped.** At our volume, a paid provider is an added cost, and Postmark's free tier (100 emails/month) is small enough to cause failures. Google SMTP works and its limits (about 2,000 messages/day) are well above our needs. Revisit if volume grows or bounces become a problem.
+- **Postmark code:** c3f1c7d added Postmark code that does nothing while `POSTMARK_SERVER_TOKEN` is unset, so mail still goes through SMTP. That code is the anymail backend switch in `cloud.py`, the `/anymail/postmark/tracking/` webhook, the `EmailSuppression` model (migration 0016), `userprofile/signals.py` and `test_email.py`. Remove it, using a new migration to drop the table (0016 has already run on stage).
+- **Deliverability (DNS, manual):**
+  1. DMARC must be at `_dmarc.hiredlabs.org`. In Namecheap, enter the Host as `_dmarc`, because Namecheap adds the domain itself. As of 2026-10-17 the record was at `_dmarc.hiredlabs.org.hiredlabs.org`. Keep `p=none` and the `rua` address, and tighten later.
+  2. The Google DKIM key (`v=DKIM1; k=rsa; …`) is published on `hiredlabs.org` itself (host `@`), where receivers don't look. Move it to Host `google._domainkey` (the selector shown in Google Admin → Apps → Gmail → Authenticate email), then click "Start authentication" there.
+  3. SPF already covers Google (`include:_spf.google.com`).
+- **Kept:** sending failures are still handled in Step 4 (caught and shown with a retry button).
 
 ### Step 3 — Settings hygiene (fixes 15)
 - `ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"`, HSTS 1 year (drop preload for now), Django → latest 4.2.x.
@@ -100,4 +88,4 @@ Decisions: password is set **after** email verification; **no volunteer login ye
 - `python manage.py test userprofile cold_apply`.
 - Dev walkthrough: sign up → close browser → re-enter email → resend → set password → log out → log in from homepage. Repeat with an existing email. Staff login lands on `/staff/`.
 - As non-staff: staff pages and another user's veteran-status page are denied.
-- Stage: send through Postmark and check delivery/DKIM; run the purge with `--dry-run --export` and review before the real run.
+- Stage: send a password reset and check, in the received message's headers, that SPF, DKIM and DMARC pass; run the purge with `--dry-run --export` and review before the real run.
