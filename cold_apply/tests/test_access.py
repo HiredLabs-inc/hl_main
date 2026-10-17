@@ -3,6 +3,7 @@ from unittest import mock
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
+from background_tasks.models import Task
 from cold_apply.models import Job
 from cold_apply.tests.factories import (
     BulletFactory,
@@ -223,6 +224,7 @@ class TaskEndpointAuthTest(TestCase):
         with mock.patch("background_tasks.queue.id_token.verify_oauth2_token", return_value=claims) as verify, \
                 mock.patch("cold_apply.views.work_task") as work_task:
             work_task.return_value.status = "success"
+            work_task.return_value.has_failed.return_value = False
             response = self.client.post(self.url, HTTP_AUTHORIZATION="Bearer t", HTTP_X_TASK_ID="1")
         self.assertEqual(response.status_code, 200)
         work_task.assert_called_once()
@@ -230,6 +232,21 @@ class TaskEndpointAuthTest(TestCase):
 
     def test_get_is_rejected(self):
         self.assertEqual(self.client.get(self.url).status_code, 405)
+
+    def test_failed_task_is_500_so_cloud_tasks_retries(self):
+        task = Task.objects.create(target_path=self.url, payload={})
+        with mock.patch("cold_apply.views.get_jobs_for_participant", side_effect=RuntimeError("scrape failed")), \
+                self.assertLogs("background_tasks.queue", level="ERROR"):
+            response = self.client.post(self.url, HTTP_X_TASK_ID=str(task.id))
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.json(), {"status": "failure"})
+
+    def test_successful_task_is_200(self):
+        task = Task.objects.create(target_path=self.url, payload={})
+        with mock.patch("cold_apply.views.get_jobs_for_participant", return_value="ok"):
+            response = self.client.post(self.url, HTTP_X_TASK_ID=str(task.id))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"status": "success"})
 
     def test_unknown_task_is_404(self):
         self.assertEqual(self.client.post(self.url, HTTP_X_TASK_ID="999").status_code, 404)

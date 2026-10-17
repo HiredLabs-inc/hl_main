@@ -64,9 +64,9 @@ def work_task(request, task_func):
     """Run the Task named by the X-Task-Id header and return it with its outcome.
 
     Raises Http404 for a missing or unknown task. An error from task_func is
-    recorded on the task and logged rather than raised: the queue uses Cloud
-    Tasks' default retry policy, so an error response would re-run a failing
-    task up to 100 times."""
+    recorded on the task and logged rather than raised; the caller answers a
+    failed task with a 5xx so Cloud Tasks retries it (the queue allows 3
+    attempts, see infra/terraform/modules/hl-env)."""
     task_id = request.headers.get(TASK_ID_HEADER, "")
     if not task_id.isdigit():
         raise Http404("Unknown task")

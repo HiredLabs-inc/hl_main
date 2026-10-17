@@ -1120,4 +1120,5 @@ def task_get_jobs_for_participant(request):
         return HttpResponse(status=403)
 
     task = work_task(request, get_jobs_for_participant)
-    return JsonResponse({"status": task.status})
+    # A 5xx makes Cloud Tasks retry the task
+    return JsonResponse({"status": task.status}, status=500 if task.has_failed() else 200)
