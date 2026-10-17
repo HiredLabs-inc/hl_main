@@ -30,7 +30,7 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 | BUG-014 | Low | Fixed | frontend | `npm install` rewrites `package-lock.json` |
 | BUG-016 | Low | Fixed | infra | Every push to `develop` deploys to stage; needs a `staging` branch |
 | BUG-017 | Low | Fixed | settings | `asgi.py` defaults to `hl_main.settings`, which isn't a valid settings module |
-| BUG-018 | Medium | In progress | infra | Stage deploy fails at `start-sql` when the stopped database takes too long to start |
+| BUG-018 | Medium | Fixed | infra | Stage deploy fails at `start-sql` when the stopped database takes too long to start |
 
 ---
 
@@ -130,7 +130,7 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 - **Where:** stage Cloud Build trigger, `deploy_branch = "develop"` in `infra/terraform/envs/stage/main.tf`
 - **Problem:** by design, every push to `develop` builds and deploys to the GCP staging environment, including small commits such as bug-log updates.
 - **Fix idea:** create a `staging` branch, point the stage trigger at it instead of `develop`, and update `infra/README.md` and `infra/cloudbuild/deploy.yaml` comments to match.
-- **Fix notes:** bug-log commits never deployed: the trigger's `ignored_files` already skips pushes that only change `**/*.md`. Code merges did deploy. The stage trigger now watches `^staging$` (reviewed plan: 1 in-place change to `hl-stage-deploy`). Promote with `git push origin develop:staging`. Checked 2026-10-17: the trigger shows `^staging$`, and pushing develop (525b396) started no build. The first push of `staging` also started no build, probably because its head commit changed only `.md` files, which `ignored_files` skips. If a promotion only adds docs commits, run `gcloud builds triggers run hl-stage-deploy --branch=staging --project=hl-main-stage`. A full deploy from `staging` hasn't been seen yet (see BUG-018).
+- **Fix notes:** bug-log commits never deployed: the trigger's `ignored_files` already skips pushes that only change `**/*.md`. Code merges did deploy. The stage trigger now watches `^staging$` (reviewed plan: 1 in-place change to `hl-stage-deploy`). Promote with `git push origin develop:staging`. Checked 2026-10-17: the trigger shows `^staging$`, and pushing develop (525b396) started no build. The first push of `staging` also started no build, probably because its head commit changed only `.md` files, which `ignored_files` skips. If a promotion only adds docs commits, run `gcloud builds triggers run hl-stage-deploy --branch=staging --project=hl-main-stage`. A full deploy from `staging` succeeded in build d4ecb19b (see BUG-018).
 
 ## BUG-017 — `asgi.py` defaults to an invalid settings module
 - **Severity:** Low · **Status:** Fixed (`fix/low-bugs`, f670412; merged into `feature/signup-login-redesign`) · **Found:** 2026-10-17, while fixing BUG-006
@@ -139,9 +139,10 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 - **Fix idea:** match `wsgi.py` (`hl_main.settings.prod`) or delete `asgi.py` if it isn't needed.
 
 ## BUG-018 — Stage deploy fails at `start-sql` when the database is slow to start
-- **Severity:** Medium · **Status:** In progress (40dc3c5, then d1e72cc on develop). d1e72cc isn't on `staging` yet; mark Fixed after a stage build starts the database and `migrate` passes · **Found:** 2026-10-17, while verifying BUG-016
+- **Severity:** Medium · **Status:** Fixed (40dc3c5 and d1e72cc on develop and staging). Verified by stage build d4ecb19b on 2026-10-17 · **Found:** 2026-10-17, while verifying BUG-016
 - **Where:** `infra/cloudbuild/deploy.yaml`, `start-sql` step (`gcloud sql instances patch hl-$_ENV-sql --activation-policy=ALWAYS`)
 - **Problem:** stage build c921841b (develop c5b2467, 2026-10-17 01:36 UTC) failed. The step that starts the stopped database gave up with `Operation ... is taking longer than expected`, so the migrate and deploy steps never ran and stage stayed on c2b679b. Any deploy that runs while the database is stopped by the nightly schedule can fail the same way.
 - **Fix idea:** run the patch with `--async`, then `gcloud sql operations wait <op> --timeout=900`. Or poll until `state=RUNNABLE`. Treat "already ALWAYS" as success.
 - **Fix notes:** the start operation took about 14 min (01:50–02:05 UTC), but `gcloud` stops waiting after about 5 min. The step now starts the database with `patch --async`, then checks `state` every 30 s for up to 30 min. If the patch itself fails (for example, a start is already running), the step still checks. The build timeout went from 3600s to 5400s. Tested on 2026-10-17 by rendering the step as Cloud Build would and running it against a stub `gcloud`: it succeeds once the database is running, succeeds when the patch fails, and fails after 60 checks.
 - **Fix notes (2):** 40dc3c5 wasn't enough. In stage build 1c701310 (staging bb05ea1, 2026-10-17 21:38 UTC), the database reported `RUNNABLE` straight after the async patch, while its start operation (298d46f8) was still running. It reported `MAINTENANCE` soon after. `start-sql` passed in 35 s, and `migrate` failed with `OperationalError: connection failed: server closed the connection unexpectedly`. d1e72cc also waits until `gcloud sql operations list --filter='status!=DONE'` returns nothing. That filter was checked against the running operation, and the stub test now covers an early `RUNNABLE` report.
+- **Verified:** stage build d4ecb19b (staging 6ecb3a4, 2026-10-17 22:14 UTC) succeeded. `start-sql` saw `RUNNABLE` with operation 7f409908 still pending and waited until it finished. Then `migrate`, `deploy-web` and `deploy-worker` all passed. `hl-stage-web` runs image `6ecb3a4` and returns 200. The database was already running for that build. A build started while the database is stopped overnight hasn't been seen yet; the stub test covers that case.
