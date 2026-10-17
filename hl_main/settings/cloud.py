@@ -105,21 +105,10 @@ LOGGING = {
 DEFAULT_FROM_EMAIL = "The HiredLabs Team <info@hiredlabs.org>"
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
 
-# Email goes through Postmark once POSTMARK_SERVER_TOKEN is in the secret;
-# until then it falls back to Gmail SMTP so a deploy never stops mail.
-# ANYMAIL_WEBHOOK_SECRET ("user:password") protects the bounce/complaint
-# webhook at /anymail/postmark/tracking/ (see userprofile/signals.py).
-POSTMARK_SERVER_TOKEN = env("POSTMARK_SERVER_TOKEN", default="")
-ANYMAIL = {
-    "POSTMARK_SERVER_TOKEN": POSTMARK_SERVER_TOKEN,
-    "WEBHOOK_SECRET": env("ANYMAIL_WEBHOOK_SECRET", default=""),
-}
-if POSTMARK_SERVER_TOKEN:
-    EMAIL_BACKEND = "anymail.backends.postmark.EmailBackend"
-else:
-    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-    EMAIL_HOST = "smtp.gmail.com"
-    EMAIL_PORT = 587
-    EMAIL_USE_TLS = True
-    EMAIL_HOST_USER = env("EMAIL_HOST_USER", default=None)
-    EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default=None)
+# Sends email to SMTP server
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = env("EMAIL_HOST_USER", default=None)
+EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default=None)

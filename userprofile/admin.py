@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Profile, ServicePackage, VeteranProfile, Comment, EmailSuppression
+from .models import Profile, ServicePackage, VeteranProfile, Comment
 
 class VeteranProfileAdmin(admin.ModelAdmin):
     list_display = (
@@ -74,21 +74,7 @@ class CommentAdmin(admin.ModelAdmin):
         "email",
     )
 
-class EmailSuppressionAdmin(admin.ModelAdmin):
-    list_display = (
-        "email",
-        "reason",
-        "updated_at",
-    )
-    list_filter = (
-        "reason",
-    )
-    search_fields = (
-        "email",
-    )
-
 admin.site.register(Comment, CommentAdmin)
-admin.site.register(EmailSuppression, EmailSuppressionAdmin)
 admin.site.register(Profile, ProfileAdmin)
 admin.site.register(ServicePackage, ServicePackageAdmin)
 admin.site.register(VeteranProfile, VeteranProfileAdmin)

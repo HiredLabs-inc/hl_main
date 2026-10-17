@@ -95,15 +95,3 @@ class Comment(models.Model):
 
     def __str__(self) -> str:
         return f'{self.name}, {self.email}'
-
-class EmailSuppression(models.Model):
-    """An address the email provider reported as bouncing or marking us as spam.
-    Reminder emails should skip these."""
-    email = models.EmailField(unique=True)
-    reason = models.CharField(max_length=50)
-    description = models.TextField(blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self) -> str:
-        return f'{self.email} ({self.reason})'
