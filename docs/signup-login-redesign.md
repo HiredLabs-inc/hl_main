@@ -28,7 +28,7 @@ Decisions: password is set **after** email verification; **no volunteer login ye
 - Branch `feature/signup-login-redesign` from `develop`, in worktree `.claude/worktrees/signup-login-redesign`.
 - Tests run in Docker under a separate compose project so the IDE's `hl_main` stack is untouched:
   - `docker compose -p hl-signup build django`
-  - `docker compose -p hl-signup run --rm frontend sh -c "npm install && npm run build"` (templates need `frontend/build/manifest.json`; revert any `package-lock.json` change)
+  - `docker compose -p hl-signup run --rm frontend sh -c "npm ci && npm run build"` (templates need `frontend/build/manifest.json`)
   - `docker compose -p hl-signup run --rm django python manage.py test`
 - Test data comes from the factory-boy factories in `cold_apply/tests/factories.py`, replacing `cold_apply/fixtures/dev_data.json`, which was deleted in `f49da2f` (Mar 2025). Stale factory fields were fixed, and the stale `userprofile/tests/test_onboarding.py` was removed (Step 8 replaces it).
 - Baseline on clean `develop`: 19 tests found, 15 errors (missing fixture, stale onboarding tests).
