@@ -39,9 +39,25 @@ Decisions: password is set **after** email verification; **no volunteer login ye
 - Shorten DD214 signed-URL expiry to ~10 minutes.
 
 ### Step 2 — Switch email provider (fixes 14)
-- Use **Postmark** (recommended: transactional-only, strong deliverability, simple) via **django-anymail**; set `EMAIL_BACKEND = "anymail.backends.postmark.EmailBackend"` in `stage.py`/`prod.py`, API token from env/Secret Manager. Dev keeps console backend.
-- Set up SPF/DKIM/DMARC for `hiredlabs.org`; keep `DEFAULT_FROM_EMAIL`.
-- Add a bounce/spam-complaint webhook (anymail tracking) to mark bad addresses so reminders stop.
+- **Postmark** via **django-anymail 14.0**, the last version that supports Django 4.2 (15.x needs Django 5).
+- `hl_main/settings/cloud.py` (shared by stage and prod):
+  - Uses `anymail.backends.postmark.EmailBackend` when `POSTMARK_SERVER_TOKEN` is set in the Secret Manager secret.
+  - Otherwise falls back to the existing Gmail SMTP settings, so deploying before the secret exists never stops mail.
+  - Dev keeps the console backend.
+- **Bounce and complaint handling:**
+  - The anymail tracking webhook is at `/anymail/postmark/tracking/`, protected by HTTP basic auth from `ANYMAIL_WEBHOOK_SECRET` (`user:password`).
+  - The URL is only mounted when a secret is set. Dev uses `dev:dev`.
+  - `userprofile/signals.py` records spam complaints, and any bounce after which Postmark marks the address `Inactive`, in the new `EmailSuppression` model (also shown in admin).
+  - Soft bounces are ignored. Step 6 reminders will skip suppressed addresses.
+- Tests: `userprofile/tests/test_email.py` covers the webhook (hard bounce, soft bounce, spam complaint, delivery ignored, bad credentials) and sending through the Postmark API.
+- **Manual setup (outside the code):**
+  1. Create a Postmark account and server. Use the default "outbound" transactional stream.
+  2. Add `hiredlabs.org` as a sender signature domain, then add Postmark's DKIM TXT record and Return-Path CNAME in DNS.
+  3. Make sure SPF covers both Google and Postmark while both are in use. Add a DMARC record (start with `p=none` plus a `rua` report address, and tighten later).
+  4. While the Postmark account is pending approval, it can only send to addresses on its own domain. Test on stage first.
+  5. Add `POSTMARK_SERVER_TOKEN` and `ANYMAIL_WEBHOOK_SECRET` to the stage secret, deploy, and send a test (for example a password reset). Check delivery and DKIM in Postmark's activity view.
+  6. In Postmark, add a webhook to `https://<host>/anymail/postmark/tracking/` with basic auth from the secret. Enable Bounce and Spam Complaint events.
+  7. Repeat steps 5 and 6 for prod. Once Postmark is confirmed working, remove `EMAIL_HOST_USER` and `EMAIL_HOST_PASSWORD` and the SMTP fallback.
 
 ### Step 3 — Settings hygiene (fixes 15)
 - `ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"`, HSTS 1 year (drop preload for now), Django → latest 4.2.x.

@@ -1,7 +1,3 @@
-import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-
 from allauth.account.utils import send_email_confirmation
 from allauth.account.views import SignupView
 from django.conf import settings

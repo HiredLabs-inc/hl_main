@@ -50,6 +50,11 @@ urlpatterns = [
     settings.MEDIA_URL, document_root=settings.MEDIA_ROOT
 )  # this only works in development
 
+# Email provider webhooks (bounces, spam complaints); only mounted with a
+# webhook secret so they never accept unauthenticated posts
+if getattr(settings, "ANYMAIL", {}).get("WEBHOOK_SECRET"):
+    urlpatterns += [path("anymail/", include("anymail.urls"))]
+
 if settings.DEBUG:
     urlpatterns += [
         path("__debug__/", include("debug_toolbar.urls")),

@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
+    "anymail",
     # hiredlabs apps
     "cold_apply.apps.ColdApplyConfig",
     "rates.apps.RatesConfig",

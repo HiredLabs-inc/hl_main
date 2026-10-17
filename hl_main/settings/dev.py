@@ -43,6 +43,8 @@ ACCOUNT_LOGIN_ATTEMPTS = None
 
 # Writes to stdout instead of sending; only for development
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+# Enables the anymail tracking webhook locally (basic auth dev:dev)
+ANYMAIL = {"WEBHOOK_SECRET": "dev:dev"}
 
 # EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 #
