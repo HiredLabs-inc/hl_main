@@ -15,11 +15,11 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 | ID | Severity | Status | Area | Summary |
 |---|---|---|---|---|
 | BUG-001 | High | Fixed | cold_apply | Deletes and keyword refresh run on GET links, so they're open to CSRF |
-| BUG-002 | Medium | Open | rates, releases | Views only require login; any self-signup can use them |
-| BUG-003 | Medium | Open | userprofile | `handle_onboard_complete` can raise IntegrityError for an existing participant |
-| BUG-004 | Medium | Open | cold_apply | `home_view` returns 500 for a non-staff user with no Participant |
-| BUG-005 | Medium | Open | userprofile | `Profile.service_package` hard-codes `default=1` |
-| BUG-006 | Medium | Open | settings | `manage.py` defaults to prod settings |
+| BUG-002 | Medium | Fixed | rates, releases | Views only require login; any self-signup can use them |
+| BUG-003 | Medium | Fixed | userprofile | `handle_onboard_complete` can raise IntegrityError for an existing participant |
+| BUG-004 | Medium | Fixed | cold_apply | `home_view` returns 500 for a non-staff user with no Participant |
+| BUG-005 | Medium | Fixed | userprofile | `Profile.service_package` hard-codes `default=1` |
+| BUG-006 | Medium | Fixed | settings | `manage.py` defaults to prod settings |
 | BUG-007 | Low | Open | settings | `PRODUCTION` is only defined in `cloud.py` |
 | BUG-008 | Low | Open | background_tasks | `work_task` crashes on a missing task and swallows task errors |
 | BUG-009 | Low | Open | cold_apply | `OverviewDeleteView.get_success_url` crashes when no job matches |
@@ -30,6 +30,7 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 | BUG-014 | Low | Open | frontend | `npm install` rewrites `package-lock.json` |
 | BUG-015 | Low | Open | hlagents | `hlagents` scaffold is half-wired (on `feature/hlagents-01`) |
 | BUG-016 | Low | Open | infra | Every push to `develop` deploys to stage; needs a `staging` branch |
+| BUG-017 | Low | Open | settings | `asgi.py` defaults to `hl_main.settings`, which isn't a valid settings module |
 
 ---
 
@@ -42,31 +43,31 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 - **Fix idea:** add `@require_POST` and change the links to small POST forms (or `hx-post` with the CSRF header already set on `<body>`).
 
 ## BUG-002 — rates and releases views only require login
-- **Severity:** Medium · **Status:** Open · **Found:** 2026-10-16
+- **Severity:** Medium · **Status:** Fixed (`fix/medium-bugs`, 6d34490; merged into `feature/signup-login-redesign`) · **Found:** 2026-10-16
 - **Where:** `rates/views.py` (`RateRequestListView`, `RecommendationCreateView`, `world_rates`); `releases/views.py` (all views, including `AppCreateView` and `ReleaseCreateView`)
 - **Problem:** any logged-in user can use these, including an unverified self-signup. The "World Rates" nav link is hidden by `perms.rates` in `templates/base_app.html:63`, but the views don't check that permission.
 - **Fix idea:** decide who should use each view. Then apply `StaffRequiredMixin` (`userprofile/guards.py`) or `PermissionRequiredMixin` to match the nav.
 
 ## BUG-003 — `handle_onboard_complete` can raise IntegrityError
-- **Severity:** Medium · **Status:** Open · **Found:** 2026-10-16
+- **Severity:** Medium · **Status:** Fixed (`fix/medium-bugs`, aec424e; merged into `feature/signup-login-redesign`) · **Found:** 2026-10-16
 - **Where:** `userprofile/models.py:59` (`Profile.handle_onboard_complete`)
 - **Problem:** it calls `Participant.objects.get_or_create(user=self.user, current_step=step)`, which looks up by both user and step. `Participant.user` is one-to-one, so if the user already has a Participant on a different step, the lookup misses, the create runs, and it raises IntegrityError. This can happen when onboarding is resubmitted or a Participant was created by hand.
 - **Fix idea:** `get_or_create(user=self.user, defaults={"current_step": step})`.
 
 ## BUG-004 — `home_view` 500 for non-staff without a Participant
-- **Severity:** Medium · **Status:** Open · **Found:** 2026-10-16
+- **Severity:** Medium · **Status:** Fixed (`fix/medium-bugs`, 72952ee; merged into `feature/signup-login-redesign`) · **Found:** 2026-10-16
 - **Where:** `cold_apply/views.py` `home_view` (`# TODO handle no profile`)
 - **Problem:** `request.user.participant.id` raises RelatedObjectDoesNotExist for a verified user who hasn't finished onboarding.
 - **Fix idea:** redirect to `userprofile:user_home`, which already routes to onboarding.
 
 ## BUG-005 — `Profile.service_package` hard-codes `default=1`
-- **Severity:** Medium · **Status:** Open · **Found:** 2026-10-16
+- **Severity:** Medium · **Status:** Fixed (`fix/medium-bugs`, fec8b7c; merged into `feature/signup-login-redesign`) · **Found:** 2026-10-16
 - **Where:** `userprofile/models.py:31`
 - **Problem:** every new Profile points at ServicePackage pk=1. On a fresh database, in tests, or if that row is ever deleted, creating a Profile fails with a foreign-key error. This broke the old onboarding tests and `load_dev_data` (worked around in that command on `feature/signup-login-redesign`).
 - **Fix idea:** `default=None`, or a callable that looks the package up by name, plus a data migration that seeds the packages.
 
 ## BUG-006 — `manage.py` defaults to prod settings
-- **Severity:** Medium · **Status:** Open · **Found:** 2026-10-16
+- **Severity:** Medium · **Status:** Fixed (`fix/medium-bugs`, fb21eee; merged into `feature/signup-login-redesign`) · **Found:** 2026-10-16
 - **Where:** `manage.py:9` (`setdefault("DJANGO_SETTINGS_MODULE", "hl_main.settings.prod")`)
 - **Problem:** running `manage.py` anywhere `DJANGO_SETTINGS_MODULE` isn't set (a host shell, a new IDE run configuration) loads prod settings. Docker Compose sets dev settings, so normal dev use isn't affected.
 - **Fix idea:** default to `hl_main.settings.dev`; Cloud Run already sets the variable explicitly.
@@ -139,3 +140,9 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 - **Where:** stage Cloud Build trigger, `deploy_branch = "develop"` in `infra/terraform/envs/stage/main.tf`
 - **Problem:** by design, every push to `develop` builds and deploys to the GCP staging environment, including small commits such as bug-log updates.
 - **Fix idea:** create a `staging` branch, point the stage trigger at it instead of `develop`, and update `infra/README.md` and `infra/cloudbuild/deploy.yaml` comments to match.
+
+## BUG-017 — `asgi.py` defaults to an invalid settings module
+- **Severity:** Low · **Status:** Open · **Found:** 2026-10-17, while fixing BUG-006
+- **Where:** `hl_main/asgi.py:14` (`setdefault('DJANGO_SETTINGS_MODULE', 'hl_main.settings')`)
+- **Problem:** `hl_main/settings/` has no `__init__.py` defining settings, so running ASGI without `DJANGO_SETTINGS_MODULE` set fails at startup. Nothing runs ASGI today (Cloud Run uses WSGI), so it has no effect yet.
+- **Fix idea:** match `wsgi.py` (`hl_main.settings.prod`) or delete `asgi.py` if it isn't needed.
