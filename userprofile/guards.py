@@ -70,3 +70,31 @@ class StaffRequiredMixin(UserPassesTestMixin):
 
     def test_func(self):
         return self.request.user.is_staff
+
+
+def app_permission_required(app_label):
+    """Decorator for views gated by any permission in a Django app, the same check
+    as {% if perms.<app_label> %}: anonymous users are sent to login, logged-in
+    users without the permission get a 403"""
+
+    def wrapper(view):
+        @wraps(view)
+        def decorator(request, *args, **kwargs):
+            if not request.user.is_authenticated:
+                return redirect_to_login(request.get_full_path())
+            if not request.user.has_module_perms(app_label):
+                raise PermissionDenied
+            return view(request, *args, **kwargs)
+
+        return decorator
+
+    return wrapper
+
+
+class AppPermissionRequiredMixin(UserPassesTestMixin):
+    """CBV version of app_permission_required; set app_label on the view"""
+
+    app_label: str = None
+
+    def test_func(self):
+        return self.request.user.has_module_perms(self.app_label)

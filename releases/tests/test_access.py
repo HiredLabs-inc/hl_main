@@ -1,3 +1,4 @@
+from django.contrib.auth.models import Permission
 from django.test import TestCase
 from django.urls import reverse
 
@@ -5,12 +6,14 @@ from cold_apply.tests.factories import UserFactory
 
 
 class ReleasesAccessTest(TestCase):
-    """Releases views are staff-only; the only link to them is on the staff home page."""
+    """Releases views need a releases permission, managed in Django admin."""
 
     @classmethod
     def setUpTestData(cls):
-        cls.staff = UserFactory(is_staff=True)
         cls.user = UserFactory()
+        cls.staff = UserFactory(is_staff=True)
+        cls.permitted = UserFactory(is_staff=True)
+        cls.permitted.user_permissions.add(Permission.objects.get(codename="view_release"))
 
     def urls(self):
         return [
@@ -30,11 +33,12 @@ class ReleasesAccessTest(TestCase):
             reverse("releases:confirm_update_feedback"),
         ]
 
-    def test_non_staff_is_forbidden(self):
-        self.client.force_login(self.user)
-        for url in self.urls():
-            with self.subTest(url=url):
-                self.assertEqual(self.client.get(url).status_code, 403)
+    def test_without_releases_permission_is_forbidden(self):
+        for user in (self.user, self.staff):
+            self.client.force_login(user)
+            for url in self.urls():
+                with self.subTest(user=user.email, url=url):
+                    self.assertEqual(self.client.get(url).status_code, 403)
 
     def test_anonymous_is_sent_to_login(self):
         for url in self.urls():
@@ -43,8 +47,8 @@ class ReleasesAccessTest(TestCase):
                 self.assertEqual(response.status_code, 302)
                 self.assertIn(reverse("account_login"), response["Location"])
 
-    def test_staff_can_open_create_pages(self):
-        self.client.force_login(self.staff)
+    def test_releases_permission_can_open_create_pages(self):
+        self.client.force_login(self.permitted)
         for name in ("releases:release_create", "releases:app_create", "releases:submit_feedback"):
             with self.subTest(page=name):
                 self.assertEqual(self.client.get(reverse(name)).status_code, 200)

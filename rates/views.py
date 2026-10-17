@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect, reverse
 from django.utils import timezone
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 
-from userprofile.guards import StaffRequiredMixin, staff_required
+from userprofile.guards import AppPermissionRequiredMixin, app_permission_required
 
 from .forms import RateRequestForm
 
@@ -12,7 +12,8 @@ from .models import RateRequest, RateResponse
 from rates.static.scripts.rate_core.main import recommend, hook_after_recommendation, ref_rate_recommend
 
 
-class RateRequestListView(StaffRequiredMixin, ListView):
+class RateRequestListView(AppPermissionRequiredMixin, ListView):
+    app_label = 'rates'
     model = RateRequest
     paginate_by = 5
     template_name = 'rates/index.html'
@@ -43,7 +44,8 @@ class RateRequestListView(StaffRequiredMixin, ListView):
 #     return render(request, 'rates/world_rates.html', context)
 
 
-class RecommendationCreateView(StaffRequiredMixin, CreateView):
+class RecommendationCreateView(AppPermissionRequiredMixin, CreateView):
+    app_label = 'rates'
     model = RateRequest
     template_name = 'rates/recommendation.html'
     fields = ['level', 'skill', 'worker_country']
@@ -80,6 +82,6 @@ class RecommendationCreateView(StaffRequiredMixin, CreateView):
             print(form.errors)
         return super().form_valid(form)
 
-@staff_required
+@app_permission_required('rates')
 def world_rates(request):
     return render(request, 'rates/world_rates.html', {'title': 'Process'})
