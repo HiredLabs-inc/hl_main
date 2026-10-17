@@ -151,3 +151,6 @@ cloud-sql-proxy
 creds/
 *-credentials.json
 application_default_credentials.json
+
+# Claude stuff
+.claude/
