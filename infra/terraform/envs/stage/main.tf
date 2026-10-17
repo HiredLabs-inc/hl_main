@@ -42,7 +42,7 @@ module "env" {
   sql_point_in_time_recovery = false
   deletion_protection        = false
 
-  deploy_branch = "develop"
+  deploy_branch = "staging"
 }
 
 output "env" {

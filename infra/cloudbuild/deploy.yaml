@@ -1,6 +1,6 @@
 # Build, migrate and deploy one environment.
 # Run by the hl-<env>-deploy Cloud Build triggers (infra/terraform/modules/hl-env):
-#   develop -> stage (hl-main-stage), main -> prod (hl-main-prod).
+#   staging -> stage (hl-main-stage), main -> prod (hl-main-prod).
 substitutions:
   _ENV: stage
   _REGION: us-west1
