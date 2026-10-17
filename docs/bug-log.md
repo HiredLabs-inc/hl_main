@@ -28,7 +28,7 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 | BUG-012 | Low | Fixed | tests | Two stale test modules never run |
 | BUG-013 | Low | Fixed | dev data | `load_dev_data` creates two superusers with the same email |
 | BUG-014 | Low | Fixed | frontend | `npm install` rewrites `package-lock.json` |
-| BUG-016 | Low | Open | infra | Every push to `develop` deploys to stage; needs a `staging` branch |
+| BUG-016 | Low | In progress | infra | Every push to `develop` deploys to stage; needs a `staging` branch |
 | BUG-017 | Low | Fixed | settings | `asgi.py` defaults to `hl_main.settings`, which isn't a valid settings module |
 
 ---
@@ -125,10 +125,11 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 - **Fix idea:** regenerate and commit the lock file with the container's npm version, and use `npm ci` in the compose command.
 
 ## BUG-016 — Every push to `develop` deploys to stage
-- **Severity:** Low · **Status:** Open · **Found:** 2026-10-17 · **Type:** design, not a code defect
+- **Severity:** Low · **Status:** In progress (`infra/bug-016-staging-branch`, 2d09d63; on local develop). Not live yet: needs `origin/staging` created, `terraform apply` in `envs/stage`, and develop pushed · **Found:** 2026-10-17 · **Type:** design, not a code defect
 - **Where:** stage Cloud Build trigger, `deploy_branch = "develop"` in `infra/terraform/envs/stage/main.tf`
 - **Problem:** by design, every push to `develop` builds and deploys to the GCP staging environment, including small commits such as bug-log updates.
 - **Fix idea:** create a `staging` branch, point the stage trigger at it instead of `develop`, and update `infra/README.md` and `infra/cloudbuild/deploy.yaml` comments to match.
+- **Fix notes:** bug-log commits never deployed: the trigger's `ignored_files` already skips pushes that only change `**/*.md`. Code merges did deploy. The stage trigger now watches `^staging$` (reviewed plan: 1 in-place change to `hl-stage-deploy`). Promote with `git push origin develop:staging`.
 
 ## BUG-017 — `asgi.py` defaults to an invalid settings module
 - **Severity:** Low · **Status:** Fixed (`fix/low-bugs`, f670412; merged into `feature/signup-login-redesign`) · **Found:** 2026-10-17, while fixing BUG-006
