@@ -4,6 +4,7 @@ import subprocess
 
 from django.conf import settings
 from django.db import transaction
+from django.http import Http404
 from google.auth.transport.requests import Request
 from google.cloud import tasks_v2
 from google.oauth2 import id_token
@@ -60,18 +61,32 @@ def is_authorized_task_request(request):
 
 @transaction.atomic
 def work_task(request, task_func):
-    """Simple implementation, need to improve later"""
-    assigned_id = request.headers.get("X-Cloudtasks-Taskname")
-    task_id = request.headers.get("X-Task-Id")
-    task = Task.objects.filter(id=task_id).select_for_update().first()
-    task.start()
+    """Run the Task named by the X-Task-Id header and return it with its outcome.
+
+    Raises Http404 for a missing or unknown task. An error from task_func is
+    recorded on the task and logged rather than raised: the queue uses Cloud
+    Tasks' default retry policy, so an error response would re-run a failing
+    task up to 100 times."""
+    task_id = request.headers.get(TASK_ID_HEADER, "")
+    if not task_id.isdigit():
+        raise Http404("Unknown task")
+
+    # Lock only while marking the task as started, not while it runs
+    with transaction.atomic():
+        task = Task.objects.select_for_update().filter(id=task_id).first()
+        if task is None:
+            raise Http404("Unknown task")
+        task.start()
+
     try:
         result = task_func(**task.payload)
-        task.complete(str(result))
-        return result
     except Exception as e:
+        logger.exception("Task %s failed", task.id)
         task.refresh_from_db()
         task.fail(str(e))
+    else:
+        task.complete(str(result))
+    return task
 
 
 def queue_task(target_path: str, task_data: dict):

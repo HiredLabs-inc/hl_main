@@ -1123,8 +1123,5 @@ def task_get_jobs_for_participant(request):
     if not is_authorized_task_request(request):
         return HttpResponse(status=403)
 
-    work_task(
-        request,
-        get_jobs_for_participant,
-    )
-    return JsonResponse({"status": "success"})
+    task = work_task(request, get_jobs_for_participant)
+    return JsonResponse({"status": task.status})

@@ -195,6 +195,7 @@ class TaskEndpointAuthTest(TestCase):
         claims = {"email": "tasks@x.iam", "email_verified": True}
         with mock.patch("background_tasks.queue.id_token.verify_oauth2_token", return_value=claims) as verify, \
                 mock.patch("cold_apply.views.work_task") as work_task:
+            work_task.return_value.status = "success"
             response = self.client.post(self.url, HTTP_AUTHORIZATION="Bearer t", HTTP_X_TASK_ID="1")
         self.assertEqual(response.status_code, 200)
         work_task.assert_called_once()
@@ -202,3 +203,6 @@ class TaskEndpointAuthTest(TestCase):
 
     def test_get_is_rejected(self):
         self.assertEqual(self.client.get(self.url).status_code, 405)
+
+    def test_unknown_task_is_404(self):
+        self.assertEqual(self.client.post(self.url, HTTP_X_TASK_ID="999").status_code, 404)
