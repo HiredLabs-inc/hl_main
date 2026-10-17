@@ -56,7 +56,6 @@ from .forms import (
     BulletUpdateForm,
     ExperienceForm,
     FindNewJobsForm,
-    InteractionForm,
     NewJobSelectionForm,
     OverviewForm,
     ParticipantForm,
@@ -173,9 +172,8 @@ class ParticipantDetailView(OwnedObjectMixin, FormMixin, DetailView):
             return self.form_invalid(form)
 
     def form_valid(self, form):
-        if isinstance(form, NewJobSelectionForm):
-            form.save()
-            return super().form_valid(form)
+        form.save()
+        return super().form_valid(form)
 
     def get_form_kwargs(self):
         return {
@@ -186,9 +184,6 @@ class ParticipantDetailView(OwnedObjectMixin, FormMixin, DetailView):
 
     def get_form_class(self):
         return NewJobSelectionForm
-        if self.request.GET.get("form") == "new_jobs":
-            return NewJobSelectionForm
-        return super().get_form_class()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -263,13 +258,8 @@ class OrganizationUpdateView(StaffRequiredMixin, UpdateView):
         return context
 
     def form_valid(self, form):
-        if form.is_valid():
-            organization = form.save(commit=False)
-            organization.save()
-            return redirect(reverse("cold_apply:confirm_update_company"))
-        else:
-            print(form.errors)
-        return super().form_valid(form)
+        form.save()
+        return redirect(reverse("cold_apply:confirm_update_company"))
 
 
 # Titles
@@ -296,13 +286,8 @@ class TitleUpdateView(StaffRequiredMixin, UpdateView):
         return context
 
     def form_valid(self, form):
-        if form.is_valid():
-            position = form.save(commit=False)
-            position.save()
-            return redirect(reverse("cold_apply:confirm_update_title"))
-        else:
-            print(form.errors)
-        return super().form_valid(form)
+        form.save()
+        return redirect(reverse("cold_apply:confirm_update_title"))
 
 
 # Jobs
@@ -616,11 +601,6 @@ def configure_tailored_resume_view(request, job_pk):
     )
 
 
-class ConfigureTailoredResumeView(LoginRequiredMixin, CreateView):
-    def get_form(self, form_class):
-        experiences = Experience.objects.filter(participant=self.kwargs[""])
-
-
 def weigh_bullets(bullets, job, keywords):
     for bullet in bullets:
         weight = weigh(bullet=bullet, jd_keywords=keywords)
@@ -880,13 +860,8 @@ class ExperienceUpdateView(OwnedObjectMixin, UpdateView):
         return context
 
     def form_valid(self, form):
-        if form.is_valid():
-            experience = form.save(commit=False)
-            experience.save()
-            return redirect(reverse("cold_apply:confirm_update_experience"))
-        else:
-            print(form.errors)
-        return super().form_valid(form)
+        form.save()
+        return redirect(reverse("cold_apply:confirm_update_experience"))
 
 
 # TODO: ExperienceDetailView
@@ -996,24 +971,6 @@ class BulletDetailView(HtmxViewMixin, OwnedObjectMixin, DetailView):
             context["job"] = job
 
         return context
-
-
-# TODO Create Interaction using generic CreateView
-@login_required
-def create_interaction(request):
-    if request.method == "POST":
-        form = InteractionForm(request.POST)
-        if form.is_valid():
-            interaction = form.save(commit=False)
-            interaction.user = request.user
-            interaction.save()
-            return redirect(reverse("cold_apply:index"))
-        else:
-            print(form.errors)
-    else:
-        form = InteractionForm()
-    context = {"form": form}
-    return render(request, "cold_apply/create_interaction.html", context)
 
 
 # TODO View interactions using generic ListView
