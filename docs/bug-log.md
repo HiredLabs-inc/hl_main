@@ -14,7 +14,7 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 
 | ID | Severity | Status | Area | Summary |
 |---|---|---|---|---|
-| BUG-001 | High | Open | cold_apply | Deletes and keyword refresh run on GET links, so they're open to CSRF |
+| BUG-001 | High | Fixed | cold_apply | Deletes and keyword refresh run on GET links, so they're open to CSRF |
 | BUG-002 | Medium | Open | rates, releases | Views only require login; any self-signup can use them |
 | BUG-003 | Medium | Open | userprofile | `handle_onboard_complete` can raise IntegrityError for an existing participant |
 | BUG-004 | Medium | Open | cold_apply | `home_view` returns 500 for a non-staff user with no Participant |
@@ -33,7 +33,7 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 ---
 
 ## BUG-001 — Deletes and keyword refresh run on GET links (CSRF)
-- **Severity:** High · **Status:** Open · **Found:** 2026-10-16, signup redesign Step 1
+- **Severity:** High · **Status:** Fixed (`fix/bug-001-csrf-get-deletes`, 1d04bee; merged into `feature/signup-login-redesign`) · **Found:** 2026-10-16, signup redesign Step 1
 - **Where:**
   - Views: `cold_apply/views.py` `delete_job`, `delete_exp`, `delete_education`, `delete_bullet`, `refresh_keywords`
   - Templates: `cold_apply/templates/cold_apply/partials/job_actions.html:7`, `participant_experience_list.html:41,72`, `partials/bullet_detail_li.html:18`, `partials/bullet_preview_detail_li.html:9`, `job_detail.html:61`
