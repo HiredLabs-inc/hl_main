@@ -158,6 +158,18 @@ class ColdApplyAccessTest(TestCase):
         self.assertTrue(Education.objects.filter(pk=education.pk).exists())
         self.assertTrue(Bullet.objects.filter(pk=self.bullet.pk).exists())
 
+    def test_home_sends_participant_to_their_page(self):
+        self.client.force_login(self.owner.user)
+        response = self.client.get(reverse("cold_apply:home"))
+        self.assertRedirects(
+            response, reverse("cold_apply:participant_detail", args=[self.owner.pk]), fetch_redirect_response=False
+        )
+
+    def test_home_sends_user_without_participant_to_user_home(self):
+        self.client.force_login(UserFactory())
+        response = self.client.get(reverse("cold_apply:home"))
+        self.assertRedirects(response, reverse("userprofile:user_home"), fetch_redirect_response=False)
+
 
 class TaskEndpointAuthTest(TestCase):
     url = reverse("cold_apply:task_get_jobs_for_participant")

@@ -87,7 +87,10 @@ def home_view(request):
     if request.user.is_staff:
         return redirect("cold_apply:index")
 
-    # TODO handle no profile
+    # Not onboarded yet: user_home sends them to onboarding
+    if not hasattr(request.user, "participant"):
+        return redirect("userprofile:user_home")
+
     return redirect("cold_apply:participant_detail", request.user.participant.id)
 
 
