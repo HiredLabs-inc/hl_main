@@ -30,7 +30,7 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 | BUG-014 | Low | Fixed | frontend | `npm install` rewrites `package-lock.json` |
 | BUG-016 | Low | Fixed | infra | Every push to `develop` deploys to stage; needs a `staging` branch |
 | BUG-017 | Low | Fixed | settings | `asgi.py` defaults to `hl_main.settings`, which isn't a valid settings module |
-| BUG-018 | Medium | Open | infra | Stage deploy fails at `start-sql` when the stopped database takes too long to start |
+| BUG-018 | Medium | In progress | infra | Stage deploy fails at `start-sql` when the stopped database takes too long to start |
 
 ---
 
@@ -139,7 +139,8 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 - **Fix idea:** match `wsgi.py` (`hl_main.settings.prod`) or delete `asgi.py` if it isn't needed.
 
 ## BUG-018 — Stage deploy fails at `start-sql` when the database is slow to start
-- **Severity:** Medium · **Status:** Open · **Found:** 2026-10-17, while verifying BUG-016
+- **Severity:** Medium · **Status:** In progress (`infra/bug-018-start-sql-wait`, 40dc3c5; on local develop). Not live until develop is pushed to `staging`; mark Fixed after a stage build passes `start-sql` · **Found:** 2026-10-17, while verifying BUG-016
 - **Where:** `infra/cloudbuild/deploy.yaml`, `start-sql` step (`gcloud sql instances patch hl-$_ENV-sql --activation-policy=ALWAYS`)
 - **Problem:** stage build c921841b (develop c5b2467, 2026-10-17 01:36 UTC) failed. The step that starts the stopped database gave up with `Operation ... is taking longer than expected`, so the migrate and deploy steps never ran and stage stayed on c2b679b. Any deploy that runs while the database is stopped by the nightly schedule can fail the same way.
 - **Fix idea:** run the patch with `--async`, then `gcloud sql operations wait <op> --timeout=900`. Or poll until `state=RUNNABLE`. Treat "already ALWAYS" as success.
+- **Fix notes:** the start operation took about 14 min (01:50–02:05 UTC), but `gcloud` stops waiting after about 5 min. The step now starts the database with `patch --async`, then checks `state` every 30 s for up to 30 min. If the patch itself fails (for example, a start is already running), the step still checks. The build timeout went from 3600s to 5400s. Tested on 2026-10-17 by rendering the step as Cloud Build would and running it against a stub `gcloud`: it succeeds once the database is running, succeeds when the patch fails, and fails after 60 checks.
