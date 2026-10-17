@@ -410,6 +410,7 @@ class JobUpdateView(HtmxViewMixin, OwnedObjectMixin, UpdateView):
 
 
 @login_required
+@require_POST
 def refresh_keywords(request, pk):
     job = get_object_or_404(owned_by(Job.objects, request.user, "participant__user"), pk=pk)
     KeywordAnalysis.objects.filter(job=job).delete()
@@ -417,6 +418,7 @@ def refresh_keywords(request, pk):
 
 
 @login_required
+@require_POST
 def delete_job(request, pk):
     job = get_object_or_404(owned_by(Job.objects, request.user, "participant__user"), pk=pk)
     participant = job.participant_id
@@ -533,6 +535,7 @@ class ConcentrationCreateView(HtmxViewMixin, LoginRequiredMixin, CreateView):
 
 
 @login_required
+@require_POST
 def delete_exp(request, pk):
     exp = get_object_or_404(owned_by(Experience.objects, request.user, "participant__user"), pk=pk)
     participant_id = exp.participant_id
@@ -544,6 +547,7 @@ def delete_exp(request, pk):
 
 
 @login_required
+@require_POST
 def delete_education(request, pk):
     education = get_object_or_404(owned_by(Education.objects, request.user, "participant__user"), pk=pk)
     participant_id = education.participant_id
@@ -554,6 +558,7 @@ def delete_education(request, pk):
 
 
 @login_required
+@require_POST
 def delete_bullet(request, pk):
     bullet = get_object_or_404(
         owned_by(Bullet.objects.select_related("experience"), request.user, "experience__participant__user"),

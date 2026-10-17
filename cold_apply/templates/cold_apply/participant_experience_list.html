@@ -38,7 +38,10 @@
             <a href="{% url 'cold_apply:update_experience' pk=exp.id %}" target="_blank"
                >Update Experience</a>
             <br>
-            <a href="{% url 'cold_apply:delete_experience' exp.id %}" onclick="return confirm('Delete experience?')">Delete Experience</a>
+            <form class="inline" method="post" action="{% url 'cold_apply:delete_experience' exp.id %}">
+                {% csrf_token %}
+                <button type="submit" class="text-orange hover:underline" onclick="return confirm('Delete experience?')">Delete Experience</button>
+            </form>
             {%  if bullets %}
                 <ul id="bullets_list_{{exp.id}}" class="list-disc pl-3 space-y-1 my-3">
                 {%  for bullet in bullets %}
@@ -69,7 +72,10 @@
             <a href="{% url 'cold_apply:update_education' edu.id %}"
                target="_blank">Update Education</a>
         <br>
-            <a href="{% url 'cold_apply:delete_education' edu.id %}" onclick="return confirm('Delete education?')">Delete Education</a>
+            <form class="inline" method="post" action="{% url 'cold_apply:delete_education' edu.id %}">
+                {% csrf_token %}
+                <button type="submit" class="text-orange hover:underline" onclick="return confirm('Delete education?')">Delete Education</button>
+            </form>
             </p>
     {% endfor %}
         {% else %}

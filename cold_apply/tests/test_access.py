@@ -11,7 +11,7 @@ from cold_apply.tests.factories import (
     ParticipantFactory,
     UserFactory,
 )
-from resume.models import Bullet, Experience, Overview
+from resume.models import Bullet, Concentration, Degree, Education, Experience, Overview
 
 
 def make_participant():
@@ -46,16 +46,16 @@ class ColdApplyAccessTest(TestCase):
             ("get", reverse("cold_apply:find_new_jobs", args=[p])),
             ("get", reverse("cold_apply:job_detail", args=[j])),
             ("get", reverse("cold_apply:update_job", args=[j])),
-            ("get", reverse("cold_apply:refresh_keywords", args=[j])),
-            ("get", reverse("cold_apply:delete_job", args=[j])),
+            ("post", reverse("cold_apply:refresh_keywords", args=[j])),
+            ("post", reverse("cold_apply:delete_job", args=[j])),
             ("post", reverse("cold_apply:job_status_update_modal", args=[j])),
             ("get", reverse("cold_apply:configure_tailored_resume", args=[j])),
             ("get", reverse("cold_apply:tailored_resume", args=[j])),
             ("get", reverse("cold_apply:update_experience", args=[self.experience.pk])),
-            ("get", reverse("cold_apply:delete_experience", args=[self.experience.pk])),
+            ("post", reverse("cold_apply:delete_experience", args=[self.experience.pk])),
             ("get", reverse("cold_apply:bullet_detail", args=[b])),
             ("get", reverse("cold_apply:update_bullet", args=[b])),
-            ("get", reverse("cold_apply:delete_bullet", args=[b])),
+            ("post", reverse("cold_apply:delete_bullet", args=[b])),
             ("post", reverse("cold_apply:regenerate_bullet", args=[b, j])),
             ("get", reverse("cold_apply:overview_detail", args=[self.overview.pk])),
             ("get", reverse("cold_apply:update_overview", args=[self.overview.pk])),
@@ -120,13 +120,13 @@ class ColdApplyAccessTest(TestCase):
 
     def test_owner_can_delete_own_bullet(self):
         self.client.force_login(self.owner.user)
-        response = self.client.get(reverse("cold_apply:delete_bullet", args=[self.bullet.pk]))
+        response = self.client.post(reverse("cold_apply:delete_bullet", args=[self.bullet.pk]))
         self.assertEqual(response.status_code, 302)
         self.assertFalse(Bullet.objects.filter(pk=self.bullet.pk).exists())
 
     def test_staff_can_delete_any_job(self):
         self.client.force_login(self.staff)
-        response = self.client.get(reverse("cold_apply:delete_job", args=[self.job.pk]))
+        response = self.client.post(reverse("cold_apply:delete_job", args=[self.job.pk]))
         self.assertEqual(response.status_code, 302)
         self.assertFalse(Job.objects.filter(pk=self.job.pk).exists())
 
@@ -134,6 +134,29 @@ class ColdApplyAccessTest(TestCase):
         self.client.force_login(self.owner.user)
         url = reverse("cold_apply:regenerate_bullet", args=[self.bullet.pk, self.job.pk])
         self.assertEqual(self.client.get(url).status_code, 405)
+
+    def test_destructive_views_reject_get(self):
+        self.client.force_login(self.owner.user)
+        education = Education.objects.create(
+            participant=self.owner,
+            org=self.job.company,
+            degree=Degree.objects.create(name="Bachelor of Science", abbr="BS"),
+            concentration=Concentration.objects.create(name="History"),
+        )
+        urls = [
+            reverse("cold_apply:refresh_keywords", args=[self.job.pk]),
+            reverse("cold_apply:delete_job", args=[self.job.pk]),
+            reverse("cold_apply:delete_experience", args=[self.experience.pk]),
+            reverse("cold_apply:delete_education", args=[education.pk]),
+            reverse("cold_apply:delete_bullet", args=[self.bullet.pk]),
+        ]
+        for url in urls:
+            with self.subTest(url=url):
+                self.assertEqual(self.client.get(url).status_code, 405)
+        self.assertTrue(Job.objects.filter(pk=self.job.pk).exists())
+        self.assertTrue(Experience.objects.filter(pk=self.experience.pk).exists())
+        self.assertTrue(Education.objects.filter(pk=education.pk).exists())
+        self.assertTrue(Bullet.objects.filter(pk=self.bullet.pk).exists())
 
 
 class TaskEndpointAuthTest(TestCase):
