@@ -40,7 +40,7 @@ def make_cloud_task(task: Task):
 def is_authorized_task_request(request):
     """Check the OIDC token Cloud Tasks attaches (see make_cloud_task).
     Locally, tasks are posted by the send_task_request command without a token."""
-    if settings.DEBUG or not getattr(settings, "PRODUCTION", False):
+    if settings.DEBUG or not settings.PRODUCTION:
         return True
 
     auth_header = request.headers.get("Authorization", "")

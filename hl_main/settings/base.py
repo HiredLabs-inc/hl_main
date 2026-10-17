@@ -32,6 +32,9 @@ env = Env()
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
+# True only on Cloud Run (cloud.py); gates Cloud Tasks and token checks
+PRODUCTION = False
+
 
 ALLOWED_HOSTS = ["*"]
 MEDIA_URL = "media/"
