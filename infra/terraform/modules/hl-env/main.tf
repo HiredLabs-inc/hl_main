@@ -165,9 +165,20 @@ resource "google_storage_bucket_iam_member" "media" {
 }
 
 resource "google_cloud_tasks_queue" "tasks" {
-  project    = var.project_id
-  name       = "${local.name}-tasks"
-  location   = var.region
+  project  = var.project_id
+  name     = "${local.name}-tasks"
+  location = var.region
+
+  # The worker returns 5xx when a task fails, so Cloud Tasks retries it.
+  # The default allows up to 100 attempts; each failed job-search scrape
+  # also saves an empty search, so keep retries few and spaced out.
+  retry_config {
+    max_attempts  = 3
+    min_backoff   = "60s"
+    max_backoff   = "600s"
+    max_doublings = 3
+  }
+
   depends_on = [google_project_service.apis]
 }
 
