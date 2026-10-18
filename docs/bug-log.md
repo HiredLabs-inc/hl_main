@@ -32,6 +32,7 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 | BUG-017 | Low | Fixed | settings | `asgi.py` defaults to `hl_main.settings`, which isn't a valid settings module |
 | BUG-018 | Medium | Fixed | infra | Stage deploy fails at `start-sql` when the stopped database takes too long to start |
 | BUG-019 | Medium | Open | settings | Suspected: a request can hit a closed database connection (one 500 on stage sign-up) |
+| BUG-020 | Low | Open | tests | Suspected: `ColdApplyAccessTest` setup sometimes fails with a value too long for a 50-character column |
 
 ---
 
@@ -154,4 +155,11 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 - **Problem:** the request returned 500 with `django.db.utils.OperationalError: the connection is closed`, raised by psycopg on allauth's unique-email check (the first query in form validation). The same form posted 8 s later succeeded. Earlier requests on the same instance (login, home page, sign-up GET) were fine.
 - **Checked:** Cloud SQL `hl-stage-sql` was `RUNNABLE` (activation policy `ALWAYS`) with no operations after 01:07 UTC, and its logs show only autovacuum around 01:52, with no terminated connections. `DATABASES` in `cloud.py` sets no `CONN_MAX_AGE`, so Django should open a new connection per request. The cause is not known. psycopg raising "is closed" (rather than "server closed the connection unexpectedly") means the client already had the connection marked closed before the query ran.
 - **Fix idea:** if it happens again, compare instance and thread timing. Options: set `CONN_MAX_AGE` with `CONN_HEALTH_CHECKS = True` so dead connections are replaced, or check what in the request could close the connection (gunicorn `gthread`, 8 threads).
+
+## BUG-020 — Flaky cold_apply test data: value too long for a 50-character column
+- **Severity:** Low · **Status:** Open · **Found:** 2026-10-18, full test run during signup redesign Step 7 · **Suspected:** seen once; the rerun passed (95 tests)
+- **Where:** `cold_apply/tests/test_access.py:32` (`JobFactory(participant=cls.owner)` in `setUpTestData`), factories in `cold_apply/tests/factories.py`
+- **Problem:** `psycopg.errors.StringDataRightTruncation: value too long for type character varying(50)`. A Faker-generated value sometimes exceeds a `max_length=50` column, so the whole test class errors.
+- **Checked:** the only 50-character column in `cold_apply/models.py` is `Job.remote`, which the factory fills from a fixed list. The value probably comes from a SubFactory (Organization, Position or Location), or from a column whose database length differs from the model. Not tracked down.
+- **Fix idea:** find the column with `\d` on the test tables after a failure, then cap that factory field, e.g. `factory.LazyFunction(lambda: fake.company()[:50])`.
 
