@@ -22,6 +22,8 @@
         {% for field in form  %}
             {% include 'components/form_input.html' %}
         {% endfor %}
+        {% include 'components/bot_check.html' %}
+        {% include 'components/form_errors.html' with title='Not sent' %}
         <div>
             <input class="btn btn-primary" type="submit" value="Save">
             <a class="btn btn-primary" href="{% url 'home' %}">Cancel</a>

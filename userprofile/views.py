@@ -1,5 +1,4 @@
 from allauth.account.utils import send_email_confirmation
-from allauth.account.views import SignupView
 from django.conf import settings
 from allauth.decorators import rate_limit
 from django.contrib import messages
@@ -20,14 +19,10 @@ from .forms import (
     UploadServiceDocForm,
     VeteranStatusUpdateForm,
     CommentForm,
-    CustomSignupForm,
 )
 from .models import OnboardingStep, Profile, VeteranProfile
 
 from hl_main.gcs import SIGNED_URL_EXPIRATION, generate_signed_url
-
-class CustomSignupView(SignupView):
-    form_class = CustomSignupForm
 
 @login_required
 @rate_limit(action="manage_email")
@@ -80,7 +75,7 @@ def impact(request):
     return render(request, 'impact.html')
 
 def contact(request):
-    form = CommentForm(request.POST or None)
+    form = CommentForm(request.POST or None, request=request)
     if request.method == "POST" and form.is_valid():
         form.save()
         return redirect("thanks")

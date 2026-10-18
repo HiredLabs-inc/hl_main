@@ -95,3 +95,17 @@ class Comment(models.Model):
 
     def __str__(self) -> str:
         return f'{self.name}, {self.email}'
+
+class PendingSignup(models.Model):
+    """An email address that started signup. The User is created only when the
+    emailed link is followed and a password is set (see userprofile/signup.py)."""
+
+    email = models.EmailField(max_length=150, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_sent_at = models.DateTimeField(null=True, blank=True)
+    send_count = models.PositiveIntegerField(default=0)
+    last_error = models.TextField(blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self) -> str:
+        return self.email

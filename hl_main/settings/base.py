@@ -194,9 +194,9 @@ ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
 ACCOUNT_LOGIN_ON_PASSWORD_RESET = True
 ACCOUNT_SESSION_REMEMBER = True
 
-# Use custom form for signup to use only email verification without a password
+# Signup itself is userprofile.signup (allauth signup is closed in the adapter).
 ACCOUNT_FORMS = {
-    "signup": "userprofile.forms.CustomSignupForm",
+    "reset_password": "userprofile.forms.BotCheckedResetPasswordForm",
 }
 
 LOGIN_REDIRECT_URL = "userprofile:user_home"
