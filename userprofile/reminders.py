@@ -64,7 +64,7 @@ def users_due(now=None):
 
 
 def send_pending_reminder(pending, request=None):
-    context = {"email": pending.email, "signup_url": signup_link(pending.email, request), "current_site": get_current_site(request)}
+    context = {"email": pending.email, "signup_url": signup_link(pending, request), "current_site": get_current_site(request)}
     get_adapter(request).send_mail("account/email/signup_reminder", pending.email, context)
     pending.reminder_sent_at = timezone.now()
     pending.save(update_fields=["reminder_sent_at"])

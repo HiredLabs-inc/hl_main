@@ -104,8 +104,8 @@ class SignupTest(BotCheckPassesMixin, TestCase):
 class SignupCompleteTest(BotCheckPassesMixin, TestCase):
     def setUp(self):
         super().setUp()
-        PendingSignup.objects.create(email="new@example.com")
-        self.url = reverse("signup_complete", args=[signup.make_token("new@example.com")])
+        self.pending = PendingSignup.objects.create(email="new@example.com")
+        self.url = reverse("signup_complete", args=[signup.make_token(self.pending)])
 
     def complete(self):
         return self.client.post(self.url, {"new_password1": PASSWORD, "new_password2": PASSWORD})
@@ -132,9 +132,25 @@ class SignupCompleteTest(BotCheckPassesMixin, TestCase):
         self.complete()
         self.assertEqual(User.objects.count(), 1)
 
+    def test_signup_again_after_account_deleted(self):
+        # Regression: a completed PendingSignup made every new link show "Already Used".
+        self.complete()
+        self.client.logout()
+        User.objects.get(email="new@example.com").delete()
+        self.client.post(reverse("custom_account_signup"), {"email": "new@example.com"})
+        new_url = mail.outbox[-1].body.split("testserver")[1].split()[0]
+
+        self.assertContains(self.client.get(self.url), "Doesn't Work")  # the old link stays dead
+        self.client.post(new_url, {"new_password1": PASSWORD, "new_password2": PASSWORD})
+        self.assertTrue(User.objects.filter(email="new@example.com").exists())
+
+    def test_link_for_deleted_pending_signup(self):
+        self.pending.delete()
+        self.assertContains(self.client.get(self.url), "Doesn't Work")
+
     def test_expired_link_offers_a_new_one(self):
         with mock.patch("django.core.signing.time.time", return_value=time.time() - signup.LINK_MAX_AGE - 60):
-            url = reverse("signup_complete", args=[signup.make_token("new@example.com")])
+            url = reverse("signup_complete", args=[signup.make_token(self.pending)])
         response = self.client.get(url)
         self.assertContains(response, "Expired")
         self.assertContains(response, "?email=new%40example.com")

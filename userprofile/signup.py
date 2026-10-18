@@ -38,18 +38,23 @@ EMAILS_PER_HOUR = 5
 SEND_ERROR = "We couldn't send the email just now. Please try again in a minute."
 
 
-def make_token(email):
-    return signing.dumps(email, salt=TOKEN_SALT)
+def make_token(pending):
+    # The row id ties the link to this PendingSignup, so links from a replaced
+    # row (see send_signup_email) stop working.
+    return signing.dumps({"id": pending.pk, "email": pending.email}, salt=TOKEN_SALT)
 
 
 def read_token(token):
-    """(email, expired) for a validly signed token, or (None, False)."""
+    """(payload, expired) for a validly signed token, or (None, False)."""
     try:
-        return signing.loads(token, salt=TOKEN_SALT, max_age=LINK_MAX_AGE), False
+        payload, expired = signing.loads(token, salt=TOKEN_SALT, max_age=LINK_MAX_AGE), False
     except signing.SignatureExpired:
-        return signing.loads(token, salt=TOKEN_SALT), True
+        payload, expired = signing.loads(token, salt=TOKEN_SALT), True
     except signing.BadSignature:
         return None, False
+    if not isinstance(payload, dict):
+        return None, False
+    return payload, expired
 
 
 def absolute_url(path, request=None):
@@ -59,8 +64,8 @@ def absolute_url(path, request=None):
     return settings.PUBLIC_BASE_URL + path
 
 
-def signup_link(email, request=None):
-    return absolute_url(reverse("signup_complete", args=[make_token(email)]), request)
+def signup_link(pending, request=None):
+    return absolute_url(reverse("signup_complete", args=[make_token(pending)]), request)
 
 
 def account_exists(email):
@@ -82,7 +87,11 @@ def send_signup_email(request, email):
     else:
         template = "account/email/signup_link"
         pending, _ = PendingSignup.objects.get_or_create(email=email)
-        context["signup_url"] = signup_link(email, request)
+        if pending.completed_at:
+            # Completed before, but the account was deleted since (e.g. in admin): start over.
+            pending.delete()
+            pending = PendingSignup.objects.create(email=email)
+        context["signup_url"] = signup_link(pending, request)
 
     try:
         get_adapter(request).send_mail(template, email, context)
@@ -138,12 +147,16 @@ def signup_change_email_view(request):
 
 
 def signup_complete_view(request, token):
-    email, expired = read_token(token)
-    if email is None or expired:
+    payload, expired = read_token(token)
+    email = payload and payload["email"]
+    if payload is None or expired:
         return render(request, "account/signup_link_invalid.html", {"email": email, "expired": expired})
-    pending = PendingSignup.objects.filter(email=email, completed_at__isnull=True).first()
-    if pending is None or account_exists(email):
+    if account_exists(email):
         return render(request, "account/signup_link_invalid.html", {"email": email, "used": True})
+    pending = PendingSignup.objects.filter(pk=payload["id"], email=email, completed_at__isnull=True).first()
+    if pending is None:
+        # Replaced by a newer signup, or deleted by staff.
+        return render(request, "account/signup_link_invalid.html", {"email": email})
 
     user = User(username=email, email=email)
     form = SetPasswordForm(user, request.POST or None)
