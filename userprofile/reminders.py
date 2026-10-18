@@ -26,6 +26,13 @@ PENDING_REMINDER_WINDOW = timedelta(days=30)
 ONBOARDING_REMINDERS_AFTER = [timedelta(days=3), timedelta(days=14)]
 ONBOARDING_REMINDER_GAP = timedelta(days=3)
 ONBOARDING_REMINDER_WINDOW = timedelta(days=30)
+# Signups never completed are deleted after this long (their links expired long before).
+PENDING_EXPIRY = timedelta(days=30)
+
+
+def expired_pending(now=None):
+    now = now or timezone.now()
+    return PendingSignup.objects.filter(completed_at__isnull=True, created_at__lt=now - PENDING_EXPIRY)
 
 
 def unfinished_users():
