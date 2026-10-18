@@ -31,6 +31,7 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 | BUG-016 | Low | Fixed | infra | Every push to `develop` deploys to stage; needs a `staging` branch |
 | BUG-017 | Low | Fixed | settings | `asgi.py` defaults to `hl_main.settings`, which isn't a valid settings module |
 | BUG-018 | Medium | Fixed | infra | Stage deploy fails at `start-sql` when the stopped database takes too long to start |
+| BUG-019 | Medium | Open | settings | Suspected: a request can hit a closed database connection (one 500 on stage sign-up) |
 
 ---
 
@@ -146,3 +147,11 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 - **Fix notes:** the start operation took about 14 min (01:50–02:05 UTC), but `gcloud` stops waiting after about 5 min. The step now starts the database with `patch --async`, then checks `state` every 30 s for up to 30 min. If the patch itself fails (for example, a start is already running), the step still checks. The build timeout went from 3600s to 5400s. Tested on 2026-10-17 by rendering the step as Cloud Build would and running it against a stub `gcloud`: it succeeds once the database is running, succeeds when the patch fails, and fails after 60 checks.
 - **Fix notes (2):** 40dc3c5 wasn't enough. In stage build 1c701310 (staging bb05ea1, 2026-10-17 21:38 UTC), the database reported `RUNNABLE` straight after the async patch, while its start operation (298d46f8) was still running. It reported `MAINTENANCE` soon after. `start-sql` passed in 35 s, and `migrate` failed with `OperationalError: connection failed: server closed the connection unexpectedly`. d1e72cc also waits until `gcloud sql operations list --filter='status!=DONE'` returns nothing. That filter was checked against the running operation, and the stub test now covers an early `RUNNABLE` report.
 - **Verified:** stage build d4ecb19b (staging 6ecb3a4, 2026-10-17 22:14 UTC) succeeded. `start-sql` saw `RUNNABLE` with operation 7f409908 still pending and waited until it finished. Then `migrate`, `deploy-web` and `deploy-worker` all passed. `hl-stage-web` runs image `6ecb3a4` and returns 200. The database was already running for that build. A build started while the database is stopped overnight hasn't been seen yet; the stub test covers that case.
+
+## BUG-019 — A request can hit a closed database connection
+- **Severity:** Medium · **Status:** Open · **Found:** 2026-10-17, stage sign-up test after build 8f748ade (46858e2) · **Suspected:** seen once, not reproduced
+- **Where:** `hl-stage-web`, `POST /accounts/sign-up/` at 2026-10-18 01:52:18 UTC (instance ending `f9fb8e`)
+- **Problem:** the request returned 500 with `django.db.utils.OperationalError: the connection is closed`, raised by psycopg on allauth's unique-email check (the first query in form validation). The same form posted 8 s later succeeded. Earlier requests on the same instance (login, home page, sign-up GET) were fine.
+- **Checked:** Cloud SQL `hl-stage-sql` was `RUNNABLE` (activation policy `ALWAYS`) with no operations after 01:07 UTC, and its logs show only autovacuum around 01:52, with no terminated connections. `DATABASES` in `cloud.py` sets no `CONN_MAX_AGE`, so Django should open a new connection per request. The cause is not known. psycopg raising "is closed" (rather than "server closed the connection unexpectedly") means the client already had the connection marked closed before the query ran.
+- **Fix idea:** if it happens again, compare instance and thread timing. Options: set `CONN_MAX_AGE` with `CONN_HEALTH_CHECKS = True` so dead connections are replaced, or check what in the request could close the connection (gunicorn `gthread`, 8 threads).
+
