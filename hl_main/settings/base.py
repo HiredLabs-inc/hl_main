@@ -202,3 +202,8 @@ ACCOUNT_FORMS = {
 LOGIN_REDIRECT_URL = "userprofile:user_home"
 
 ACCOUNT_ADAPTER = "hl_main.adapter.CustomAccountAdapter"
+
+# Cloudflare Turnstile (bot check on signup, password reset and contact forms).
+# The defaults are Cloudflare's test keys, which always pass; cloud.py requires real ones.
+TURNSTILE_SITE_KEY = env("TURNSTILE_SITE_KEY", default="1x00000000000000000000AA")
+TURNSTILE_SECRET_KEY = env("TURNSTILE_SECRET_KEY", default="1x0000000000000000000000000000000AA")

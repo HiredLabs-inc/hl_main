@@ -28,6 +28,8 @@ env.read_env(StringIO(_client.access_secret_version(name=_name).payload.data.dec
 SECRET_KEY = env("DJANGO_SECRET_KEY")
 VA_API_KEY = env("VA_API_KEY")
 SITE_ID = env.int("SITE_ID", default=1)
+TURNSTILE_SITE_KEY = env("TURNSTILE_SITE_KEY")
+TURNSTILE_SECRET_KEY = env("TURNSTILE_SECRET_KEY")
 
 # Hosts: custom domains (comma-separated) plus both Cloud Run URLs (see hl_main/cloudrun.py).
 ALLOWED_HOSTS = [h for h in env.list("ALLOWED_HOSTS", default=["www.hiredlabs.org", "hiredlabs.org"]) if h]
@@ -82,11 +84,14 @@ STORAGES = {
     },
 }
 
-SECURE_HSTS_SECONDS = 25
+# HSTS for a year. Not preloaded yet: preload is hard to undo once browsers ship it.
+SECURE_HSTS_SECONDS = 31536000
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = False
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
-SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-SECURE_HSTS_PRELOAD = True
+# Links in emails (confirmation, password reset) use https.
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"
 
 # google cloud run proxy sends http to containers
 # so need django to recognise HTTP_X_FORWARDED_PROTO header
