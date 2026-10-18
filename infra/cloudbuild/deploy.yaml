@@ -58,7 +58,8 @@ steps:
   - |
     gcloud run jobs update hl-$_ENV-migrate --region=$_REGION --image=$_IMAGE:$SHORT_SHA &&
     gcloud run jobs execute hl-$_ENV-migrate --region=$_REGION --wait &&
-    gcloud run jobs update hl-$_ENV-manage --region=$_REGION --image=$_IMAGE:$SHORT_SHA
+    gcloud run jobs update hl-$_ENV-manage --region=$_REGION --image=$_IMAGE:$SHORT_SHA &&
+    gcloud run jobs update hl-$_ENV-signup-reminders --region=$_REGION --image=$_IMAGE:$SHORT_SHA
 
 - id: deploy-web
   name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim

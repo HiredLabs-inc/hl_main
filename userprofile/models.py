@@ -106,6 +106,18 @@ class PendingSignup(models.Model):
     send_count = models.PositiveIntegerField(default=0)
     last_error = models.TextField(blank=True)
     completed_at = models.DateTimeField(null=True, blank=True)
+    reminder_sent_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self) -> str:
         return self.email
+
+class OnboardingReminder(models.Model):
+    """Reminders sent to a user who has an account but hasn't finished onboarding
+    (see userprofile/reminders.py)."""
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    sent_count = models.PositiveIntegerField(default=0)
+    last_sent_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self) -> str:
+        return f"{self.user.email} ({self.sent_count})"

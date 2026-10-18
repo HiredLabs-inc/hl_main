@@ -1,0 +1,1 @@
+{% load i18n %}{% autoescape off %}{% trans "Your signup link is waiting" %}{% endautoescape %}

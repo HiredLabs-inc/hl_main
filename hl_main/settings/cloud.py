@@ -36,6 +36,8 @@ ALLOWED_HOSTS = [h for h in env.list("ALLOWED_HOSTS", default=["www.hiredlabs.or
 CSRF_TRUSTED_ORIGINS = [f"https://{host}" for host in ALLOWED_HOSTS]
 CLOUDRUN_SERVICE_URL = env("CLOUDRUN_SERVICE_URL", default="")
 CLOUDRUN_WORKER_URL = env("CLOUDRUN_WORKER_URL", default="")
+# Base of links in emails sent outside a request; prod sets https://www.hiredlabs.org.
+PUBLIC_BASE_URL = env("PUBLIC_BASE_URL", default=CLOUDRUN_SERVICE_URL).rstrip("/")
 for _url in (CLOUDRUN_SERVICE_URL, CLOUDRUN_WORKER_URL):
     if _url:
         ALLOWED_HOSTS.append(urlparse(_url).netloc)

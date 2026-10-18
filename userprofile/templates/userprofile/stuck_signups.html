@@ -1,0 +1,61 @@
+{% extends 'staff.html' %}
+
+{% block content %}
+<div class="space-y-8">
+    <h1 class="text-2xl font-semibold">Stuck signups</h1>
+
+    {% for message in messages %}
+        <div role="status" class="rounded border-s-4 p-3 text-sm {% if message.level_tag == 'error' %}border-red-500 bg-red-50 text-red-700{% else %}border-green-500 bg-green-50 text-green-800{% endif %}">{{ message }}</div>
+    {% endfor %}
+
+    <section>
+        <h2 class="text-lg font-semibold">Signup link not followed</h2>
+        <p class="text-sm text-gray-500">Entered an email but never set a password. They get one automatic reminder a day after the last email.</p>
+        <table class="table table-striped border mt-2">
+            <thead><tr><th class="th">Email</th><th class="th">Started</th><th class="th">Last sent</th><th class="th">Sends</th><th class="th">Reminded</th><th class="th">Last error</th><th class="th"></th></tr></thead>
+            <tbody>
+            {% for p in pending %}
+                <tr class="tr">
+                    <td class="td">{{ p.email }}</td>
+                    <td class="td">{{ p.created_at|date:"Y-m-d H:i" }}</td>
+                    <td class="td">{{ p.last_sent_at|date:"Y-m-d H:i"|default:"never" }}</td>
+                    <td class="td">{{ p.send_count }}</td>
+                    <td class="td">{{ p.reminder_sent_at|date:"Y-m-d"|default:"no" }}</td>
+                    <td class="td text-red-700">{{ p.last_error }}</td>
+                    <td class="td whitespace-nowrap">
+                        <form method="post" action="{% url 'stuck_signup_action' 'pending' p.pk 'resend' %}" class="inline">{% csrf_token %}<button class="text-blue-600 hover:text-blue-500">Resend link</button></form>
+                        <form method="post" action="{% url 'stuck_signup_action' 'pending' p.pk 'delete' %}" class="inline" onsubmit="return confirm('Delete the pending signup for {{ p.email|escapejs }}?')">{% csrf_token %}<button class="text-red-600 hover:text-red-500 ml-3">Delete</button></form>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td class="td" colspan="7">Nobody is waiting on a signup link.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </section>
+
+    <section>
+        <h2 class="text-lg font-semibold">Account created, onboarding not finished</h2>
+        <p class="text-sm text-gray-500">Verified email but no completed profile. New accounts get automatic reminders about 3 and 14 days after joining. Newest {{ max_rows }} shown.</p>
+        <table class="table table-striped border mt-2">
+            <thead><tr><th class="th">Email</th><th class="th">Joined</th><th class="th">Last login</th><th class="th">Reminders</th><th class="th"></th></tr></thead>
+            <tbody>
+            {% for u in users %}
+                <tr class="tr">
+                    <td class="td">{{ u.email }}</td>
+                    <td class="td">{{ u.date_joined|date:"Y-m-d" }}</td>
+                    <td class="td">{{ u.last_login|date:"Y-m-d"|default:"never" }}</td>
+                    <td class="td">{{ u.onboardingreminder.sent_count|default:0 }}{% if u.onboardingreminder.last_sent_at %} (last {{ u.onboardingreminder.last_sent_at|date:"Y-m-d" }}){% endif %}</td>
+                    <td class="td whitespace-nowrap">
+                        <form method="post" action="{% url 'stuck_signup_action' 'user' u.pk 'remind' %}" class="inline">{% csrf_token %}<button class="text-blue-600 hover:text-blue-500">Send reminder</button></form>
+                        <form method="post" action="{% url 'stuck_signup_action' 'user' u.pk 'delete' %}" class="inline" onsubmit="return confirm('Delete the account for {{ u.email|escapejs }}? This also deletes their profile and uploads.')">{% csrf_token %}<button class="text-red-600 hover:text-red-500 ml-3">Delete</button></form>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td class="td" colspan="5">Everyone with an account has finished onboarding.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </section>
+</div>
+{% endblock %}

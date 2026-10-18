@@ -13,6 +13,7 @@ import smtplib
 from allauth import ratelimit
 from allauth.account.adapter import get_adapter
 from allauth.account.models import EmailAddress
+from django.conf import settings
 from django.contrib.auth import login
 from django.contrib.auth.forms import SetPasswordForm
 from django.contrib.auth.models import User
@@ -51,6 +52,17 @@ def read_token(token):
         return None, False
 
 
+def absolute_url(path, request=None):
+    """Full URL for links in emails; without a request (commands) uses PUBLIC_BASE_URL."""
+    if request is not None:
+        return request.build_absolute_uri(path)
+    return settings.PUBLIC_BASE_URL + path
+
+
+def signup_link(email, request=None):
+    return absolute_url(reverse("signup_complete", args=[make_token(email)]), request)
+
+
 def account_exists(email):
     return User.objects.filter(email__iexact=email).exists() or EmailAddress.objects.filter(email__iexact=email).exists()
 
@@ -65,12 +77,12 @@ def send_signup_email(request, email):
     pending = None
     if account_exists(email):
         template = "account/email/signup_existing"
-        context["login_url"] = request.build_absolute_uri(reverse("account_login"))
-        context["reset_url"] = request.build_absolute_uri(reverse("account_reset_password"))
+        context["login_url"] = absolute_url(reverse("account_login"), request)
+        context["reset_url"] = absolute_url(reverse("account_reset_password"), request)
     else:
         template = "account/email/signup_link"
         pending, _ = PendingSignup.objects.get_or_create(email=email)
-        context["signup_url"] = request.build_absolute_uri(reverse("signup_complete", args=[make_token(email)]))
+        context["signup_url"] = signup_link(email, request)
 
     try:
         get_adapter(request).send_mail(template, email, context)

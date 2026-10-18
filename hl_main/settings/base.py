@@ -205,5 +205,8 @@ ACCOUNT_ADAPTER = "hl_main.adapter.CustomAccountAdapter"
 
 # Cloudflare Turnstile (bot check on signup, password reset and contact forms).
 # The defaults are Cloudflare's test keys, which always pass; cloud.py requires real ones.
+# Base of links in emails sent outside a request (the send_signup_reminders command).
+PUBLIC_BASE_URL = env("PUBLIC_BASE_URL", default="http://localhost:8000")
+
 TURNSTILE_SITE_KEY = env("TURNSTILE_SITE_KEY", default="1x00000000000000000000AA")
 TURNSTILE_SECRET_KEY = env("TURNSTILE_SECRET_KEY", default="1x0000000000000000000000000000000AA")
