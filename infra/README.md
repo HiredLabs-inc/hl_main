@@ -48,7 +48,7 @@ Then, using the values from `terraform output`:
    GCP_CLOUDSQL_PRIVATE_IP=<output sql_private_ip>
    GS_BUCKET_NAME=<output media_bucket>
    CLOUDRUN_SERVICE_URL=<output web_url>
-   CLOUDRUN_WORKER_URL=<output worker_url>
+   CLOUDRUN_WORKER_URL=<output worker_url>   # the deterministic *-<project number>.<region>.run.app hosts are added automatically
    ALLOWED_HOSTS=                # prod: hiredlabs.org,www.hiredlabs.org ; stage: leave empty
    ```
 3. **First deploy:** push to `staging` (stage) or `main` (prod). The trigger reads `infra/cloudbuild/deploy.yaml` from that branch on GitHub, so it has to be pushed there first. After that, you can re-run by hand:

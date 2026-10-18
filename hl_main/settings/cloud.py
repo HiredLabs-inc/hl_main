@@ -11,6 +11,8 @@ from urllib.parse import urlparse
 
 from google.cloud import secretmanager
 
+from hl_main.cloudrun import deterministic_host
+
 from .base import *
 
 PRODUCTION = True
@@ -27,7 +29,7 @@ SECRET_KEY = env("DJANGO_SECRET_KEY")
 VA_API_KEY = env("VA_API_KEY")
 SITE_ID = env.int("SITE_ID", default=1)
 
-# Hosts: custom domains (comma-separated) plus the Cloud Run URLs.
+# Hosts: custom domains (comma-separated) plus both Cloud Run URLs (see hl_main/cloudrun.py).
 ALLOWED_HOSTS = [h for h in env.list("ALLOWED_HOSTS", default=["www.hiredlabs.org", "hiredlabs.org"]) if h]
 CSRF_TRUSTED_ORIGINS = [f"https://{host}" for host in ALLOWED_HOSTS]
 CLOUDRUN_SERVICE_URL = env("CLOUDRUN_SERVICE_URL", default="")
@@ -36,9 +38,13 @@ for _url in (CLOUDRUN_SERVICE_URL, CLOUDRUN_WORKER_URL):
     if _url:
         ALLOWED_HOSTS.append(urlparse(_url).netloc)
         CSRF_TRUSTED_ORIGINS.append(_url.rstrip("/"))
+GCP_REGION = env("GCP_REGION")
+_host = deterministic_host(GCP_REGION)
+if _host and _host not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(_host)
+    CSRF_TRUSTED_ORIGINS.append(f"https://{_host}")
 
 # Background tasks (see background_tasks/queue.py)
-GCP_REGION = env("GCP_REGION")
 GCP_TASK_QUEUE = env("GCP_TASK_QUEUE")
 GCP_SERVICE_ACCOUNT = env("GCP_SERVICE_ACCOUNT")
 
