@@ -23,6 +23,6 @@
         {% csrf_token %}
         <button name="previous_step" class="font-semibold text-blue-600 hover:text-blue-500" >Previous Step</button>
     </form>
-    <a href="{% url 'account_logout' %}" class="font-semibold text-blue-600 hover:text-blue-500">Logout</a>
+    {% include 'components/logout_button.html' %}
   </div>
 {% endblock bottom_nav %}

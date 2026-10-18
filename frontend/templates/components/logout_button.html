@@ -1,0 +1,5 @@
+{# Logout must be a POST (allauth shows a confirmation page on GET). Usage: {% include 'components/logout_button.html' with button_class="..." label="Log out" %} #}
+<form method="post" action="{% url 'account_logout' %}" class="inline">
+    {% csrf_token %}
+    <button type="submit" class="{{ button_class|default:'font-semibold text-blue-600 hover:text-blue-500' }}">{{ label|default:"Log out" }}</button>
+</form>
