@@ -1,153 +1,158 @@
 {% extends 'new_home_base.html' %}
-{% load form_helpers %}
-{% load components %}
-{% include 'modal.html' %}
 
-    {% wrapper breadcrumbs %}
-    <div>
-        <nav class="flex container mx-auto p-2 text-sm" aria-label="Breadcrumb">
-            <ol class="inline-flex items-center space-x-1 md:space-x-3 overflow-x-auto">
-                {% block breadcrumbs %}
-                {% endblock breadcrumbs %}
-            </ol>
-        </nav>
-    </div>
-    {% endwrapper %}
+{% block title %}Services: coding boot camp and career support | Hired Labs{% endblock title %}
 
-    {% block body %}
-        <br>
-        <br>
+{% block body %}
+<div class="hl-page">
 
-        <div class="md:container justify-items-center md:mx-auto px-4">
-            <div class="grid grid-cols-1 max-w-2xl">
-            <h1>Who We Serve</h1>
-                <p>At Hired Labs, we're on a mission to end Veteran underemployment, particularly among enlisted Veterans.
-                All of our services are designed to help United States Military Veterans who completed active duty with a rank between E-1 and E-9, and whose service was characterized as anything other than dishonorable or uncharacterized.</p>
-            <br>
-            <p>Veterans who completed active duty as Commissioned Officers and Warrant Officers are welcome to apply, but will be added to our waitlist and only enrolled in services as space becomes available.
-                We do not provide services to non-Veterans, or Veterans of countries other than the United States of America.</p>
-        <p></p>
-        <br>
-               <H1 class="text-2xl font-bold">Coding Boot Camp</H1>
-            <p><b>Go from zero</b> to creating functional web applications using Python in 6 weeks. We'll show you the basics,
-                then guide you through building a full-stack web application. We'll use free online resources that can be accessed
-                from any browser, so you don't need your own computer. You'll learn how to use Python, JavaScript,
-                HTML, CSS, and frameworks like Django and React to build anything you can imagine.
-            </p>
-            <p>
-                At the end, you'll have your own website with a functioning backend web application, and the knowledge
-                to customize all of it and build further. Along the way we'll show you how to use Git, text-generating AI,
-                and other tools.
-            </p>
-                <ol>
-                     <li class="py-4">
-                       <h2 class="text-2xl font-bold">No Experience Required</h2>
-                       <p>If you can read and write emails, you can code. Even if you've never written (or read) any code,
-                       our bootcamp is for you. We'll show you the concepts behind coding, and point you toward resources
-                       to learn more, while building practical experience. </p>
-                         <br>
-                         <p>This course is intended for Veterans who have very little or <b>no experience</b> coding.
-                         If you've never coded, but thought about joining coding boot camp before - this course is for you.
-                             If you're just starting to learn how to code, and are unsure what to learn next -
-                             this course might be for you.
-                         </p>
-                        <br>
-                             <p>If you're already experienced and want to get to the next
-                             level - this course may not be for you, but we'd love to meet you, and help point you in the right direction!</p>
-                   </li>
-                   <li class="py-4">
-                       <h2 class="text-2xl font-bold">No Math Required</h2>
-                       <p>
-                            You don't need to be a math whiz to code. We'll show you how to use code to solve problems, and
-                            how to use code to make functional things. Math is definitely useful, but not required to learn
-                           how to write functional code, and our bootcamp is focused on practical skills.
-
-                       </p>
-                   </li>
-                   <li class="py-4">
-                       <h2 class="text-2xl font-bold">No Laptop Required</h2>
-                       <p>
-                           If you have a computer, great! If not, we'll show you how to use free online resources that
-                           can be accessed from any browser, so you don't need your own computer - a library or internet
-                           cafe will do. We'll build our web application directly in the browser, so you'll be able to
-                           save your work and access it from anywhere. Mobile phones might be a struggle, because
-                           typing on a small device and reading on a small screen is uncomfortable, but it's possible.
-                       </p>
-                   </li>
-                   <li class="py-4">
-                       <h2 class="text-2xl font-bold">Commitment Required</h2>
-                       <p>
-                           We'll meet twice a week, on Tuesdays and Thursdays from 6:00 pm to 7:30 pm Pacific for 6 weeks. Commiting to
-                       at least that much time is the first step, but you'll need to make coding a daily habit to really learn.
-                   </li>
-                    <li class="py-4">
-                        <div class="mb-3 p-6 min-w-full flex flex-col items-center">
-                            <h2 class="text-2xl font-bold">Next Session: August 18th, 2026</h2>
-                        </div>
-                        <br>
-                   </li>
-               </ol>
-        <div class="mb-3 p-6 min-w-full flex flex-col items-center">
-        <a href="{% url 'custom_account_signup' %}" class="bg-hl-black hover:bg-gray-500 focus:ring-4 focus:outline-none focus:ring-gray-300 rounded-lg inline-flex items-center justify-center px-4 py-2.5 dark:bg-gray-700 dark:hover:bg-gray-600 dark:focus:ring-gray-700">
-                            <div class="text-left">
-                                <div class="-mt-1 font-sans text-sm font-semibold">Sign Up</div>
-                            </div>
-                    </a>
+    {# Page header #}
+    <section class="border-b border-hl-line bg-hl-mist">
+        <div class="hl-container flex flex-wrap items-end justify-between gap-x-12 gap-y-6 py-10 md:py-16">
+            <div class="flex min-w-0 flex-[1_1_520px] flex-col gap-4">
+                <p class="hl-eyebrow">Services</p>
+                <h1 class="text-[36px] font-extrabold leading-[1.08] tracking-[-0.03em] md:text-[52px]">Free programs for enlisted veterans.</h1>
+                <p class="hl-lead max-w-[620px]">We're on a mission to end veteran underemployment. Start with our coding boot camp, or get one-on-one help with your job search.</p>
+            </div>
+            <nav aria-label="On this page" class="flex flex-wrap gap-2.5">
+                <a href="#boot-camp" class="rounded-full border border-hl-steel bg-white px-[18px] py-2.5 text-[15px] font-semibold no-underline hover:border-hl-navy">Coding boot camp</a>
+                <a href="#career-support" class="rounded-full border border-hl-steel bg-white px-[18px] py-2.5 text-[15px] font-semibold no-underline hover:border-hl-navy">Career support</a>
+                <a href="#eligibility" class="rounded-full border border-hl-steel bg-white px-[18px] py-2.5 text-[15px] font-semibold no-underline hover:border-hl-navy">Who we serve</a>
+            </nav>
         </div>
-        <br>
-                <br>
-            <H1>Hi-touch Employment Services</H1>
+    </section>
 
-            <p>We provide a high-touch, personalized service to help you land your next job and level up your career. We'll help you with resume updates, job search, and application tracking. We'll provide you with a list of open jobs, for which you are a strong candidate, and help you apply to them. We'll also provide a simple spreadsheet to track applications and their outcome. The goal is to get called back for an initial interview. We'll continue to provide updated lists of open jobs, and keyword optimized versions of your resume.</p>
-            <h2>Initial 6-Week Program</h2>
-                <ol>
-                     <li class="py-4">
-                       <h4>1. Intake Call</h4>
-                       <p>Meet with us for a quick call to discuss your background, experience, and what you're looking for in your next role.</p>
-                   </li>
-                   <li class="py-4">
-                       <h4>2. Resume Updates & Job Search</h4>
-                       <p>
-                          Within the 6-week program, our team of specialists updates your resume and conducts a preliminary search for best-fit open roles based on the intake interview. You’ll receive a professionally updated resume and a tailored list of open jobs.
-                       </p>
-                   </li>
-                   <li class="py-4">
-                       <h4>3. Application</h4>
-                       <p>
-                           Using the updated resume and list of job posts provided, you apply to the jobs.
-                       </p>
-                   </li>
-                   <li class="py-4">
-                       <h4>4. Record Results</h4>
-                       <p>
-                           We provide a simple spreadsheet to track applications and their outcomes. The goal is to get called back for an initial interview.
-                       </p>
-                       <p>
-                            We ask that you share jobs you find and apply to outside of our recommendations, ensuring engagement and allowing us to calibrate our support.
-
-                       </p>
-                   </li>
-                    <li class="py-4">
-                       <h4>5. Rinse & Repeat</h4>
-                       <p>
-                           Based on your feedback on the initial resume revision and job recommendations, we provide updated lists of open jobs and keyword-optimized versions of your resume for any jobs you really like.
-                       </p>
-                   </li>
-
-               </ol>
-        <br>
-                        <h3>Optional Additional 6-Week Extension</h3>
-                        <p>For those who are actively engaged and would like additional support, we offer an additional 6-week extension. During this period, services will be provided bi-weekly to review your progress, ensure engagement, and continue supporting your search!</p>
-        <br>
-        <div class="mb-3 p-6 min-w-full flex flex-col items-center">
-        <a href="{% url 'custom_account_signup' %}" class="bg-hl-black hover:bg-gray-500 focus:ring-4 focus:outline-none focus:ring-gray-300 rounded-lg inline-flex items-center justify-center px-4 py-2.5 dark:bg-gray-700 dark:hover:bg-gray-600 dark:focus:ring-gray-700">
-                            <div class="text-left">
-                                <div class="-mt-1 font-sans text-sm font-semibold">Sign Up</div>
-                            </div>
-                    </a>
+    {# Boot camp #}
+    <section id="boot-camp" class="hl-container hl-section flex scroll-mt-4 flex-wrap items-start gap-x-16 gap-y-12">
+        <div class="flex min-w-0 flex-[1.5_1_560px] flex-col gap-6">
+            <h2 class="hl-h2">Coding boot camp</h2>
+            <p class="text-[19px] font-medium leading-relaxed">Go from zero to creating functional web applications using Python in six weeks.</p>
+            <p class="text-[17px] leading-[1.7] text-hl-ink">We'll show you the basics, then guide you through building a full-stack web application. You'll learn Python, JavaScript, HTML, CSS, and frameworks like Django and React. Along the way we'll show you how to use Git, text-generating AI and other tools.</p>
+            <p class="text-[17px] leading-[1.7] text-hl-ink">At the end, you'll have your own website with a functioning backend, and the knowledge to customize all of it and keep building.</p>
+            <ul aria-label="Technologies you'll use" class="flex flex-wrap gap-2.5">
+                <li class="hl-chip border border-hl-line bg-hl-mist">Python</li>
+                <li class="hl-chip border border-hl-line bg-hl-mist">Django</li>
+                <li class="hl-chip border border-hl-line bg-hl-mist">JavaScript</li>
+                <li class="hl-chip border border-hl-line bg-hl-mist">React</li>
+                <li class="hl-chip border border-hl-line bg-hl-mist">HTML</li>
+                <li class="hl-chip border border-hl-line bg-hl-mist">CSS</li>
+                <li class="hl-chip border border-hl-line bg-hl-mist">Git</li>
+                <li class="hl-chip border border-hl-line bg-hl-mist">AI tools</li>
+            </ul>
         </div>
 
+        <aside aria-label="Next session" class="flex min-w-0 flex-[1_1_340px] flex-col gap-5 rounded-[20px] bg-hl-navy p-8 text-white">
+            <p class="hl-eyebrow !text-hl-orange">Next session</p>
+            {% if next_bootcamp %}
+                <p class="text-[30px] font-extrabold tracking-[-0.02em]">Starts {{ next_bootcamp.start_date|date:"F j, Y" }}</p>
+            {% else %}
+                <div class="flex flex-col gap-2">
+                    <p class="text-[30px] font-extrabold tracking-[-0.02em]">Dates to be announced</p>
+                    <p class="text-[15px] leading-relaxed text-hl-steel">Sign up now and we'll email you as soon as the next session is scheduled.</p>
+                </div>
+            {% endif %}
+            <dl class="flex flex-col gap-3.5 border-t border-hl-navy-line pt-5 text-[15px]">
+                <div class="flex justify-between gap-4"><dt class="text-hl-steel">Length</dt><dd class="font-semibold">6 weeks</dd></div>
+                <div class="flex justify-between gap-4"><dt class="text-hl-steel">Classes</dt><dd class="text-right font-semibold">Tue and Thu, 6:00 to 7:30 pm PT</dd></div>
+                <div class="flex justify-between gap-4"><dt class="text-hl-steel">Where</dt><dd class="font-semibold">Online, in your browser</dd></div>
+                <div class="flex justify-between gap-4"><dt class="text-hl-steel">Cost</dt><dd class="font-semibold">Free for veterans</dd></div>
+            </dl>
+            <a href="{% url 'custom_account_signup' %}" class="hl-btn-primary text-center">
+                {% if next_bootcamp %}Save my seat{% else %}Join the waitlist{% endif %}
+            </a>
+        </aside>
+
+        <div class="grid min-w-0 flex-[1_1_100%] grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            <article class="flex flex-col gap-2.5 rounded-2xl border border-hl-line p-7">
+                <h3 class="text-[19px] font-bold">No experience required</h3>
+                <p class="text-[15px] leading-relaxed text-hl-ink">If you can read and write emails, you can code. Even if you've never written or read any code, this boot camp is for you.</p>
+            </article>
+            <article class="flex flex-col gap-2.5 rounded-2xl border border-hl-line p-7">
+                <h3 class="text-[19px] font-bold">No math required</h3>
+                <p class="text-[15px] leading-relaxed text-hl-ink">Math is useful, but not required to write functional code. We focus on practical skills and solving real problems.</p>
+            </article>
+            <article class="flex flex-col gap-2.5 rounded-2xl border border-hl-line p-7">
+                <h3 class="text-[19px] font-bold">No laptop required</h3>
+                <p class="text-[15px] leading-relaxed text-hl-ink">We build in the browser with free tools, so a library or internet cafe computer works. A phone is possible, but tough.</p>
+            </article>
+            <article class="flex flex-col gap-2.5 rounded-2xl border border-[#F5D9B0] bg-[#FFF8EE] p-7">
+                <h3 class="text-[19px] font-bold">Commitment required</h3>
+                <p class="text-[15px] leading-relaxed text-hl-ink">Attend both weekly classes for six weeks. To really learn, make coding a daily habit.</p>
+            </article>
+        </div>
+
+        <div class="flex min-w-0 flex-[1_1_100%] flex-col gap-6 border-t border-hl-line pt-10">
+            <h3 class="text-2xl font-extrabold tracking-[-0.01em]">Is it right for you?</h3>
+            <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+                <div class="flex items-start gap-3.5">
+                    <svg aria-hidden="true" class="mt-0.5 h-6 w-6 flex-none" viewBox="0 0 24 24" fill="none" stroke="#1F7A4D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                    <p class="leading-relaxed"><strong>Yes,</strong> if you've never coded but have thought about a boot camp.</p>
+                </div>
+                <div class="flex items-start gap-3.5">
+                    <svg aria-hidden="true" class="mt-0.5 h-6 w-6 flex-none" viewBox="0 0 24 24" fill="none" stroke="#1F7A4D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                    <p class="leading-relaxed"><strong>Probably,</strong> if you've just started learning and aren't sure what to learn next.</p>
+                </div>
+                <div class="flex items-start gap-3.5">
+                    <svg aria-hidden="true" class="mt-0.5 h-6 w-6 flex-none" viewBox="0 0 24 24" fill="none" stroke="#5A6878" stroke-width="2.2" stroke-linecap="round"><path d="M5 12h14"/></svg>
+                    <p class="leading-relaxed"><strong>Maybe not,</strong> if you're already experienced. We'd still love to meet you and point you in the right direction.</p>
+                </div>
             </div>
         </div>
-    {% endblock body %}
+    </section>
 
+    {# Testimonial strip #}
+    <section class="bg-hl-mist py-12 md:py-[72px]">
+        <figure class="mx-auto flex max-w-[900px] flex-col gap-[18px] px-4 text-center sm:px-6">
+            <blockquote class="text-[22px] font-semibold leading-snug tracking-[-0.01em] md:text-[28px]">&ldquo;{{ testimonial.quote }}&rdquo;</blockquote>
+            <figcaption class="text-[15px]"><strong>{{ testimonial.name }}</strong><span class="text-hl-muted">, {{ testimonial.branch }}</span></figcaption>
+        </figure>
+    </section>
+
+    {# Career support #}
+    <section id="career-support" class="hl-container hl-section flex scroll-mt-4 flex-wrap gap-x-16 gap-y-10">
+        <div class="flex min-w-0 flex-[1_1_360px] flex-col gap-[18px]">
+            <h2 class="text-[28px] font-extrabold leading-tight tracking-[-0.02em] md:text-[38px]">Career support</h2>
+            <p class="text-[17px] leading-[1.7] text-hl-ink">High-touch, personalized help to land your next job: resume updates, a tailored job search and application tracking. The goal is to get called back for a first interview.</p>
+            <p class="rounded-xl bg-hl-mist px-5 py-[18px] text-[15px] leading-relaxed text-hl-ink"><strong class="text-hl-navy">Optional 6-week extension.</strong> Stay actively engaged and you can continue for another six weeks, with bi-weekly check-ins on your progress.</p>
+            <a href="{% url 'custom_account_signup' %}" class="hl-btn-dark self-start !px-6 !py-3.5 !text-base">Sign up for career support</a>
+        </div>
+        <ol class="flex min-w-0 flex-[1.4_1_480px] flex-col">
+            <li class="flex gap-5 border-t border-hl-line py-5">
+                <span class="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-hl-cream text-[15px] font-extrabold text-hl-amber">1</span>
+                <div class="flex flex-col gap-1"><h3 class="text-lg font-bold">Intake call</h3><p class="text-[15px] leading-relaxed text-hl-ink">A quick call about your background, experience and what you want in your next role.</p></div>
+            </li>
+            <li class="flex gap-5 border-t border-hl-line py-5">
+                <span class="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-hl-cream text-[15px] font-extrabold text-hl-amber">2</span>
+                <div class="flex flex-col gap-1"><h3 class="text-lg font-bold">Resume updates and job search</h3><p class="text-[15px] leading-relaxed text-hl-ink">Our specialists update your resume and send a tailored list of open roles that fit you.</p></div>
+            </li>
+            <li class="flex gap-5 border-t border-hl-line py-5">
+                <span class="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-hl-cream text-[15px] font-extrabold text-hl-amber">3</span>
+                <div class="flex flex-col gap-1"><h3 class="text-lg font-bold">Apply</h3><p class="text-[15px] leading-relaxed text-hl-ink">You apply to the jobs using your updated resume.</p></div>
+            </li>
+            <li class="flex gap-5 border-t border-hl-line py-5">
+                <span class="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-hl-cream text-[15px] font-extrabold text-hl-amber">4</span>
+                <div class="flex flex-col gap-1"><h3 class="text-lg font-bold">Record results</h3><p class="text-[15px] leading-relaxed text-hl-ink">Track applications and outcomes in a simple spreadsheet, including jobs you find on your own.</p></div>
+            </li>
+            <li class="flex gap-5 border-y border-hl-line py-5">
+                <span class="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-hl-cream text-[15px] font-extrabold text-hl-amber">5</span>
+                <div class="flex flex-col gap-1"><h3 class="text-lg font-bold">Rinse and repeat</h3><p class="text-[15px] leading-relaxed text-hl-ink">Based on your feedback, we send new openings and keyword-optimized resumes for jobs you really like.</p></div>
+            </li>
+        </ol>
+    </section>
+
+    {# Eligibility #}
+    <section id="eligibility" class="hl-section scroll-mt-4 bg-hl-mist">
+        <div class="hl-container flex flex-wrap gap-x-16 gap-y-8">
+            <div class="flex min-w-0 flex-[1_1_340px] flex-col gap-3">
+                <h2 class="text-[28px] font-extrabold leading-tight tracking-[-0.02em] md:text-[38px]">Who we serve</h2>
+                <p class="text-[17px] leading-relaxed text-hl-ink">Our programs are built for enlisted veterans of the U.S. military.</p>
+            </div>
+            <ul class="flex min-w-0 flex-[1.4_1_480px] flex-col gap-3.5">
+                <li class="rounded-[14px] border border-hl-line bg-white px-6 py-5 leading-relaxed"><strong>Eligible:</strong> U.S. military veterans who completed active duty at a rank between E-1 and E-9, with service characterized as anything other than dishonorable or uncharacterized.</li>
+                <li class="rounded-[14px] border border-hl-line bg-white px-6 py-5 leading-relaxed"><strong>Waitlist:</strong> veterans who served as commissioned or warrant officers are welcome to apply, and are enrolled as space becomes available.</li>
+                <li class="rounded-[14px] border border-hl-line bg-white px-6 py-5 leading-relaxed"><strong>Not eligible:</strong> non-veterans and veterans of countries other than the United States.</li>
+            </ul>
+        </div>
+    </section>
+
+</div>
+{% endblock body %}

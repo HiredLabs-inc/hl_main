@@ -1,34 +1,23 @@
 {% extends 'new_home_base.html' %}
-{% load form_helpers %}
-{% load components %}
-{% include 'modal.html' %}
 
-    {% wrapper breadcrumbs %}
-    <div>
-        <nav class="flex container mx-auto p-2 text-sm" aria-label="Breadcrumb">
-            <ol class="inline-flex items-center space-x-1 md:space-x-3 overflow-x-auto">
-                {% block breadcrumbs %}
-                {% endblock breadcrumbs %}
-            </ol>
-        </nav>
-    </div>
-    {% endwrapper %}
+{% block title %}Contact | Hired Labs{% endblock title %}
 
-    {% block body %}
-{#        flex min-h-full flex-col px-6 py-12 lg:px-8 #}
-        <div class="flex min-h-full flex-col px-6 py-12 lg:px-8 justify-items-center md:mx-auto px-4 max-w-3xl">
-        <form class="post-form space-y-4 max-w-md" method="post">
-        {% csrf_token %}
-        {% for field in form  %}
-            {% include 'components/form_input.html' %}
-        {% endfor %}
-        {% include 'components/bot_check.html' %}
-        {% include 'components/form_errors.html' with title='Not sent' %}
-        <div>
-            <input class="btn btn-primary" type="submit" value="Save">
-            <a class="btn btn-primary" href="{% url 'home' %}">Cancel</a>
-        </div>
-    </form>
-        </div>
-    {% endblock body %}
-
+{% block body %}
+<div class="hl-page">
+    {% include 'components/page_header.html' with eyebrow="Contact" title="Get in touch." lead="Questions, partnerships or volunteering: send us a note and we'll get back to you." %}
+    <section class="hl-container hl-section">
+        <form class="post-form max-w-md space-y-4" method="post">
+            {% csrf_token %}
+            {% for field in form %}
+                {% include 'components/form_input.html' %}
+            {% endfor %}
+            {% include 'components/bot_check.html' %}
+            {% include 'components/form_errors.html' with title='Not sent' %}
+            <div class="flex flex-wrap gap-3 pt-2">
+                <input class="hl-btn-dark cursor-pointer" type="submit" value="Send">
+                <a class="hl-btn-outline" href="{% url 'home' %}">Cancel</a>
+            </div>
+        </form>
+    </section>
+</div>
+{% endblock body %}

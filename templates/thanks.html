@@ -1,24 +1,13 @@
 {% extends 'new_home_base.html' %}
-{% load form_helpers %}
-{% load components %}
-{% include 'modal.html' %}
 
-    {% wrapper breadcrumbs %}
-    <div>
-        <nav class="flex container mx-auto p-2 text-sm" aria-label="Breadcrumb">
-            <ol class="inline-flex items-center space-x-1 md:space-x-3 overflow-x-auto">
-                {% block breadcrumbs %}
-                {% endblock breadcrumbs %}
-            </ol>
-        </nav>
-    </div>
-    {% endwrapper %}
+{% block title %}Thank you | Hired Labs{% endblock title %}
 
-    {% block body %}
-        <div class="md:container grid grid-cols-1 gap-4 justify-items-center md:mx-auto px-4 max-w-3xl">
-               <p>
-                   Thank you!
-               </p>
-        </div>
-    {% endblock body %}
-
+{% block body %}
+<div class="hl-page">
+    <section class="hl-container hl-section flex max-w-2xl flex-col items-start gap-5">
+        <h1 class="hl-h2">Thank you!</h1>
+        <p class="hl-lead">We got your message and will get back to you soon.</p>
+        <a href="{% url 'home' %}" class="hl-btn-dark">Back to the homepage</a>
+    </section>
+</div>
+{% endblock body %}

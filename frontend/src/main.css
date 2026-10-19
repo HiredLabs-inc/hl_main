@@ -1,10 +1,12 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap");
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-a:not(.btn):not(.admin_panel) {
+/* App pages: orange links. Public pages (body.hl-site) style links themselves. */
+a:not(.btn):not(.admin_panel):not(.hl-site a) {
   @apply hover:underline text-orange;
 }
 
@@ -158,4 +160,101 @@ h5 {
   shadow-sm bg-white border-blue-500 border-2 text-blue-500 focus-visible:outline 
   focus-visible:outline-2 focus-visible:outline-offset-2 
   focus-visible:outline-blue-600 cursor-pointer
+}
+
+/* ---------- Public site (templates extending new_home_base.html) ---------- */
+
+/* Low-specificity defaults so Tailwind utilities still win. */
+:where(.hl-site) a {
+  color: theme("colors.hl-navy");
+  text-underline-offset: 3px;
+}
+:where(.hl-site) a:hover {
+  color: theme("colors.hl-orange-text");
+}
+:where(.hl-page) :is(h1, h2, h3, h4, p, blockquote, figure) {
+  margin: 0;
+}
+
+@layer components {
+  .hl-container {
+    @apply mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-8;
+  }
+  .hl-section {
+    @apply py-14 md:py-20 lg:py-24;
+  }
+  .hl-eyebrow {
+    @apply text-sm font-bold uppercase tracking-[0.1em] text-hl-orange-text;
+  }
+  .hl-h1 {
+    @apply text-[40px] font-extrabold leading-[1.05] tracking-[-0.03em] md:text-[56px] lg:text-[64px];
+  }
+  .hl-h2 {
+    @apply text-[30px] font-extrabold leading-[1.15] tracking-[-0.02em] md:text-[40px];
+  }
+  .hl-lead {
+    @apply text-lg leading-relaxed text-hl-ink md:text-[19px];
+  }
+  .hl-btn {
+    @apply inline-flex items-center justify-center rounded-xl px-7 py-4 text-[17px] font-bold no-underline transition
+           focus:outline-none focus-visible:ring-4 focus-visible:ring-orange/40;
+  }
+  .hl-btn-primary {
+    @apply hl-btn bg-orange text-hl-navy hover:bg-hl-orange hover:text-hl-navy;
+  }
+  .hl-btn-outline {
+    @apply hl-btn border-[1.5px] border-hl-steel font-semibold text-hl-navy hover:border-hl-navy hover:text-hl-navy;
+  }
+  .hl-btn-outline-dark {
+    @apply hl-btn border-[1.5px] border-hl-muted font-semibold text-white hover:border-white hover:text-white;
+  }
+  .hl-btn-dark {
+    @apply hl-btn bg-hl-navy text-white hover:bg-hl-navy-2 hover:text-white;
+  }
+  .hl-card {
+    @apply rounded-2xl border border-hl-line bg-white p-7 md:p-8;
+  }
+  .hl-chip {
+    @apply rounded-lg px-3.5 py-2 font-code text-sm;
+  }
+  .hl-nav-link {
+    @apply py-2.5 text-[15px] font-medium text-hl-navy no-underline hover:text-hl-orange-text;
+  }
+
+  /* Long-form text: legal pages. */
+  .hl-prose {
+    @apply max-w-3xl text-base leading-7 text-hl-ink;
+  }
+  .hl-prose h2 {
+    @apply mb-3 mt-10 text-2xl font-extrabold text-hl-navy;
+  }
+  .hl-prose h3 {
+    @apply mb-2 mt-6 text-lg font-bold text-hl-navy;
+  }
+  .hl-prose p {
+    @apply mb-4;
+  }
+  .hl-prose ul {
+    @apply mb-4 list-disc space-y-1 pl-6;
+  }
+  .hl-prose a {
+    @apply underline;
+  }
+
+  /* allauth and welcome pages render inside the public chrome */
+  .hl-site .auth-primary-button {
+    @apply rounded-xl bg-hl-navy px-5 py-3 text-base text-white no-underline hover:bg-hl-navy-2 hover:text-white
+           focus-visible:outline-orange;
+  }
+  .hl-site .auth-outline-button {
+    @apply rounded-xl border-[1.5px] border-hl-steel bg-white px-5 py-3 text-base text-hl-navy no-underline
+           hover:border-hl-navy hover:bg-white hover:text-hl-navy focus-visible:outline-orange;
+  }
+  .hl-site .auth-link {
+    @apply text-hl-ink hover:text-hl-orange-text;
+  }
+}
+
+[x-cloak] {
+  display: none !important;
 }

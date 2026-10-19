@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Profile, ServicePackage, VeteranProfile, Comment
+from .models import BootCampSession, Comment, Profile, ServicePackage, VeteranProfile
 
 class VeteranProfileAdmin(admin.ModelAdmin):
     list_display = (
@@ -74,6 +74,11 @@ class CommentAdmin(admin.ModelAdmin):
         "email",
     )
 
+class BootCampSessionAdmin(admin.ModelAdmin):
+    list_display = ("start_date", "created_at")
+    ordering = ("-start_date",)
+
+admin.site.register(BootCampSession, BootCampSessionAdmin)
 admin.site.register(Comment, CommentAdmin)
 admin.site.register(Profile, ProfileAdmin)
 admin.site.register(ServicePackage, ServicePackageAdmin)

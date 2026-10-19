@@ -1,245 +1,166 @@
 {% extends 'new_home_base.html' %}
-{% load form_helpers %}
-{% load components %}
-{% include 'modal.html' %}
 {% load static %}
 
-    {% wrapper breadcrumbs %}
-    <div>
-        <nav class="flex container mx-auto p-2 text-sm" aria-label="Breadcrumb">
-            <ol class="inline-flex items-center space-x-1 md:space-x-3 overflow-x-auto">
-                {% block breadcrumbs %}
-                {% endblock breadcrumbs %}
-            </ol>
-        </nav>
-    </div>
-    {% endwrapper %}
+{% block body %}
+<div class="hl-page">
 
-    {% block body %}
-        <div class="container w-full max-w-screen-lg grid grid-cols-1 md:grid-cols-2 gap-4 justify-items-center px-4 mx-auto">
-{#            # CTA Block#}
-            <div class="mb-3 p-6 shadow-lg">
-                        <h2 class="mb-2 text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
-                            Helping Enlisted Veterans Find Meaningful Employment
-                        </h2>
-                    <p class="mb-3 font-normal text-gray-700 dark:text-gray-400">
-                        We understand the challenges Veterans face building fulfilling careers after military service; we're here to help!
-                    </p>
-                    <p class="mb-3 font-normal text-gray-700 dark:text-gray-400">
-                        Resume Updates, Job Searches, & Coding Boot Camp - free for Veterans.
-                    </p>
-                    <a href="{% url 'custom_account_signup' %}" class="w-full bg-hl-black hover:bg-gray-500 focus:ring-4 focus:outline-none focus:ring-gray-300 rounded-lg inline-flex items-center justify-center px-4 py-2.5 dark:bg-gray-700 dark:hover:bg-gray-600 dark:focus:ring-gray-700">
-                            <div class="text-left">
-                                <div class="-mt-1 font-sans text-sm font-semibold">Sign Up</div>
-                            </div>
-                    </a>
-{#                    <br>#}
-{#                    <br>#}
-
-
-                </div>
-{#            # Image Block#}
-            <div class="mb-3 p-6 shadow-lg">
-{#      <img class="rounded-lg shadow-lg" src="/static/images/vets-moving.jpg" alt="Marine Trying on Alphas">#}
-        <video poster="{% static 'main/images/smith-2.png' %}" controls loop muted playsinline>
-            <source src="{% static 'main/videos/optimized_720p.webm' %}" type="video/webm">
-            <source src="{% static 'main/videos/optimized_720p.mp4' %}" type="video/webm">
-            <source src="{% static 'main/videos/optimized_720p.ogv' %}" type="video/webm">
-            <track src="{% static 'main/videos/promo-24.vtt' %}" kind="subtitles" srclang="en" label="English" default>
-            Your browser does not support the video tag.
-        </video>
-    </div>
-{#            # Learn More Block #}
-            <div class="mb-3 p-4 text-center md:col-span-2 w-full bg-center bg-no-repeat bg-cover shadow-lg shadow-lg"
-                 style="background-image: url('{% static 'main/images/cta-background-4.png' %}'); background-size:
-                         contain; height: 400px;max-width: 650px; margin: 0 auto;">
-                <a href="{% url 'how_it_works' %}" class="sm:w-auto inline-flex justify-center px-4 py-2.5">
-
-
-                        <div class="text-center">
-                                <div class="w-full bg-hl-black hover:bg-gray-500 focus:ring-4 focus:outline-none focus:ring-gray-300 rounded-lg inline-flex items-center justify-center px-4 py-2.5 dark:bg-gray-700 dark:hover:bg-gray-600 dark:focus:ring-gray-700">Learn More</div>
-                            </div>
-                    </a>
+    {# Hero: boot camp + promo video #}
+    <section class="hl-container flex flex-wrap items-center gap-x-14 gap-y-12 py-12 md:py-20">
+        <div class="flex min-w-0 flex-[1_1_440px] flex-col gap-6">
+            <p class="inline-flex items-center gap-2.5 self-start rounded-full bg-hl-cream px-3.5 py-2 text-sm font-semibold text-hl-amber">
+                <span aria-hidden="true" class="h-2 w-2 rounded-full bg-orange"></span>
+                {% if next_bootcamp %}
+                    Next boot camp starts {{ next_bootcamp.start_date|date:"F j, Y" }}
+                {% else %}
+                    Next boot camp: dates to be announced
+                {% endif %}
+            </p>
+            <h1 class="hl-h1">Learn to code in six weeks. Free for veterans.</h1>
+            <p class="hl-lead max-w-[540px]">Go from zero to your own working web app with Python. Live classes twice a week.</p>
+            <div class="flex flex-wrap gap-3 pt-2">
+                <a href="{% url 'custom_account_signup' %}" class="hl-btn-primary">
+                    {% if next_bootcamp %}Join the next boot camp{% else %}Join the waitlist{% endif %}
+                </a>
+                <a href="{% url 'how_it_works' %}#boot-camp" class="hl-btn-outline">What you'll learn</a>
             </div>
-{#            # Testimonial Block #}
-            <div x-data="testimonialCarousel()" x-init="init()" class="mb-3 p-4 text-center md:col-span-2">
-                    <div
-                        x-bind:class="transitionClass(currentIndex)"
-                        class="mb-3 p-4 text-center md:col-span-2"
-                >
-                    <figure class="max-w-screen-md mx-auto text-center">
-                        <svg class="w-10 h-10 mx-auto mb-3 text-gray-400 dark:text-gray-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 18 14">
-                            <path d="M6 0H2a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h4v1a3 3 0 0 1-3 3H2a1 1 0 0 0 0 2h1a5.006 5.006 0 0 0 5-5V2a2 2 0 0 0-2-2Zm10 0h-4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h4v1a3 3 0 0 1-3 3h-1a1 1 0 0 0 0 2h1a5.006 5.006 0 0 0 5-5V2a2 2 0 0 0-2-2Z"/>
-                        </svg>
-                        <blockquote>
-                            <p x-text="currentTestimonial.quote" class="text-2xl italic font-medium text-gray-900 dark:text-white"></p>
-                        </blockquote>
-                        <figcaption class="flex items-center justify-center mt-6 space-x-3 rtl:space-x-reverse">
-{#                            <img class="w-6 h-6 rounded-full" src="https://flowbite.s3.amazonaws.com/blocks/marketing-ui/avatars/michael-gouch.png" alt="profile picture">#}
-                            <div class="flex items-center divide-x-2 rtl:divide-x-reverse divide-gray-500 dark:divide-gray-700">
-                                <cite x-text="currentTestimonial.user" class="pe-3 font-medium text-gray-900 dark:text-white"></cite>
-                                <cite x-text="currentTestimonial.company" class="ps-3 text-sm text-gray-800 dark:text-gray-400"></cite>
-                            </div>
-                        </figcaption>
-                    </figure>
+            <p class="text-sm text-hl-muted">No experience, math or laptop required.</p>
+        </div>
+        <figure class="flex min-w-0 flex-[1.15_1_460px] flex-col gap-3">
+            <video class="w-full rounded-[20px] bg-hl-navy shadow-[0_24px_48px_-24px_rgba(14,31,51,0.45)]"
+                   poster="{% static 'main/images/smith-2.png' %}" controls playsinline preload="metadata">
+                <source src="{% static 'main/videos/optimized_720p.webm' %}" type="video/webm">
+                <source src="{% static 'main/videos/optimized_720p.mp4' %}" type="video/mp4">
+                <source src="{% static 'main/videos/optimized_720p.ogv' %}" type="video/ogg">
+                <track src="{% static 'main/videos/promo-24.vtt' %}" kind="subtitles" srclang="en" label="English" default>
+                Your browser does not support the video tag.
+            </video>
+            <figcaption class="text-sm text-hl-muted">Who we are and what we do. Captions available.</figcaption>
+        </figure>
+    </section>
+
+    {# Boot camp: what you'll learn #}
+    <section class="hl-section bg-hl-navy text-white">
+        <div class="hl-container flex flex-wrap gap-x-16 gap-y-12">
+            <div class="flex min-w-0 flex-[1_1_400px] flex-col gap-5">
+                <p class="hl-eyebrow !text-hl-orange">Coding boot camp</p>
+                <h2 class="hl-h2">Build a full-stack web app, start to finish.</h2>
+                <p class="text-[17px] leading-relaxed text-hl-steel">We start with the basics, then guide you through building your own website with a working backend. You finish with a real project and the know-how to keep building.</p>
+                <ul aria-label="Technologies you'll use" class="flex flex-wrap gap-2.5 pt-1">
+                    <li class="hl-chip border border-hl-navy-line">Python</li>
+                    <li class="hl-chip border border-hl-navy-line">Django</li>
+                    <li class="hl-chip border border-hl-navy-line">JavaScript</li>
+                    <li class="hl-chip border border-hl-navy-line">React</li>
+                    <li class="hl-chip border border-hl-navy-line">HTML</li>
+                    <li class="hl-chip border border-hl-navy-line">CSS</li>
+                    <li class="hl-chip border border-hl-navy-line">Git</li>
+                    <li class="hl-chip border border-hl-navy-line">AI tools</li>
+                </ul>
+                <div class="flex flex-wrap gap-3 pt-3">
+                    <a href="{% url 'custom_account_signup' %}" class="hl-btn-primary">
+                        {% if next_bootcamp %}Save my seat{% else %}Get on the list{% endif %}
+                    </a>
+                    <a href="{% url 'how_it_works' %}#boot-camp" class="hl-btn !px-2 font-semibold text-white hover:text-hl-orange">Full boot camp details</a>
+                </div>
+            </div>
+            <div class="grid min-w-0 flex-[1.2_1_460px] grid-cols-1 gap-4 sm:grid-cols-2">
+                <div class="flex flex-col gap-2.5 rounded-2xl bg-hl-navy-2 p-7">
+                    <h3 class="text-[19px] font-bold">No experience required</h3>
+                    <p class="text-[15px] leading-relaxed text-hl-steel">If you can read and write emails, you can code. Built for people who have never written a line.</p>
+                </div>
+                <div class="flex flex-col gap-2.5 rounded-2xl bg-hl-navy-2 p-7">
+                    <h3 class="text-[19px] font-bold">No math required</h3>
+                    <p class="text-[15px] leading-relaxed text-hl-steel">We focus on practical skills: using code to solve problems and make things that work.</p>
+                </div>
+                <div class="flex flex-col gap-2.5 rounded-2xl bg-hl-navy-2 p-7">
+                    <h3 class="text-[19px] font-bold">No laptop required</h3>
+                    <p class="text-[15px] leading-relaxed text-hl-steel">Everything runs in the browser with free tools. A library computer works fine.</p>
+                </div>
+                <div class="flex flex-col gap-2.5 rounded-2xl bg-hl-navy-2 p-7">
+                    <h3 class="text-[19px] font-bold">Commitment required</h3>
+                    <p class="text-[15px] leading-relaxed text-hl-steel">Tuesdays and Thursdays, 6:00 to 7:30 pm Pacific, for six weeks. Plus daily practice.</p>
                 </div>
             </div>
         </div>
-    {% endblock body %}
-{% block scripts %}
-<script>
-    function testimonialCarousel() {
-      return {
-        currentIndex: 0,
-        testimonials: [
-            {#1#}
-            {
-              quote: "The resume writing and tailoring were extremely helpful, as well as the job search guidance and feedback. I believe these all contributed most to me finding a job.",
-              user: "Kyle Vandenbrandhorninge",
-              company: "US Marine Corps Veteran"
-            },
-            {#2#}
-            {
-              quote: "I had a great time with everyone on the team. Everyone is eager to help and extremely knowledgable about the current job market and hiring trends.",
-              user: "Kyle Vandenbrandhorninge",
-              company: "US Marine Corps Veteran"
-            },
-            {#3#}
-            {
-              quote:
-                  "Your team's dedication and sincere effort in partnering with me throughout the journey of securing a new job have made a significant impact on my career transition.",
-              user: "Eddie Lemus",
-              company: "US Marine Corps Veteran"
-            },
-            {#4#}
-            {
-              quote: "Weekly tailored jobs helped organize all jobs that I applied to and having a job sourced in my behalf was invaluable.",
-              user: "Eddie Lemus",
-              company: "US Marine Corps Veteran"
-            },
-            {#5#}
-            {
-              quote: "The experience has been both challenging and humbling...I extend my heartfelt thanks for the invaluable support.",
-              user: "Eddie Lemus",
-              company: "US Marine Corps Veteran"
-            },
-            {#6#}
-            {
-                quote: "... it was just a big help not having to spend a ton of time editing [my resume] myself",
-                user: "Chad Fosse",
-                company: "US Marine Corps Veteran"
-            },
-            {#7#}
-            {
-                quote: "Veterans helping veterans always motivates me.",
-                user: "Kyle Vandenbrandhorninge",
-                company: "US Marine Corps Veteran",
-            },
-            {#8#}
-            {
-                quote: "I wanted to have coding demystified - and it did just that.",
-                user: "Marnie Tait",
-                company: "US Army Veteran"
-             },
-            {#9#}
-            {
-                quote: "It is a rare thing in this world to find organization or a person who will do something for another person with no expectations. Hired Labs is one of these rare chances to get a boost and bit of assistance to making a change in your life happen.",
-                user: "Chris Schrachta",
-                company: "US Navy Veteran"
-             },
-            {#10#}
-            {
-                quote: "Thank you for the heart you have and the passion to help others.",
-                user: "Chris Schrachta",
-                company: "US Navy Veteran"
-             },
-            {#11#}
-            {
-                quote: "...I think the format was excellent for a novice like myself.",
-                user: "Marnie Tait",
-                company: "US Army Veteran"
-             },
-            {#12#}
-            {
-                quote: "Communication - this was a real bonus, on the calls and via discord and email. Recording the sessions was great too.",
-                user: "Marnie Tait",
-                company: "US Army Veteran"
-             },
-            {#13#}
-            {
-                quote: "Excessive levels of patience and doing so even with a tight time schedule.",
-                user: "Chris Schrachta",
-                company: "US Navy Veteran"
-             },
-            {#14#}
-            {
-                quote: "The example [web app] is a simple and achievable goal and everything is explained and reviewed.",
-                user: "Chris Schrachta",
-                company: "US Navy Veteran"
-             },
-            {#15#}
-            {
-                quote: "... this class achieved its goal and kept its objective.",
-                user: "Chris Schrachta",
-                company: "US Navy Veteran",
-             },
-            {#16#}
-            {
-                quote: "...the communication post class was excellent. All the directions were easy to understand.",
-                user: "Marnie Tait",
-                company: "US Army Veteran",
-             },
-            {#17#}
-            {
-                quote: "The team was very knowledgeable and helpful..." +
-                    "I was able to learn a new skill that I can further develop.",
-                user: "Emilio Herrera",
-                company: "US Air Force Veteran",
-            },
-            {#18#}
-            {
-                quote: "Excellent intro to coding with well-supported materials and knowledgeable instructor " +
-                    "who was well-attuned to the needs of a wide-range of students and abilities.",
-                user: "Greg O'Shea",
-                company: "US Navy Veteran",
-            },
-            {#19#}
-            {
-                quote: "This course was perfect as an introduction into coding and web dev, and not intimidating at all. " +
-                    "I would highly recommend it to others.",
-                user: "Ariel Taylor",
-                company: "US Navy Veteran",
-            },
-          // Add more testimonials as needed ODD NUMBER REQUIRED!!
-        ],
-        intervalId: null,
+    </section>
 
-        init() {
-          this.startCarousel();
-        },
+    {# How it works #}
+    <section class="hl-container hl-section flex flex-col gap-10">
+        <div class="flex max-w-[640px] flex-col gap-3">
+            <p class="hl-eyebrow">How it works</p>
+            <h2 class="hl-h2">From sign-up to your own web app.</h2>
+        </div>
+        <ol class="grid grid-cols-1 gap-8 md:grid-cols-3">
+            <li class="flex flex-col gap-3 border-t-2 border-hl-navy pt-6">
+                <span class="text-[15px] font-extrabold text-hl-orange-text">01</span>
+                <h3 class="text-[21px] font-bold">Sign up</h3>
+                <p class="leading-relaxed text-hl-ink">Create your free account.
+                    {% if next_bootcamp %}We'll hold your seat for the session starting {{ next_bootcamp.start_date|date:"F j" }}.{% else %}We'll email you as soon as the next session is scheduled.{% endif %}
+                </p>
+            </li>
+            <li class="flex flex-col gap-3 border-t-2 border-hl-navy pt-6">
+                <span class="text-[15px] font-extrabold text-hl-orange-text">02</span>
+                <h3 class="text-[21px] font-bold">Code with us live</h3>
+                <p class="leading-relaxed text-hl-ink">Join two evening classes a week, online. You'll build your project step by step with an instructor.</p>
+            </li>
+            <li class="flex flex-col gap-3 border-t-2 border-hl-navy pt-6">
+                <span class="text-[15px] font-extrabold text-hl-orange-text">03</span>
+                <h3 class="text-[21px] font-bold">Launch your project</h3>
+                <p class="leading-relaxed text-hl-ink">Finish with your own website and backend, plus a clear idea of what to learn next.</p>
+            </li>
+        </ol>
+    </section>
 
-        startCarousel() {
-          this.intervalId = setInterval(() => {
-            this.showNextTestimonial();
-          }, 10000); // Adjust the time interval (in milliseconds) as needed
-        },
+    {# Testimonials #}
+    <section class="hl-section bg-hl-mist">
+        <div class="hl-container flex flex-col gap-10">
+            <h2 class="hl-h2">In their words</h2>
+            <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+                {% for t in testimonials %}
+                <figure class="hl-card flex flex-col gap-5">
+                    <blockquote class="text-lg leading-relaxed">&ldquo;{{ t.quote }}&rdquo;</blockquote>
+                    <figcaption class="mt-auto text-[15px]"><strong>{{ t.name }}</strong><br><span class="text-hl-muted">{{ t.branch }}</span></figcaption>
+                </figure>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
 
-        showNextTestimonial() {
-          this.currentIndex = (this.currentIndex + 1) % this.testimonials.length;
-        },
+    {# Career support (secondary) #}
+    <section class="hl-container hl-section flex flex-wrap items-center gap-x-16 gap-y-8">
+        <div class="flex min-w-0 flex-[1_1_360px] flex-col gap-3">
+            <p class="hl-eyebrow">Also available</p>
+            <h2 class="text-[26px] font-extrabold leading-tight tracking-[-0.02em] md:text-[34px]">One-on-one career support</h2>
+            <p class="leading-relaxed text-hl-ink">Looking for a job now? Our six-week program pairs you with specialists who do the heavy lifting.</p>
+        </div>
+        <div class="grid min-w-0 flex-[1.3_1_460px] grid-cols-1 gap-4 sm:grid-cols-2">
+            <a href="{% url 'how_it_works' %}#career-support" class="flex items-start gap-4 rounded-[14px] border border-hl-line px-6 py-5 no-underline hover:border-hl-navy">
+                <svg aria-hidden="true" class="mt-0.5 h-[22px] w-[22px] flex-none" viewBox="0 0 24 24" fill="none" stroke="#B45F06" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/><path d="M8 13h8M8 17h5"/></svg>
+                <span class="flex flex-col gap-1"><span class="text-[17px] font-bold text-hl-navy">Resume updates</span><span class="text-[15px] leading-normal text-hl-ink">Your experience, translated for civilian hiring managers.</span></span>
+            </a>
+            <a href="{% url 'how_it_works' %}#career-support" class="flex items-start gap-4 rounded-[14px] border border-hl-line px-6 py-5 no-underline hover:border-hl-navy">
+                <svg aria-hidden="true" class="mt-0.5 h-[22px] w-[22px] flex-none" viewBox="0 0 24 24" fill="none" stroke="#B45F06" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                <span class="flex flex-col gap-1"><span class="text-[17px] font-bold text-hl-navy">Job search</span><span class="text-[15px] leading-normal text-hl-ink">A tailored list of open roles and a simple tracker.</span></span>
+            </a>
+        </div>
+    </section>
 
-          transitionClass(index) {
-            return {
-                'opacity-0': this.currentIndex !== index,
-            };
-          },
+    {# Donate / partner #}
+    <section id="donate" class="hl-container scroll-mt-6 pb-14 md:pb-20 lg:pb-24">
+        <div class="flex flex-wrap items-center justify-between gap-8 rounded-3xl bg-hl-navy p-8 text-white md:p-12 lg:p-16">
+            <div class="flex min-w-0 flex-[1_1_420px] flex-col gap-3">
+                <h2 class="text-[28px] font-extrabold leading-tight tracking-[-0.02em] md:text-[38px]">Keep the boot camp free.</h2>
+                <p class="text-[17px] leading-relaxed text-hl-steel">Every class and service is free for veterans. Donations and hiring partners keep it that way.</p>
+                <p class="mt-2 max-w-[620px] border-t border-hl-navy-line pt-4 text-[15px] leading-relaxed text-hl-steel">
+                    <strong class="text-white">Why the donation form says Stiles Hall:</strong>
+                    Hired Labs is an independent nonprofit. Stiles Hall is our fiscal agent. They handle our banking, accounting and mailing address, and connect us with their community. Gifts made through their form support Hired Labs.
+                </p>
+            </div>
+            <div class="flex flex-wrap gap-3">
+                <a href="{{ DONATE_URL }}" target="_blank" rel="noopener" class="hl-btn-primary">Donate</a>
+                <a href="{% url 'contact' %}" class="hl-btn-outline-dark">Partner with us</a>
+            </div>
+        </div>
+    </section>
 
-        get currentTestimonial() {
-          return this.testimonials[this.currentIndex];
-        },
-      };
-    }
-  </script>
-
-{% endblock scripts %}
-```
+</div>
+{% endblock body %}
