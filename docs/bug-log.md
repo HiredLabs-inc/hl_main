@@ -33,6 +33,16 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 | BUG-018 | Medium | Fixed | infra | Stage deploy fails at `start-sql` when the stopped database takes too long to start |
 | BUG-019 | Medium | Open | settings | Suspected: a request can hit a closed database connection (one 500 on stage sign-up) |
 | BUG-020 | Low | Open | tests | Suspected: `ColdApplyAccessTest` setup sometimes fails with a value too long for a 50-character column |
+| BUG-021 | High | Open | userprofile | Every staff user can open DD214s (veteran status page and Django admin) |
+| BUG-022 | Medium | Open | cold_apply | Do Not Contact badge is never shown to staff |
+| BUG-023 | Medium | Open | cold_apply | Participant page shows blank phone and email |
+| BUG-024 | Medium | Open | cold_apply | Participants with no current step don't appear on the pipeline |
+| BUG-025 | Low | Open | cold_apply | "Highest Education" is just the first Education row |
+| BUG-026 | Low | Open | cold_apply | Pipeline registration date prints the month where the minutes should be |
+| BUG-027 | Low | Open | cold_apply | Veteran status button is superuser-only but the view allows any staff |
+| BUG-028 | Low | Open | userprofile | Suspected: Profile admin search raises FieldError (`user`, `nickname`) |
+| BUG-029 | Low | Open | cold_apply | Dead or misleading code in the staff pages (`staff.html` navbar, `index.html`, Bootstrap script, URL typo) |
+| BUG-030 | Low | Open | cold_apply | Any logged-in user can create companies, titles, positions, concentrations and locations, and list locations |
 
 ---
 
@@ -163,3 +173,65 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 - **Checked:** the only 50-character column in `cold_apply/models.py` is `Job.remote`, which the factory fills from a fixed list. The value probably comes from a SubFactory (Organization, Position or Location), or from a column whose database length differs from the model. Not tracked down.
 - **Fix idea:** find the column with `\d` on the test tables after a failure, then cap that factory field, e.g. `factory.LazyFunction(lambda: fake.company()[:50])`.
 
+## BUG-021 — Every staff user can open DD214s
+- **Severity:** High · **Status:** Open · **Found:** 2026-10-19, cold_apply staff redesign review
+- **Where:** `userprofile/views.py` `update_veteran_status_view` (`@staff_required`, makes a signed URL for `profile.service_doc`); `userprofile/admin.py` `ProfileAdmin` and `VeteranProfileAdmin` (the default change form shows `service_doc` as a link, and GCS storage signs it for 24 h by default)
+- **Problem:** anyone with `is_staff` can reach the veteran status page and open the DD214. Anyone with view or change permission on Profile in admin can do the same. DD214s should be limited to a small group of veteran-status reviewers.
+- **Fix idea:** add a custom permission (e.g. `userprofile.review_veteran_status`), check it on the view and in the templates, and exclude or guard `service_doc` in both admin classes. Planned in `docs/cold-apply-staff-redesign.md` §5.
+
+## BUG-022 — Do Not Contact badge is never shown to staff
+- **Severity:** Medium · **Status:** Open · **Found:** 2026-10-19, cold_apply staff redesign review
+- **Where:** `cold_apply/templates/cold_apply/participant_detail.html` (`{% if object.user.is_staff %}` around the DNC badge)
+- **Problem:** the check is whether the **participant** is staff, not the viewer. Participants are never staff, so staff never see "Do Not Contact".
+- **Fix idea:** use `{% if user.is_staff %}`.
+
+## BUG-023 — Participant page shows blank phone and email
+- **Severity:** Medium · **Status:** Open · **Found:** 2026-10-19, cold_apply staff redesign review
+- **Where:** `cold_apply/templates/cold_apply/participant_detail.html` (`{{ object.phone }}`, `{{ object.email }}`)
+- **Problem:** `Participant` has no `phone` or `email` field, so both always render empty.
+- **Fix idea:** `object.user.profile.phone` and `object.user.email`.
+
+## BUG-024 — Participants with no current step don't appear on the pipeline
+- **Severity:** Medium · **Status:** Open · **Found:** 2026-10-19, cold_apply staff redesign review
+- **Where:** `cold_apply/templates/cold_apply/participant_list.html`; `Participant.current_step` is nullable with `on_delete=SET_NULL`
+- **Problem:** every table filters on `participant.current_step.phase == phase`. A participant whose step is empty, or whose step was deleted, isn't listed anywhere, so staff lose track of them.
+- **Fix idea:** add an "Unassigned" group. The staff redesign replaces this page anyway.
+
+## BUG-025 — "Highest Education" is just the first Education row
+- **Severity:** Low · **Status:** Open · **Found:** 2026-10-19, cold_apply staff redesign review
+- **Where:** `cold_apply/views.py` `ParticipantDetailView.get_context_data` (`Education.objects.filter(...).first()`)
+- **Problem:** `Education` has no ordering, so this is whichever row the database returns first.
+- **Fix idea:** order by degree level, or rename the label.
+
+## BUG-026 — Pipeline date prints the month where the minutes should be
+- **Severity:** Low · **Status:** Open · **Found:** 2026-10-19, cold_apply staff redesign review
+- **Where:** `cold_apply/templates/cold_apply/participant_list.html` (`date:"F j, Y: H:m:s T"`)
+- **Problem:** `m` is the month in Django's date format; minutes are `i`.
+- **Fix idea:** `"F j, Y H:i T"`.
+
+## BUG-027 — Veteran status button is superuser-only, the view is staff-only
+- **Severity:** Low · **Status:** Open · **Found:** 2026-10-19, cold_apply staff redesign review
+- **Where:** `participant_detail.html` (`{% if user.is_superuser %}`) vs `userprofile/views.py` `update_veteran_status_view` (`@staff_required`)
+- **Problem:** the button and the view disagree, so the button hides a page that any staff user can still open by URL. Superseded by BUG-021's permission.
+
+## BUG-028 — Profile admin search raises FieldError
+- **Severity:** Low · **Status:** Open · **Found:** 2026-10-19, cold_apply staff redesign review · **Suspected:** read from code, not reproduced
+- **Where:** `userprofile/admin.py` `ProfileAdmin.search_fields`
+- **Problem:** it lists `"user"` (a ForeignKey, so `icontains` is invalid) and `"nickname"` (no longer a field). Any search in the Profile admin should raise FieldError. `list_filter = ("user", ...)` also lists every user as a filter.
+- **Fix idea:** `search_fields = ("user__email", "user__first_name", "user__last_name", "city", "state")`, and drop `user` from `list_filter`.
+
+## BUG-029 — Dead or misleading code in the cold_apply staff pages
+- **Severity:** Low · **Status:** Open · **Found:** 2026-10-19, cold_apply staff redesign review
+- **Where:** `cold_apply/`
+- **Problem:**
+  - `templates/staff.html` has a Bootstrap navbar in `block content`. All 23 cold_apply templates that extend it override `content`, so the navbar never renders.
+  - `participant_detail.html` calls `new bootstrap.Collapse(...)` on `#jobs-panel-new-jobs`. Bootstrap isn't loaded and the element no longer exists (the panels are `<details>`).
+  - `templates/cold_apply/index.html` is an old to-do list and isn't routed.
+  - `ParticipantListView.model = Phase` although it lists Participants. `ParticipantDetailView` fetches the participant again instead of using `self.object`.
+  - The URL `companiies/<pk>/update/` is misspelled.
+- **Fix idea:** remove these as part of the staff redesign.
+
+## BUG-030 — Any logged-in user can create shared reference data
+- **Severity:** Low · **Status:** Open · **Found:** 2026-10-19, cold_apply staff redesign review
+- **Where:** `cold_apply/views.py` `OrganizationCreateView`, `TitleCreateView`, `PositionCreateView`, `ConcentrationCreateView`, `LocationCreateView`, `LocationDetailView`, `LocationListView` (all `LoginRequiredMixin`)
+- **Problem:** any participant can add companies, titles, positions, concentrations and locations, and list all locations. This may be intended, because participants pick these values on their own forms. Confirm before restricting.
