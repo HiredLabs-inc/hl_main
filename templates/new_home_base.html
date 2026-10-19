@@ -57,9 +57,21 @@
                              <a href="https://www.paypal.com/donate/?hosted_button_id=FSCDFRT2GALF4" class="block py-2 pl-3 pr-4 text-center bg-blue-800 rounded md:bg-transparent md:text-blue-700 md:p-0 dark:text-white md:dark:text-blue-500" aria-current="page" target="_blank">Donate</a>
                          </li>
 
+                         {% if user.is_authenticated %}
                          <li>
-                             <a href="{% url 'custom_account_signup' %}" class="block py-2 pl-3 pr-4 text-center bg-blue-800 rounded md:bg-transparent md:text-blue-700 md:p-0 dark:text-white md:dark:text-blue-500" aria-current="page">Sign Up</a>
+                             <a href="{% url 'userprofile:user_home' %}" class="block py-2 pl-3 pr-4 text-center bg-blue-800 rounded md:bg-transparent md:text-blue-700 md:p-0 dark:text-white md:dark:text-blue-500">My Account</a>
                          </li>
+                         <li>
+                             {% include 'components/logout_button.html' with button_class="block py-2 pl-3 pr-4 text-center bg-blue-800 rounded md:bg-transparent md:text-blue-700 md:p-0 dark:text-white md:dark:text-blue-500 w-full" %}
+                         </li>
+                         {% else %}
+                         <li>
+                             <a href="{% url 'account_login' %}" class="block py-2 pl-3 pr-4 text-center bg-blue-800 rounded md:bg-transparent md:text-blue-700 md:p-0 dark:text-white md:dark:text-blue-500">Log In</a>
+                         </li>
+                         <li>
+                             <a href="{% url 'custom_account_signup' %}" class="block py-2 pl-3 pr-4 text-center bg-blue-800 rounded md:bg-transparent md:text-blue-700 md:p-0 dark:text-white md:dark:text-blue-500">Sign Up</a>
+                         </li>
+                         {% endif %}
                      </ul>
                 </div>
             </div>

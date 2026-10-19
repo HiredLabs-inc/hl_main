@@ -40,6 +40,9 @@ module "env" {
   sql_point_in_time_recovery = true
   deletion_protection        = true
 
+  # Stage's database stops nightly, so stage runs reminders only by hand.
+  signup_reminders_schedule = "0 10 * * *"
+
   deploy_branch = "main"
 }
 

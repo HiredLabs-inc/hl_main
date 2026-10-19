@@ -29,7 +29,7 @@ class Profile(TrackedModel):
     city = models.CharField(max_length=100)
     linkedin = models.URLField(max_length=200, default="https://www.linkedin.com/")
     service_package = models.ForeignKey(
-        "ServicePackage", on_delete=models.SET_NULL, null=True, default=1
+        "ServicePackage", on_delete=models.SET_NULL, null=True, default=None
     )
     is_veteran = models.BooleanField(null=True, default=True)
     veteran_verified = models.BooleanField(default=False)
@@ -57,7 +57,7 @@ class Profile(TrackedModel):
         step = Step.objects.order_by("phase__order", "order").first()
 
         participant, _ = Participant.objects.get_or_create(
-            user=self.user, current_step=step
+            user=self.user, defaults={"current_step": step}
         )
         return self.save()
 
@@ -95,3 +95,29 @@ class Comment(models.Model):
 
     def __str__(self) -> str:
         return f'{self.name}, {self.email}'
+
+class PendingSignup(models.Model):
+    """An email address that started signup. The User is created only when the
+    emailed link is followed and a password is set (see userprofile/signup.py)."""
+
+    email = models.EmailField(max_length=150, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_sent_at = models.DateTimeField(null=True, blank=True)
+    send_count = models.PositiveIntegerField(default=0)
+    last_error = models.TextField(blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    reminder_sent_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self) -> str:
+        return self.email
+
+class OnboardingReminder(models.Model):
+    """Reminders sent to a user who has an account but hasn't finished onboarding
+    (see userprofile/reminders.py)."""
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    sent_count = models.PositiveIntegerField(default=0)
+    last_sent_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self) -> str:
+        return f"{self.user.email} ({self.sent_count})"

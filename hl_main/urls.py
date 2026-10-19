@@ -17,13 +17,19 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
+from django.views.generic import RedirectView
 
-from userprofile import views as userprofile_views
+from userprofile import signup, stuck_signups, views as userprofile_views
 
 urlpatterns = [
     path("admin/", admin.site.urls, name="admin"),
+    # Signup lives in userprofile.signup; allauth's own signup URL redirects there.
+    path("accounts/signup/", RedirectView.as_view(pattern_name="custom_account_signup")),
+    path("accounts/sign-up/", signup.signup_view, name="custom_account_signup"),
+    path("accounts/sign-up/sent/", signup.signup_sent_view, name="signup_sent"),
+    path("accounts/sign-up/change-email/", signup.signup_change_email_view, name="signup_change_email"),
+    path("accounts/sign-up/complete/<str:token>/", signup.signup_complete_view, name="signup_complete"),
     path("accounts/", include("allauth.urls")),
-    path("accounts/sign-up/", userprofile_views.CustomSignupView.as_view(), name="custom_account_signup"),
     path(
         "accounts/verified_email_required",
         userprofile_views.verified_email_required_view,
@@ -41,6 +47,12 @@ urlpatterns = [
     path("thank-you/", userprofile_views.thanks, name="thanks"),
     path("welcome/", userprofile_views.welcome, name="welcome"),
     path("staff/", userprofile_views.staff, name="staff"),
+    path("staff/stuck-signups/", stuck_signups.stuck_signups_view, name="stuck_signups"),
+    path(
+        "staff/stuck-signups/<str:kind>/<int:pk>/<str:action>/",
+        stuck_signups.stuck_signup_action_view,
+        name="stuck_signup_action",
+    ),
     path("userprofile/", include("userprofile.urls")),
     path("cold_apply/", include("cold_apply.urls")),
     path("resume/", include("resume.urls")),

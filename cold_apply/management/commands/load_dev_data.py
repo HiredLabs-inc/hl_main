@@ -22,9 +22,14 @@ class Command(BaseCommand):
         User.objects.all().delete()
         Phase.objects.all().delete()
 
+        ServicePackage.objects.all().delete()
+        for name in ["Basic", "Managed", "Complete"]:
+            ServicePackage.objects.create(name=name)
+
         admin_user = User.objects.create_superuser(
             username="admin@admin.com", email="admin@admin.com", password="admin"
         )
+        EmailAddress.objects.create(user=admin_user, email=admin_user.email, verified=True, primary=True)
         Profile.objects.create(user=admin_user)
 
         phase_1 = Phase.objects.create(
@@ -72,23 +77,8 @@ class Command(BaseCommand):
         Position.objects.all().delete()
         Organization.objects.all().delete()
 
-        User.objects.create_superuser(
-            username="admin", email="admin@admin.com", password="admin"
-        )
-
         for i in range(5):
             user = UserFactory(email=f"user{i}@email.com", password="password")
             participant = ParticipantFactory(user=user)
             print(participant.user.profile)
             job = JobFactory(participant=participant)
-
-        ServicePackage.objects.all().delete()
-        ServicePackage.objects.create(
-            name="Basic",
-        )
-        ServicePackage.objects.create(
-            name="Managed",
-        )
-        ServicePackage.objects.create(
-            name="Complete",
-        )

@@ -28,13 +28,7 @@
                           please feel free to contact us at: info@hiredlabs.org.
                     </p>
 
-        <form method="post" action="{% url 'account_logout' %}">
-            {% csrf_token %}
-            {% if redirect_field_value %}
-            <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}"/>
-            {% endif %}
-            <button class="auth-primary-button" type="submit">Done</button>
-        </form>
+        <a href="{% url 'home' %}" class="auth-primary-button">Done</a>
         </div>
     {% endblock body %}
 

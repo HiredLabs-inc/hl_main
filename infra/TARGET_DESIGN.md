@@ -104,7 +104,7 @@ The app is DB-bound: Django runs many queries per page. Every request served in 
 |---|---|---|---|
 | 0 | Fallback point | ✅ done | — |
 | 1 | Repo hygiene (§5), `infra/` Terraform skeleton, GCS state bucket, rotate superuser password | none | git revert |
-| 2 | Stand up **stage** in hl-main-stage with Terraform (new SQL, stopped by default). Cloud Build trigger on `develop`. Prove the full deploy → migrate → smoke-test loop | none | `terraform destroy` stage |
+| 2 | Stand up **stage** in hl-main-stage with Terraform (new SQL, stopped by default). Cloud Build trigger on `staging` (was `develop`, see Decisions). Prove the full deploy → migrate → smoke-test loop | none | `terraform destroy` stage |
 | 3 | Attach hl-main-prod to vpc-host-prod and stand up **prod** with Terraform: SQL, services, LB on a new IP, cert pre-provisioned through DNS auth. Restore last night's dump and test on the run.app URL | none | destroy |
 | 4 | Lower the DNS TTL to 300 s (1 day ahead) | none | — |
 | 5 | **Cut-over, ~15–30 min:** pause old task queue → maintenance page / scale old web → final `hired-labs-dev` export → import into `hl-prod-sql` as `hiredlabs` → migrate job → smoke test → switch DNS to the new LB IP | **downtime** | Point DNS back to the old LB (old stack untouched) |
@@ -118,7 +118,7 @@ There is no billing export, so every figure above is a list-price estimate. To c
 ## Decisions (2026-10-13)
 1. **East coast: option A.** Cloud CDN plus a tested us-east1 DR path.
 2. **DNS: Namecheap.** It stays there. Cut-over means changing the A record for `@` and `www` to the new LB IP. The cert is pre-provisioned with a Certificate Manager DNS-authorization CNAME added in Namecheap. Lower the TTL in Namecheap a day ahead.
-3. **CI/CD: Cloud Build GitHub triggers on `HiredLabs-inc/hl_main`.** `develop` → build + deploy to **stage**. `main` → deploy the **same image digest** to **prod**.
+3. **CI/CD: Cloud Build GitHub triggers on `HiredLabs-inc/hl_main`.** `staging` → build + deploy to **stage** (was `develop` until 2026-10-17, BUG-016: stage now deploys only when `develop` is promoted with `git push origin develop:staging`). `main` → deploy the **same image digest** to **prod**.
 4. **Fallback window: 14 days** after cut-over. Then the Development project `hl-main-dev` is deleted (step 7). It is no longer a target environment, but it hosts prod until cut-over.
 5. **Superuser:** the leaked password belongs to `superadmin_1`, which exists only in the stage DB. Prod uses a different account, `superadmin`. No prod rotation needed. Remove the plaintext from the repo; stage gets a fresh DB.
 

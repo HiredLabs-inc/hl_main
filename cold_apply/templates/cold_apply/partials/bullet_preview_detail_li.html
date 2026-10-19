@@ -6,6 +6,6 @@
         hx-target="closest li"
         hx-swap="outerHTML"
     >[edit]</a>
-    <a hx-confirm="Delete bullet point?" hx-boost="true" href="{% url 'cold_apply:delete_bullet' pk=bullet.id %}" hx-swap="innerHTML show:no-scroll">[delete]</a>
+    <a hx-confirm="Delete bullet point?" href="#" hx-post="{% url 'cold_apply:delete_bullet' pk=bullet.id %}" hx-swap="innerHTML show:no-scroll">[delete]</a>
 </li>
 {% endwith %}

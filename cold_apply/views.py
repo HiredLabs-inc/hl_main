@@ -15,7 +15,7 @@ from django.urls import Resolver404, resolve, reverse, reverse_lazy
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
+from django.views.decorators.http import require_http_methods, require_POST
 from django.views.generic import (
     CreateView,
     DeleteView,
@@ -28,8 +28,8 @@ from django.views.generic import (
 from django.views.generic.edit import FormMixin
 
 from background_tasks.models import Task, TaskStatusChoices
-from background_tasks.queue import queue_task, work_task
-# from cold_apply.guards import sign_up_completed
+from background_tasks.queue import is_authorized_task_request, queue_task, work_task
+from cold_apply.guards import OwnedObjectMixin, ParticipantAccessMixin, owned_by
 from cold_apply.jobs import get_jobs_for_participant
 from cold_apply.resume_formatting import (
     group_bullets_by_experience,
@@ -49,15 +49,13 @@ from resume.models import (
     Position,
 )
 from resume.pdf import RESUME_TEMPLATE_SECTIONS_JSON, write_template_to_pdf
-from userprofile.guards import verified_required
-from userprofile.models import Profile
+from userprofile.guards import StaffRequiredMixin, verified_required
 
 from .forms import (
     BulletCreateForm,
     BulletUpdateForm,
     ExperienceForm,
     FindNewJobsForm,
-    InteractionForm,
     NewJobSelectionForm,
     OverviewForm,
     ParticipantForm,
@@ -80,7 +78,7 @@ from .static.scripts.keyword_analyzer.keyword_analyzer import (
     hook_after_jd_analysis,
 )
 from .static.scripts.resume_writer.bullet_weighter import hook_after_weighting, weigh
-from hl_main.gcs import generate_signed_url
+from hl_main.gcs import SIGNED_URL_EXPIRATION, generate_signed_url
 
 
 @verified_required
@@ -88,13 +86,16 @@ def home_view(request):
     if request.user.is_staff:
         return redirect("cold_apply:index")
 
-    # TODO handle no profile
+    # Not onboarded yet: user_home sends them to onboarding
+    if not hasattr(request.user, "participant"):
+        return redirect("userprofile:user_home")
+
     return redirect("cold_apply:participant_detail", request.user.participant.id)
 
 
 # Index
 # @method_decorator(sign_up_completed, name="dispatch")
-class ParticipantListView(LoginRequiredMixin, ListView):
+class ParticipantListView(StaffRequiredMixin, ListView):
     model = Phase
     template_name = "cold_apply/participant_list.html"
     context_object_name = "participants"
@@ -113,7 +114,7 @@ class ParticipantListView(LoginRequiredMixin, ListView):
         return context
 
 # process/
-class PhaseListView(LoginRequiredMixin, ListView):
+class PhaseListView(StaffRequiredMixin, ListView):
     model = Phase
     template_name = "cold_apply/process.html"
     context_object_name = "phases"
@@ -151,8 +152,9 @@ class ConfirmApplicationView(TemplateView):
 
 
 # Read Participant details
-class ParticipantDetailView(LoginRequiredMixin, FormMixin, DetailView):
+class ParticipantDetailView(OwnedObjectMixin, FormMixin, DetailView):
     model = Participant
+    owner_lookup = "user"
     template_name = "cold_apply/participant_detail.html"
     context_object_name = "participants"
     queryset = Participant.objects.prefetch_related("job_set").all()
@@ -170,9 +172,8 @@ class ParticipantDetailView(LoginRequiredMixin, FormMixin, DetailView):
             return self.form_invalid(form)
 
     def form_valid(self, form):
-        if isinstance(form, NewJobSelectionForm):
-            form.save()
-            return super().form_valid(form)
+        form.save()
+        return super().form_valid(form)
 
     def get_form_kwargs(self):
         return {
@@ -183,9 +184,6 @@ class ParticipantDetailView(LoginRequiredMixin, FormMixin, DetailView):
 
     def get_form_class(self):
         return NewJobSelectionForm
-        if self.request.GET.get("form") == "new_jobs":
-            return NewJobSelectionForm
-        return super().get_form_class()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -207,16 +205,17 @@ class ParticipantDetailView(LoginRequiredMixin, FormMixin, DetailView):
             context["profile"] = participant.user.profile
         except ObjectDoesNotExist:
             context["profile"] = None
-        if not settings.DEBUG and context['profile'] is not None:
+        if not settings.DEBUG and context['profile'] is not None and context['profile'].resume:
             context['signed_url'] = generate_signed_url(
                 bucket_name=settings.GS_BUCKET_NAME,
                 object_name=context['profile'].resume.name,
+                expiration=SIGNED_URL_EXPIRATION,
             )
 
         return context
 
 
-class ParticipantUpdateView(LoginRequiredMixin, UpdateView):
+class ParticipantUpdateView(StaffRequiredMixin, UpdateView):
     model = Participant
     form = ParticipantForm
     template_name = "cold_apply/participant_update.html"
@@ -247,7 +246,7 @@ class OrganizationCreateView(HtmxViewMixin, LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class OrganizationUpdateView(LoginRequiredMixin, UpdateView):
+class OrganizationUpdateView(StaffRequiredMixin, UpdateView):
     model = Organization
     template_name = "cold_apply/company_update.html"
     fields = ["name", "website", "org_type"]
@@ -259,13 +258,8 @@ class OrganizationUpdateView(LoginRequiredMixin, UpdateView):
         return context
 
     def form_valid(self, form):
-        if form.is_valid():
-            organization = form.save(commit=False)
-            organization.save()
-            return redirect(reverse("cold_apply:confirm_update_company"))
-        else:
-            print(form.errors)
-        return super().form_valid(form)
+        form.save()
+        return redirect(reverse("cold_apply:confirm_update_company"))
 
 
 # Titles
@@ -280,7 +274,7 @@ class TitleCreateView(HtmxViewMixin, LoginRequiredMixin, CreateView):
     # TODO TitleDetail view for success_url
 
 
-class TitleUpdateView(LoginRequiredMixin, UpdateView):
+class TitleUpdateView(StaffRequiredMixin, UpdateView):
     model = Position
     template_name = "cold_apply/title_update.html"
     fields = ["title"]
@@ -292,17 +286,12 @@ class TitleUpdateView(LoginRequiredMixin, UpdateView):
         return context
 
     def form_valid(self, form):
-        if form.is_valid():
-            position = form.save(commit=False)
-            position.save()
-            return redirect(reverse("cold_apply:confirm_update_title"))
-        else:
-            print(form.errors)
-        return super().form_valid(form)
+        form.save()
+        return redirect(reverse("cold_apply:confirm_update_title"))
 
 
 # Jobs
-class JobCreateView(LoginRequiredMixin, CreateView):
+class JobCreateView(ParticipantAccessMixin, CreateView):
     model = Job
     template_name = "cold_apply/job_create.html"
     fields = [
@@ -332,8 +321,9 @@ class JobCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class JobDetailView(LoginRequiredMixin, DetailView):
+class JobDetailView(OwnedObjectMixin, DetailView):
     model = Job
+    owner_lookup = "participant__user"
     template_name = "cold_apply/job_detail.html"
     context_object_name = "jobs"
     # paginate_by = 10
@@ -352,12 +342,13 @@ class JobDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
+@login_required
 @require_http_methods(["POST"])
 def job_status_update_modal_view(request, job_id):
     status_form_class = model_forms.modelform_factory(Job, fields=["status"])
     status_form = status_form_class(request.POST)
 
-    job = get_object_or_404(Job, pk=job_id)
+    job = get_object_or_404(owned_by(Job.objects, request.user, "participant__user"), pk=job_id)
     if status_form.is_valid():
         job.status = status_form.cleaned_data["status"]
 
@@ -371,8 +362,9 @@ def job_status_update_modal_view(request, job_id):
     )
 
 
-class JobUpdateView(HtmxViewMixin, LoginRequiredMixin, UpdateView):
+class JobUpdateView(HtmxViewMixin, OwnedObjectMixin, UpdateView):
     model = Job
+    owner_lookup = "participant__user"
     template_name = "cold_apply/job_update.html"
     empty_response_on_save = True
     refresh_on_save = True
@@ -406,21 +398,25 @@ class JobUpdateView(HtmxViewMixin, LoginRequiredMixin, UpdateView):
 
 
 @login_required
+@require_POST
 def refresh_keywords(request, pk):
-    KeywordAnalysis.objects.all().filter(job=pk).delete()
+    job = get_object_or_404(owned_by(Job.objects, request.user, "participant__user"), pk=pk)
+    KeywordAnalysis.objects.filter(job=job).delete()
     return redirect(reverse("cold_apply:job_detail", kwargs={"pk": pk}))
 
 
 @login_required
+@require_POST
 def delete_job(request, pk):
-    participant = Job.objects.get(id=pk).participant.id
-    Job.objects.get(id=pk).delete()
+    job = get_object_or_404(owned_by(Job.objects, request.user, "participant__user"), pk=pk)
+    participant = job.participant_id
+    job.delete()
     return redirect(
         reverse("cold_apply:participant_detail", kwargs={"pk": participant})
     )
 
 
-class ParticipantExperienceListView(LoginRequiredMixin, ListView):
+class ParticipantExperienceListView(ParticipantAccessMixin, ListView):
     model = Experience
     template_name = "cold_apply/participant_experience_list.html"
     context_object_name = "experiences"
@@ -442,7 +438,7 @@ class ParticipantExperienceListView(LoginRequiredMixin, ListView):
         )
 
 
-class ParticipantExperienceBySkillListView(LoginRequiredMixin, ListView):
+class ParticipantExperienceBySkillListView(ParticipantAccessMixin, ListView):
     model = Skill
     template_name = "cold_apply/participant_experience_by_skill_list.html"
     context_object_name = "skills"
@@ -467,7 +463,7 @@ class ParticipantExperienceBySkillListView(LoginRequiredMixin, ListView):
         )
 
 
-class EducationCreateView(LoginRequiredMixin, CreateView):
+class EducationCreateView(ParticipantAccessMixin, CreateView):
     model = Education
     template_name = "cold_apply/education_create.html"
     fields = ["degree", "concentration", "org"]
@@ -491,8 +487,9 @@ class EducationCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class EducationUpdateView(LoginRequiredMixin, UpdateView):
+class EducationUpdateView(OwnedObjectMixin, UpdateView):
     model = Education
+    owner_lookup = "participant__user"
     template_name = "cold_apply/education_update.html"
     fields = ["degree", "concentration", "org"]
 
@@ -526,8 +523,9 @@ class ConcentrationCreateView(HtmxViewMixin, LoginRequiredMixin, CreateView):
 
 
 @login_required
+@require_POST
 def delete_exp(request, pk):
-    exp = get_object_or_404(Experience, pk=pk)
+    exp = get_object_or_404(owned_by(Experience.objects, request.user, "participant__user"), pk=pk)
     participant_id = exp.participant_id
 
     exp.delete()
@@ -537,8 +535,9 @@ def delete_exp(request, pk):
 
 
 @login_required
+@require_POST
 def delete_education(request, pk):
-    education = get_object_or_404(Education, pk=pk)
+    education = get_object_or_404(owned_by(Education.objects, request.user, "participant__user"), pk=pk)
     participant_id = education.participant_id
     education.delete()
     return redirect(
@@ -547,10 +546,14 @@ def delete_education(request, pk):
 
 
 @login_required
+@require_POST
 def delete_bullet(request, pk):
-    WeightedBullet.objects.filter(bullet=pk).delete()
-    BulletKeyword.objects.filter(bullet=pk).delete()
-    bullet = Bullet.objects.select_related("experience").get(id=pk)
+    bullet = get_object_or_404(
+        owned_by(Bullet.objects.select_related("experience"), request.user, "experience__participant__user"),
+        pk=pk,
+    )
+    WeightedBullet.objects.filter(bullet=bullet).delete()
+    BulletKeyword.objects.filter(bullet=bullet).delete()
     participant_id = bullet.experience.participant_id
     bullet.delete()
     if "Hx-Request" in request.headers:
@@ -563,7 +566,9 @@ def delete_bullet(request, pk):
 
 @login_required
 def configure_tailored_resume_view(request, job_pk):
-    job = get_object_or_404(Job.objects.select_related("participant"), pk=job_pk)
+    job = get_object_or_404(
+        owned_by(Job.objects.select_related("participant"), request.user, "participant__user"), pk=job_pk
+    )
     experiences = Experience.objects.filter(participant=job.participant)
     skills = Skill.objects.filter(
         bullet__experience__participant=job.participant
@@ -596,11 +601,6 @@ def configure_tailored_resume_view(request, job_pk):
     )
 
 
-class ConfigureTailoredResumeView(LoginRequiredMixin, CreateView):
-    def get_form(self, form_class):
-        experiences = Experience.objects.filter(participant=self.kwargs[""])
-
-
 def weigh_bullets(bullets, job, keywords):
     for bullet in bullets:
         weight = weigh(bullet=bullet, jd_keywords=keywords)
@@ -619,10 +619,14 @@ def weigh_bullets(bullets, job, keywords):
 @require_http_methods(["GET"])
 def tailored_resume_view(request, job_pk):
     job = get_object_or_404(
-        Job.objects.select_related(
-            "title",
-            "participant__user__profile",
-        ).prefetch_related("keywordanalysis_set"),
+        owned_by(
+            Job.objects.select_related(
+                "title",
+                "participant__user__profile",
+            ).prefetch_related("keywordanalysis_set"),
+            request.user,
+            "participant__user",
+        ),
         pk=job_pk,
     )
     job.participant.experience_set.first()
@@ -744,14 +748,15 @@ def tailored_resume_view(request, job_pk):
     return redirect(reverse("cold_apply:configure_tailored_resume", args=[job.pk]))
 
 
-class OverviewDetailView(HtmxViewMixin, LoginRequiredMixin, DetailView):
+class OverviewDetailView(HtmxViewMixin, OwnedObjectMixin, DetailView):
     model = Overview
+    owner_lookup = "participant__user"
     htmx_template = "cold_apply/partials/overview_detail.html"
     template_name = "cold_apply/overview_detail.html"
     context_object_name = "overview"
 
 
-class OverviewCreateView(HtmxViewMixin, LoginRequiredMixin, CreateView):
+class OverviewCreateView(HtmxViewMixin, ParticipantAccessMixin, CreateView):
     form_class = OverviewForm
     template_name = "cold_apply/overview_create.html"
     htmx_template = "cold_apply/partials/overview_create_form.html"
@@ -768,7 +773,7 @@ class OverviewCreateView(HtmxViewMixin, LoginRequiredMixin, CreateView):
 
     def get_form(self, form_class=None):
         self.position = Position.objects.get(id=self.kwargs["position_pk"])
-        self.job = get_object_or_404(Job, pk=self.kwargs["job_pk"])
+        self.job = get_object_or_404(Job, pk=self.kwargs["job_pk"], participant_id=self.kwargs["pk"])
         return super().get_form(form_class)
 
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
@@ -784,8 +789,9 @@ class OverviewCreateView(HtmxViewMixin, LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class OverviewUpdateView(HtmxViewMixin, LoginRequiredMixin, UpdateView):
+class OverviewUpdateView(HtmxViewMixin, OwnedObjectMixin, UpdateView):
     model = Overview
+    owner_lookup = "participant__user"
     fields = ["text"]
     refresh_on_save = True
     template_name = "cold_apply/overview_update.html"
@@ -796,23 +802,20 @@ class OverviewUpdateView(HtmxViewMixin, LoginRequiredMixin, UpdateView):
         return super().form_valid(form)
 
 
-class OverviewDeleteView(HtmxViewMixin, LoginRequiredMixin, DeleteView):
+class OverviewDeleteView(HtmxViewMixin, OwnedObjectMixin, DeleteView):
     model = Overview
+    owner_lookup = "participant__user"
     template_name = "cold_apply/overview_delete.html"
     refresh_on_save = True
 
     def get_success_url(self) -> str:
-        return reverse(
-            "cold_apply:configure_tailored_resume",
-            args=[
-                self.object.participant.job_set.filter(title=self.object.title)
-                .first()
-                .id
-            ],
-        )
+        job = self.object.participant.job_set.filter(title=self.object.title).first()
+        if job is None:
+            return reverse("cold_apply:participant_detail", args=[self.object.participant_id])
+        return reverse("cold_apply:configure_tailored_resume", args=[job.id])
 
 
-class ExperienceCreateView(LoginRequiredMixin, CreateView):
+class ExperienceCreateView(ParticipantAccessMixin, CreateView):
     model = Experience
     template_name = "cold_apply/experience_create.html"
     form_class = ExperienceForm
@@ -839,8 +842,9 @@ class ExperienceCreateView(LoginRequiredMixin, CreateView):
 # TODO: ExperienceUpdateView
 
 
-class ExperienceUpdateView(LoginRequiredMixin, UpdateView):
+class ExperienceUpdateView(OwnedObjectMixin, UpdateView):
     model = Experience
+    owner_lookup = "participant__user"
     template_name = "cold_apply/experience_update.html"
     fields = ["start_date", "end_date", "org", "position"]
     context_object_name = "experience"
@@ -852,19 +856,14 @@ class ExperienceUpdateView(LoginRequiredMixin, UpdateView):
         return context
 
     def form_valid(self, form):
-        if form.is_valid():
-            experience = form.save(commit=False)
-            experience.save()
-            return redirect(reverse("cold_apply:confirm_update_experience"))
-        else:
-            print(form.errors)
-        return super().form_valid(form)
+        form.save()
+        return redirect(reverse("cold_apply:confirm_update_experience"))
 
 
 # TODO: ExperienceDetailView
 
 
-class BulletCreateView(HtmxViewMixin, LoginRequiredMixin, CreateView):
+class BulletCreateView(HtmxViewMixin, ParticipantAccessMixin, CreateView):
     """For creating bullets when the experience id is known"""
 
     model = Bullet
@@ -903,9 +902,13 @@ class BulletCreateView(HtmxViewMixin, LoginRequiredMixin, CreateView):
         return reverse("cold_apply:bullet_detail", kwargs={"pk": self.object.id})
 
 
+@login_required
+@require_POST
 def regenerate_bullet_view(request, bullet_id, job_id):
-    bullet = get_object_or_404(Bullet, pk=bullet_id)
-    job = get_object_or_404(Job, pk=job_id)
+    bullet = get_object_or_404(
+        owned_by(Bullet.objects, request.user, "experience__participant__user"), pk=bullet_id
+    )
+    job = get_object_or_404(owned_by(Job.objects, request.user, "participant__user"), pk=job_id)
 
     rewritten_text = rewrite_bullet_for_job(bullet, job)
     bullet.text = rewritten_text
@@ -914,8 +917,9 @@ def regenerate_bullet_view(request, bullet_id, job_id):
     return HttpResponse(status=204, headers={"Hx-Refresh": "true"})
 
 
-class BulletUpdateView(HtmxViewMixin, LoginRequiredMixin, UpdateView):
+class BulletUpdateView(HtmxViewMixin, OwnedObjectMixin, UpdateView):
     model = Bullet
+    owner_lookup = "experience__participant__user"
     template_name = "cold_apply/participant_update.html"
     htmx_template = "cold_apply/partials/bullet_update_form.html"
     refresh_on_save = True
@@ -939,14 +943,17 @@ class BulletUpdateView(HtmxViewMixin, LoginRequiredMixin, UpdateView):
         context["now"] = timezone.now()
 
         if job_id := self.kwargs.get("job_id"):
-            context["job"] = get_object_or_404(Job, pk=job_id)
+            context["job"] = get_object_or_404(
+                owned_by(Job.objects, self.request.user, "participant__user"), pk=job_id
+            )
 
         return context
 
 
 # TODO: BulletDetailView
-class BulletDetailView(HtmxViewMixin, LoginRequiredMixin, DetailView):
+class BulletDetailView(HtmxViewMixin, OwnedObjectMixin, DetailView):
     model = Bullet
+    owner_lookup = "experience__participant__user"
     htmx_template = "cold_apply/partials/bullet_detail_li.html"
     template_name = "cold_apply/bullet_detail.html"
     context_object_name = "bullet"
@@ -954,28 +961,12 @@ class BulletDetailView(HtmxViewMixin, LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
         context = super().get_context_data()
         if job_id := self.kwargs.get("job_id"):
-            job = get_object_or_404(Job, pk=job_id)
+            job = get_object_or_404(
+                owned_by(Job.objects, self.request.user, "participant__user"), pk=job_id
+            )
             context["job"] = job
 
         return context
-
-
-# TODO Create Interaction using generic CreateView
-@login_required
-def create_interaction(request):
-    if request.method == "POST":
-        form = InteractionForm(request.POST)
-        if form.is_valid():
-            interaction = form.save(commit=False)
-            interaction.user = request.user
-            interaction.save()
-            return redirect(reverse("cold_apply:index"))
-        else:
-            print(form.errors)
-    else:
-        form = InteractionForm()
-    context = {"form": form}
-    return render(request, "cold_apply/create_interaction.html", context)
 
 
 # TODO View interactions using generic ListView
@@ -1005,7 +996,7 @@ class LocationCreateView(HtmxViewMixin, LoginRequiredMixin, CreateView):
         return {"country": Country.objects.get(name="United States")}
 
 
-class LocationUpdateView(LoginRequiredMixin, UpdateView):
+class LocationUpdateView(StaffRequiredMixin, UpdateView):
     fields = ["city", "state", "country"]
     model = Location
     template_name = "cold_apply/location_update.html"
@@ -1023,8 +1014,9 @@ class LocationListView(LoginRequiredMixin, ListView):
     context_object_name = "locations"
 
 
+@login_required
 def find_new_jobs_view(request, participant_id):
-    participant = get_object_or_404(Participant, pk=participant_id)
+    participant = get_object_or_404(owned_by(Participant.objects, request.user, "user"), pk=participant_id)
 
     job_searches = JobSearch.objects.filter(participant=participant).order_by(
         "-created_at"
@@ -1077,6 +1069,7 @@ def find_new_jobs_view(request, participant_id):
     )
 
 
+@login_required
 def get_task_status_view(request):
     """task_id is appended to request.session in another view
     use that to retrieve the task status.
@@ -1120,27 +1113,12 @@ def get_task_status_view(request):
 
 
 @csrf_exempt
+@require_POST
 def task_get_jobs_for_participant(request):
     """Recieve POST from google cloud tasks"""
+    if not is_authorized_task_request(request):
+        return HttpResponse(status=403)
 
-    work_task(
-        request,
-        get_jobs_for_participant,
-    )
-    return JsonResponse({"status": "success"})
-
-
-def view_uploaded_resume(request, pk):
-    participant = get_object_or_404(Profile, pk=pk)
-    resume_name = participant.resume.name
-    if participant.uploaded_resume:
-        signed_url = generate_signed_url(
-            bucket_name=settings.GS_BUCKET_NAME,
-            object_name=resume_name,
-        )
-        print(signed_url)
-        return redirect(signed_url)
-    else:
-        return redirect(
-            reverse("cold_apply:participant_detail", kwargs={"pk": pk})
-        )
+    task = work_task(request, get_jobs_for_participant)
+    # A 5xx makes Cloud Tasks retry the task
+    return JsonResponse({"status": task.status}, status=500 if task.has_failed() else 200)

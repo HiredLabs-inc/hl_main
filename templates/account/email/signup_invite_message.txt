@@ -1,0 +1,9 @@
+{% extends "account/email/base_message.txt" %}
+{% load i18n %}
+
+{% block content %}{% autoescape off %}{% blocktrans %}You started signing up to Hired Labs a while ago but didn't finish. We've made signing up simpler, and removed the unfinished account.
+
+If you'd still like our help with your job search, open this link and choose a password:
+{{ signup_url }}
+
+The link works for 7 days. If you're no longer interested, you can ignore this email; we won't send another.{% endblocktrans %}{% endautoescape %}{% endblock content %}

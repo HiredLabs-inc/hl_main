@@ -9,7 +9,7 @@ services:
       # see frontend/tailwind.config.js
       - .:/app
     working_dir: /app/frontend
-    command: sh -c "npm install && npm run watch"
+    command: sh -c "npm ci && npm run watch"
   gcloud:
     image: google/cloud-sdk:latest
     volumes:
@@ -41,9 +41,13 @@ services:
       - DJANGO_SETTINGS_MODULE=hl_main.settings.dev
 
   db:
-    image: postgres
+    # pinned: data in pgdata is Postgres 17 format
+    image: postgres:17
     environment:
       - POSTGRES_PASSWORD=postgres
+    volumes:
+      # named so the dev database survives container recreation
+      - pgdata:/var/lib/postgresql/data
   django-tasks:
     build:
       context: .
@@ -60,3 +64,6 @@ services:
       - DJANGO_ROLE=tasks
       - DJANGO_SETTINGS_MODULE=hl_main.settings.dev
     command: python manage.py runserver 0.0.0.0:8001
+
+volumes:
+  pgdata:

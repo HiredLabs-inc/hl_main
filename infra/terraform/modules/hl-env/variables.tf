@@ -100,6 +100,12 @@ variable "sql_nightly_stop" {
   default     = false
 }
 
+variable "signup_reminders_schedule" {
+  description = "Cron schedule (America/Los_Angeles) that runs the signup-reminders job; null runs it only by hand."
+  type        = string
+  default     = null
+}
+
 variable "deletion_protection" {
   type = bool
 }

@@ -7,7 +7,7 @@
 | `terraform/modules/hl-env` | One environment: SAs, Cloud SQL, secret, bucket, queue, Cloud Run web/worker/jobs, deploy trigger |
 | `terraform/modules/hl-lb` | Prod load balancer, Cloud CDN, Certificate Manager cert |
 | `terraform/envs/{stage,prod}` | Environment roots |
-| `cloudbuild/deploy.yaml` | Build → migrate → deploy. `develop` → stage, `main` → prod |
+| `cloudbuild/deploy.yaml` | Build → migrate → deploy. `staging` → stage, `main` → prod |
 
 Conventions: resources are named `hl-<env>-<thing>`. There are no service account keys anywhere. Cloud Build owns container images and Terraform owns everything else. Secrets and DB passwords never go through Terraform, so they stay out of state.
 
@@ -48,13 +48,20 @@ Then, using the values from `terraform output`:
    GCP_CLOUDSQL_PRIVATE_IP=<output sql_private_ip>
    GS_BUCKET_NAME=<output media_bucket>
    CLOUDRUN_SERVICE_URL=<output web_url>
-   CLOUDRUN_WORKER_URL=<output worker_url>
+   CLOUDRUN_WORKER_URL=<output worker_url>   # the deterministic *-<project number>.<region>.run.app hosts are added automatically
+   TURNSTILE_SITE_KEY=<from Cloudflare Turnstile>
+   TURNSTILE_SECRET_KEY=<from Cloudflare Turnstile>
+   PUBLIC_BASE_URL=              # prod: https://www.hiredlabs.org ; stage: leave out (uses CLOUDRUN_SERVICE_URL)
    ALLOWED_HOSTS=                # prod: hiredlabs.org,www.hiredlabs.org ; stage: leave empty
    ```
-3. **First deploy:** push to `develop` (stage) or `main` (prod). The trigger reads `infra/cloudbuild/deploy.yaml` from that branch on GitHub, so it has to be pushed there first. After that, you can re-run by hand:
-   `gcloud builds triggers run hl-stage-deploy --branch=develop --project=hl-main-stage`
+3. **First deploy:** push to `staging` (stage) or `main` (prod). The trigger reads `infra/cloudbuild/deploy.yaml` from that branch on GitHub, so it has to be pushed there first. After that, you can re-run by hand:
+   `gcloud builds triggers run hl-stage-deploy --branch=staging --project=hl-main-stage`
 4. **Seed stage data:**
    `gcloud run jobs execute hl-stage-manage --region=us-west1 --project=hl-main-stage --args=manage.py,loaddata,concentrations,degrees,titles,skills,states,countries_hdi,step_seed`
+
+### Promoting to stage
+Pushes to `develop` don't deploy. To deploy what's on `develop` to stage, fast-forward `staging` to it:
+`git push origin develop:staging`
 
 ### Stage database on demand
 The stage database is created running and is stopped every night at 02:00 PT. Deploys to stage start it automatically. To start it by hand:

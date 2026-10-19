@@ -1,0 +1,9 @@
+{% extends "account/email/base_message.txt" %}
+{% load i18n %}
+
+{% block content %}{% autoescape off %}{% blocktrans %}Someone (hopefully you) asked to sign up to Hired Labs with this email address.
+
+To finish signing up, open this link and choose a password:
+{{ signup_url }}
+
+The link works for 7 days. If this wasn't you, you can ignore this email.{% endblocktrans %}{% endautoescape %}{% endblock content %}

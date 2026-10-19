@@ -1,16 +1,25 @@
-import django
+import datetime
 import os
 from urllib.parse import urlencode
-from django.test import TestCase
-from django.contrib.staticfiles.testing import StaticLiveServerTestCase
-from django.urls import reverse
+
+from django.conf import settings
 from django.contrib.auth.models import User
+from django.contrib.staticfiles.testing import StaticLiveServerTestCase
+from django.shortcuts import resolve_url
+from django.test import TestCase
+from django.urls import reverse
+from playwright.sync_api import sync_playwright
 
 from cold_apply.forms import ResumeConfigForm
-from cold_apply.models import Job, Location, Participant, SkillBullet, State
-from hl_main import settings
-from playwright.sync_api import Playwright, sync_playwright, expect
-from cold_apply.models import Skill
+from cold_apply.models import Phase, Skill, SkillBullet, Step
+from cold_apply.tests.factories import (
+    ExperienceFactory,
+    JobFactory,
+    OrganizationFactory,
+    ParticipantFactory,
+    PositionFactory,
+    UserFactory,
+)
 from resume.models import (
     Bullet,
     CertProjectActivity,
@@ -28,10 +37,32 @@ from resume.pdf import (
 )
 
 
+def make_resume_participant():
+    """A participant with one job and three experiences with distinct start dates,
+    each experience carrying factory bullets."""
+    # The pipeline only lists participants whose current step is in an active phase
+    phase = Phase.objects.create(title="Phase 1", start="start", end="end", result="result", active=True)
+    step = Step.objects.create(title="Phase 1.0", description="First step", phase=phase)
+    user = UserFactory(first_name="Jane", last_name="Veteran", email="jane@example.com")
+    participant = ParticipantFactory(user=user, current_step=step, jobs=[], experiences=[])
+    JobFactory(participant=participant, title=PositionFactory(title="Software Engineer"), status="Open")
+    for year in (2018, 2020, 2022):
+        ExperienceFactory(
+            participant=participant,
+            org=OrganizationFactory(),
+            position=PositionFactory(),
+            start_date=datetime.date(year, 1, 1),
+            end_date=datetime.date(year + 1, 1, 1),
+        )
+    return participant
+
+
+def login_redirect_url(url):
+    return resolve_url(settings.LOGIN_URL) + f"?next={url}"
+
+
 class ColdApplyBrowserTest(StaticLiveServerTestCase):
     """Playwright end to end tests for the cold_apply app."""
-
-    fixtures = ["cold_apply/fixtures/dev_data.json"]
 
     @classmethod
     def setUpClass(cls):
@@ -52,6 +83,10 @@ class ColdApplyBrowserTest(StaticLiveServerTestCase):
         cls.browser.close()
         cls.playwright.stop()
 
+    def setUp(self):
+        User.objects.create_superuser(username="admin@example.com", email="admin@example.com", password="admin")
+        self.participant = make_resume_participant()
+
     def test_click_through_to_config_page(self):
         """
         - Login and navigate to the config page for a job.
@@ -59,56 +94,39 @@ class ColdApplyBrowserTest(StaticLiveServerTestCase):
         """
         context = self.browser.new_context()
         page = context.new_page()
-        page.goto(f"{self.live_server_url}/userprofile/login/?next=/staff/")
-        page.locator("#id_username").click()
-        page.locator("#id_username").fill("admin")
-        page.locator("#id_password").click()
+        page.goto(f"{self.live_server_url}{reverse('account_login')}?next={reverse('cold_apply:index')}")
+        page.locator("#id_login").fill("admin@example.com")
         page.locator("#id_password").fill("admin")
-        page.get_by_role("button", name="Login").click()
-        page.get_by_role("link", name="cold_apply").click()
+        page.get_by_role("button", name="Sign In").click()
 
-        page.get_by_role("link", name="Jeff Stock").click()
-        page.get_by_role("link", name="Software Engineer - Early Professional").click()
+        page.get_by_role("link", name="Jane Veteran").first.click()
+        page.get_by_role("link", name="Software Engineer").first.click()
         with page.expect_popup() as page1_info:
             page.get_by_role("link", name="Tailor Resume").click()
         page1 = page1_info.value
-        page1.get_by_text(
-            "Hired Labs, inc.: Technical Co-founder - 2022-06-15 - Present"
-        ).click()
-        page1.get_by_text(
-            "Upwork Inc.: Program Manager, Data Analytics & Operations - 2019-12-31 - 2022-05-"
-        ).click()
-        page1.get_by_label(
-            "Upwork Inc.: Associate Program Manager, Contingent Workforce - 2018-08-01 - 2019-12-31"
-        ).check()
-        page1.get_by_role("listitem").filter(has_text="Top Skills").click()
-        page1.get_by_role("listitem").filter(
-            has_text="Seriff Overview | Education | Skills | Certifications"
-        ).locator("div").click()
+        for experience in Experience.objects.filter(participant=self.participant):
+            page1.get_by_label(str(experience)).check()
 
-        page1.get_by_text("No colors").click()
-        page1.get_by_text("No colors").click()
         page1.get_by_role("button", name="Preview Content").click()
-        assert page1.get_by_text("Jeff Stock").is_visible()
+        assert page1.get_by_text("Jane Veteran").first.is_visible()
         page1.get_by_role("button", name="Back to Configuration").click()
 
         context.close()
 
 
 class EducationUpdateViewTestCase(TestCase):
-    fixtures = ["cold_apply/fixtures/dev_data.json"]
-
     @classmethod
-    def setUpTestData(self):
-        self.education = Education.objects.create(
-            participant=Participant.objects.filter(name="Jeff Stock").first(),
-            org=Organization.objects.first(),
-            degree=Degree.objects.first(),
-            concentration=Concentration.objects.first(),
+    def setUpTestData(cls):
+        cls.staff = User.objects.create_superuser(username="admin@example.com", email="admin@example.com", password="admin")
+        cls.education = Education.objects.create(
+            participant=ParticipantFactory(jobs=[], experiences=[]),
+            org=OrganizationFactory(),
+            degree=Degree.objects.create(name="Bachelor of Science", abbr="BS"),
+            concentration=Concentration.objects.create(name="Computer Science"),
         )
 
     def test_view_200(self):
-        self.client.login(username="admin", password="admin")
+        self.client.force_login(self.staff)
 
         url = reverse("cold_apply:update_education", args=[self.education.id])
 
@@ -117,44 +135,35 @@ class EducationUpdateViewTestCase(TestCase):
 
         self.client.logout()
         unauth_response = self.client.get(url)
-        self.assertRedirects(
-            unauth_response, reverse(settings.LOGIN_URL) + f"?next={url}"
-        )
+        self.assertRedirects(unauth_response, login_redirect_url(url))
 
 
 class ParticipantUpdateViewTestCase(TestCase):
-    fixtures = ["cold_apply/fixtures/dev_data.json"]
+    @classmethod
+    def setUpTestData(cls):
+        cls.staff = User.objects.create_superuser(username="admin@example.com", email="admin@example.com", password="admin")
+        cls.participant = ParticipantFactory(jobs=[], experiences=[])
 
     def test_view_200(self):
-        self.client.login(username="admin", password="admin")
+        self.client.force_login(self.staff)
 
-        url = reverse(
-            "cold_apply:update_participant", args=[Participant.objects.first().id]
-        )
+        url = reverse("cold_apply:update_participant", args=[self.participant.id])
 
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
 
         self.client.logout()
         unauth_response = self.client.get(url)
-        self.assertRedirects(
-            unauth_response, reverse(settings.LOGIN_URL) + f"?next={url}"
-        )
+        self.assertRedirects(unauth_response, login_redirect_url(url))
 
 
 class ConfigureTailoredResumeViewTest(TestCase):
-    fixtures = ["cold_apply/fixtures/dev_data.json"]
-
-    def setUp(self):
-        self.user = User.objects.create_superuser(
-            username="testuser", password="testpassword"
-        )
-        self.participant = Participant.objects.filter(name="Jeff Stock").first()
-        self.job = self.participant.job_set.first()
-        self.config_url = reverse(
-            "cold_apply:configure_tailored_resume", args=[self.job.pk]
-        )
-        self.resume_url = reverse("cold_apply:tailored_resume", args=[self.job.id])
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_superuser(username="testuser", password="testpassword")
+        cls.participant = make_resume_participant()
+        cls.job = cls.participant.job_set.first()
+        cls.config_url = reverse("cold_apply:configure_tailored_resume", args=[cls.job.pk])
 
     def test_get_request(self):
         self.client.force_login(self.user)
@@ -169,13 +178,9 @@ class ConfigureTailoredResumeViewTest(TestCase):
             RESUME_TEMPLATE_SECTIONS_JSON,
         )
 
-        # Add assertions for other expected form errors
-
     def test_job_not_found(self):
         self.client.force_login(self.user)
-        url = reverse(
-            "cold_apply:configure_tailored_resume", args=[12345]
-        )  # Non-existent job ID
+        url = reverse("cold_apply:configure_tailored_resume", args=[12345])  # Non-existent job ID
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, 404)
@@ -183,111 +188,64 @@ class ConfigureTailoredResumeViewTest(TestCase):
     def test_view_is_login_required(self):
         response = self.client.get(self.config_url)
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(
-            response, reverse(settings.LOGIN_URL) + f"?next={self.config_url}"
-        )
+        self.assertRedirects(response, login_redirect_url(self.config_url))
 
 
 class TailoredResumeViewTestCase(TestCase):
-    fixtures = ["cold_apply/fixtures/dev_data.json"]
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_superuser(username="testuser", password="testpassword")
+        cls.participant = make_resume_participant()
+        cls.job = cls.participant.job_set.first()
+        cls.url = reverse("cold_apply:tailored_resume", args=[cls.job.id])
 
-    def setUp(self):
-        self.user = User.objects.create_superuser(
-            username="testuser", password="testpassword"
-        )
-        # self.participant = Participant.objects.first()
-        # self.position = Position.objects.create("position")
-        self.participant = Participant.objects.filter(name="Jeff Stock").first()
-        self.job = self.participant.job_set.first()
-        self.url = reverse("cold_apply:tailored_resume", args=[self.job.id])
-        skill1 = Skill.objects.create(title="test skill 1")
+        bullets = Bullet.objects.filter(experience__participant=cls.participant)
+        for i, bullet in enumerate(bullets[:3], start=1):
+            SkillBullet.objects.create(bullet=bullet, skill=Skill.objects.create(title=f"test skill {i}"))
 
-        skill2 = Skill.objects.create(title="test skill 2")
-        skill3 = Skill.objects.create(title="test skill 3")
-
-        bullets = Bullet.objects.filter(experience__participant=self.participant)
-
-        bullet1 = bullets[0]
-        bullet2 = bullets[1]
-        bullet3 = bullets[2]
-
-        SkillBullet.objects.create(
-            bullet=bullet1,
-            skill=skill1,
-        )
-        SkillBullet.objects.create(
-            bullet=bullet2,
-            skill=skill2,
-        )
-        SkillBullet.objects.create(
-            bullet=bullet3,
-            skill=skill3,
-        )
-
-        self.cert1 = CertProjectActivity.objects.create(
+        cls.cert1 = CertProjectActivity.objects.create(
             org=Organization.objects.first(),
             title="test cert 1",
             description="test cert 1 description",
             variety="Certification",
-            participant=self.participant,
+            participant=cls.participant,
         )
-        self.cert2 = CertProjectActivity.objects.create(
+        cls.cert2 = CertProjectActivity.objects.create(
             org=Organization.objects.first(),
             title="test cert 1",
             description="test cert 1 description",
             variety="Award",
-            participant=self.participant,
+            participant=cls.participant,
         )
 
-    def test_response_is_pdf(self):
-        self.client.force_login(self.user)
-        data = {
+    def resume_params(self, **overrides):
+        return {
             "sections": [v for v, k in ResumeSections.choices],
             "bullets_content": ResumeFormatChoices.CHRONOLOGICAL,
             "resume_template": ResumeCoreTemplates.STANDARD,
-            # "preview": True,
-            "experiences": Experience.objects.filter(
-                participant=self.participant
-            ).values_list("id", flat=True),
-            # "skills": [self.skill.pk],
-            # "certifications": [self.certification.pk],
-            # Add other form fields here with their respective values
+            "experiences": Experience.objects.filter(participant=self.participant).values_list("id", flat=True),
+            **overrides,
         }
-        response = self.client.get(self.url, data)
 
-        self.assertTemplateUsed(
-            response, f"resume/resume_{ResumeCoreTemplates.STANDARD}.html"
-        )
+    def test_response_is_pdf(self):
+        self.client.force_login(self.user)
+        response = self.client.get(self.url, self.resume_params())
+
+        self.assertTemplateUsed(response, f"resume/resume_{ResumeCoreTemplates.STANDARD}.html")
         self.assertEqual(response["Content-Type"], "application/pdf")
-
         self.assertEqual(response.status_code, 200)
 
     def test_preview_response_is_html(self):
         self.client.force_login(self.user)
-        data = {
-            "sections": [v for v, k in ResumeSections.choices],
-            "bullets_content": ResumeFormatChoices.CHRONOLOGICAL,
-            "resume_template": ResumeCoreTemplates.STANDARD,
-            "preview": True,
-            "experiences": Experience.objects.filter(
-                participant=self.participant
-            ).values_list("id", flat=True),
-            # "skills": [self.skill.pk],
-            # "certifications": [self.certification.pk],
-            # Add other form fields here with their respective values
-        }
-        response = self.client.get(self.url, data)
-        self.assertTemplateUsed(
-            response, f"resume/resume_{ResumeCoreTemplates.STANDARD}.html"
-        )
-        self.assertEqual(response["Content-Type"], "text/html; charset=utf-8")
+        response = self.client.get(self.url, self.resume_params(preview=True))
 
+        self.assertTemplateUsed(response, f"resume/resume_{ResumeCoreTemplates.STANDARD}.html")
+        self.assertEqual(response["Content-Type"], "text/html; charset=utf-8")
         self.assertEqual(response.status_code, 200)
 
     def test_post_request_invalid_form(self):
         self.client.force_login(self.user)
-        data = {"wrong": True}
-        response = self.client.get(self.url + f"?{urlencode(data)}")
+        response = self.client.get(self.url + f"?{urlencode({'wrong': True})}")
         self.assertRedirects(
             response,
             reverse("cold_apply:configure_tailored_resume", args=[self.job.pk]),
@@ -301,17 +259,9 @@ class TailoredResumeViewTestCase(TestCase):
             .values_list("id", flat=True)
         )[:2]
 
-        data = {
-            "sections": [v for v, k in ResumeSections.choices],
-            "bullets_content": ResumeFormatChoices.SKILLS,
-            "resume_template": ResumeCoreTemplates.STANDARD,
-            "preview": True,
-            "extra_skills": extra_skills,
-            "experiences": Experience.objects.filter(
-                participant=self.participant
-            ).values_list("id", flat=True),
-        }
-
+        data = self.resume_params(
+            bullets_content=ResumeFormatChoices.SKILLS, preview=True, extra_skills=extra_skills
+        )
         response = self.client.get(self.url, data)
         self.assertQuerysetEqual(
             response.context["skills"].order_by("id"),
@@ -329,17 +279,7 @@ class TailoredResumeViewTestCase(TestCase):
         self.client.force_login(self.user)
         certs = [self.cert1.id]
 
-        data = {
-            "sections": [v for v, k in ResumeSections.choices],
-            "bullets_content": ResumeFormatChoices.SKILLS,
-            "resume_template": ResumeCoreTemplates.STANDARD,
-            "preview": True,
-            "certifications": certs,
-            "experiences": Experience.objects.filter(
-                participant=self.participant
-            ).values_list("id", flat=True),
-        }
-
+        data = self.resume_params(bullets_content=ResumeFormatChoices.SKILLS, preview=True, certifications=certs)
         response = self.client.get(self.url, data)
         self.assertQuerysetEqual(
             response.context["certifications"].order_by("id"),
@@ -348,22 +288,9 @@ class TailoredResumeViewTestCase(TestCase):
 
     def test_experiences_are_chronological(self):
         self.client.force_login(self.user)
-        participant = Participant.objects.filter(name="Jeff Stock").first()
-
-        query_pararms = {
-            "sections": [v for v, k in ResumeSections.choices],
-            "bullets_content": ResumeFormatChoices.CHRONOLOGICAL,
-            "resume_template": ResumeCoreTemplates.STANDARD,
-            "preview": True,
-            "experiences": Experience.objects.filter(
-                participant=participant
-            ).values_list("id", flat=True),
-        }
-
-        response = self.client.get(self.url, query_pararms)
+        response = self.client.get(self.url, self.resume_params(preview=True))
 
         experiences = list(response.context["chronological_experiences"])
+        self.assertEqual(len(experiences), 3)
         for i, ex in enumerate(experiences[:-1]):
-            self.assertGreater(
-                ex["obj"].start_date, experiences[i + 1]["obj"].start_date
-            )
+            self.assertGreater(ex["obj"].start_date, experiences[i + 1]["obj"].start_date)

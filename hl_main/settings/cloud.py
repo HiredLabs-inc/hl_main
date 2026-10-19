@@ -11,6 +11,8 @@ from urllib.parse import urlparse
 
 from google.cloud import secretmanager
 
+from hl_main.cloudrun import deterministic_host
+
 from .base import *
 
 PRODUCTION = True
@@ -26,19 +28,27 @@ env.read_env(StringIO(_client.access_secret_version(name=_name).payload.data.dec
 SECRET_KEY = env("DJANGO_SECRET_KEY")
 VA_API_KEY = env("VA_API_KEY")
 SITE_ID = env.int("SITE_ID", default=1)
+TURNSTILE_SITE_KEY = env("TURNSTILE_SITE_KEY")
+TURNSTILE_SECRET_KEY = env("TURNSTILE_SECRET_KEY")
 
-# Hosts: custom domains (comma-separated) plus the Cloud Run URLs.
+# Hosts: custom domains (comma-separated) plus both Cloud Run URLs (see hl_main/cloudrun.py).
 ALLOWED_HOSTS = [h for h in env.list("ALLOWED_HOSTS", default=["www.hiredlabs.org", "hiredlabs.org"]) if h]
 CSRF_TRUSTED_ORIGINS = [f"https://{host}" for host in ALLOWED_HOSTS]
 CLOUDRUN_SERVICE_URL = env("CLOUDRUN_SERVICE_URL", default="")
 CLOUDRUN_WORKER_URL = env("CLOUDRUN_WORKER_URL", default="")
+# Base of links in emails sent outside a request; prod sets https://www.hiredlabs.org.
+PUBLIC_BASE_URL = env("PUBLIC_BASE_URL", default=CLOUDRUN_SERVICE_URL).rstrip("/")
 for _url in (CLOUDRUN_SERVICE_URL, CLOUDRUN_WORKER_URL):
     if _url:
         ALLOWED_HOSTS.append(urlparse(_url).netloc)
         CSRF_TRUSTED_ORIGINS.append(_url.rstrip("/"))
+GCP_REGION = env("GCP_REGION")
+_host = deterministic_host(GCP_REGION)
+if _host and _host not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(_host)
+    CSRF_TRUSTED_ORIGINS.append(f"https://{_host}")
 
 # Background tasks (see background_tasks/queue.py)
-GCP_REGION = env("GCP_REGION")
 GCP_TASK_QUEUE = env("GCP_TASK_QUEUE")
 GCP_SERVICE_ACCOUNT = env("GCP_SERVICE_ACCOUNT")
 
@@ -76,11 +86,14 @@ STORAGES = {
     },
 }
 
-SECURE_HSTS_SECONDS = 25
+# HSTS for a year. Not preloaded yet: preload is hard to undo once browsers ship it.
+SECURE_HSTS_SECONDS = 31536000
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = False
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
-SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-SECURE_HSTS_PRELOAD = True
+# Links in emails (confirmation, password reset) use https.
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"
 
 # google cloud run proxy sends http to containers
 # so need django to recognise HTTP_X_FORWARDED_PROTO header
@@ -102,11 +115,13 @@ LOGGING = {
     },
 }
 
+DEFAULT_FROM_EMAIL = "The HiredLabs Team <info@hiredlabs.org>"
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
+
 # Sends email to SMTP server
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-DEFAULT_FROM_EMAIL = "The HiredLabs Team <info@hiredlabs.org>"
 EMAIL_HOST_USER = env("EMAIL_HOST_USER", default=None)
 EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default=None)

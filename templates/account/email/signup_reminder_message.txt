@@ -1,0 +1,9 @@
+{% extends "account/email/base_message.txt" %}
+{% load i18n %}
+
+{% block content %}{% autoescape off %}{% blocktrans %}You started signing up to Hired Labs but haven't finished yet.
+
+To finish, open this link and choose a password:
+{{ signup_url }}
+
+The link works for 7 days. If you didn't sign up, you can ignore this email and we won't send another.{% endblocktrans %}{% endautoescape %}{% endblock content %}

@@ -165,9 +165,20 @@ resource "google_storage_bucket_iam_member" "media" {
 }
 
 resource "google_cloud_tasks_queue" "tasks" {
-  project    = var.project_id
-  name       = "${local.name}-tasks"
-  location   = var.region
+  project  = var.project_id
+  name     = "${local.name}-tasks"
+  location = var.region
+
+  # The worker returns 5xx when a task fails, so Cloud Tasks retries it.
+  # The default allows up to 100 attempts; each failed job-search scrape
+  # also saves an empty search, so keep retries few and spaced out.
+  retry_config {
+    max_attempts  = 3
+    min_backoff   = "60s"
+    max_backoff   = "600s"
+    max_doublings = 3
+  }
+
   depends_on = [google_project_service.apis]
 }
 
@@ -384,10 +395,12 @@ resource "google_cloud_run_v2_service_iam_member" "worker_invoker" {
 # hl-<env>-migrate runs on every deploy. hl-<env>-manage runs any management
 # command on demand, e.g.:
 #   gcloud run jobs execute hl-stage-manage --region=us-west1 --args=manage.py,loaddata,skills
+# hl-<env>-signup-reminders runs daily on var.signup_reminders_schedule.
 resource "google_cloud_run_v2_job" "jobs" {
   for_each = {
-    migrate = ["sh", "-c", "python manage.py migrate --no-input && python manage.py createcachetable"]
-    manage  = ["python", "manage.py", "showmigrations"]
+    migrate          = ["sh", "-c", "python manage.py migrate --no-input && python manage.py createcachetable"]
+    manage           = ["python", "manage.py", "showmigrations"]
+    signup-reminders = ["python", "manage.py", "send_signup_reminders"]
   }
   project             = var.project_id
   name                = "${local.name}-${each.key}"
@@ -431,6 +444,43 @@ resource "google_cloud_run_v2_job" "jobs" {
   }
 
   depends_on = [google_project_service.apis, google_compute_subnetwork_iam_member.network_user]
+}
+
+# Daily signup reminder emails (userprofile/reminders.py).
+resource "google_service_account" "reminders_scheduler" {
+  count        = var.signup_reminders_schedule == null ? 0 : 1
+  project      = var.project_id
+  account_id   = "${local.name}-reminders"
+  display_name = "Runs ${local.name}-signup-reminders"
+}
+
+resource "google_cloud_run_v2_job_iam_member" "reminders_scheduler" {
+  count    = var.signup_reminders_schedule == null ? 0 : 1
+  project  = var.project_id
+  location = var.region
+  name     = google_cloud_run_v2_job.jobs["signup-reminders"].name
+  role     = "roles/run.invoker"
+  member   = google_service_account.reminders_scheduler[0].member
+}
+
+resource "google_cloud_scheduler_job" "signup_reminders" {
+  count     = var.signup_reminders_schedule == null ? 0 : 1
+  project   = var.project_id
+  region    = var.region
+  name      = "${local.name}-signup-reminders"
+  schedule  = var.signup_reminders_schedule
+  time_zone = "America/Los_Angeles"
+
+  http_target {
+    http_method = "POST"
+    uri         = "https://run.googleapis.com/v2/projects/${var.project_id}/locations/${var.region}/jobs/${google_cloud_run_v2_job.jobs["signup-reminders"].name}:run"
+    oauth_token {
+      service_account_email = google_service_account.reminders_scheduler[0].email
+      scope                 = "https://www.googleapis.com/auth/cloud-platform"
+    }
+  }
+
+  depends_on = [google_project_service.apis]
 }
 
 # --- CI/CD ------------------------------------------------------------------

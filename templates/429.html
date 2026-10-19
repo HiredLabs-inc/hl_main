@@ -1,0 +1,10 @@
+{% extends "account/base.html" %}
+
+{% load i18n %}
+
+{% block head_title %}{% trans "Too Many Requests" %}{% endblock %}
+
+{% block content %}
+<h1 class="text-center">{% trans "Too Many Requests" %}</h1>
+<p class="mt-4">{% trans "Please wait a minute and try again." %}</p>
+{% endblock %}
