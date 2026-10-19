@@ -164,7 +164,7 @@ A new staff-only page (`cold_apply/staff/people/<pk>/`) replaces the staff use o
 | New `Flow` (name, slug, description, active, order) | Seeded: Intake, Resume & Job Search, Boot Camp |
 | `Phase.flow` FK | Existing phases go under Resume & Job Search |
 | `Step.required_permission` (optional char) | For the Intake *Verify Veteran Status* step |
-| New `Enrollment` (person→User, flow, current_step, assignee→User, status: active/paused/completed/withdrawn, started_at, step_entered_at, ended_at) | Only one non-ended enrollment per (person, flow) |
+| New `Enrollment` (person→User, flow, current_step, assignee→User, status: active/paused/rejected/no_show/completed/withdrawn, started_at, step_entered_at, ended_at) | Only one non-ended enrollment per (person, flow) |
 | New `Activity` (person, enrollment?, kind, text, from/to, actor, created_at) | Replaces `Interaction` |
 | Permission `userprofile.review_veteran_status` + "Veteran reviewers" group | Data migration creates the group |
 | Retire `Participant.current_step` | Data migration following the Step 3 mapping (built from prod rows) |
@@ -217,8 +217,12 @@ That portal and access level don't exist yet, and only staff does any of the cre
 
 ### New questions from the prod data (2026-10-19)
 - **Nurture as a flow?** 121 people are in Nurture → Monthly Newsletter, and Boot Camp Alumni is there too. The draft makes Nurture its own flow, so staff can filter and act on it like any other. The alternative is a paused status on another enrollment.
+**Answer (Jeff):** Nurture is its own flow, but it isn't defined yet. "Monthly Newsletter" is a placeholder; there is no newsletter.
 - **Do Not Contact:** 81 people are on *Do nothing*, but only 1 profile has `dnc=True`. Should the migration set `dnc=True` for all 81, and drop the Do Not Contact phase?
+**Answer (Jeff):** yes. Mark them do not contact, and drop the phase.
 - **"Send Rejection Message"** appears in both Phase 4 and Boot Camp On-boarding, and Phase 4 also has **"No Show"**. These are copied as they are. Should they become enrollment outcomes (status *withdrawn* / *completed* with a reason) instead of steps? The draft copies them now and leaves that for later.
+**Answer (Jeff):** "Send Rejection Message" is a step today because someone has to act, and the rejection isn't final. Applicants sometimes upload the wrong service document or an unclear DD214, and the soft rejection lets them fix it. It could be an outcome that leaves people in "rejected" until they respond. "No Show" can be an outcome too.
+**Resulting design (Claude):** two new enrollment statuses. **`rejected`** is a soft rejection that can be undone: the enrollment keeps its step, and staff set it back to `active` when the participant responds. **`no_show`** is the other. Setting `rejected` from the dashboard prompts for a reason (e.g. "unclear DD214"), which is saved to the Activity timeline. Sending the message itself stays a manual task for now. The "Send Rejection Message" and "No Show" steps are not copied.
 
 ## 8. Plan
 **DRAFT (Claude), 2026-10-19.** Each step ends with passing tests and can be merged to develop on its own. Step 1 doesn't depend on the rest and goes first. Ask before each commit.
@@ -228,7 +232,7 @@ That portal and access level don't exist yet, and only staff does any of the cre
   - `docker compose -p hl-cold-apply build django`
   - `docker compose -p hl-cold-apply run --rm frontend sh -c "npm ci && npm run build"`
   - `docker compose -p hl-cold-apply run --rm django python manage.py test`
-- Record the baseline test count here before Step 1.
+- Baseline on `develop` (7aa936b, 2026-10-19): 114 tests, all passing.
 - **Prod Phase and Step rows: done 2026-10-19.** Read-only `manage.py shell` query run through the `hl-prod-manage` Cloud Run job (execution `hl-prod-manage-xl84x`), with Jeff's approval. Only counts were read, no personal data. Step 3's mapping comes from these rows, not from the dev seed.
 
 **Prod phases and steps (2026-10-19).** Step ids in brackets; *n* = participants on that step now.
@@ -254,10 +258,10 @@ Other facts from the query:
 - Only **1** profile has `dnc=True`, although 81 participants are on *Do nothing*.
 - Several phases and steps share an `order` value (for example, three phases have order 0). That ambiguity is BUG-031.
 
-### Step 1 — Lock down DD214s (fixes BUG-021, BUG-027, BUG-028)
+### Step 1 — Lock down DD214s (fixes BUG-021, BUG-027, BUG-028) — done 2026-10-19, not yet deployed
 - Add the permission `review_veteran_status` to `Profile.Meta.permissions`. A data migration creates an empty **"Veteran reviewers"** group that holds it. Jeff is a superuser, so `has_perm` already passes for him. Others are added to the group in admin as they join.
-- New view `userprofile:service_doc` (`/staff/people/<user_pk>/service-doc/`):
-  - Users without the permission get a 403. For reviewers, it logs who opened which document (Python logging for now; it moves to Activity in Step 7) and redirects to a signed URL that lasts about 10 minutes.
+- New view `service_doc` (`/staff/people/<user_pk>/service-doc/`, in `hl_main/urls.py` beside the stuck-signups pages):
+  - Users without the permission get a 403. For reviewers, it logs who opened which document (to the `hl_main.audit` logger, kept at INFO in `cloud.py`; it moves to Activity in Step 7) and redirects to a signed URL that lasts about 10 minutes.
   - In DEBUG it streams the local file instead, so dev no longer links straight to `/media/`.
 - `update_veteran_status_view` requires the permission. The page and the participant page link to the file only through the new view. The participant page shows the update button only to holders of the permission (BUG-027).
 - Admin: `get_exclude` hides `service_doc` on `ProfileAdmin` and `VeteranProfileAdmin` for anyone without the permission. Fix `ProfileAdmin.search_fields` / `list_filter` (BUG-028).
@@ -283,11 +287,12 @@ Other facts from the query:
 | **Intake** | Applicants → Verify Veteran Status (gets `required_permission`) | A final **Triage** step |
 | **Resume & Job Search** | Phases 1–5 and all their steps | — |
 | **Boot Camp** | Boot Camp On-boarding (10 steps) and Boot Camp Wait List (3 steps), as two phases | — |
-| **Nurture** **[decide]** | Nurture → Boot Camp Alumni, Monthly Newsletter | — |
+| **Nurture** | Nurture → Boot Camp Alumni. *Monthly Newsletter* is a placeholder, so it becomes a generic **Nurture** step until the flow is defined (IDEA-006) | — |
 
 - **Existing participants:**
   - Each one gets one enrollment in the flow that now holds their current step, on the copied step. Phases 1–5 go to Resume & Job Search, the boot camp phases go to Boot Camp, and Nurture goes to the Nurture flow.
-  - **Do Not Contact / Do nothing (81 people):** no enrollment. Their `Profile.dnc` is set to `True` **[decide]**, because the flag is the source of truth and is set on only 1 profile today. Do Not Contact is not migrated as a flow.
+  - **Do Not Contact / Do nothing (81 people):** no enrollment. Their `Profile.dnc` is set to `True` (Jeff, 2026-10-19), and the phase is dropped.
+  - **Rejection and No Show steps:** these steps are not copied (no one is on a rejection step today). The 1 participant on *No Show* gets a Resume & Job Search enrollment at *Apply to Jobs* with status `no_show`.
   - Participants with no step (BUG-024; none in prod today) get an Intake enrollment at Triage, so staff would see them.
   - `step_entered_at` starts as `Participant.updated_at`, the best value available.
 - `Interaction` rows become Activity notes. Prod has none, but the code path stays for dev and stage data.
@@ -343,3 +348,5 @@ Tracked in `docs/backlog.md`: IDEA-001 assignee notifications, IDEA-002 kanban v
 - 2026-10-19: §1–3 filled in by Jeff; bugs logged (BUG-021–030); §5 drafted for review.
 - 2026-10-19: §7 answered by Jeff; bucket checked (private); §5 updated to match; §8 drafted for review.
 - 2026-10-19: prod phases/steps read (Step 0); Step 3 mapping built from them; new questions added to §7; BUG-031 logged; left-out items moved to `docs/backlog.md`.
+- 2026-10-19: Jeff answered the prod-data questions (Nurture flow, DNC, soft rejection / no show as statuses); Step 1 started.
+- 2026-10-19: Step 1 implemented: 129 tests passing (15 new in `userprofile/tests/test_service_doc.py`); migration `userprofile/0022` checked both ways.
