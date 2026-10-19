@@ -20,7 +20,8 @@ from .forms import (
     VeteranStatusUpdateForm,
     CommentForm,
 )
-from .models import OnboardingStep, Profile, VeteranProfile
+from . import testimonials
+from .models import BootCampSession, OnboardingStep, Profile, VeteranProfile
 
 from hl_main.gcs import SIGNED_URL_EXPIRATION, generate_signed_url
 
@@ -57,7 +58,11 @@ def user_home(request):
 
 # Public views
 def home(request):
-    return render(request, "new_home.html")
+    return render(
+        request,
+        "new_home.html",
+        {"next_bootcamp": BootCampSession.next_session(), "testimonials": testimonials.HOMEPAGE},
+    )
 
 def about(request):
     return render(request, "new_about.html")
@@ -69,7 +74,11 @@ def privacy_policy(request):
     return render(request, "privacy_policy.html")
 
 def how_it_works(request):
-    return render(request, "how_it_works.html")
+    return render(
+        request,
+        "how_it_works.html",
+        {"next_bootcamp": BootCampSession.next_session(), "testimonial": testimonials.SERVICES_FEATURE},
+    )
 
 def impact(request):
     return render(request, 'impact.html')

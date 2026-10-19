@@ -1,69 +1,45 @@
 {% extends 'new_home_base.html' %}
-{% load form_helpers %}
-{% load components %}
-{% include 'modal.html' %}
 {% load static %}
 
-    {% wrapper breadcrumbs %}
-    <div>
-        <nav class="flex container mx-auto p-2 text-sm" aria-label="Breadcrumb">
-            <ol class="inline-flex items-center space-x-1 md:space-x-3 overflow-x-auto">
-                {% block breadcrumbs %}
-                {% endblock breadcrumbs %}
-            </ol>
-        </nav>
-    </div>
-    {% endwrapper %}
+{% block title %}About | Hired Labs{% endblock title %}
 
-    {% block body %}
-        <div class="md:container justify-items-center md:mx-auto px-4">
-            <div class="grid grid-cols-1 max-w-2xl">
-                <p class="mb-3 first-line:uppercase first-line:tracking-widest first-letter:text-7xl first-letter:font-bold first-letter:mr-3 first-letter:float-left">
-                    Hired Labs is committed to helping Veterans find meaningful employment. Veterans
-              experience underemployment more often than their peers and face unique challenges when it comes to
-              translating their experience into terms that corporate America can understand.
-                </p>
+{% block body %}
+<div class="hl-page">
+    {% include 'components/page_header.html' with eyebrow="About" title="Veterans helping veterans." lead="Hired Labs is committed to helping veterans find meaningful employment." %}
 
-                <p>
-                    Our founder totally gets it. Jeff, a Marine Corps Veteran, was able to make
-              a successful career change thanks to a single manager's open-mindedness and willingness to see the value of his
-              transferable skills. Through his own lived experience, Jeff knows what it takes to make relevant
-              military experience understandable to non-vet hiring managers and recruiters.
-                </p>
-
-                <p>
-                    We offer high-touch job placement services and coding bootcamp for Vets, and training for non-Veteran hiring teams. Our goal is
-              to reframe the conversation around preconceived notions of an ideal candidate and make it easier for
-              Veterans to switch their code to better match that of hiring teams. We're a small team of passionate people who are committed to helping Veterans find meaningful employment.
-                </p>
-                </div>
-                <h2>
-                    Leadership
-                </h2>
-                <div class="grid grid-cols-2 max-w-2xl">
-                    <p class="mb-3 pr-3">
-                        Jeff, a US Marine Corps Veteran, served for nearly a decade as an interpreter and intelligence
-                        collector in the Former Soviet Union, Europe, and the Middle East.
-                        He led a team of signals intelligence collectors in and around Fallujah, Iraq during
-                        Operation Iraqi Freedom (OIF) II & III, then served as an interpreter for the
-                        Defense Threat Reduction Agency (DTRA). After completing his service, Jeff earned a B.A. in
-                        Linguistics at UC Berkeley, and then went on to build a successful career in tech creating and leading data analysis
-                        and operations teams.
-                    </p>
-                    <div class="items-center justify-center">
-                        <img src="{% static 'main/images/jeff.jpeg' %}" alt="Jeff Stock" class="h-48 w-48 mx-auto">
-                        <h3 class="text-center">Jeff Stock</h3>
-                        <h5 class="text-center">Founder/CEO</h5>
-                    </div>
-                    <p class="mb-3 pr-3">
-                        Passionate about helping Veterans gain confidence in their abilities and express themselves
-                        effectively in environments where Veterans are often misunderstood, Jeff founded Hired Labs
-                        where he leverages his experience in helping people from diverse backgrounds navigate the
-                        complexities of corporate America.
-                    </p>
-
-
-                </div>
+    <section class="hl-container hl-section flex flex-wrap gap-x-16 gap-y-10">
+        <div class="flex min-w-0 flex-[1.4_1_520px] flex-col gap-5 text-[17px] leading-[1.7] text-hl-ink">
+            <p>Veterans experience underemployment more often than their peers and face unique challenges when it comes to translating their experience into terms that corporate America can understand.</p>
+            <p>Our founder totally gets it. Jeff, a Marine Corps veteran, was able to make a successful career change thanks to a single manager's open-mindedness and willingness to see the value of his transferable skills. Through his own lived experience, Jeff knows what it takes to make relevant military experience understandable to non-vet hiring managers and recruiters.</p>
+            <p>We offer a coding boot camp and high-touch job placement services for vets, and training for non-veteran hiring teams. Our goal is to reframe the conversation around preconceived notions of an ideal candidate and make it easier for veterans to switch their code to better match that of hiring teams. We're a small team of passionate people who are committed to helping veterans find meaningful employment.</p>
+            <div class="flex flex-wrap gap-3 pt-2">
+                <a href="{% url 'how_it_works' %}#boot-camp" class="hl-btn-primary">Explore the boot camp</a>
+                <a href="{% url 'home' %}#donate" class="hl-btn-outline">Support our work</a>
+            </div>
         </div>
-    {% endblock body %}
+        <aside class="min-w-0 flex-[1_1_320px] self-start rounded-2xl bg-hl-mist p-7">
+            <h2 class="text-lg font-bold">How we're organized</h2>
+            <p class="mt-3 text-[15px] leading-relaxed text-hl-ink">Hired Labs, Inc. is an independent 501(c)(3) nonprofit. Stiles Hall serves as our fiscal agent. They handle our banking, accounting and mailing address, and connect us with their community. That's why our donation form names Stiles Hall.</p>
+        </aside>
+    </section>
 
+    <section class="hl-section border-t border-hl-line">
+        <div class="hl-container flex flex-col gap-10">
+            <h2 class="hl-h2">Leadership</h2>
+            <article class="flex flex-wrap items-start gap-x-12 gap-y-8">
+                <div class="flex flex-none flex-col items-start gap-3">
+                    <img src="{% static 'main/images/jeff.jpeg' %}" alt="Jeff Stock" width="200" height="200" class="h-40 w-40 rounded-2xl object-cover md:h-48 md:w-48">
+                    <div>
+                        <p class="text-xl font-bold">Jeff Stock</p>
+                        <p class="text-hl-muted">Founder and CEO</p>
+                    </div>
+                </div>
+                <div class="flex min-w-0 flex-[1_1_480px] flex-col gap-5 text-[17px] leading-[1.7] text-hl-ink">
+                    <p>Jeff, a US Marine Corps veteran, served for nearly a decade as an interpreter and intelligence collector in the Former Soviet Union, Europe, and the Middle East. He led a team of signals intelligence collectors in and around Fallujah, Iraq during Operation Iraqi Freedom (OIF) II &amp; III, then served as an interpreter for the Defense Threat Reduction Agency (DTRA). After completing his service, Jeff earned a B.A. in Linguistics at UC Berkeley, and then went on to build a successful career in tech creating and leading data analysis and operations teams.</p>
+                    <p>Passionate about helping veterans gain confidence in their abilities and express themselves effectively in environments where veterans are often misunderstood, Jeff founded Hired Labs where he leverages his experience in helping people from diverse backgrounds navigate the complexities of corporate America.</p>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+{% endblock body %}

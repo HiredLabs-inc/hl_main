@@ -1,20 +1,11 @@
 {% extends 'new_home_base.html' %}
-{% load static %}
-{% get_static_prefix as STATIC_PREFIX %}
-{% get_media_prefix as MEDIA_PREFIX %}
 
-<!-- Google tag (gtag.js) -->
-{#<script async src="https://www.googletagmanager.com/gtag/js?id=G-4KYKKL0C1Y"></script>#}
-{#<script>#}
-{#  window.dataLayer = window.dataLayer || [];#}
-{#  function gtag(){dataLayer.push(arguments);}#}
-{#  gtag('js', new Date());#}
-{##}
-{#  gtag('config', 'G-4KYKKL0C1Y');#}
-{#</script>#}
- {% block body %}
-    <div>
-    <h1>Privacy Policy</h1>
+{% block title %}Privacy Policy | Hired Labs{% endblock title %}
+
+{% block body %}
+{% include 'components/page_header.html' with eyebrow="Legal" title="Privacy Policy" %}
+<div class="hl-container py-12 md:py-16">
+<div class="hl-prose">
     <h2>1. Introduction</h2>
     <p>This Privacy Policy ("Policy") outlines how Hired Labs, Inc. ("we," "us," "our", "Company") collects, uses, discloses, and safeguards personal and non-personal information from individuals who interact with our services, websites, applications, and products.</p>
     <h2>2. Information We Collect</h2>
@@ -83,9 +74,7 @@
     <p>We may update this Policy to reflect changes in our practices or legal requirements. We will notify users of significant changes through appropriate channels, and will get active consent from users any time such changes are made.</p>
     <p>We will provide clear, plain-language, written summaries of what has changed, and ask users to accept the changes before accessing our sites, applications, products or services.</p>
     <h2>11. Contact Us</h2>
-    <p>If you have questions or concerns about this Policy or our data practices, please contact infa@hiredlabs.org
-
-
+    <p>If you have questions or concerns about this Policy or our data practices, please contact info@hiredlabs.org.</p>
 </div>
-{% endblock %}
-```
+</div>
+{% endblock body %}

@@ -1,20 +1,11 @@
 {% extends 'new_home_base.html' %}
-{% load static %}
-{% get_static_prefix as STATIC_PREFIX %}
-{% get_media_prefix as MEDIA_PREFIX %}
-<!-- Google tag (gtag.js) -->
-{#<script async src="https://www.googletagmanager.com/gtag/js?id=G-4KYKKL0C1Y"></script>#}
-{#<script>#}
-{#  window.dataLayer = window.dataLayer || [];#}
-{#  function gtag(){dataLayer.push(arguments);}#}
-{#  gtag('js', new Date());#}
-{##}
-{#  gtag('config', 'G-4KYKKL0C1Y');#}
-{#</script>#}
+
+{% block title %}Terms of Service | Hired Labs{% endblock title %}
 
 {% block body %}
-    <div>
-    <h1>Terms of Service</h1>
+{% include 'components/page_header.html' with eyebrow="Legal" title="Terms of Service" %}
+<div class="hl-container py-12 md:py-16">
+<div class="hl-prose">
     <h2>1. Acceptance of Terms</h2>
     <p>
         By accessing or using Hired Labs, Inc.'s ("we," "us," "our") services, websites, applications, and products, you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, please do not use our services.
@@ -59,7 +50,6 @@
     <p>We reserve the right to terminate or suspend your access to our services, at our sole discretion, for any reason, without notice.</p>
     <h3>11. Contact Us</h3>
     <p>If you have any questions or concerns about these Terms, please contact us at info@hiredlabs.org.</p>
-
 </div>
-{% endblock %}
-```
+</div>
+{% endblock body %}
