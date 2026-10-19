@@ -77,3 +77,13 @@ class HomepageContentTest(TestCase):
         response = self.client.get(reverse("how_it_works"))
         for anchor in ("boot-camp", "career-support", "eligibility"):
             self.assertContains(response, f'id="{anchor}"')
+
+
+class ImpactPageTest(TestCase):
+    def test_impact_page_shows_figures_without_years(self):
+        response = self.client.get(reverse("impact"))
+        for figure in ("113", "1,500+", "72 hours"):
+            self.assertContains(response, figure)
+        for year in ("2023", "2024"):
+            self.assertNotContains(response, year)
+        self.assertNotContains(response, "impact-2024.jpg")
