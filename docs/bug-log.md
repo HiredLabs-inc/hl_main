@@ -43,6 +43,7 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 | BUG-028 | Low | Open | userprofile | Suspected: Profile admin search raises FieldError (`user`, `nickname`) |
 | BUG-029 | Low | Open | cold_apply | Dead or misleading code in the staff pages (`staff.html` navbar, `index.html`, Bootstrap script, URL typo) |
 | BUG-030 | Low | Open | cold_apply | Any logged-in user can create companies, titles, positions, concentrations and locations, and list locations |
+| BUG-031 | Medium | Open | userprofile | Suspected: new signups can land in Nurture, because phases and steps share order values |
 
 ---
 
@@ -235,3 +236,9 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 - **Severity:** Low · **Status:** Open · **Found:** 2026-10-19, cold_apply staff redesign review
 - **Where:** `cold_apply/views.py` `OrganizationCreateView`, `TitleCreateView`, `PositionCreateView`, `ConcentrationCreateView`, `LocationCreateView`, `LocationDetailView`, `LocationListView` (all `LoginRequiredMixin`)
 - **Problem:** any participant can add companies, titles, positions, concentrations and locations, and list all locations. This may be intended, because participants pick these values on their own forms. Confirm before restricting.
+
+## BUG-031 — New signups can land in the wrong phase
+- **Severity:** Medium · **Status:** Open · **Found:** 2026-10-19, read-only prod query for the cold_apply staff redesign · **Suspected:** read from code and prod data, not reproduced
+- **Where:** `userprofile/models.py` `Profile.handle_onboard_complete` (`Step.objects.order_by("phase__order", "order").first()`)
+- **Problem:** on prod, Applicants, Phase 1 and Nurture all have phase order 0, and their first steps all have step order 0 (Verify Veteran Status, Send Initial Email, Boot Camp Alumni / Monthly Newsletter). Postgres may return any of these ties first, so a new participant can start in Nurture instead of Applicants.
+- **Fix idea:** the cold_apply staff redesign (Step 4) replaces this with an explicit Intake enrollment. Until then, give Applicants a unique lowest order in admin.
