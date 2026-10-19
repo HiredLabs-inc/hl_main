@@ -35,7 +35,7 @@ class BootCampDatesTest(TestCase):
     def test_dates_to_be_announced_by_default(self):
         response = self.client.get(reverse("home"))
         self.assertContains(response, "Next boot camp: dates to be announced")
-        self.assertContains(response, "Sign up to hear first")
+        self.assertContains(response, "Join the waitlist")
         self.assertNotContains(response, "Join the next boot camp")
 
         response = self.client.get(reverse("how_it_works"))

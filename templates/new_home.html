@@ -16,14 +16,14 @@
                 {% endif %}
             </p>
             <h1 class="hl-h1">Learn to code in six weeks. Free for veterans.</h1>
-            <p class="hl-lead max-w-[540px]">Go from zero to your own working web app with Python. Live classes twice a week, taught by people who've made the same transition.</p>
+            <p class="hl-lead max-w-[540px]">Go from zero to your own working web app with Python. Live classes twice a week.</p>
             <div class="flex flex-wrap gap-3 pt-2">
                 <a href="{% url 'custom_account_signup' %}" class="hl-btn-primary">
-                    {% if next_bootcamp %}Join the next boot camp{% else %}Sign up to hear first{% endif %}
+                    {% if next_bootcamp %}Join the next boot camp{% else %}Join the waitlist{% endif %}
                 </a>
                 <a href="{% url 'how_it_works' %}#boot-camp" class="hl-btn-outline">What you'll learn</a>
             </div>
-            <p class="text-sm text-hl-muted">No experience, math or laptop required. A 501(c)(3) nonprofit founded by a Marine Corps veteran.</p>
+            <p class="text-sm text-hl-muted">No experience, math or laptop required.</p>
         </div>
         <figure class="flex min-w-0 flex-[1.15_1_460px] flex-col gap-3">
             <video class="w-full rounded-[20px] bg-hl-navy shadow-[0_24px_48px_-24px_rgba(14,31,51,0.45)]"
