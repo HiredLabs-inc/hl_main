@@ -211,3 +211,6 @@ PUBLIC_BASE_URL = env("PUBLIC_BASE_URL", default="http://localhost:8000")
 
 TURNSTILE_SITE_KEY = env("TURNSTILE_SITE_KEY", default="1x00000000000000000000AA")
 TURNSTILE_SECRET_KEY = env("TURNSTILE_SECRET_KEY", default="1x0000000000000000000000000000000AA")
+
+# Where comments from the contact form are emailed (userprofile.views.contact).
+COMMENT_NOTIFICATION_EMAILS = ["info@hiredlabs.org"]
