@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.models import User
 from django.db import models
+from django.utils import timezone
 
 from cold_apply.models import Participant, Step
 from hl_main.models import TrackedModel
@@ -121,3 +122,21 @@ class OnboardingReminder(models.Model):
 
     def __str__(self) -> str:
         return f"{self.user.email} ({self.sent_count})"
+
+
+class BootCampSession(models.Model):
+    """A scheduled coding boot camp cohort. The public site shows the next start
+    date on or after today, and "dates to be announced" when there is none."""
+
+    start_date = models.DateField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["start_date"]
+
+    def __str__(self) -> str:
+        return f"Boot camp starting {self.start_date.isoformat()}"
+
+    @classmethod
+    def next_session(cls):
+        return cls.objects.filter(start_date__gte=timezone.localdate()).order_by("start_date").first()

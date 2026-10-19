@@ -1,0 +1,8 @@
+{# Public page header band. Usage: {% include 'components/page_header.html' with eyebrow="About" title="..." lead="..." %} #}
+<section class="border-b border-hl-line bg-hl-mist">
+    <div class="hl-container flex flex-col gap-4 py-10 md:py-16">
+        {% if eyebrow %}<p class="hl-eyebrow">{{ eyebrow }}</p>{% endif %}
+        <h1 class="max-w-[820px] text-[36px] font-extrabold leading-[1.08] tracking-[-0.03em] md:text-[52px]">{{ title }}</h1>
+        {% if lead %}<p class="hl-lead max-w-[680px]">{{ lead }}</p>{% endif %}
+    </div>
+</section>
