@@ -65,6 +65,31 @@ def staff_required(view):
     return decorator
 
 
+VETERAN_REVIEW_PERMISSION = "userprofile.review_veteran_status"
+
+
+def can_review_veteran_status(user):
+    """Only staff holding review_veteran_status (or superusers) may open DD214s
+    and change veteran status"""
+    return user.is_staff and user.has_perm(VETERAN_REVIEW_PERMISSION)
+
+
+def veteran_reviewer_required(view):
+    """Decorator for views that expose service documents or change veteran
+    status: anonymous users are sent to login, everyone else without the
+    permission gets a 403"""
+
+    @wraps(view)
+    def decorator(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect_to_login(request.get_full_path())
+        if not can_review_veteran_status(request.user):
+            raise PermissionDenied
+        return view(request, *args, **kwargs)
+
+    return decorator
+
+
 class StaffRequiredMixin(UserPassesTestMixin):
     """CBV version of staff_required"""
 

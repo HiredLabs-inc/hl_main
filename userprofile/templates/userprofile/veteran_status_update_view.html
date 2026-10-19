@@ -14,11 +14,7 @@
     <br>
     {% if profile.service_doc %}
             <div class="col-span-5 text-gray-600">
-                {% if debug %}
-                    <a class="admin_panel" href="{{ MEDIA_PREFIX }}{{ profile.service_doc }}"target="_blank">
-                {% else %}
-                    <a class="admin_panel" href="{{ signed_url }}"target="_blank">
-                {% endif %}
+                <a class="admin_panel" href="{% url 'service_doc' profile.user_id %}" target="_blank" rel="noopener">
                     View Uploaded Service Doc
                 </a>
             </div>

@@ -113,6 +113,10 @@ LOGGING = {
         "handlers": ["console"],
         "level": "WARNING",
     },
+    "loggers": {
+        # Access to sensitive documents (userprofile.views.service_doc_view)
+        "hl_main.audit": {"level": "INFO"},
+    },
 }
 
 DEFAULT_FROM_EMAIL = "The HiredLabs Team <info@hiredlabs.org>"

@@ -122,7 +122,8 @@ class StaffOnlyUserprofilePagesTest(TestCase):
             self.assertEqual(response.status_code, 403)
         self.assertFalse(Profile.objects.get(user=self.vet).veteran_verified)
 
-    def test_staff_allowed(self):
+    def test_staff_allowed_on_staff_home_only(self):
+        # Veteran status needs review_veteran_status as well (test_service_doc.py)
         self.client.force_login(verified_user("staff@example.com", is_staff=True))
-        for url in self.pages:
-            self.assertEqual(self.client.get(url).status_code, 200, url)
+        self.assertEqual(self.client.get(self.pages[0]).status_code, 200)
+        self.assertEqual(self.client.get(self.pages[1]).status_code, 403)

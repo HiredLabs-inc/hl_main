@@ -34,7 +34,7 @@
             {% else %}
             <span class="rounded-md bg-red-100 text-red-700 p-1">Not Verified</span>
             {% endif %}
-            {% if user.is_superuser %}
+            {% if user.is_staff and perms.userprofile.review_veteran_status %}
                 <br>
                 <br>
                     <div>

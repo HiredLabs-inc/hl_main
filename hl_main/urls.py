@@ -48,6 +48,7 @@ urlpatterns = [
     path("welcome/", userprofile_views.welcome, name="welcome"),
     path("staff/", userprofile_views.staff, name="staff"),
     path("staff/stuck-signups/", stuck_signups.stuck_signups_view, name="stuck_signups"),
+    path("staff/people/<int:user_pk>/service-doc/", userprofile_views.service_doc_view, name="service_doc"),
     path(
         "staff/stuck-signups/<str:kind>/<int:pk>/<str:action>/",
         stuck_signups.stuck_signup_action_view,
