@@ -1,9 +1,13 @@
+import logging
+import smtplib
+
 from allauth.account.utils import send_email_confirmation
 from django.conf import settings
 from allauth.decorators import rate_limit
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.mail import EmailMessage
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
@@ -24,6 +28,8 @@ from . import testimonials
 from .models import BootCampSession, OnboardingStep, Profile, VeteranProfile
 
 from hl_main.gcs import SIGNED_URL_EXPIRATION, generate_signed_url
+
+logger = logging.getLogger(__name__)
 
 @login_required
 @rate_limit(action="manage_email")
@@ -86,9 +92,25 @@ def impact(request):
 def contact(request):
     form = CommentForm(request.POST or None, request=request)
     if request.method == "POST" and form.is_valid():
-        form.save()
+        notify_comment(request, form.save())
         return redirect("thanks")
     return render(request, "secondary_actions.html", {"form": form})
+
+def notify_comment(request, comment):
+    """Email a new contact-form comment to the team. Replying answers the commenter.
+    A failed send is logged; the comment is already saved and visible in admin."""
+    admin_url = request.build_absolute_uri(reverse("admin:userprofile_comment_change", args=[comment.pk]))
+    message = EmailMessage(
+        # A newline in a header is rejected, so flatten the name
+        subject=f"New comment from {' '.join(comment.name.split())}",
+        body=f"{comment.name} <{comment.email}> wrote:\n\n{comment.comment}\n\nIn admin: {admin_url}\n",
+        to=settings.COMMENT_NOTIFICATION_EMAILS,
+        reply_to=[comment.email],
+    )
+    try:
+        message.send()
+    except (smtplib.SMTPException, OSError):
+        logger.exception("Comment notification for comment %s failed", comment.pk)
 
 def thanks(request):
     return render(request, "thanks.html")
