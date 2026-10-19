@@ -87,7 +87,7 @@ Today a participant has a single `current_step`, so they can be in only one plac
 
 ```
 Person (User + Profile)
- ├─ Enrollment: Intake               step: Veteran review     assignee: —        status: active
+ ├─ Enrollment: Intake               step: Verify Vet Status  assignee: —        status: active
  ├─ Enrollment: Boot Camp            step: Waitlist           assignee: Sam      status: active
  └─ Enrollment: Resume & Job Search  step: Write bullets      assignee: Alex     status: active
 Activity timeline (notes + every step/assignee/status change, who and when)
@@ -106,9 +106,9 @@ A new `staff_base.html` (Tailwind, Django messages, staff-only nav) replaces `st
 The participant-facing pages (their own profile, jobs, experience and resume tools) stay on `base_app.html` and are not part of this redesign. Staff stop sharing the participant's detail template (§5.3).
 
 ### 5.2 Dashboard (your list #1: work without leaving the page)
-One page, `/staff/` (or `/cold_apply/staff/`; **[decide]**), with tabs:
+One page at `/staff/`, with tabs:
 
-- **Intake.** New applicants, grouped by intake step: *Applied → Veteran review → Triage*.
+- **Intake.** New applicants, grouped by intake step: *Verify Veteran Status → Triage* (from the prod Applicants phase).
 - **One tab per active flow.** Enrollments grouped by phase, then step.
 - **My people.** Every enrollment assigned to me, across flows.
 
@@ -142,8 +142,8 @@ A new staff-only page (`cold_apply/staff/people/<pk>/`) replaces the staff use o
 - **One door to the file:** a view `GET /staff/people/<pk>/service-doc/` checks the permission, logs an Activity entry ("Alex opened the DD214"), and redirects to a ~10-minute signed URL. Pages never contain a signed URL for someone without the permission.
 - **Django admin:** remove `service_doc` from `ProfileAdmin` and `VeteranProfileAdmin` for anyone without the permission (`get_exclude`). Otherwise admin's GCS link is a 24-hour signed URL that any staff member with Profile access can open.
 - **Storage:** move new DD214 uploads to their own prefix (`service_docs/`) instead of the shared `uploads/`. Also confirm the GCS bucket has no public access (§7).
-- **Intake:** the *Veteran review* step can only be completed by a reviewer. The step model gets an optional `required_permission`, and the dashboard hides or disables that step change for other staff.
-- **Superusers:** they pass Django permission checks automatically. That's acceptable if superusers stay a short list. **[decide]**
+- **Intake:** the *Verify Veteran Status* step can only be completed by a reviewer. The step model gets an optional `required_permission`, and the dashboard hides or disables that step change for other staff.
+- **Superusers:** have access to everything, including DD214s (normal `has_perm` behaviour). At launch the reviewer group is empty, because Jeff is a superuser. Yes - superusers will be a small, trusted group, and should have full access to everything.
 
 ### 5.5 Assignees (your list #3)
 - **Default: the assignee is on the Enrollment.** "Who's responsible right now" can differ per flow, for example a boot camp lead versus a resume writer. The participant header shows all of them.
@@ -156,20 +156,20 @@ A new staff-only page (`cold_apply/staff/people/<pk>/`) replaces the staff use o
 - **Activity** replaces `Interaction` (which is admin-only today, with no views). Each entry has: person, optional enrollment, kind (note, email, phone, in person, step change, assignee change, status change, DD214 opened), text, `from`/`to` values, who, when. Existing `Interaction` rows are migrated over as notes.
 - **Flows, phases and steps:** stay managed in Django admin for now, since they rarely change. The "Flows" page is read-only.
 - **Companies / titles / locations:** out of scope for the first pass. Later: list, merge duplicates, delete. BUG-030 (participants creating reference data) needs a call first.
-- **Jobs and applications:** out of scope. Recommend dropping the unused `Application` model and keeping `Job.status` / `status_reason`. **[decide]**
+- **Jobs and applications:** out of scope, except that the unused `Application` model is dropped. `Job.status` / `status_reason` stay. Agreed with recommendation
 
 ### 5.7 Data model changes
 | Change | Notes |
 |---|---|
 | New `Flow` (name, slug, description, active, order) | Seeded: Intake, Resume & Job Search, Boot Camp |
 | `Phase.flow` FK | Existing phases go under Resume & Job Search |
-| `Step.required_permission` (optional char) | For the Intake *Veteran review* step |
+| `Step.required_permission` (optional char) | For the Intake *Verify Veteran Status* step |
 | New `Enrollment` (person→User, flow, current_step, assignee→User, status: active/paused/completed/withdrawn, started_at, step_entered_at, ended_at) | Only one non-ended enrollment per (person, flow) |
 | New `Activity` (person, enrollment?, kind, text, from/to, actor, created_at) | Replaces `Interaction` |
 | Permission `userprofile.review_veteran_status` + "Veteran reviewers" group | Data migration creates the group |
-| Retire `Participant.current_step` | Data migration: each Participant gets an Enrollment in Resume & Job Search at its current step. Participants in "Nurture" or "Do Not Contact" become paused enrollments; DNC already lives on `Profile.dnc` |
+| Retire `Participant.current_step` | Data migration following the Step 3 mapping (built from prod rows) |
 
-**Where the code lives [decide]:** this proposal puts Flow/Enrollment/Activity in a **new small app (`pipeline`)** keyed on `User`, with no imports from cold_apply. The dashboard, row partials and `staff_base.html` go there too. Cold apply then becomes the Resume & Job Search flow plus its job and resume tools, and a future program needs only new flow data and its own tools. The alternative is to keep everything inside `cold_apply`. That's faster to start but not reusable.
+**Where the code lives (decided: new app):** put the cod in a new pipeline app this proposal puts Flow/Enrollment/Activity in a **new small app (`pipeline`)** keyed on `User`, with no imports from cold_apply. The dashboard, row partials and `staff_base.html` go there too. Cold apply then becomes the Resume & Job Search flow plus its job and resume tools, and a future program needs only new flow data and its own tools. The alternative is to keep everything inside `cold_apply`. That's faster to start but not reusable.
 
 `Participant` stays for now, because jobs, bullets, experience and the other tools point at it. It can be folded into `User`/`Profile` later.
 
@@ -180,29 +180,166 @@ A new staff-only page (`cold_apply/staff/people/<pk>/`) replaces the staff use o
 | 2026-10-19 | DD214s are visible only to holders of a veteran-reviewer permission; other staff see status only | §3.2 |
 | 2026-10-19 | Each participant has a tracked assignee | §3.3 |
 | 2026-10-19 | A participant can be in more than one flow at once (e.g. Boot Camp and resume services) | §2.4 |
+| 2026-10-19 | One assignee per enrollment | Responsibility differs per flow |
+| 2026-10-19 | Intake is a flow; programs are modelled as flows | Uniform and reusable |
+| 2026-10-19 | New `pipeline` app keyed on `User`; dashboard at `/staff/` | Reusable admin interface (§1) |
+| 2026-10-19 | Boot Camp enrollments link to a `BootCampSession`; no session means waitlist | Boot camp sessions aren't always scheduled |
+| 2026-10-19 | Superusers get everything, including DD214s; reviewer group starts empty | Jeff is the only reviewer today |
+| 2026-10-19 | Drop `Application` | Unused |
+| 2026-10-19 | Participants keep create rights on reference data (BUG-030) for now | Needed for adding experience; revisit with the self-service portal |
 
 ## 7. Open questions
 - **Where is the assignee recorded?** The draft puts one assignee on each enrollment; the alternative is one per participant.
+**Answer** One assignee on each enrollment.
 - **Should Intake be a flow?** The draft models intake (Applied → Veteran review → Triage) as a flow, rather than as status fields on the profile.
+**Answer** Yes, Intake should be a flow, and flows in general are a good idea
 - **New app or inside cold_apply?** The draft proposes a new `pipeline` app keyed on `User`.
+**Answer** New app like the draft proposes
 - **URL for the dashboard:** `/staff/` or `/cold_apply/staff/`?
+**Answer** `/staff/`
 - **Boot Camp and cohorts:** should a Boot Camp enrollment link to a `BootCampSession` once one is scheduled, with "Waitlist" meaning no session yet?
+**Answer** Yes
 - **DD214 access for superusers:** should superusers get DD214 access automatically, or only through the reviewer group (a custom check rather than `has_perm`)?
+**Answer** Superusers should have access to all things, including DD214
 - **Who is in the "Veteran reviewers" group** at launch?
+**Clarifying question with possible answer** Do you mean which user(s) by name? Honestly, it's just me now, but there will be others in the future.
+**Reply (Claude):** yes, by name. You're a superuser, so the group can start empty and people are added in admin later.
 - **Is the GCS media bucket private?** If any public access exists, fixing it comes before anything else here.
+**Answer** Not sure - can you check?
+**Checked (Claude, 2026-10-19):** both are private. `hiredlabs-prod-media` and `hiredlabs-stage-media` have public access prevention `enforced` and uniform bucket-level access, with no `allUsers` or `allAuthenticatedUsers` bindings. The only bucket grant is `objectAdmin` to the app's service account. Project owners and editors (read and write) and project viewers (read) also have access through the default legacy bucket roles, and Jeff is the only project owner on prod. This matches Terraform (`infra/terraform/modules/hl-env/main.tf`).
 - **Who counts as staff:** only `is_staff`, or volunteers later? The signup redesign decided "no volunteer login yet".
+**Answer** There will be volunteers, but any time really soon.
 - **`Application` model:** drop it as unused, or replace `Job.status`/`status_reason` with it?
+**Answer** Drop `Application`
 - **Shared reference data:** should participants be able to create Companies, Titles and Locations (BUG-030), or only staff?
+Participants can now, because that's how experience is added - manually - and the intent is to eventually have particapants access certain tools through a self-service portal.
+That portal and access level don't exist yet, and only staff does any of the creation of those items now.  
+
+### New questions from the prod data (2026-10-19)
+- **Nurture as a flow?** 121 people are in Nurture → Monthly Newsletter, and Boot Camp Alumni is there too. The draft makes Nurture its own flow, so staff can filter and act on it like any other. The alternative is a paused status on another enrollment.
+- **Do Not Contact:** 81 people are on *Do nothing*, but only 1 profile has `dnc=True`. Should the migration set `dnc=True` for all 81, and drop the Do Not Contact phase?
+- **"Send Rejection Message"** appears in both Phase 4 and Boot Camp On-boarding, and Phase 4 also has **"No Show"**. These are copied as they are. Should they become enrollment outcomes (status *withdrawn* / *completed* with a reason) instead of steps? The draft copies them now and leaves that for later.
 
 ## 8. Plan
-**TODO:** ordered steps, filled in after Section 5.
+**DRAFT (Claude), 2026-10-19.** Each step ends with passing tests and can be merged to develop on its own. Step 1 doesn't depend on the rest and goes first. Ask before each commit.
 
 ### Step 0 — Working environment
 - Tests run in Docker under their own compose project:
   - `docker compose -p hl-cold-apply build django`
   - `docker compose -p hl-cold-apply run --rm frontend sh -c "npm ci && npm run build"`
   - `docker compose -p hl-cold-apply run --rm django python manage.py test`
+- Record the baseline test count here before Step 1.
+- **Prod Phase and Step rows: done 2026-10-19.** Read-only `manage.py shell` query run through the `hl-prod-manage` Cloud Run job (execution `hl-prod-manage-xl84x`), with Jeff's approval. Only counts were read, no personal data. Step 3's mapping comes from these rows, not from the dev seed.
+
+**Prod phases and steps (2026-10-19).** Step ids in brackets; *n* = participants on that step now.
+
+| Phase (id, order) | Steps in order |
+|---|---|
+| Applicants (10, 0) | Verify Veteran Status [14] |
+| Phase 1 (1, 0) | Send Initial Email [1] · Fill out intake form [2] (Participant) · Intake Call [3] · Conduct Intake Call [4] |
+| Phase 2 (2, 1) | Create Initial Job List [5] *n=2* · Analyze keywords in job posts [6] · Write tailored bullets and overview [7] |
+| Phase 3 (3, 2) | Send Initial Job and Resume Set [8] *n=1* · Offer Resume & Job Search [25] · Give Feedback on Initial Packet [9] (Participant) · Review for Resume Service [22] |
+| Phase 4 (4, 3) | Apply to Jobs [10] · No Show [32] *n=1* · Send Rejection Message [23] |
+| Phase 5 (5, 4) | Send End-of-Process Comms [11] |
+| Boot Camp On-boarding (8, 3) | Send Commitment Form [15] *n=1* · Send Rejection Message [17] · Send Waitlist 1 Message [18] · Send Waitlist 2 Message [24] · Fill out Commitment Form [20] *n=1* · Send Enrollment Confirmation [19] · Send Calendar Invite [28] · Send pre-course survey [26] · Send Instructor Intro [21] · Active Student [27] |
+| Boot Camp Wait List (9, 4) | Priority Enrollment - Next Cycle [31] · Never Committed [29] · Make Way for Enlisted [16] *n=5* |
+| Nurture (6, 0, inactive) | Boot Camp Alumni [30] · Monthly Newsletter [12] *n=121* |
+| Do Not Contact (7, 1, inactive) | Do nothing [13] *n=81* |
+
+Other facts from the query:
+- 213 participants, and every one has a step (BUG-024 doesn't occur in prod today).
+- 0 `Interaction` rows and 0 `Application` rows.
+- 0 `BootCampSession` rows.
+- 182 profiles have `bootcamp=True`.
+- Only **1** profile has `dnc=True`, although 81 participants are on *Do nothing*.
+- Several phases and steps share an `order` value (for example, three phases have order 0). That ambiguity is BUG-031.
+
+### Step 1 — Lock down DD214s (fixes BUG-021, BUG-027, BUG-028)
+- Add the permission `review_veteran_status` to `Profile.Meta.permissions`. A data migration creates an empty **"Veteran reviewers"** group that holds it. Jeff is a superuser, so `has_perm` already passes for him. Others are added to the group in admin as they join.
+- New view `userprofile:service_doc` (`/staff/people/<user_pk>/service-doc/`):
+  - Users without the permission get a 403. For reviewers, it logs who opened which document (Python logging for now; it moves to Activity in Step 7) and redirects to a signed URL that lasts about 10 minutes.
+  - In DEBUG it streams the local file instead, so dev no longer links straight to `/media/`.
+- `update_veteran_status_view` requires the permission. The page and the participant page link to the file only through the new view. The participant page shows the update button only to holders of the permission (BUG-027).
+- Admin: `get_exclude` hides `service_doc` on `ProfileAdmin` and `VeteranProfileAdmin` for anyone without the permission. Fix `ProfileAdmin.search_fields` / `list_filter` (BUG-028).
+- New uploads go to `service_docs/` (change `upload_to`; existing files stay where they are).
+- **Tests:** staff without the permission get 403 on the view and the page, and see no file field in admin. Reviewers and superusers get a redirect. The participant page shows the button only to the right users.
+
+### Step 2 — `pipeline` app: models and services
+- New app `pipeline`. It imports nothing from `cold_apply`.
+- **Models:**
+  - `Flow`.
+  - `Phase` and `Step`: new copies in `pipeline`, not moved, so the old cold_apply tables keep working until Step 9. `Step` gains `required_permission`.
+  - `Enrollment`: person, flow, current_step, assignee, status, started_at, step_entered_at, ended_at. A conditional `UniqueConstraint` allows one non-ended enrollment per (person, flow).
+  - `Activity`.
+  - All of them registered in admin.
+- **`pipeline/services.py`:** `enroll`, `move_to_step`, `assign`, `set_status`, `add_note`, `complete_triage`. Each one runs in a transaction, writes its Activity row and checks `required_permission`. Every UI path calls these functions; no view writes enrollments directly.
+- **Tests:** each service function, the uniqueness constraint, the permission-gated step, and an Activity row written for every change.
+
+### Step 3 — Seed flows and migrate existing data (fixes BUG-024)
+- **The data migration builds the flows from the prod rows in Step 0.** It copies phase and step titles, descriptions, owners and order. Steps that share an order value are ordered by id and renumbered.
+
+| New flow | Built from (prod phase → steps) | Added |
+|---|---|---|
+| **Intake** | Applicants → Verify Veteran Status (gets `required_permission`) | A final **Triage** step |
+| **Resume & Job Search** | Phases 1–5 and all their steps | — |
+| **Boot Camp** | Boot Camp On-boarding (10 steps) and Boot Camp Wait List (3 steps), as two phases | — |
+| **Nurture** **[decide]** | Nurture → Boot Camp Alumni, Monthly Newsletter | — |
+
+- **Existing participants:**
+  - Each one gets one enrollment in the flow that now holds their current step, on the copied step. Phases 1–5 go to Resume & Job Search, the boot camp phases go to Boot Camp, and Nurture goes to the Nurture flow.
+  - **Do Not Contact / Do nothing (81 people):** no enrollment. Their `Profile.dnc` is set to `True` **[decide]**, because the flag is the source of truth and is set on only 1 profile today. Do Not Contact is not migrated as a flow.
+  - Participants with no step (BUG-024; none in prod today) get an Intake enrollment at Triage, so staff would see them.
+  - `step_entered_at` starts as `Participant.updated_at`, the best value available.
+- `Interaction` rows become Activity notes. Prod has none, but the code path stays for dev and stage data.
+- **Tests:** run the migration on factory data that covers every mapping case, including the DNC case and tied order values. Before the prod deploy, also run it on a copy of stage data. Then rerun the Step 0 query on prod to confirm no phases or steps were added since 2026-10-19.
+
+### Step 4 — New signups enter Intake
+- `Profile.handle_onboard_complete` still creates the `Participant`, which the job and resume tools need. It no longer picks "the first step" (BUG-031: ties can drop new signups into Nurture). It creates an Intake enrollment at *Verify Veteran Status*. A non-veteran goes straight to *Triage*.
+- Verifying a veteran (Step 1 page) offers "Verified, move to Triage", which calls `move_to_step`.
+- **Tests:** onboarding creates exactly one Intake enrollment, and running it again doesn't duplicate it (keep the BUG-003 behaviour).
+
+### Step 5 — Staff layout and read-only dashboard at `/staff/`
+- Add `staff_base.html`: Tailwind, staff nav (§5.1) and Django messages. Today's `/staff/` app list (`staff_home.html`) moves into the nav.
+- `/staff/` shows tabs for Intake, each active flow, and My people. Filters (assignee, phase, status, in step > N days, search) are GET params, and the table body is swapped with htmx. The count strip links to filters. Rows come from a single partial, which Step 6 reuses.
+- Old `cold_apply:index` redirects to `/staff/`.
+- **Tests:** staff-only access, each filter, and a fixed query count with 50 enrollments.
+
+### Step 6 — Inline actions and quick view
+- **Row controls:**
+  - Step dropdown, assignee dropdown, note, and pause/complete/withdraw: each is an htmx POST to a small view that calls the service function and returns the updated row.
+  - Steps the user lacks permission for are disabled.
+- **"Enroll in…":** on any row, plus the triage form on the Intake tab, with checkboxes for Boot Camp and Resume & Job Search.
+- **Side panel:** quick view with profile summary, enrollments and timeline, opened from the name.
+- **Tests:** each action, including permission refusal, a CSRF-protected POST and a 404 for a missing enrollment. One Playwright smoke test of triage from the dashboard.
+
+### Step 7 — Staff participant workspace and People search
+- `/staff/people/` (search) and `/staff/people/<pk>/` (§5.3): header, enrollment cards, veteran panel (DD214 link only with the permission), timeline, profile details, and links to the existing work tools.
+- DD214 opens are now logged as Activity.
+- Staff links to `participant_detail` point to the workspace. The staff-only blocks are removed from `participant_detail.html`, which becomes participant-only. This fixes BUG-022, BUG-023 and BUG-025 by replacing the code that has them.
+- **Tests:** access, every panel renders with missing profile data, and the DD214 link is hidden without the permission.
+
+### Step 8 — Boot camp sessions
+- Link Boot Camp enrollments to `BootCampSession` on the userprofile side (`BootCampSession.enrollments`, at most one session per enrollment), so `pipeline` stays generic. An enrollment with no session is on the waitlist.
+- Assign a session from the row or the side panel, which moves the enrollment to *Session assigned*. The Boot Camp tab gets a session filter.
+- **Tests:** assigning a session, the waitlist filter, and one session per enrollment.
+
+### Step 9 — Cleanup (fixes BUG-026, BUG-029)
+- Remove `Participant.current_step` and cold_apply `Phase`, `Step`, `Interaction` and `Application` (dropped, §7). Remove `ParticipantListView`, `PhaseListView`, `participant_list.html`, `process.html`, `staff.html`, `cold_apply/index.html`, `ParticipantUpdateView` and its form.
+- Old URLs redirect. `process` becomes the read-only Flows page.
+- Fix the `companiies` URL typo.
+- Update `load_dev_data`, `dev_seed.json` and `cold_apply/tests/factories.py` for flows and enrollments.
+- **Tests:** full suite; no references left to the removed models (`grep`).
+
+### Step 10 — Rollout
+- Deploy to stage (`git push origin develop:staging`, done by Jeff). Check the Step 3 migration against stage data, then go through the dashboard as a staff user without the permission and as a superuser.
+- **Prod checklist:** rerun the Step 0 query and confirm the mapping still holds, take a database backup before deploying (deploys run migrations automatically), and add any reviewers to the group.
+- Update the bug log entries to `Fixed` with their commits.
+
+### Not in this plan
+Tracked in `docs/backlog.md`: IDEA-001 assignee notifications, IDEA-002 kanban view, IDEA-003 reference data management, IDEA-004 self-service participant portal (and BUG-030), IDEA-005 volunteer logins.
 
 ## 9. Status
 - 2026-10-19: worktree and doc created; review in Section 4.
 - 2026-10-19: §1–3 filled in by Jeff; bugs logged (BUG-021–030); §5 drafted for review.
+- 2026-10-19: §7 answered by Jeff; bucket checked (private); §5 updated to match; §8 drafted for review.
+- 2026-10-19: prod phases/steps read (Step 0); Step 3 mapping built from them; new questions added to §7; BUG-031 logged; left-out items moved to `docs/backlog.md`.
