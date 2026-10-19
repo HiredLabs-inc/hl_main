@@ -33,14 +33,14 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 | BUG-018 | Medium | Fixed | infra | Stage deploy fails at `start-sql` when the stopped database takes too long to start |
 | BUG-019 | Medium | Open | settings | Suspected: a request can hit a closed database connection (one 500 on stage sign-up) |
 | BUG-020 | Low | Open | tests | Suspected: `ColdApplyAccessTest` setup sometimes fails with a value too long for a 50-character column |
-| BUG-021 | High | Open | userprofile | Every staff user can open DD214s (veteran status page and Django admin) |
+| BUG-021 | High | Fixed | userprofile | Every staff user can open DD214s (veteran status page and Django admin) |
 | BUG-022 | Medium | Open | cold_apply | Do Not Contact badge is never shown to staff |
 | BUG-023 | Medium | Open | cold_apply | Participant page shows blank phone and email |
 | BUG-024 | Medium | Open | cold_apply | Participants with no current step don't appear on the pipeline |
 | BUG-025 | Low | Open | cold_apply | "Highest Education" is just the first Education row |
 | BUG-026 | Low | Open | cold_apply | Pipeline registration date prints the month where the minutes should be |
-| BUG-027 | Low | Open | cold_apply | Veteran status button is superuser-only but the view allows any staff |
-| BUG-028 | Low | Open | userprofile | Suspected: Profile admin search raises FieldError (`user`, `nickname`) |
+| BUG-027 | Low | Fixed | cold_apply | Veteran status button is superuser-only but the view allows any staff |
+| BUG-028 | Low | Fixed | userprofile | Suspected: Profile admin search raises FieldError (`user`, `nickname`) |
 | BUG-029 | Low | Open | cold_apply | Dead or misleading code in the staff pages (`staff.html` navbar, `index.html`, Bootstrap script, URL typo) |
 | BUG-030 | Low | Open | cold_apply | Any logged-in user can create companies, titles, positions, concentrations and locations, and list locations |
 | BUG-031 | Medium | Open | userprofile | Suspected: new signups can land in Nurture, because phases and steps share order values |
@@ -175,7 +175,7 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 - **Fix idea:** find the column with `\d` on the test tables after a failure, then cap that factory field, e.g. `factory.LazyFunction(lambda: fake.company()[:50])`.
 
 ## BUG-021 — Every staff user can open DD214s
-- **Severity:** High · **Status:** Open · **Found:** 2026-10-19, cold_apply staff redesign review
+- **Severity:** High · **Status:** Fixed (`feature/cold-apply-staff-redesign`, 8adb309; not yet merged to develop) · **Found:** 2026-10-19, cold_apply staff redesign review
 - **Where:** `userprofile/views.py` `update_veteran_status_view` (`@staff_required`, makes a signed URL for `profile.service_doc`); `userprofile/admin.py` `ProfileAdmin` and `VeteranProfileAdmin` (the default change form shows `service_doc` as a link, and GCS storage signs it for 24 h by default)
 - **Problem:** anyone with `is_staff` can reach the veteran status page and open the DD214. Anyone with view or change permission on Profile in admin can do the same. DD214s should be limited to a small group of veteran-status reviewers.
 - **Fix idea:** add a custom permission (e.g. `userprofile.review_veteran_status`), check it on the view and in the templates, and exclude or guard `service_doc` in both admin classes. Planned in `docs/cold-apply-staff-redesign.md` §5.
@@ -211,12 +211,12 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 - **Fix idea:** `"F j, Y H:i T"`.
 
 ## BUG-027 — Veteran status button is superuser-only, the view is staff-only
-- **Severity:** Low · **Status:** Open · **Found:** 2026-10-19, cold_apply staff redesign review
+- **Severity:** Low · **Status:** Fixed (`feature/cold-apply-staff-redesign`, 8adb309; not yet merged to develop) · **Found:** 2026-10-19, cold_apply staff redesign review
 - **Where:** `participant_detail.html` (`{% if user.is_superuser %}`) vs `userprofile/views.py` `update_veteran_status_view` (`@staff_required`)
 - **Problem:** the button and the view disagree, so the button hides a page that any staff user can still open by URL. Superseded by BUG-021's permission.
 
 ## BUG-028 — Profile admin search raises FieldError
-- **Severity:** Low · **Status:** Open · **Found:** 2026-10-19, cold_apply staff redesign review · **Suspected:** read from code, not reproduced
+- **Severity:** Low · **Status:** Fixed (`feature/cold-apply-staff-redesign`, 8adb309; not yet merged to develop) · **Found:** 2026-10-19, cold_apply staff redesign review · **Suspected:** read from code, not reproduced
 - **Where:** `userprofile/admin.py` `ProfileAdmin.search_fields`
 - **Problem:** it lists `"user"` (a ForeignKey, so `icontains` is invalid) and `"nickname"` (no longer a field). Any search in the Profile admin should raise FieldError. `list_filter = ("user", ...)` also lists every user as a filter.
 - **Fix idea:** `search_fields = ("user__email", "user__first_name", "user__last_name", "city", "state")`, and drop `user` from `list_filter`.
