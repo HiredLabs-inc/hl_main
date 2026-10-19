@@ -18,6 +18,7 @@ Design and development ideas that came up during other work and are **not bugs**
 | IDEA-003 | Idea | cold_apply | Staff pages to list, merge and delete companies, titles and locations |
 | IDEA-004 | Idea | cold_apply | Self-service participant portal with its own access level |
 | IDEA-005 | Idea | accounts | Volunteer logins |
+| IDEA-006 | Idea | pipeline | Define the Nurture flow (today it's a placeholder) |
 
 ---
 
@@ -45,3 +46,8 @@ Design and development ideas that came up during other work and are **not bugs**
 - **Status:** Idea · **Area:** accounts · **Source:** signup/login redesign ("no volunteer login yet"); `docs/cold-apply-staff-redesign.md` §5.5 and §7 (2026-10-19)
 - **What:** let volunteers log in with a limited role, so they can be assignees on enrollments and do selected staff work.
 - **Notes:** Jeff expects volunteers, but not soon. Assignee choices are limited to `is_staff` users until then. A volunteer role will need its own permission set, with no DD214 access.
+
+## IDEA-006 — Define the Nurture flow
+- **Status:** Idea · **Area:** pipeline · **Source:** `docs/cold-apply-staff-redesign.md` §7 (2026-10-19)
+- **What:** decide what Nurture means for people who have finished or paused other flows (boot camp alumni, past job-search participants), and give it real steps.
+- **Notes:** prod has 121 participants on Nurture → *Monthly Newsletter*, which is a placeholder; there is no newsletter. The staff redesign migrates them to a generic *Nurture* step in a Nurture flow until this is defined.
