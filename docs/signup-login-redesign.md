@@ -78,6 +78,13 @@ Decisions: password is set **after** email verification; **no volunteer login ye
 - Signup creates no `User`; identical response for new vs. existing emails; token completion, expiry, reuse; send failure handled; Turnstile/honeypot rejection; staff-only access and IDOR closed; purge and reminder commands.
 - Replace stale `userprofile/tests/test_onboarding.py`.
 
+## Status (2026-10-18)
+Steps 0–8 are done. Steps 3–6 were tested on stage, including signing up again after an account was deleted (fix 389a574). The Step 7 purge hasn't been run on stage or prod yet: start with `--dry-run --export=-` (see the command's help). Tests (103) are in `userprofile/tests/test_{signup,navigation,reminders,purge,onboarding,profile}.py` and `cold_apply/tests/test_access.py`.
+
+Before prod:
+- The prod secret needs `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` and `PUBLIC_BASE_URL=https://www.hiredlabs.org`.
+- `terraform apply` in `envs/prod` must run before the first deploy, so the signup-reminders job and its scheduler exist.
+
 ## Key files
 `userprofile/{guards,models,forms,views,urls}.py`, `hl_main/adapter.py`, `hl_main/urls.py`, `hl_main/settings/{base,stage,prod}.py`, `cold_apply/views.py`, `templates/new_home_base.html`, `templates/account/*`, `templates/welcome.html`, `templates/base_app.html`, `requirements.txt`.
 
