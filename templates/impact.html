@@ -5,12 +5,75 @@
 
 {% block body %}
 <div class="hl-page">
-    {% include 'components/page_header.html' with eyebrow="Impact" title="Our 2024 impact report." %}
+    {% include 'components/page_header.html' with eyebrow="Impact" title="Our impact at a glance." lead="Veterans helping veterans build skills, find work, and connect with the support they need." %}
 
-    <section class="hl-container hl-section flex flex-col items-center gap-6">
-        <img src="{% static 'main/images/impact-2024.jpg' %}" alt="Hired Labs 2024 impact report"
-             width="800" height="2000" class="h-auto w-full max-w-[800px] rounded-2xl border border-hl-line shadow-sm">
+    {# Headline numbers #}
+    <section class="hl-container hl-section">
+        <dl class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+            <div class="flex flex-col-reverse gap-2 border-t-2 border-hl-navy pt-6">
+                <dt class="leading-relaxed text-hl-ink">Veterans registered</dt>
+                <dd class="text-[44px] font-extrabold leading-none tracking-[-0.03em] text-hl-navy">113</dd>
+            </div>
+            <div class="flex flex-col-reverse gap-2 border-t-2 border-hl-navy pt-6">
+                <dt class="leading-relaxed text-hl-ink">States represented</dt>
+                <dd class="text-[44px] font-extrabold leading-none tracking-[-0.03em] text-hl-navy">26</dd>
+            </div>
+            <div class="flex flex-col-reverse gap-2 border-t-2 border-hl-navy pt-6">
+                <dt class="leading-relaxed text-hl-ink">Veterans in job support</dt>
+                <dd class="text-[44px] font-extrabold leading-none tracking-[-0.03em] text-hl-navy">82</dd>
+            </div>
+            <div class="flex flex-col-reverse gap-2 border-t-2 border-hl-navy pt-6">
+                <dt class="leading-relaxed text-hl-ink">Partner organizations</dt>
+                <dd class="text-[44px] font-extrabold leading-none tracking-[-0.03em] text-hl-navy">30</dd>
+            </div>
+        </dl>
+    </section>
+
+    {# Program details #}
+    <section class="hl-section bg-hl-mist">
+        <div class="hl-container grid grid-cols-1 gap-6 md:grid-cols-2">
+            <article class="hl-card flex flex-col gap-4">
+                <p class="hl-eyebrow">Coding boot camp</p>
+                <h2 class="text-2xl font-extrabold tracking-[-0.01em]">72 hours of live instruction</h2>
+                <ul class="flex flex-col gap-2 leading-relaxed text-hl-ink">
+                    <li><strong>4</strong> cohorts</li>
+                    <li><strong>63</strong> veterans participated</li>
+                    <li><strong>20</strong> graduated</li>
+                </ul>
+                <p class="leading-relaxed text-hl-muted">Each participant builds a web application from scratch.</p>
+                <a href="{% url 'how_it_works' %}#boot-camp" class="mt-auto font-semibold">About the boot camp</a>
+            </article>
+            <article class="hl-card flex flex-col gap-4">
+                <p class="hl-eyebrow">Job support</p>
+                <h2 class="text-2xl font-extrabold tracking-[-0.01em]">82 veterans engaged</h2>
+                <ul class="flex flex-col gap-2 leading-relaxed text-hl-ink">
+                    <li><strong>1,500+</strong> jobs identified</li>
+                    <li><strong>~36.6 hours</strong> saved per participant</li>
+                    <li><strong>~3,000 hours</strong> saved in total</li>
+                </ul>
+                <p class="leading-relaxed text-hl-muted">Time redirected to networking and other critical tasks.</p>
+            </article>
+            <article class="hl-card flex flex-col gap-4">
+                <p class="hl-eyebrow">Nationwide reach</p>
+                <h2 class="text-2xl font-extrabold tracking-[-0.01em]">113 veterans across 26 states</h2>
+                <p class="leading-relaxed text-hl-ink">Veterans across the country register with Hired Labs. Most are in California, Texas and Florida.</p>
+            </article>
+            <article class="hl-card flex flex-col gap-4">
+                <p class="hl-eyebrow">Partnerships</p>
+                <h2 class="text-2xl font-extrabold tracking-[-0.01em]">30 partners in our referral network</h2>
+                <ul class="flex flex-col gap-2 leading-relaxed text-hl-ink">
+                    <li>Nonprofits</li>
+                    <li>Higher education</li>
+                    <li>Government agencies at all levels</li>
+                </ul>
+                <p class="leading-relaxed text-hl-muted">Our partners provide services in employment, education, housing and rehabilitation.</p>
+            </article>
+        </div>
+    </section>
+
+    <section class="hl-container hl-section flex flex-wrap gap-3">
         <a href="{% url 'home' %}#donate" class="hl-btn-primary">Support the next cohort</a>
+        <a href="{% url 'how_it_works' %}#boot-camp" class="hl-btn-outline">Explore the boot camp</a>
     </section>
 </div>
 {% endblock body %}
