@@ -34,16 +34,17 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 | BUG-019 | Medium | Open | settings | Suspected: a request can hit a closed database connection (one 500 on stage sign-up) |
 | BUG-020 | Low | Open | tests | Suspected: `ColdApplyAccessTest` setup sometimes fails with a value too long for a 50-character column |
 | BUG-021 | High | Fixed | userprofile | Every staff user can open DD214s (veteran status page and Django admin) |
-| BUG-022 | Medium | Open | cold_apply | Do Not Contact badge is never shown to staff |
-| BUG-023 | Medium | Open | cold_apply | Participant page shows blank phone and email |
-| BUG-024 | Medium | Open | cold_apply | Participants with no current step don't appear on the pipeline |
-| BUG-025 | Low | Open | cold_apply | "Highest Education" is just the first Education row |
+| BUG-022 | Medium | Fixed | cold_apply | Do Not Contact badge is never shown to staff |
+| BUG-023 | Medium | Fixed | cold_apply | Participant page shows blank phone and email |
+| BUG-024 | Medium | Fixed | cold_apply | Participants with no current step don't appear on the pipeline |
+| BUG-025 | Low | Fixed | cold_apply | "Highest Education" is just the first Education row |
 | BUG-026 | Low | Open | cold_apply | Pipeline registration date prints the month where the minutes should be |
 | BUG-027 | Low | Fixed | cold_apply | Veteran status button is superuser-only but the view allows any staff |
 | BUG-028 | Low | Fixed | userprofile | Suspected: Profile admin search raises FieldError (`user`, `nickname`) |
 | BUG-029 | Low | Open | cold_apply | Dead or misleading code in the staff pages (`staff.html` navbar, `index.html`, Bootstrap script, URL typo) |
 | BUG-030 | Low | Open | cold_apply | Any logged-in user can create companies, titles, positions, concentrations and locations, and list locations |
-| BUG-031 | Medium | Open | userprofile | Suspected: new signups can land in Nurture, because phases and steps share order values |
+| BUG-031 | Medium | Fixed | userprofile | Suspected: new signups can land in Nurture, because phases and steps share order values |
+| BUG-032 | Low | Open | cold_apply | Participant page says "Not a Veteran Veteran (None)" for a veteran with no service branch |
 
 ---
 
@@ -181,25 +182,25 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 - **Fix idea:** add a custom permission (e.g. `userprofile.review_veteran_status`), check it on the view and in the templates, and exclude or guard `service_doc` in both admin classes. Planned in `docs/cold-apply-staff-redesign.md` §5.
 
 ## BUG-022 — Do Not Contact badge is never shown to staff
-- **Severity:** Medium · **Status:** Open · **Found:** 2026-10-19, cold_apply staff redesign review
+- **Severity:** Medium · **Status:** Fixed (`feature/cold-apply-staff-redesign`, e0b44c1, Step 7: the staff blocks moved from the participant page to the staff workspace, which shows the badge; not yet merged into develop) · **Found:** 2026-10-19, cold_apply staff redesign review
 - **Where:** `cold_apply/templates/cold_apply/participant_detail.html` (`{% if object.user.is_staff %}` around the DNC badge)
 - **Problem:** the check is whether the **participant** is staff, not the viewer. Participants are never staff, so staff never see "Do Not Contact".
 - **Fix idea:** use `{% if user.is_staff %}`.
 
 ## BUG-023 — Participant page shows blank phone and email
-- **Severity:** Medium · **Status:** Open · **Found:** 2026-10-19, cold_apply staff redesign review
+- **Severity:** Medium · **Status:** Fixed (`feature/cold-apply-staff-redesign`, e0b44c1, Step 7: the broken lines were removed; the staff workspace shows the user's email and profile phone; not yet merged into develop) · **Found:** 2026-10-19, cold_apply staff redesign review
 - **Where:** `cold_apply/templates/cold_apply/participant_detail.html` (`{{ object.phone }}`, `{{ object.email }}`)
 - **Problem:** `Participant` has no `phone` or `email` field, so both always render empty.
 - **Fix idea:** `object.user.profile.phone` and `object.user.email`.
 
 ## BUG-024 — Participants with no current step don't appear on the pipeline
-- **Severity:** Medium · **Status:** Open · **Found:** 2026-10-19, cold_apply staff redesign review
+- **Severity:** Medium · **Status:** Fixed (`feature/cold-apply-staff-redesign`, 4d8a610 and 219cdfd, Steps 3 and 5: everyone gets an enrollment, participants with no step go to Intake › Triage, and the dashboard lists enrollments instead of phases; not yet merged into develop) · **Found:** 2026-10-19, cold_apply staff redesign review
 - **Where:** `cold_apply/templates/cold_apply/participant_list.html`; `Participant.current_step` is nullable with `on_delete=SET_NULL`
 - **Problem:** every table filters on `participant.current_step.phase == phase`. A participant whose step is empty, or whose step was deleted, isn't listed anywhere, so staff lose track of them.
 - **Fix idea:** add an "Unassigned" group. The staff redesign replaces this page anyway.
 
 ## BUG-025 — "Highest Education" is just the first Education row
-- **Severity:** Low · **Status:** Open · **Found:** 2026-10-19, cold_apply staff redesign review
+- **Severity:** Low · **Status:** Fixed (`feature/cold-apply-staff-redesign`, e0b44c1, Step 7: the label is now "Education" and lists every entry; not yet merged into develop) · **Found:** 2026-10-19, cold_apply staff redesign review
 - **Where:** `cold_apply/views.py` `ParticipantDetailView.get_context_data` (`Education.objects.filter(...).first()`)
 - **Problem:** `Education` has no ordering, so this is whichever row the database returns first.
 - **Fix idea:** order by degree level, or rename the label.
@@ -238,7 +239,13 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 - **Problem:** any participant can add companies, titles, positions, concentrations and locations, and list all locations. This may be intended, because participants pick these values on their own forms. Confirm before restricting.
 
 ## BUG-031 — New signups can land in the wrong phase
-- **Severity:** Medium · **Status:** Open · **Found:** 2026-10-19, read-only prod query for the cold_apply staff redesign · **Suspected:** read from code and prod data, not reproduced
+- **Severity:** Medium · **Status:** Fixed (`feature/cold-apply-staff-redesign`, 1cc7b0c, Step 4: signups get an explicit Intake enrollment; the old step is chosen by title, not "the first step"; not yet merged into develop) · **Found:** 2026-10-19, read-only prod query for the cold_apply staff redesign · **Suspected:** read from code and prod data, not reproduced
 - **Where:** `userprofile/models.py` `Profile.handle_onboard_complete` (`Step.objects.order_by("phase__order", "order").first()`)
 - **Problem:** on prod, Applicants, Phase 1 and Nurture all have phase order 0, and their first steps all have step order 0 (Verify Veteran Status, Send Initial Email, Boot Camp Alumni / Monthly Newsletter). Postgres may return any of these ties first, so a new participant can start in Nurture instead of Applicants.
 - **Fix idea:** the cold_apply staff redesign (Step 4) replaces this with an explicit Intake enrollment. Until then, give Applicants a unique lowest order in admin.
+
+## BUG-032 — Participant page says "Not a Veteran Veteran" for a veteran with no branch
+- **Severity:** Low · **Status:** Open · **Found:** 2026-10-19, cold_apply staff redesign (Step 7 browser check)
+- **Where:** `cold_apply/templates/cold_apply/participant_detail.html` (`{{object.user.profile.service_branch}} Veteran ({{ object.user.profile.rank_at_separation}})`); `Profile.service_branch` defaults to `"Not a Veteran"`, which isn't one of its choices
+- **Problem:** when `is_veteran` is true but no branch was chosen, the page prints the raw default and the missing rank: "Not a Veteran Veteran (None)". The participant sees this about themselves.
+- **Fix idea:** use `get_service_branch_display`, and skip the branch and rank when they're unset. Better, make the default `None`, since "Not a Veteran" duplicates `is_veteran`.

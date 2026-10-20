@@ -14,7 +14,7 @@ Design and development ideas that came up during other work and are **not bugs**
 | ID | Status | Area | Summary |
 |---|---|---|---|
 | IDEA-001 | Idea | pipeline | Email assignees about new assignments and enrollments stuck in a step |
-| IDEA-002 | Idea | pipeline | Kanban view of a flow on the staff dashboard |
+| IDEA-002 | Planned | pipeline | Kanban view of a flow on the staff dashboard |
 | IDEA-003 | Idea | cold_apply | Staff pages to list, merge and delete companies, titles and locations |
 | IDEA-004 | Idea | cold_apply | Self-service participant portal with its own access level |
 | IDEA-005 | Idea | accounts | Volunteer logins |
@@ -28,7 +28,8 @@ Design and development ideas that came up during other work and are **not bugs**
 - **Notes:** could reuse the daily `send_signup_reminders` command / Cloud Run Job from the signup redesign. Activity rows already record assignments and step changes, so the data is there.
 
 ## IDEA-002 — Kanban view of a flow
-- **Status:** Idea · **Area:** pipeline · **Source:** `docs/cold-apply-staff-redesign.md` §4.4 and §5.2 (2026-10-19)
+- **Status:** Planned · **Area:** pipeline · **Source:** `docs/cold-apply-staff-redesign.md` §4.4 and §5.2 (2026-10-19)
+- **Plan:** `docs/kanban-board.md` on `feature/kanban-board` (agreed 2026-10-19); mockup https://claude.ai/artifact/XgapZE6b6efDJAAchPaAZ6. Starts after staff redesign Step 6.
 - **What:** a second view of a flow tab on `/staff/`, with a column per phase or step and a card per enrollment. Moving a card calls the same `move_to_step` service as the table's dropdown.
 - **Notes:** the table comes first because it handles filters and inline controls better. Worth adding if staff prefer to see the whole flow at a glance.
 
