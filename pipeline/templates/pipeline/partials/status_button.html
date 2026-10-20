@@ -1,0 +1,4 @@
+<form hx-post="{% url 'pipeline:status' enrollment.pk %}" hx-target="#enrollment-{{ enrollment.pk }}" hx-swap="outerHTML" {% if confirm %}hx-confirm="{{ confirm }}"{% endif %}>
+    <input type="hidden" name="status" value="{{ value }}">
+    <button type="submit" class="btn btn-outline-secondary !px-3 !py-1 !text-sm">{{ label }}</button>
+</form>

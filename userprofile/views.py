@@ -12,8 +12,8 @@ from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
-from releases.models import App
-from userprofile.guards import staff_required, verified_required, veteran_reviewer_required
+from userprofile.guards import verified_required, veteran_reviewer_required
+from userprofile.intake import awaiting_veteran_review, verify_and_advance
 from userprofile.va_api import confirm_veteran_status
 
 from .forms import (
@@ -29,6 +29,7 @@ from . import testimonials
 from .models import BootCampSession, OnboardingStep, Profile, VeteranProfile
 
 from hl_main.gcs import SIGNED_URL_EXPIRATION, generate_signed_url
+from pipeline import services
 
 logger = logging.getLogger(__name__)
 # Who opened which service document; kept at INFO in production (settings/cloud.py)
@@ -122,11 +123,6 @@ def welcome(request):
     return render(request, "welcome.html")
 
 # All views below require login
-@staff_required
-def staff(request):
-    context = {"apps": App.objects.all()}
-    return render(request, "staff_home.html", context)
-
 @login_required
 def profile_view(request):
     user_profile = Profile.objects.get_or_create(user=request.user)
@@ -144,24 +140,34 @@ def profile_update_view(request):
 @veteran_reviewer_required
 def update_veteran_status_view(request, participant_id):
     profile = get_object_or_404(Profile, user=participant_id)
+    if request.method == "POST" and "verify_and_advance" in request.POST:
+        enrollment = verify_and_advance(profile, request.user)
+        if enrollment is None:
+            messages.error(request, "They aren't waiting for veteran review, so nothing was moved.")
+        else:
+            messages.success(request, f"Verified and moved to {enrollment.current_step.title}.")
+        return redirect("userprofile:veteran_status_update_view", participant_id=profile.user_id)
     form = VeteranStatusUpdateForm(request.POST or None, instance=profile)
     if request.method == "POST" and form.is_valid():
         form.save()
     context = {
         "form": form,
         "profile": profile,
+        "awaiting_review": awaiting_veteran_review(profile.user),
     }
     return render(request, "userprofile/veteran_status_update_view.html", context)
 
 
 @veteran_reviewer_required
 def service_doc_view(request, user_pk):
-    """The only way to open a service document (DD214): logs who opened it, then
-    redirects to a short-lived signed URL, or streams the local file in development"""
+    """The only way to open a service document (DD214): logs who opened it (audit log
+    and the person's timeline), then redirects to a short-lived signed URL, or
+    streams the local file in development"""
     profile = get_object_or_404(Profile, user=user_pk)
     if not profile.service_doc:
         raise Http404
     audit_logger.info("Service document of user %s opened by user %s", profile.user_id, request.user.pk)
+    services.record_document_opened(profile.user, request.user, "DD214")
     if settings.DEBUG:
         return FileResponse(profile.service_doc.open("rb"))
     return redirect(

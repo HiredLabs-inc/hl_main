@@ -19,7 +19,8 @@ from django.contrib import admin
 from django.urls import include, path
 from django.views.generic import RedirectView
 
-from userprofile import signup, stuck_signups, views as userprofile_views
+from pipeline import views as pipeline_views
+from userprofile import people, signup, stuck_signups, views as userprofile_views
 
 urlpatterns = [
     path("admin/", admin.site.urls, name="admin"),
@@ -46,7 +47,11 @@ urlpatterns = [
     path("volunteer/", userprofile_views.contact, name="volunteer"),
     path("thank-you/", userprofile_views.thanks, name="thanks"),
     path("welcome/", userprofile_views.welcome, name="welcome"),
-    path("staff/", userprofile_views.staff, name="staff"),
+    path("staff/", pipeline_views.dashboard_view, name="staff"),
+    path("staff/flows/", pipeline_views.flows_view, name="staff_flows"),
+    path("staff/", include("pipeline.urls")),
+    path("staff/people/", people.people_view, name="staff_people"),
+    path("staff/people/<int:user_pk>/", people.person_view, name="staff_person"),
     path("staff/stuck-signups/", stuck_signups.stuck_signups_view, name="stuck_signups"),
     path("staff/people/<int:user_pk>/service-doc/", userprofile_views.service_doc_view, name="service_doc"),
     path(

@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     "allauth.socialaccount",
     # hiredlabs apps
     "cold_apply.apps.ColdApplyConfig",
+    "pipeline.apps.PipelineConfig",
     "rates.apps.RatesConfig",
     "releases.apps.ReleasesConfig",
     "resume.apps.ResumeConfig",

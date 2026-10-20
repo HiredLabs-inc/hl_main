@@ -1,0 +1,128 @@
+{% comment %}
+One enrollment on the dashboard: the row, and an actions row under it opened
+with "⋯". Every control posts to a pipeline action, which answers with this
+partial and refreshes the table. Needs enrollment (from dashboard.decorate),
+staff_users and stale_days.
+{% endcomment %}
+{% with person=enrollment.person profile=enrollment.person.profile step=enrollment.current_step %}
+{% with name=person.get_full_name|default:person.email %}
+<tbody id="enrollment-{{ enrollment.pk }}" x-data="{ open: false }" class="border-t border-hl-line">
+<tr class="align-top hover:bg-hl-mist/60">
+    <td class="px-3 py-2">
+        {% if hide_person %}
+            <span class="font-medium text-hl-ink">{{ enrollment.flow.name }}</span>
+            <span class="block text-xs text-hl-muted">Since {{ enrollment.created_at|date:"M j, Y" }}{% if enrollment.is_ended %} · ended {{ enrollment.ended_at|date:"M j, Y" }}{% endif %}</span>
+        {% else %}
+            <a href="{% url 'staff_person' person.pk %}" hx-get="{% url 'pipeline:panel' person.pk %}" hx-target="#person-panel" class="font-medium">{{ name }}</a>
+            <span class="block text-xs text-hl-muted">{{ person.email }}</span>
+            {% if profile.dnc %}<span class="staff-badge staff-badge-bad mt-1">Do not contact</span>{% endif %}
+        {% endif %}
+    </td>
+    <td class="px-3 py-2 text-hl-ink">
+        {% if show_flow_step %}<span class="block text-xs text-hl-muted">{{ step.phase.title }}</span>{% endif %}
+        <select name="step" aria-label="Step for {{ name }}" class="staff-field w-full max-w-[16rem] !py-1"
+                hx-post="{% url 'pipeline:move' enrollment.pk %}" hx-target="#enrollment-{{ enrollment.pk }}" hx-swap="outerHTML"
+                {% if enrollment.is_ended %}disabled
+                {% elif not enrollment.can_leave %}disabled title="Only veteran reviewers can move people off {{ step.title }}"{% endif %}>
+            {% regroup enrollment.step_choices by phase as phases %}
+            {% for phase in phases %}
+                <optgroup label="{{ phase.grouper.title }}">
+                    {% for choice in phase.list %}<option value="{{ choice.pk }}" {% if choice.pk == step.pk %}selected{% endif %}>{{ choice.title }}</option>{% endfor %}
+                </optgroup>
+            {% endfor %}
+        </select>
+        {% if enrollment.flow.slug == "boot-camp" %}
+            {% include 'pipeline/partials/session_select.html' with in_row=True %}
+        {% endif %}
+        {% if enrollment.status != "active" %}
+            <span class="staff-badge {% if enrollment.status == 'rejected' or enrollment.status == 'no_show' %}staff-badge-warn{% else %}staff-badge-plain{% endif %} mt-1">{{ enrollment.get_status_display }}</span>
+        {% endif %}
+        {% if step.required_permission == "userprofile.review_veteran_status" and user.is_staff and perms.userprofile.review_veteran_status %}
+            <a href="{% url 'userprofile:veteran_status_update_view' person.pk %}" class="mt-1 block text-xs">Review veteran status</a>
+        {% endif %}
+    </td>
+    <td class="px-3 py-2">
+        <select name="assignee" aria-label="Assignee for {{ name }}" class="staff-field w-full max-w-[12rem] !py-1"
+                hx-post="{% url 'pipeline:assign' enrollment.pk %}" hx-target="#enrollment-{{ enrollment.pk }}" hx-swap="outerHTML"
+                {% if enrollment.is_ended %}disabled{% endif %}>
+            <option value="">Unassigned</option>
+            {% for staff in staff_users %}
+                <option value="{{ staff.pk }}" {% if staff.pk == enrollment.assignee_id %}selected{% endif %}>{{ staff.get_full_name|default:staff.email }}</option>
+            {% endfor %}
+        </select>
+    </td>
+    <td class="px-3 py-2">
+        {% if profile.is_veteran is False %}
+            <span class="staff-badge staff-badge-plain">Not a veteran</span>
+        {% elif profile.veteran_verified %}
+            <span class="staff-badge staff-badge-ok">Verified</span>
+        {% elif profile %}
+            <span class="staff-badge staff-badge-warn">Unverified</span>
+        {% endif %}
+    </td>
+    <td class="px-3 py-2 text-right tabular-nums {% if enrollment.days_in_step > stale_days %}font-semibold text-hl-amber{% else %}text-hl-ink{% endif %}">
+        {{ enrollment.days_in_step }}
+    </td>
+    <td class="px-3 py-2 text-hl-muted">
+        {% if enrollment.last_activity %}<time datetime="{{ enrollment.last_activity|date:'c' }}" title="{{ enrollment.last_activity }}">{{ enrollment.last_activity|timesince }} ago</time>{% else %}—{% endif %}
+    </td>
+    <td class="px-3 py-2 text-right">
+        <button type="button" x-on:click="open = !open" x-bind:aria-expanded="open" aria-controls="actions-{{ enrollment.pk }}"
+                class="rounded-md px-2 py-1 text-hl-muted hover:bg-hl-mist hover:text-hl-ink" aria-label="More actions for {{ name }}">⋯</button>
+    </td>
+</tr>
+{% comment %}hidden rather than x-show: htmx settles the style attribute of elements whose id survives a swap, which undid x-show's display: none and left this row open after every action.{% endcomment %}
+<tr id="actions-{{ enrollment.pk }}" hidden x-bind:hidden="!open" class="bg-hl-mist/60">
+    <td colspan="7" class="px-3 py-3">
+        {# Sticky so the actions stay on screen while the table scrolls sideways on phones #}
+        <div class="sticky left-3 max-w-[calc(100vw-3.5rem)] md:static md:max-w-none">
+        {% if enrollment.is_ended %}
+            <p class="text-sm text-hl-muted">This enrollment is {{ enrollment.get_status_display|lower }} and can't be changed.</p>
+        {% else %}
+        <div class="grid gap-4 md:grid-cols-3">
+            <form hx-post="{% url 'pipeline:note' enrollment.pk %}" hx-target="#enrollment-{{ enrollment.pk }}" hx-swap="outerHTML" class="space-y-2">
+                <p class="text-xs font-semibold uppercase tracking-wide text-hl-muted">Add a note</p>
+                <select name="kind" aria-label="Kind of note" class="staff-field w-full !py-1">
+                    <option value="note">Note</option><option value="email">Email</option><option value="phone">Phone call</option><option value="in_person">In person</option>
+                </select>
+                <textarea name="text" rows="2" required aria-label="Note" class="staff-field w-full" placeholder="What happened?"></textarea>
+                <button type="submit" class="btn btn-outline-secondary !px-3 !py-1 !text-sm">Add note</button>
+            </form>
+
+            <div class="space-y-2">
+                <p class="text-xs font-semibold uppercase tracking-wide text-hl-muted">Status: {{ enrollment.get_status_display }}</p>
+                <div class="flex flex-wrap gap-2">
+                    {% if enrollment.status != "active" %}{% include 'pipeline/partials/status_button.html' with value="active" label="Make active" %}{% endif %}
+                    {% if enrollment.status != "paused" %}{% include 'pipeline/partials/status_button.html' with value="paused" label="Pause" %}{% endif %}
+                    {% if enrollment.status != "no_show" %}{% include 'pipeline/partials/status_button.html' with value="no_show" label="No show" %}{% endif %}
+                    {% include 'pipeline/partials/status_button.html' with value="completed" label="Complete" confirm="Complete this enrollment? It can't be reopened." %}
+                    {% include 'pipeline/partials/status_button.html' with value="withdrawn" label="Withdraw" confirm="Withdraw from this flow? It can't be reopened." %}
+                </div>
+                {% if enrollment.status != "rejected" %}
+                    <form hx-post="{% url 'pipeline:status' enrollment.pk %}" hx-target="#enrollment-{{ enrollment.pk }}" hx-swap="outerHTML" class="flex gap-2">
+                        <input type="hidden" name="status" value="rejected">
+                        <input name="reason" required aria-label="Reason for rejection" placeholder="Reason, e.g. unclear DD214" class="staff-field min-w-0 flex-1 !py-1">
+                        <button type="submit" class="btn btn-outline-secondary !px-3 !py-1 !text-sm">Reject</button>
+                    </form>
+                {% endif %}
+            </div>
+
+            <div class="space-y-4">
+                {% if enrollment.flow.slug == "intake" %}
+                    {% if step.required_permission %}
+                        <p class="text-sm text-hl-muted">Triage opens once veteran status is reviewed.</p>
+                    {% elif enrollment.can_leave %}
+                        {% include 'pipeline/partials/flow_choice_form.html' with action='pipeline:triage' title="Triage: enroll in" button="Complete triage" %}
+                    {% endif %}
+                {% elif enrollment.enroll_choices %}
+                    {% include 'pipeline/partials/flow_choice_form.html' with action='pipeline:enroll' title="Enroll in" button="Enroll" %}
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+        </div>
+    </td>
+</tr>
+</tbody>
+{% endwith %}
+{% endwith %}

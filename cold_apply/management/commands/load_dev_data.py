@@ -1,8 +1,13 @@
+from datetime import timedelta
+
 from allauth.account.models import EmailAddress
 from django.contrib.auth import get_user_model
 from django.core.management import BaseCommand
+from django.utils import timezone
 
-from cold_apply.models import Participant, Phase, Skill, Step
+from cold_apply.models import Skill
+from pipeline import services
+from pipeline.models import Flow
 from cold_apply.tests.factories import (
     JobFactory,
     ParticipantFactory,
@@ -10,7 +15,7 @@ from cold_apply.tests.factories import (
     UserFactory,
 )
 from resume.models import Degree, Organization, Position
-from userprofile.models import Profile, ServicePackage
+from userprofile.models import BootCampSession, Profile, ServicePackage
 
 User = get_user_model()
 
@@ -20,7 +25,6 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         User.objects.all().delete()
-        Phase.objects.all().delete()
 
         ServicePackage.objects.all().delete()
         for name in ["Basic", "Managed", "Complete"]:
@@ -31,38 +35,6 @@ class Command(BaseCommand):
         )
         EmailAddress.objects.create(user=admin_user, email=admin_user.email, verified=True, primary=True)
         Profile.objects.create(user=admin_user)
-
-        phase_1 = Phase.objects.create(
-            title="Phase 1",
-            start="Participant Shows Interest",
-            end="Intake call completed",
-            result="Clear direction for job search and resume type",
-            active=True,
-            order=0,
-        )
-        phase_2 = Phase.objects.create(
-            title="Phase 2",
-            start="Full results of intake call and phase 1 analysis received",
-            end="Hired Labs approves of initial job set and tailored resume sets",
-            result="First actionable set of open jobs and tailored resumes ready for transmission to participant",
-            active=True,
-            order=1,
-        )
-        phase_3 = Phase.objects.create(
-            title="Phase 3",
-            start="Initial set of jobs and resumes sent to participant",
-            end="Changes made to general format of resume or direction of job search",
-            result="Initial set of jobs and resumes agreed upon by Hired Labs and participant",
-            active=True,
-            order=2,
-        )
-
-        Step.objects.create(title="Phase 1.0", phase=phase_1, order=0)
-        Step.objects.create(title="Phase 1.1", phase=phase_1, order=1)
-        Step.objects.create(title="Phase 2.0", phase=phase_2, order=0)
-        Step.objects.create(title="Phase 2.1", phase=phase_2, order=1)
-        Step.objects.create(title="Phase 3.0", phase=phase_3, order=0)
-        Step.objects.create(title="Phase 3.1", phase=phase_3, order=1)
 
         Skill.objects.all().delete()
 
@@ -77,8 +49,15 @@ class Command(BaseCommand):
         Position.objects.all().delete()
         Organization.objects.all().delete()
 
+        # An upcoming session, so the Boot Camp tab has one to assign
+        if not BootCampSession.objects.filter(start_date__gte=timezone.localdate()).exists():
+            BootCampSession.objects.create(start_date=timezone.localdate() + timedelta(days=45))
+
+        # One participant per flow, plus a second applicant, so every dashboard tab has someone
+        flows = ["intake", "intake", "resume-job-search", "boot-camp", "nurture"]
         for i in range(5):
             user = UserFactory(email=f"user{i}@email.com", password="password")
             participant = ParticipantFactory(user=user)
             print(participant.user.profile)
             job = JobFactory(participant=participant)
+            services.enroll(user, Flow.objects.get(slug=flows[i]), actor=admin_user)

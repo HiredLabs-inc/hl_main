@@ -268,7 +268,7 @@ Other facts from the query:
 - New uploads go to `service_docs/` (change `upload_to`; existing files stay where they are).
 - **Tests:** staff without the permission get 403 on the view and the page, and see no file field in admin. Reviewers and superusers get a redirect. The participant page shows the button only to the right users.
 
-### Step 2 — `pipeline` app: models and services
+### Step 2 — `pipeline` app: models and services — done 2026-10-19
 - New app `pipeline`. It imports nothing from `cold_apply`.
 - **Models:**
   - `Flow`.
@@ -276,10 +276,10 @@ Other facts from the query:
   - `Enrollment`: person, flow, current_step, assignee, status, started_at, step_entered_at, ended_at. A conditional `UniqueConstraint` allows one non-ended enrollment per (person, flow).
   - `Activity`.
   - All of them registered in admin.
-- **`pipeline/services.py`:** `enroll`, `move_to_step`, `assign`, `set_status`, `add_note`, `complete_triage`. Each one runs in a transaction, writes its Activity row and checks `required_permission`. Every UI path calls these functions; no view writes enrollments directly.
+- **`pipeline/services.py`:** `enroll`, `move_to_step`, `assign`, `set_status`, `add_note`, `complete_triage`, plus `record_document_opened` for Step 7. Each one runs in a transaction, writes its Activity row and checks `required_permission`. Every UI path calls these functions; no view writes enrollments directly.
 - **Tests:** each service function, the uniqueness constraint, the permission-gated step, and an Activity row written for every change.
 
-### Step 3 — Seed flows and migrate existing data (fixes BUG-024)
+### Step 3 — Seed flows and migrate existing data (fixes BUG-024) — done 2026-10-19
 - **The data migration builds the flows from the prod rows in Step 0.** It copies phase and step titles, descriptions, owners and order. Steps that share an order value are ordered by id and renumbered.
 
 | New flow | Built from (prod phase → steps) | Added |
@@ -297,47 +297,149 @@ Other facts from the query:
   - `step_entered_at` starts as `Participant.updated_at`, the best value available.
 - `Interaction` rows become Activity notes. Prod has none, but the code path stays for dev and stage data.
 - **Tests:** run the migration on factory data that covers every mapping case, including the DNC case and tied order values. Before the prod deploy, also run it on a copy of stage data. Then rerun the Step 0 query on prod to confirm no phases or steps were added since 2026-10-19.
+- **As built** (`pipeline/migrations/0002_seed_flows.py`):
+  - Old phases are matched to flows by title: *Applicants* → Intake, *Phase N* → Resume & Job Search, *Boot Camp …* → Boot Camp, *Nurture* → Nurture, *Do Not Contact* → `dnc`. **Any other phase title stops the migration** with an error naming it, rather than guessing. Because deploys auto-migrate, the prod recheck matters: a new phase would fail the deploy.
+  - People on *No Show* or *Send Rejection Message* stay on the copied step before it in the same phase, with status `no_show` or `rejected`. That puts the prod No Show participant on *Apply to Jobs*, as agreed.
+  - Each migrated enrollment gets an `enrolled` Activity ("Moved from the old Cold Apply steps") with no actor, plus a `status_change` entry for no show or rejected. DNC people get a note instead. The enrollment's `created_at` is the participant's `created_at`.
+  - `Participant.active` is ignored: it is only shown in admin and nothing else reads it.
+  - On a fresh database (tests, new dev setups) there are no old phases, so Intake gets *Applicants: Verify Veteran Status, Triage* and each other flow gets a single placeholder step named after it.
+  - Reversing the migration deletes all pipeline rows. It leaves `Profile.dnc` alone, since one profile was already marked before.
+  - `load_dev_data` still creates only old cold_apply phases, so dev participants have no enrollments until Step 4 or 5 updates it.
 
-### Step 4 — New signups enter Intake
+### Step 4 — New signups enter Intake — done 2026-10-19
 - `Profile.handle_onboard_complete` still creates the `Participant`, which the job and resume tools need. It no longer picks "the first step" (BUG-031: ties can drop new signups into Nurture). It creates an Intake enrollment at *Verify Veteran Status*. A non-veteran goes straight to *Triage*.
 - Verifying a veteran (Step 1 page) offers "Verified, move to Triage", which calls `move_to_step`.
 - **Tests:** onboarding creates exactly one Intake enrollment, and running it again doesn't duplicate it (keep the BUG-003 behaviour).
+- **As built** (`userprofile/intake.py`):
+  - Onboarding enrolls the person in Intake only if they have **no enrollment in any flow**. Running onboarding again, or onboarding someone already moved into another flow by Step 3, adds nothing.
+  - The start step is the first Intake step. For non-veterans (`is_veteran=False`), a first step gated by the veteran review permission is skipped. Steps are found by flow and permission, not by title, so renaming them in admin doesn't break this.
+  - The person is recorded as the actor on their own `enrolled` entry.
+  - If the Intake flow is missing, onboarding still completes and an error is logged.
+  - `Participant.current_step` is still set for the old staff pages, which are removed in Step 9. It now uses the old *Verify Veteran Status* step if one exists, instead of "the first step" (BUG-031).
+  - On the veteran status page, the button is labelled with the next step ("Verified, move to Triage"). It appears only while the person's Intake enrollment is on the gated step. It sets `veteran_verified` and calls `move_to_step` in one transaction.
+  - `Step.next_step()` was added to the pipeline model.
 
-### Step 5 — Staff layout and read-only dashboard at `/staff/`
+### Step 5 — Staff layout and read-only dashboard at `/staff/` — done 2026-10-19
 - Add `staff_base.html`: Tailwind, staff nav (§5.1) and Django messages. Today's `/staff/` app list (`staff_home.html`) moves into the nav.
 - `/staff/` shows tabs for Intake, each active flow, and My people. Filters (assignee, phase, status, in step > N days, search) are GET params, and the table body is swapped with htmx. The count strip links to filters. Rows come from a single partial, which Step 6 reuses.
 - Old `cold_apply:index` redirects to `/staff/`.
 - **Tests:** staff-only access, each filter, and a fixed query count with 50 enrollments.
+- **As built:**
+  - **Layout:** `templates/staff_base.html` has a navy staff bar with Dashboard, Stuck signups and Flows, plus a menu with tools (World Rates, public site, release notes per app), Admin for superusers, and account links. `staff.html` now just extends it, so the veteran status, stuck signups and World Rates pages get the new nav. On phones the links move to a second row.
+  - The old `staff_home.html` app list and `userprofile.views.staff` are gone.
+  - **Dashboard** (`pipeline/views.py`, `pipeline/dashboard.py`):
+    - Tabs: Intake, each other active flow, My people, and **Everyone**. Everyone was added so the "Unassigned" and "In step over 14 days" counts have a cross-flow view to link to.
+    - The count strip has one card per Intake step (e.g. "In Verify Veteran Status"), then Unassigned and "In step over 14 days".
+    - Filters: search (every word must match name or email), assignee, phase (flow tabs only), step, status (blank = all open), and days in step. They are a Django form read from GET params. The form fires htmx on `input` with a 300 ms delay and pushes the URL.
+    - Rows are grouped by step on flow tabs and by flow on My people and Everyone. Each row comes from `pipeline/partials/enrollment_row.html` (`id="enrollment-<pk>"`) for Step 6.
+    - Veteran reviewers get a "Review veteran status" link on gated rows.
+    - Names link to the old participant page until Step 7.
+  - **Flows page** at `/staff/flows/`: each active flow's phases and steps, with open counts linking to the dashboard. It replaces the old `process` page in the nav; that page still exists.
+  - `cold_apply:index` redirects to `/staff/`, and the old `participant_list.html` is deleted.
+  - `load_dev_data` now enrolls its 5 participants across the flows.
+  - **Gotcha:** `Meta.ordering` doesn't apply to GROUP BY queries, so the annotated step queries order explicitly.
+  - Tailwind now scans `pipeline/` templates and `.py` files.
 
-### Step 6 — Inline actions and quick view
+### Step 6 — Inline actions and quick view — done 2026-10-19
 - **Row controls:**
   - Step dropdown, assignee dropdown, note, and pause/complete/withdraw: each is an htmx POST to a small view that calls the service function and returns the updated row.
   - Steps the user lacks permission for are disabled.
 - **"Enroll in…":** on any row, plus the triage form on the Intake tab, with checkboxes for Boot Camp and Resume & Job Search.
 - **Side panel:** quick view with profile summary, enrollments and timeline, opened from the name.
 - **Tests:** each action, including permission refusal, a CSRF-protected POST and a 404 for a missing enrollment. One Playwright smoke test of triage from the dashboard.
+- **As built** (`pipeline/actions.py`, URLs under `/staff/` in `pipeline/urls.py`):
+  - The step and assignee are dropdowns in their cells. The step dropdown is disabled when the user can't leave the current step, and its tooltip says why.
+  - "⋯" opens an actions row under the person, not a dropdown menu, because a menu would be clipped by the table's scroll container. The actions row has:
+    - a note form, with kind note, email, phone or in person;
+    - status buttons: Make active, Pause, No show, Reject with a required reason, and Complete or Withdraw, which ask for confirmation because they can't be undone;
+    - **Triage** on Intake rows, and **Enroll in…** on other rows.
+  - Intake rows don't offer "Enroll in…", so nobody can skip veteran review that way. Rows on Verify Veteran Status say "Triage opens once veteran status is reviewed."
+  - Each action returns the updated row. It also sends an htmx `enrollment-changed` event, which makes the table (with the current filters) and the count strip reload, so moved or ended rows land in the right place.
+  - Refusals (validation or permission) return 200 with `HX-Reswap: none` and an error toast through the existing toaster. The page doesn't change.
+  - **Side panel:** clicking a name opens a drawer with profile badges and details, all enrollments, the last 50 timeline entries and a note form. Escape, the backdrop or Close shuts it. It links to the old participant page ("Open full page") until Step 7.
+  - **Gotcha:** `hx-include` is inherited. The table container includes the filter form for its refresh, so it sets `hx-disinherit="*"`. Otherwise every row control also posts the filters' empty `step`.
+  - On phones the table scrolls sideways, and the actions row stays pinned on screen.
 
-### Step 7 — Staff participant workspace and People search
+### Step 7 — Staff participant workspace and People search — done 2026-10-19
 - `/staff/people/` (search) and `/staff/people/<pk>/` (§5.3): header, enrollment cards, veteran panel (DD214 link only with the permission), timeline, profile details, and links to the existing work tools.
 - DD214 opens are now logged as Activity.
 - Staff links to `participant_detail` point to the workspace. The staff-only blocks are removed from `participant_detail.html`, which becomes participant-only. This fixes BUG-022, BUG-023 and BUG-025 by replacing the code that has them.
 - **Tests:** access, every panel renders with missing profile data, and the DD214 link is hidden without the permission.
+- **As built** (`userprofile/people.py`, templates in `userprofile/templates/userprofile/people/`):
+  - **People** (`/staff/people/`, added to the nav): non-staff users who have a profile or an enrollment, newest first, 50 per page. Search matches every word against name or email and updates as you type. Each row shows open flows with their step, a DNC badge, a veteran badge and the join date.
+  - **Workspace** (`/staff/people/<user_pk>/`; staff accounts return 404):
+    - **Header:** name, DNC and veteran badges, email, phone, location, joined.
+    - **Flows:** the dashboard's row partial with the flow name in place of the person, so it has the same controls. It also lists ended enrollments.
+    - **"Enroll in":** a form for flows they aren't in, including Intake. It's hidden while they're in Intake, so other flows come through triage.
+    - **Timeline:** with a note form.
+    - **Veteran status:** branch, rank, specialty and years for all staff. The DD214 and "Review veteran status" links are for reviewers only; other staff see "Only veteran reviewers can open the DD214."
+    - **Work tools:** links to jobs and tailored resumes, job search, add a job, education and experience, experience by skill.
+    - **Profile:** resume link (signed URL in production), boot camp interest, training, skills, preferences, job links.
+    - **Background:** the 3 most recent experiences and all education entries.
+    - The flows and timeline sections reload on `enrollment-changed`.
+  - The dashboard row name and the panel's "Open full page" now go to the workspace. `pipeline` no longer references cold_apply at all.
+  - New endpoints: `pipeline:person_note`, a note not tied to one enrollment that returns the timeline partial and replaces the panel-only note endpoint; and `pipeline:person_enroll`.
+  - Opening a DD214 now also writes a `document_opened` Activity ("DD214", by whom).
+  - **`participant_detail.html` is now the jobs tool for both participants and staff.**
+    - Removed: the staff DNC block (BUG-022), the blank phone and email lines (BUG-023), the veteran review button, current phase and step, training, skills and job links, the "Update Participant Phase" link, "Back to Pipeline", and a dead script that called `bootstrap.Collapse`.
+    - Staff get breadcrumbs People › name › Jobs and an "Open staff workspace" link.
+    - "Highest Education" became "Education" and lists every entry, since Education has no dates or level to rank by (BUG-025).
+  - `ParticipantUpdateView` (the old phase editor) is no longer linked from anywhere; Step 9 removes it.
 
-### Step 8 — Boot camp sessions
+### Step 8 — Boot camp sessions — done 2026-10-19
 - Link Boot Camp enrollments to `BootCampSession` on the userprofile side (`BootCampSession.enrollments`, at most one session per enrollment), so `pipeline` stays generic. An enrollment with no session is on the waitlist.
 - Assign a session from the row or the side panel, which moves the enrollment to *Session assigned*. The Boot Camp tab gets a session filter.
 - **Tests:** assigning a session, the waitlist filter, and one session per enrollment.
+- **As built** (`userprofile/bootcamp.py`, model `BootCampSeat`):
+  - `BootCampSeat` links a session to an enrollment, with a one-to-one on the enrollment. `BootCampSession.enrollments` is a many-to-many through it. A session that has people in it can't be deleted (PROTECT).
+  - Each session change goes on the timeline, e.g. "Boot camp session: Waitlist → Starts Dec 3, 2026" (new Activity kind `session_change`).
+  - **Assigning a session moves the person to *Send Enrollment Confirmation*** (Jeff, 2026-10-20). There's no *Session assigned* step in prod, so this replaces it.
+    - The move is recorded as a normal step change, and the toast says where they moved.
+    - People already at or after that step in On-boarding (Send Calendar Invite … Active Student) stay where they are, so changing someone's session doesn't send them back.
+    - People on Wait List steps or earlier On-boarding steps move.
+    - Moving someone back to the waitlist doesn't change their step.
+    - On a fresh database there's no such step, so nothing moves.
+  - Boot Camp rows have a session dropdown under the step dropdown, and so does the side panel. The first option is "Waitlist (no session)", followed by upcoming sessions. A session that has already started stays in the list for people who are in it.
+  - The Boot Camp tab has a **Session** filter: Any session, Waitlist, or a session.
+  - Sessions are still created in Django admin.
+  - Also fixed a Step 6 bug: after any row action, the row's "⋯" actions row reopened. htmx restores the `style` attribute of elements that keep their `id` across a swap, which undid Alpine's `x-show`. The row now uses a bound `hidden` attribute. The browser test checks this.
+  - `load_dev_data` creates an upcoming session.
 
-### Step 9 — Cleanup (fixes BUG-026, BUG-029)
+### Step 9 — Cleanup (fixes BUG-026, BUG-029) — done 2026-10-20
 - Remove `Participant.current_step` and cold_apply `Phase`, `Step`, `Interaction` and `Application` (dropped, §7). Remove `ParticipantListView`, `PhaseListView`, `participant_list.html`, `process.html`, `staff.html`, `cold_apply/index.html`, `ParticipantUpdateView` and its form.
 - Old URLs redirect. `process` becomes the read-only Flows page.
 - Fix the `companiies` URL typo.
 - Update `load_dev_data`, `dev_seed.json` and `cold_apply/tests/factories.py` for flows and enrollments.
 - **Tests:** full suite; no references left to the removed models (`grep`).
+- **As built:**
+  - Migration `cold_apply/0004_remove_old_pipeline` drops `Phase`, `Step`, `Interaction`, `Application` and `Participant.current_step`. It depends on `pipeline/0002_seed_flows`, so on deploy the seed copies the old rows first and the drop runs after. **The old rows are gone after this deploy; the pre-deploy backup is the only way back.** Checked forward, back and forward on the dev database.
+  - `handle_onboard_complete` only creates the `Participant` now; Intake does the rest (Step 4).
+  - **Old URLs:**
+    - `/cold_apply/participants/` redirects to the dashboard.
+    - `/cold_apply/process/` redirects to the Flows page.
+    - `/cold_apply/participants/<pk>/update/` redirects to the person's workspace (404 for an unknown participant).
+    - `confirm_update_participant` is gone.
+    - `companiies/` is now `companies/`, with no redirect because nothing links to it from outside.
+  - Removed `process.html`, `cold_apply/index.html`, `participant_create.html` (no view used it), `templates/staff.html` (43 templates now extend `staff_base.html` directly), `ParticipantForm` and `InteractionForm`.
+  - Kept `participant_update.html`: `BulletUpdateView` uses it for its full-page form.
+  - **Breadcrumbs and links:**
+    - The "Pipeline" breadcrumb is now "Dashboard" and links to `/staff/`.
+    - It was shown to participants on two pages (bullet update and job update), linking them to a staff page; it's now staff only.
+    - The Toolbox "Cold Apply" link and the Cancel links on the profile and veteran status forms go to the dashboard.
+  - **BUG-029 cleanup:**
+    - `ParticipantDetailView` uses `self.object` instead of fetching the participant again.
+    - The `bootstrap.Collapse` call was already gone with Step 7's template changes.
+    - BUG-026's template (`participant_list.html`) was deleted in Step 5.
+  - ParticipantAdmin's search was broken (`"user" "active"` ran together into one name, and it searched foreign keys and dates). It now searches the user's email and name.
+  - **`load_dev_data`, `dev_seed.json` and the factories** no longer create phases or steps.
+  - **The seed migration tests:**
+    - They can't use the old models any more, so `pipeline/tests/old_pipeline.py` recreates the old tables from the migration's historical state.
+    - `SeedFromProdShapeTest` does this inside each test's transaction (Postgres rolls back the schema changes).
+    - The browser tests, which flush the database, create the tables, seed and drop them.
 
 ### Step 10 — Rollout
 - Deploy to stage (`git push origin develop:staging`, done by Jeff). Check the Step 3 migration against stage data, then go through the dashboard as a staff user without the permission and as a superuser.
-- **Prod checklist:** rerun the Step 0 query and confirm the mapping still holds, take a database backup before deploying (deploys run migrations automatically), and add any reviewers to the group.
+- **Prod checklist:** rerun the Step 0 query and confirm the mapping still holds, take a database backup before deploying (deploys run migrations automatically, and `cold_apply/0004` drops the old tables in the same deploy), and add any reviewers to the group.
 - Update the bug log entries to `Fixed` with their commits.
 
 ### Not in this plan
@@ -350,3 +452,13 @@ Tracked in `docs/backlog.md`: IDEA-001 assignee notifications, IDEA-002 kanban v
 - 2026-10-19: prod phases/steps read (Step 0); Step 3 mapping built from them; new questions added to §7; BUG-031 logged; left-out items moved to `docs/backlog.md`.
 - 2026-10-19: Jeff answered the prod-data questions (Nurture flow, DNC, soft rejection / no show as statuses); Step 1 started.
 - 2026-10-19: Step 1 implemented: 129 tests passing (15 new in `userprofile/tests/test_service_doc.py`); migration `userprofile/0022` checked both ways.
+- 2026-10-19: Step 1 merged into develop (fcca49a); it reaches prod with the next release, not 3.2.3.
+- 2026-10-19: Step 2 implemented: `pipeline` app (Flow, Phase, Step, Enrollment, Activity; migration `pipeline/0001`), services, and admin. Enrollment and Activity are read-only in admin so the timeline stays complete. 158 tests passing (29 new).
+- 2026-10-19: Step 2 committed (99005ff). Step 3 implemented: data migration `pipeline/0002_seed_flows` with 10 tests built on the prod phase/step shape; checked forward, back and forward on the dev database. 168 tests passing. The known flaky `JobFactory` error (already in the bug log) showed up once.
+- 2026-10-19: Step 3 committed (4d8a610). Step 4 implemented: signups enter Intake, and veteran reviewers get a verify-and-advance button. 180 tests passing.
+- 2026-10-19: Step 4 committed (1cc7b0c). Step 5 implemented: staff layout, dashboard and Flows page; checked in a browser at desktop and phone widths. 197 tests passing.
+- 2026-10-19: Step 5 committed (219cdfd). Step 6 implemented: row controls, triage, side panel; 2 Playwright tests; checked in a browser. 225 tests passing.
+- 2026-10-19: Step 6 committed (f7c690f). Step 7 implemented: People search, staff workspace, DD214 opens on the timeline, participant page trimmed (fixes BUG-022, BUG-023, BUG-025). 242 tests passing.
+- 2026-10-19: Step 7 committed (e0b44c1, c4c80f1); develop merged in (f833a14). Step 8 implemented: boot camp sessions and the waitlist filter, plus the fix for the actions row reopening. 254 tests passing.
+- 2026-10-20: Step 8 committed (6e52c5b, 2b1f69a). Step 9 implemented: old pipeline models, views and templates removed; old URLs redirect. 253 tests passing.
+- 2026-10-20: Step 9 committed (3766a04, f2c8950). Jeff chose Send Enrollment Confirmation as the step a session moves people to; built, with 4 new tests.

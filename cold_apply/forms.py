@@ -17,21 +17,7 @@ from resume.pdf import (
     ResumeSections,
 )
 
-from .models import Interaction, Job, Participant, Skill
-
-
-class ParticipantForm(forms.ModelForm):
-    class Meta:
-        model = Participant
-        fields = [
-            "current_step",
-        ]
-
-
-class InteractionForm(forms.ModelForm):
-    class Meta:
-        model = Interaction
-        fields = ["participant", "interaction_type", "notes"]
+from .models import Job, Skill
 
 
 class ExperienceForm(forms.ModelForm):

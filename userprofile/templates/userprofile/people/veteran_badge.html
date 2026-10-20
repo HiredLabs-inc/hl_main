@@ -1,0 +1,7 @@
+{% if profile.is_veteran is False %}
+    <span class="staff-badge staff-badge-plain">Not a veteran</span>
+{% elif profile.veteran_verified %}
+    <span class="staff-badge staff-badge-ok">Veteran verified</span>
+{% elif profile %}
+    <span class="staff-badge staff-badge-warn">Veteran unverified</span>
+{% endif %}

@@ -11,7 +11,7 @@ from django.urls import reverse
 from playwright.sync_api import sync_playwright
 
 from cold_apply.forms import ResumeConfigForm
-from cold_apply.models import Phase, Skill, SkillBullet, Step
+from cold_apply.models import Skill, SkillBullet
 from cold_apply.tests.factories import (
     ExperienceFactory,
     JobFactory,
@@ -20,6 +20,9 @@ from cold_apply.tests.factories import (
     PositionFactory,
     UserFactory,
 )
+from pipeline import services
+from pipeline.models import Flow
+from pipeline.tests.old_pipeline import seed_fresh_flows
 from resume.models import (
     Bullet,
     CertProjectActivity,
@@ -37,14 +40,14 @@ from resume.pdf import (
 )
 
 
+
 def make_resume_participant():
     """A participant with one job and three experiences with distinct start dates,
     each experience carrying factory bullets."""
-    # The pipeline only lists participants whose current step is in an active phase
-    phase = Phase.objects.create(title="Phase 1", start="start", end="end", result="result", active=True)
-    step = Step.objects.create(title="Phase 1.0", description="First step", phase=phase)
     user = UserFactory(first_name="Jane", last_name="Veteran", email="jane@example.com")
-    participant = ParticipantFactory(user=user, current_step=step, jobs=[], experiences=[])
+    participant = ParticipantFactory(user=user, jobs=[], experiences=[])
+    # The staff dashboard lists people by enrollment
+    services.enroll(user, Flow.objects.get(slug="resume-job-search"), actor=None)
     JobFactory(participant=participant, title=PositionFactory(title="Software Engineer"), status="Open")
     for year in (2018, 2020, 2022):
         ExperienceFactory(
@@ -84,6 +87,9 @@ class ColdApplyBrowserTest(StaticLiveServerTestCase):
         cls.playwright.stop()
 
     def setUp(self):
+        # TransactionTestCases flush the database, including the flows seeded by migrations
+        if not Flow.objects.exists():
+            seed_fresh_flows()
         User.objects.create_superuser(username="admin@example.com", email="admin@example.com", password="admin")
         self.participant = make_resume_participant()
 
@@ -94,12 +100,16 @@ class ColdApplyBrowserTest(StaticLiveServerTestCase):
         """
         context = self.browser.new_context()
         page = context.new_page()
-        page.goto(f"{self.live_server_url}{reverse('account_login')}?next={reverse('cold_apply:index')}")
+        dashboard = f"{reverse('staff')}?tab=resume-job-search"
+        page.goto(f"{self.live_server_url}{reverse('account_login')}?{urlencode({'next': dashboard})}")
         page.locator("#id_login").fill("admin@example.com")
         page.locator("#id_password").fill("admin")
         page.get_by_role("button", name="Sign In").click()
 
+        # The name opens the quick view, then the staff workspace links to the jobs page
         page.get_by_role("link", name="Jane Veteran").first.click()
+        page.get_by_role("link", name="Open full page").click()
+        page.get_by_role("link", name="Jobs and tailored resumes").click()
         page.get_by_role("link", name="Software Engineer").first.click()
         with page.expect_popup() as page1_info:
             page.get_by_role("link", name="Tailor Resume").click()
@@ -144,13 +154,15 @@ class ParticipantUpdateViewTestCase(TestCase):
         cls.staff = User.objects.create_superuser(username="admin@example.com", email="admin@example.com", password="admin")
         cls.participant = ParticipantFactory(jobs=[], experiences=[])
 
-    def test_view_200(self):
+    def test_redirects_to_workspace(self):
         self.client.force_login(self.staff)
 
         url = reverse("cold_apply:update_participant", args=[self.participant.id])
 
         response = self.client.get(url)
-        self.assertEqual(response.status_code, 200)
+        self.assertRedirects(response, reverse("staff_person", args=[self.participant.user_id]))
+        missing = reverse("cold_apply:update_participant", args=[999999])
+        self.assertEqual(self.client.get(missing).status_code, 404)
 
         self.client.logout()
         unauth_response = self.client.get(url)

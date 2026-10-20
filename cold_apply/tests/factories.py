@@ -14,7 +14,6 @@ from cold_apply.models import (
     Skill,
     SkillBullet,
     State,
-    Step,
 )
 from rates.models import Country
 from resume.models import Bullet, Experience, Organization, Position
@@ -299,7 +298,6 @@ class ParticipantFactory(DjangoModelFactory):
 
     user = factory.SubFactory(UserFactory)
     active = True
-    current_step = factory.LazyFunction(lambda: Step.objects.order_by("phase__order", "order").first())
     jobs = factory.RelatedFactoryList(JobFactory, "participant", size=10)
     experiences = factory.RelatedFactoryList(ExperienceFactory, "participant", size=3)
 

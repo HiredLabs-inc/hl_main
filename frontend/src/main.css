@@ -5,8 +5,9 @@
 @tailwind components;
 @tailwind utilities;
 
-/* App pages: orange links. Public pages (body.hl-site) style links themselves. */
-a:not(.btn):not(.admin_panel):not(.hl-site a) {
+/* App pages: orange links. Public pages (body.hl-site) and the staff nav
+   (.staff-chrome) style links themselves. */
+a:not(.btn):not(.admin_panel):not(.hl-site a):not(.staff-chrome a) {
   @apply hover:underline text-orange;
 }
 
@@ -257,4 +258,42 @@ h5 {
 
 [x-cloak] {
   display: none !important;
+}
+
+/* ---------- Staff pages (templates extending staff_base.html) ---------- */
+
+@layer components {
+  .staff-nav-link {
+    @apply whitespace-nowrap rounded-md px-3 py-1.5 text-hl-steel hover:bg-hl-navy-2 hover:text-white;
+  }
+  .staff-nav-link-current {
+    @apply bg-hl-navy-2 text-white;
+  }
+  .staff-menu-item {
+    @apply block rounded-md px-3 py-2 text-hl-ink hover:bg-hl-mist;
+  }
+  .staff-tab {
+    @apply whitespace-nowrap border-b-2 border-transparent px-3 py-2 text-sm font-medium text-hl-muted hover:border-hl-steel hover:text-hl-ink;
+  }
+  .staff-tab-current {
+    @apply border-hl-orange-text text-hl-navy;
+  }
+  .staff-badge {
+    @apply inline-flex items-center whitespace-nowrap rounded px-1.5 py-0.5 text-xs font-medium;
+  }
+  .staff-badge-ok {
+    @apply bg-green-50 text-green-800 ring-1 ring-inset ring-green-600/20;
+  }
+  .staff-badge-warn {
+    @apply bg-amber-50 text-amber-800 ring-1 ring-inset ring-amber-600/30;
+  }
+  .staff-badge-bad {
+    @apply bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20;
+  }
+  .staff-badge-plain {
+    @apply bg-hl-mist text-hl-ink ring-1 ring-inset ring-hl-line;
+  }
+  .staff-field {
+    @apply rounded-md border-hl-line py-1.5 text-sm focus:border-hl-blue focus:ring-hl-blue;
+  }
 }

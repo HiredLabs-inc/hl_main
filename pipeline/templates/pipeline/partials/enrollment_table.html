@@ -1,0 +1,37 @@
+{% if not filters.is_valid %}
+    <div role="alert" class="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        Some filters aren't valid: {% for field in filters %}{% for error in field.errors %}{{ field.label }}: {{ error }} {% endfor %}{% endfor %}
+    </div>
+{% elif not rows %}
+    <div class="rounded-lg border border-dashed border-hl-line p-8 text-center text-sm text-hl-muted">
+        Nobody matches. <a href="{% url 'staff' %}?tab={{ tab }}">Clear the filters</a>
+    </div>
+{% else %}
+    <div class="overflow-x-auto rounded-lg border border-hl-line bg-white">
+        <table class="w-full min-w-[56rem] text-left text-sm">
+            <thead class="bg-hl-mist text-xs uppercase tracking-wide text-hl-muted">
+                <tr>
+                    <th scope="col" class="px-3 py-2 font-medium">Name</th>
+                    <th scope="col" class="px-3 py-2 font-medium">Step</th>
+                    <th scope="col" class="px-3 py-2 font-medium">Assignee</th>
+                    <th scope="col" class="px-3 py-2 font-medium">Veteran</th>
+                    <th scope="col" class="px-3 py-2 text-right font-medium">Days in step</th>
+                    <th scope="col" class="px-3 py-2 font-medium">Last activity</th>
+                    <th scope="col" class="px-3 py-2"><span class="sr-only">Actions</span></th>
+                </tr>
+            </thead>
+            {% if flow %}
+                {% regroup rows by current_step as groups %}
+                {% for group in groups %}
+                    {% include 'pipeline/partials/enrollment_group.html' with heading=group.grouper.phase.title|add:" › "|add:group.grouper.title %}
+                {% endfor %}
+            {% else %}
+                {% regroup rows by flow as groups %}
+                {% for group in groups %}
+                    {% include 'pipeline/partials/enrollment_group.html' with heading=group.grouper.name show_flow_step=True %}
+                {% endfor %}
+            {% endif %}
+        </table>
+    </div>
+    <p class="mt-2 text-xs text-hl-muted">{{ rows|length }} {{ rows|length|pluralize:"person,people" }}</p>
+{% endif %}

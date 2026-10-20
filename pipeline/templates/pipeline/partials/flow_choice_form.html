@@ -1,0 +1,13 @@
+<form hx-post="{% url action enrollment.pk %}" hx-target="#enrollment-{{ enrollment.pk }}" hx-swap="outerHTML" class="space-y-2">
+    <fieldset>
+        <legend class="text-xs font-semibold uppercase tracking-wide text-hl-muted">{{ title }}</legend>
+        {% for flow in enrollment.enroll_choices %}
+            <label class="mt-1 flex items-center gap-2 text-sm text-hl-ink">
+                <input type="checkbox" name="flows" value="{{ flow.pk }}" class="rounded border-hl-line text-hl-blue focus:ring-hl-blue"> {{ flow.name }}
+            </label>
+        {% empty %}
+            <p class="mt-1 text-sm text-hl-muted">Already in every flow.</p>
+        {% endfor %}
+    </fieldset>
+    {% if enrollment.enroll_choices %}<button type="submit" class="btn btn-primary !px-3 !py-1 !text-sm">{{ button }}</button>{% endif %}
+</form>
