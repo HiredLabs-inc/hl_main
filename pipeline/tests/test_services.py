@@ -15,20 +15,20 @@ def make_user(email, **kwargs):
 class PipelineTestCase(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.intake = Flow.objects.create(name="Intake", slug="intake", order=0)
+        cls.intake = Flow.objects.create(name="Intake", slug="test-intake", order=0)
         applicants = Phase.objects.create(flow=cls.intake, title="Applicants")
         cls.verify = Step.objects.create(
             phase=applicants, title="Verify Veteran Status", order=0, required_permission=VETERAN_REVIEW
         )
         cls.triage = Step.objects.create(phase=applicants, title="Triage", order=1)
 
-        cls.job_search = Flow.objects.create(name="Resume & Job Search", slug="resume-job-search", order=1)
+        cls.job_search = Flow.objects.create(name="Resume & Job Search", slug="test-job-search", order=1)
         phase_2 = Phase.objects.create(flow=cls.job_search, title="Phase 2", order=1)
         phase_1 = Phase.objects.create(flow=cls.job_search, title="Phase 1", order=0)
         cls.job_list = Step.objects.create(phase=phase_2, title="Create Initial Job List", order=0)
         cls.first_email = Step.objects.create(phase=phase_1, title="Send Initial Email", order=0)
 
-        cls.boot_camp = Flow.objects.create(name="Boot Camp", slug="boot-camp", order=2)
+        cls.boot_camp = Flow.objects.create(name="Boot Camp", slug="test-boot-camp", order=2)
         cls.waitlist = Step.objects.create(
             phase=Phase.objects.create(flow=cls.boot_camp, title="Wait List"), title="Priority Enrollment"
         )
@@ -224,7 +224,7 @@ class CompleteTriageTest(PipelineTestCase):
         self.assertEqual(intake.status, Enrollment.Status.COMPLETED)
         self.assertEqual(
             set(Enrollment.objects.filter(person=self.person, ended_at__isnull=True).values_list("flow__slug", flat=True)),
-            {"resume-job-search", "boot-camp"},
+            {"test-job-search", "test-boot-camp"},
         )
 
     def test_gated_step_blocks_triage_without_permission(self):

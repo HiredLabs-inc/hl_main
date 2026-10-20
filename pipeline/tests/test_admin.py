@@ -9,7 +9,7 @@ from pipeline.models import Flow, Phase, Step
 class PipelineAdminTest(TestCase):
     def setUp(self):
         self.superuser = User.objects.create_superuser("super@example.com", "super@example.com", "password")
-        flow = Flow.objects.create(name="Intake", slug="intake")
+        flow = Flow.objects.create(name="Intake", slug="test-intake")
         step = Step.objects.create(phase=Phase.objects.create(flow=flow, title="Applicants"), title="Triage")
         self.enrollment = services.enroll(
             User.objects.create_user("vet@example.com", "vet@example.com"), flow, self.superuser
