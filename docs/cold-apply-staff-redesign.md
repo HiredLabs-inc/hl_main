@@ -399,16 +399,41 @@ Other facts from the query:
   - Also fixed a Step 6 bug: after any row action, the row's "⋯" actions row reopened. htmx restores the `style` attribute of elements that keep their `id` across a swap, which undid Alpine's `x-show`. The row now uses a bound `hidden` attribute. The browser test checks this.
   - `load_dev_data` creates an upcoming session.
 
-### Step 9 — Cleanup (fixes BUG-026, BUG-029)
+### Step 9 — Cleanup (fixes BUG-026, BUG-029) — done 2026-10-20
 - Remove `Participant.current_step` and cold_apply `Phase`, `Step`, `Interaction` and `Application` (dropped, §7). Remove `ParticipantListView`, `PhaseListView`, `participant_list.html`, `process.html`, `staff.html`, `cold_apply/index.html`, `ParticipantUpdateView` and its form.
 - Old URLs redirect. `process` becomes the read-only Flows page.
 - Fix the `companiies` URL typo.
 - Update `load_dev_data`, `dev_seed.json` and `cold_apply/tests/factories.py` for flows and enrollments.
 - **Tests:** full suite; no references left to the removed models (`grep`).
+- **As built:**
+  - Migration `cold_apply/0004_remove_old_pipeline` drops `Phase`, `Step`, `Interaction`, `Application` and `Participant.current_step`. It depends on `pipeline/0002_seed_flows`, so on deploy the seed copies the old rows first and the drop runs after. **The old rows are gone after this deploy; the pre-deploy backup is the only way back.** Checked forward, back and forward on the dev database.
+  - `handle_onboard_complete` only creates the `Participant` now; Intake does the rest (Step 4).
+  - **Old URLs:**
+    - `/cold_apply/participants/` redirects to the dashboard.
+    - `/cold_apply/process/` redirects to the Flows page.
+    - `/cold_apply/participants/<pk>/update/` redirects to the person's workspace (404 for an unknown participant).
+    - `confirm_update_participant` is gone.
+    - `companiies/` is now `companies/`, with no redirect because nothing links to it from outside.
+  - Removed `process.html`, `cold_apply/index.html`, `participant_create.html` (no view used it), `templates/staff.html` (43 templates now extend `staff_base.html` directly), `ParticipantForm` and `InteractionForm`.
+  - Kept `participant_update.html`: `BulletUpdateView` uses it for its full-page form.
+  - **Breadcrumbs and links:**
+    - The "Pipeline" breadcrumb is now "Dashboard" and links to `/staff/`.
+    - It was shown to participants on two pages (bullet update and job update), linking them to a staff page; it's now staff only.
+    - The Toolbox "Cold Apply" link and the Cancel links on the profile and veteran status forms go to the dashboard.
+  - **BUG-029 cleanup:**
+    - `ParticipantDetailView` uses `self.object` instead of fetching the participant again.
+    - The `bootstrap.Collapse` call was already gone with Step 7's template changes.
+    - BUG-026's template (`participant_list.html`) was deleted in Step 5.
+  - ParticipantAdmin's search was broken (`"user" "active"` ran together into one name, and it searched foreign keys and dates). It now searches the user's email and name.
+  - **`load_dev_data`, `dev_seed.json` and the factories** no longer create phases or steps.
+  - **The seed migration tests:**
+    - They can't use the old models any more, so `pipeline/tests/old_pipeline.py` recreates the old tables from the migration's historical state.
+    - `SeedFromProdShapeTest` does this inside each test's transaction (Postgres rolls back the schema changes).
+    - The browser tests, which flush the database, create the tables, seed and drop them.
 
 ### Step 10 — Rollout
 - Deploy to stage (`git push origin develop:staging`, done by Jeff). Check the Step 3 migration against stage data, then go through the dashboard as a staff user without the permission and as a superuser.
-- **Prod checklist:** rerun the Step 0 query and confirm the mapping still holds, take a database backup before deploying (deploys run migrations automatically), and add any reviewers to the group.
+- **Prod checklist:** rerun the Step 0 query and confirm the mapping still holds, take a database backup before deploying (deploys run migrations automatically, and `cold_apply/0004` drops the old tables in the same deploy), and add any reviewers to the group.
 - Update the bug log entries to `Fixed` with their commits.
 
 ### Not in this plan
@@ -429,3 +454,4 @@ Tracked in `docs/backlog.md`: IDEA-001 assignee notifications, IDEA-002 kanban v
 - 2026-10-19: Step 5 committed (219cdfd). Step 6 implemented: row controls, triage, side panel; 2 Playwright tests; checked in a browser. 225 tests passing.
 - 2026-10-19: Step 6 committed (f7c690f). Step 7 implemented: People search, staff workspace, DD214 opens on the timeline, participant page trimmed (fixes BUG-022, BUG-023, BUG-025). 242 tests passing.
 - 2026-10-19: Step 7 committed (e0b44c1, c4c80f1); develop merged in (f833a14). Step 8 implemented: boot camp sessions and the waitlist filter, plus the fix for the actions row reopening. 254 tests passing.
+- 2026-10-20: Step 8 committed (6e52c5b, 2b1f69a). Step 9 implemented: old pipeline models, views and templates removed; old URLs redirect. 253 tests passing.
