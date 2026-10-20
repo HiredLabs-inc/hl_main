@@ -50,8 +50,13 @@ class Profile(TrackedModel):
     years_of_service = models.IntegerField(null=True)
     rank_at_separation = models.CharField(max_length=200, null=True)
     resume = models.FileField(upload_to="uploads/", default=None, null=True)
-    service_doc = models.FileField(upload_to="uploads/", default=None, null=True)
+    service_doc = models.FileField(upload_to="service_docs/", default=None, null=True)
     bootcamp = models.BooleanField(default=False)
+
+    class Meta:
+        permissions = [
+            ("review_veteran_status", "Can review veteran status and open service documents"),
+        ]
 
     def handle_onboard_complete(self):
         self.is_onboarded = True
@@ -81,7 +86,7 @@ class VeteranProfile(TrackedModel):
     military_specialiaty = models.CharField(max_length=200, null=True)
     years_of_service = models.IntegerField(null=True)
     rank_at_separation = models.CharField(max_length=200, null=True)
-    service_doc = models.FileField(upload_to="uploads/", null=True)
+    service_doc = models.FileField(upload_to="service_docs/", null=True)
 
 class ServicePackage(models.Model):
     name = models.CharField(max_length=300)

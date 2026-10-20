@@ -8,11 +8,12 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import EmailMessage
+from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
 from releases.models import App
-from userprofile.guards import staff_required, verified_required
+from userprofile.guards import staff_required, verified_required, veteran_reviewer_required
 from userprofile.va_api import confirm_veteran_status
 
 from .forms import (
@@ -30,6 +31,8 @@ from .models import BootCampSession, OnboardingStep, Profile, VeteranProfile
 from hl_main.gcs import SIGNED_URL_EXPIRATION, generate_signed_url
 
 logger = logging.getLogger(__name__)
+# Who opened which service document; kept at INFO in production (settings/cloud.py)
+audit_logger = logging.getLogger("hl_main.audit")
 
 @login_required
 @rate_limit(action="manage_email")
@@ -138,25 +141,33 @@ def profile_update_view(request):
         return redirect("userprofile:profile_view")
     return render(request, "userprofile/profile_update_view.html", {"form": form})
 
-@staff_required
+@veteran_reviewer_required
 def update_veteran_status_view(request, participant_id):
     profile = get_object_or_404(Profile, user=participant_id)
-    # veteran_profile = VeteranProfile.objects.get(user=participant_id)
     form = VeteranStatusUpdateForm(request.POST or None, instance=profile)
-    signed_url = ''
-    if not settings.DEBUG and profile.service_doc:
-        signed_url = generate_signed_url(
-            bucket_name=settings.GS_BUCKET_NAME,
-            object_name=profile.service_doc.name,
-            expiration=SIGNED_URL_EXPIRATION,
-        )
     if request.method == "POST" and form.is_valid():
         form.save()
     context = {
         "form": form,
         "profile": profile,
-        # "veteran_profile": veteran_profile,
-        "signed_url": signed_url,
-        "debug": settings.DEBUG,
     }
     return render(request, "userprofile/veteran_status_update_view.html", context)
+
+
+@veteran_reviewer_required
+def service_doc_view(request, user_pk):
+    """The only way to open a service document (DD214): logs who opened it, then
+    redirects to a short-lived signed URL, or streams the local file in development"""
+    profile = get_object_or_404(Profile, user=user_pk)
+    if not profile.service_doc:
+        raise Http404
+    audit_logger.info("Service document of user %s opened by user %s", profile.user_id, request.user.pk)
+    if settings.DEBUG:
+        return FileResponse(profile.service_doc.open("rb"))
+    return redirect(
+        generate_signed_url(
+            bucket_name=settings.GS_BUCKET_NAME,
+            object_name=profile.service_doc.name,
+            expiration=SIGNED_URL_EXPIRATION,
+        )
+    )
