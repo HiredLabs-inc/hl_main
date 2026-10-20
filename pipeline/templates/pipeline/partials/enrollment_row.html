@@ -9,10 +9,14 @@ staff_users and stale_days.
 <tbody id="enrollment-{{ enrollment.pk }}" x-data="{ open: false }" class="border-t border-hl-line">
 <tr class="align-top hover:bg-hl-mist/60">
     <td class="px-3 py-2">
-        <a href="{% if person.participant %}{% url 'cold_apply:participant_detail' person.participant.pk %}{% else %}#{% endif %}"
-           hx-get="{% url 'pipeline:panel' person.pk %}" hx-target="#person-panel" class="font-medium">{{ name }}</a>
-        <span class="block text-xs text-hl-muted">{{ person.email }}</span>
-        {% if profile.dnc %}<span class="staff-badge staff-badge-bad mt-1">Do not contact</span>{% endif %}
+        {% if hide_person %}
+            <span class="font-medium text-hl-ink">{{ enrollment.flow.name }}</span>
+            <span class="block text-xs text-hl-muted">Since {{ enrollment.created_at|date:"M j, Y" }}{% if enrollment.is_ended %} · ended {{ enrollment.ended_at|date:"M j, Y" }}{% endif %}</span>
+        {% else %}
+            <a href="{% url 'staff_person' person.pk %}" hx-get="{% url 'pipeline:panel' person.pk %}" hx-target="#person-panel" class="font-medium">{{ name }}</a>
+            <span class="block text-xs text-hl-muted">{{ person.email }}</span>
+            {% if profile.dnc %}<span class="staff-badge staff-badge-bad mt-1">Do not contact</span>{% endif %}
+        {% endif %}
     </td>
     <td class="px-3 py-2 text-hl-ink">
         {% if show_flow_step %}<span class="block text-xs text-hl-muted">{{ step.phase.title }}</span>{% endif %}

@@ -29,6 +29,7 @@ from . import testimonials
 from .models import BootCampSession, OnboardingStep, Profile, VeteranProfile
 
 from hl_main.gcs import SIGNED_URL_EXPIRATION, generate_signed_url
+from pipeline import services
 
 logger = logging.getLogger(__name__)
 # Who opened which service document; kept at INFO in production (settings/cloud.py)
@@ -159,12 +160,14 @@ def update_veteran_status_view(request, participant_id):
 
 @veteran_reviewer_required
 def service_doc_view(request, user_pk):
-    """The only way to open a service document (DD214): logs who opened it, then
-    redirects to a short-lived signed URL, or streams the local file in development"""
+    """The only way to open a service document (DD214): logs who opened it (audit log
+    and the person's timeline), then redirects to a short-lived signed URL, or
+    streams the local file in development"""
     profile = get_object_or_404(Profile, user=user_pk)
     if not profile.service_doc:
         raise Http404
     audit_logger.info("Service document of user %s opened by user %s", profile.user_id, request.user.pk)
+    services.record_document_opened(profile.user, request.user, "DD214")
     if settings.DEBUG:
         return FileResponse(profile.service_doc.open("rb"))
     return redirect(

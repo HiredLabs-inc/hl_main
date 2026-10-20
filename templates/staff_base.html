@@ -15,6 +15,7 @@ the toaster in base.html.
         <nav class="order-last -mx-1 flex w-full items-center gap-1 overflow-x-auto pb-2 text-sm sm:order-none sm:mx-0 sm:w-auto sm:flex-1 sm:pb-0" aria-label="Staff">
             {% if user.is_staff %}
                 <a href="{% url 'staff' %}" class="staff-nav-link {% if current == 'staff' %}staff-nav-link-current{% endif %}" {% if current == 'staff' %}aria-current="page"{% endif %}>Dashboard</a>
+                <a href="{% url 'staff_people' %}" class="staff-nav-link {% if current == 'staff_people' or current == 'staff_person' %}staff-nav-link-current{% endif %}" {% if current == 'staff_people' %}aria-current="page"{% endif %}>People</a>
                 <a href="{% url 'stuck_signups' %}" class="staff-nav-link {% if current == 'stuck_signups' %}staff-nav-link-current{% endif %}" {% if current == 'stuck_signups' %}aria-current="page"{% endif %}>Stuck signups</a>
                 <a href="{% url 'staff_flows' %}" class="staff-nav-link {% if current == 'staff_flows' %}staff-nav-link-current{% endif %}" {% if current == 'staff_flows' %}aria-current="page"{% endif %}>Flows</a>
             {% endif %}

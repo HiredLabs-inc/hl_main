@@ -185,9 +185,9 @@ class ParticipantDetailView(OwnedObjectMixin, FormMixin, DetailView):
         )
         context["latest_experience"] = latest_experience
         context["jobs"] = self.object.job_set.all()
-        context["highest_edu"] = Education.objects.filter(
+        context["educations"] = Education.objects.filter(
             participant_id=self.kwargs["pk"]
-        ).first()
+        ).select_related("org", "degree", "concentration")
         participant = Participant.objects.get(id=self.kwargs["pk"])
         context["now"] = timezone.now()
         try:

@@ -63,7 +63,7 @@ def row_queryset():
     """Enrollments with what a dashboard row shows"""
     last_activity = Activity.objects.filter(person=OuterRef("person")).order_by("-created_at").values("created_at")[:1]
     return Enrollment.objects.select_related(
-        "person__profile", "person__participant", "flow", "current_step__phase", "assignee"
+        "person__profile", "flow", "current_step__phase", "assignee"
     ).annotate(last_activity=Subquery(last_activity))
 
 

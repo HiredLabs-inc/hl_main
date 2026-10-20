@@ -196,14 +196,16 @@ class PanelTest(ActionTestCase):
         for text in ("Pat Vet", "Do not contact", "555-0100", "Resume &amp; Job Search", "Prefers email", "Sam Staff"):
             self.assertContains(response, text)
 
-    def test_panel_note(self):
-        url = reverse("pipeline:panel_note", args=[self.vet.pk])
+    def test_person_note(self):
+        url = reverse("pipeline:person_note", args=[self.vet.pk])
         response = self.client.post(url, {"kind": "email", "text": "Sent welcome"})
-        self.assertTemplateUsed(response, "pipeline/partials/person_panel.html")
+        self.assertTemplateUsed(response, "pipeline/partials/timeline.html")
         self.assertContains(response, "Sent welcome")
         self.assertTrue(events(response)["enrollment-changed"])
         self.assertIsNone(Activity.objects.get(kind="email").enrollment)
         self.assertEqual(self.client.post(url, {"text": ""})["HX-Reswap"], "none")
+        self.client.force_login(self.vet)
+        self.assertEqual(self.client.post(url, {"text": "hi"}).status_code, 403)
 
     def test_person_without_profile(self):
         bare = User.objects.create_user("bare@example.com")
@@ -213,3 +215,15 @@ class PanelTest(ActionTestCase):
         self.assertEqual(self.client.get(reverse("pipeline:panel", args=[999999])).status_code, 404)
         self.client.force_login(self.vet)
         self.assertEqual(self.client.get(reverse("pipeline:panel", args=[self.vet.pk])).status_code, 403)
+
+
+class PersonEnrollTest(ActionTestCase):
+    def test_enroll_from_workspace(self):
+        url = reverse("pipeline:person_enroll", args=[self.vet.pk])
+        response = self.client.post(url, {"flows": [self.intake.pk, self.job_search.pk]})
+        self.assertEqual(response["HX-Reswap"], "none")
+        self.assertEqual(events(response)["toast"]["text"], "Enrolled in Intake.")
+        self.assertTrue(events(response)["enrollment-changed"])
+        self.assertRefused(self.client.post(url, {}), "Choose at least one flow")
+        self.client.force_login(self.vet)
+        self.assertEqual(self.client.post(url, {"flows": [self.boot_camp.pk]}).status_code, 403)

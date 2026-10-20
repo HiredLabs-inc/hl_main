@@ -1,0 +1,21 @@
+{% extends 'staff_base.html' %}
+{% block page_title %}People{% endblock %}
+{% block content %}
+<div class="space-y-5">
+    <div>
+        <h1 class="!mb-1">People</h1>
+        <p class="text-sm text-hl-muted">Everyone who has signed up or been in a flow, newest first.</p>
+    </div>
+    <form method="get" action="{% url 'staff_people' %}" role="search"
+          hx-get="{% url 'staff_people' %}" hx-target="#people-table" hx-push-url="true" hx-trigger="input delay:300ms, submit">
+        <label for="people-q" class="text-xs font-medium text-hl-muted">Search</label>
+        <div class="mt-1 flex gap-2">
+            <input id="people-q" type="search" name="q" value="{{ q }}" placeholder="Name or email" class="staff-field w-full max-w-sm">
+            <button type="submit" class="btn btn-outline-secondary !py-1.5 !text-sm">Search</button>
+        </div>
+    </form>
+    <div id="people-table">
+        {% include 'userprofile/people/people_table.html' %}
+    </div>
+</div>
+{% endblock %}

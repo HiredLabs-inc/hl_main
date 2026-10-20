@@ -108,7 +108,8 @@ class VeteranStatusButtonTest(TestCase):
         self.vet = verified_user()
         Profile.objects.create(user=self.vet, is_veteran=True)
         self.participant = Participant.objects.create(user=self.vet)
-        self.url = reverse("cold_apply:participant_detail", args=[self.participant.pk])
+        # Staff review veteran status from the person's workspace
+        self.url = reverse("staff_person", args=[self.vet.pk])
         self.status_url = reverse("userprofile:veteran_status_update_view", args=[self.vet.pk])
 
     def test_button_only_for_reviewers(self):
