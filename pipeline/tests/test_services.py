@@ -232,3 +232,10 @@ class CompleteTriageTest(PipelineTestCase):
         with self.assertRaises(PermissionDenied):
             services.complete_triage(intake, [self.job_search], self.staff)
         self.assertFalse(Enrollment.objects.filter(person=self.person, flow=self.job_search).exists())
+
+
+class NextStepTest(PipelineTestCase):
+    def test_next_step_crosses_phases_and_ends_with_none(self):
+        self.assertEqual(self.first_email.next_step(), self.job_list)
+        self.assertIsNone(self.job_list.next_step())
+        self.assertEqual(self.verify.next_step(), self.triage)

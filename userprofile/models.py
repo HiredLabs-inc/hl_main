@@ -59,12 +59,20 @@ class Profile(TrackedModel):
         ]
 
     def handle_onboard_complete(self):
-        self.is_onboarded = True
-        step = Step.objects.order_by("phase__order", "order").first()
+        from .intake import start_intake  # imports allauth via guards; not safe while models load
 
+        self.is_onboarded = True
+        # The old staff pages read Participant.current_step until Step 9 of the
+        # redesign. Use the old Verify Veteran Status step, not "the first step",
+        # which ties can send to Nurture (BUG-031).
+        step = (
+            Step.objects.filter(title="Verify Veteran Status").first()
+            or Step.objects.order_by("phase__order", "order").first()
+        )
         participant, _ = Participant.objects.get_or_create(
             user=self.user, defaults={"current_step": step}
         )
+        start_intake(self.user, is_veteran=self.is_veteran is not False)
         return self.save()
 
 class ServiceBranches(models.TextChoices):

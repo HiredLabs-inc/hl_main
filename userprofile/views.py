@@ -14,6 +14,7 @@ from django.urls import reverse
 
 from releases.models import App
 from userprofile.guards import staff_required, verified_required, veteran_reviewer_required
+from userprofile.intake import awaiting_veteran_review, verify_and_advance
 from userprofile.va_api import confirm_veteran_status
 
 from .forms import (
@@ -144,12 +145,20 @@ def profile_update_view(request):
 @veteran_reviewer_required
 def update_veteran_status_view(request, participant_id):
     profile = get_object_or_404(Profile, user=participant_id)
+    if request.method == "POST" and "verify_and_advance" in request.POST:
+        enrollment = verify_and_advance(profile, request.user)
+        if enrollment is None:
+            messages.error(request, "They aren't waiting for veteran review, so nothing was moved.")
+        else:
+            messages.success(request, f"Verified and moved to {enrollment.current_step.title}.")
+        return redirect("userprofile:veteran_status_update_view", participant_id=profile.user_id)
     form = VeteranStatusUpdateForm(request.POST or None, instance=profile)
     if request.method == "POST" and form.is_valid():
         form.save()
     context = {
         "form": form,
         "profile": profile,
+        "awaiting_review": awaiting_veteran_review(profile.user),
     }
     return render(request, "userprofile/veteran_status_update_view.html", context)
 

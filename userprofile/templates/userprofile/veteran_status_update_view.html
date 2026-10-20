@@ -21,6 +21,16 @@
     {% else %}
         <p>No service doc uploaded.</p>
     {% endif %}
+    {% for message in messages %}
+        <p class="rounded-md p-2 {% if message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}">{{ message }}</p>
+    {% endfor %}
+    {% if awaiting_review %}
+        <form method="post" class="my-4">
+            {% csrf_token %}
+            <p>{{ profile.user.get_full_name|default:profile.user.email }} is waiting on <strong>{{ awaiting_review.current_step.title }}</strong> in Intake.</p>
+            <button type="submit" name="verify_and_advance" class="btn btn-primary mt-2">Verified, move to {{ awaiting_review.current_step.next_step.title }}</button>
+        </form>
+    {% endif %}
     <div class="container">
         {% url 'cold_apply:index' as cancel_url %}
         {% include "forms/standard_form.html" with form=form %}

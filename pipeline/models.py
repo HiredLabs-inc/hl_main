@@ -71,6 +71,12 @@ class Step(models.Model):
     def flow(self):
         return self.phase.flow
 
+    def next_step(self):
+        """The step after this one in its flow, or None if it's the last"""
+        steps = list(Step.objects.filter(phase__flow_id=self.phase.flow_id).values_list("pk", flat=True))
+        index = steps.index(self.pk)
+        return Step.objects.get(pk=steps[index + 1]) if index + 1 < len(steps) else None
+
 
 class Enrollment(TrackedModel):
     class Status(models.TextChoices):
