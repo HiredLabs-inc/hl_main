@@ -4,10 +4,12 @@ and the step the board script (frontend/src/board.js) files it under. In a
 compact column (over 30 cards) it's one line, name and days; hovering or
 focusing it shows the full card over it. That copy is only a picture
 (aria-hidden, no pointer events), so the line underneath still takes the click.
-moved and error come from a move (pipeline:move with render=card).
+moved and error come from a move (pipeline:move with render=card). Cards can
+also be dragged to another column (board.js); data-locked ones can't.
 {% endcomment %}
 <div id="card-{{ enrollment.pk }}" data-board-card data-step="{{ enrollment.current_step_id }}" {% if moved %}data-board-moved{% endif %}
-     class="rounded-md [&.htmx-request]:opacity-60 {% if moved %}ring-2 ring-hl-blue{% elif error %}ring-2 ring-red-600{% endif %} {% if compact %}group relative{% endif %}">
+     data-move-url="{% url 'pipeline:move' enrollment.pk %}" {% if not enrollment.can_leave %}data-locked{% endif %}
+     class="rounded-md [&.htmx-request]:opacity-60 [&.board-saving]:opacity-60 {% if enrollment.can_leave %}cursor-grab{% endif %} {% if moved %}ring-2 ring-hl-blue{% elif error %}ring-2 ring-red-600{% endif %} {% if compact %}group relative{% endif %}">
 {% if compact %}
 {% with person=enrollment.person %}
     <div class="flex items-center gap-2 rounded-md border border-hl-line bg-white px-2.5 py-1.5">

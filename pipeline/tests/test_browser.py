@@ -120,3 +120,60 @@ class DashboardBrowserTest(StaticLiveServerTestCase):
         expect(page.locator(f"#board-count-{second.pk}")).to_have_text("0")
         enrollment.refresh_from_db()
         self.assertEqual(enrollment.current_step, first)
+
+    def drag(self, source, target):
+        """Drag with the mouse, as SortableJS's fallback mode expects"""
+        page = self.page
+        start, end = source.bounding_box(), target.bounding_box()
+        page.mouse.move(start["x"] + 10, start["y"] + start["height"] - 8)
+        page.mouse.down()
+        page.mouse.move(start["x"] + 30, start["y"] + start["height"], steps=5)
+        page.mouse.move(end["x"] + end["width"] / 2, end["y"] + 40, steps=15)
+        page.mouse.up()
+
+    def test_board_drag_to_a_collapsed_step(self):
+        page = self.page
+        flow = Flow.objects.get(slug="resume-job-search")
+        first = flow.first_step()
+        phase = flow.phases.create(title="Phase 2", order=1)
+        second = Step.objects.create(phase=phase, title="Write bullets", order=0)
+        enrollment = services.enroll(self.person, flow, None)
+        page.goto(f"{self.live_server_url}{reverse('staff')}?tab=resume-job-search&view=board")
+
+        card = page.locator(f"#card-{enrollment.pk}")
+        strip = page.locator(f'[data-board-strip="{second.pk}"]')
+        expect(strip).to_be_visible()
+        self.drag(card, strip)
+        expect(page.get_by_text("Moved Nia New to Write bullets.")).to_be_visible()
+        expect(page.locator(f'[data-board-cards="{second.pk}"]').locator(f"#card-{enrollment.pk}")).to_be_visible()
+        expect(page.locator(f"#board-count-{second.pk}")).to_have_text("1")
+        enrollment.refresh_from_db()
+        self.assertEqual(enrollment.current_step, second)
+        self.assertEqual(enrollment.activities.filter(kind="step_change").count(), 1)
+
+        # Back by dragging into the first step's column
+        self.drag(page.locator(f"#card-{enrollment.pk}"), page.locator(f'[data-board-cards="{first.pk}"]'))
+        # The card moves at once; the toast says the server saved it
+        expect(page.get_by_text("Moved Nia New to Resume & Job Search.")).to_be_visible()
+        expect(page.locator(f'[data-board-cards="{first.pk}"]').locator(f"#card-{enrollment.pk}")).to_be_visible()
+        enrollment.refresh_from_db()
+        self.assertEqual(enrollment.current_step, first)
+
+    def test_board_refused_drag_puts_the_card_where_it_is(self):
+        page = self.page
+        flow = Flow.objects.get(slug="resume-job-search")
+        first = flow.first_step()
+        second = Step.objects.create(phase=first.phase, title="Write bullets", order=1)
+        third = Step.objects.create(phase=first.phase, title="Apply", order=2)
+        enrollment = services.enroll(self.person, flow, None)
+        page.goto(f"{self.live_server_url}{reverse('staff')}?tab=resume-job-search&view=board")
+        page.get_by_label("Collapse empty steps").uncheck()
+
+        # Someone else moves them after the board loaded
+        services.move_to_step(enrollment, third, User.objects.get(email="staff@example.com"))
+        self.drag(page.locator(f"#card-{enrollment.pk}"), page.locator(f'[data-board-cards="{second.pk}"]'))
+        card = page.locator(f'[data-board-cards="{third.pk}"]').locator(f"#card-{enrollment.pk}")
+        expect(card.get_by_role("alert")).to_have_text("staff@example.com moved Nia to Apply just now.")
+        enrollment.refresh_from_db()
+        self.assertEqual(enrollment.current_step, third)
+        self.assertEqual(enrollment.activities.filter(kind="step_change").count(), 1)
