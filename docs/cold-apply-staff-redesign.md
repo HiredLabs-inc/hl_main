@@ -268,7 +268,7 @@ Other facts from the query:
 - New uploads go to `service_docs/` (change `upload_to`; existing files stay where they are).
 - **Tests:** staff without the permission get 403 on the view and the page, and see no file field in admin. Reviewers and superusers get a redirect. The participant page shows the button only to the right users.
 
-### Step 2 — `pipeline` app: models and services
+### Step 2 — `pipeline` app: models and services — done 2026-10-19
 - New app `pipeline`. It imports nothing from `cold_apply`.
 - **Models:**
   - `Flow`.
@@ -276,7 +276,7 @@ Other facts from the query:
   - `Enrollment`: person, flow, current_step, assignee, status, started_at, step_entered_at, ended_at. A conditional `UniqueConstraint` allows one non-ended enrollment per (person, flow).
   - `Activity`.
   - All of them registered in admin.
-- **`pipeline/services.py`:** `enroll`, `move_to_step`, `assign`, `set_status`, `add_note`, `complete_triage`. Each one runs in a transaction, writes its Activity row and checks `required_permission`. Every UI path calls these functions; no view writes enrollments directly.
+- **`pipeline/services.py`:** `enroll`, `move_to_step`, `assign`, `set_status`, `add_note`, `complete_triage`, plus `record_document_opened` for Step 7. Each one runs in a transaction, writes its Activity row and checks `required_permission`. Every UI path calls these functions; no view writes enrollments directly.
 - **Tests:** each service function, the uniqueness constraint, the permission-gated step, and an Activity row written for every change.
 
 ### Step 3 — Seed flows and migrate existing data (fixes BUG-024)
@@ -350,3 +350,5 @@ Tracked in `docs/backlog.md`: IDEA-001 assignee notifications, IDEA-002 kanban v
 - 2026-10-19: prod phases/steps read (Step 0); Step 3 mapping built from them; new questions added to §7; BUG-031 logged; left-out items moved to `docs/backlog.md`.
 - 2026-10-19: Jeff answered the prod-data questions (Nurture flow, DNC, soft rejection / no show as statuses); Step 1 started.
 - 2026-10-19: Step 1 implemented: 129 tests passing (15 new in `userprofile/tests/test_service_doc.py`); migration `userprofile/0022` checked both ways.
+- 2026-10-19: Step 1 merged into develop (fcca49a); it reaches prod with the next release, not 3.2.3.
+- 2026-10-19: Step 2 implemented: `pipeline` app (Flow, Phase, Step, Enrollment, Activity; migration `pipeline/0001`), services, and admin. Enrollment and Activity are read-only in admin so the timeline stays complete. 158 tests passing (29 new).
