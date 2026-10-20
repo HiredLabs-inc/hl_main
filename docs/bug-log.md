@@ -206,7 +206,7 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 - **Fix idea:** order by degree level, or rename the label.
 
 ## BUG-026 — Pipeline date prints the month where the minutes should be
-- **Severity:** Low · **Status:** Open · **Found:** 2026-10-19, cold_apply staff redesign review
+- **Severity:** Low · **Status:** Fixed (`feature/cold-apply-staff-redesign`, 219cdfd; the template was deleted; not yet merged into develop) · **Found:** 2026-10-19, cold_apply staff redesign review
 - **Where:** `cold_apply/templates/cold_apply/participant_list.html` (`date:"F j, Y: H:m:s T"`)
 - **Problem:** `m` is the month in Django's date format; minutes are `i`.
 - **Fix idea:** `"F j, Y H:i T"`.
@@ -223,7 +223,7 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 - **Fix idea:** `search_fields = ("user__email", "user__first_name", "user__last_name", "city", "state")`, and drop `user` from `list_filter`.
 
 ## BUG-029 — Dead or misleading code in the cold_apply staff pages
-- **Severity:** Low · **Status:** Open · **Found:** 2026-10-19, cold_apply staff redesign review
+- **Severity:** Low · **Status:** Fixed (`feature/cold-apply-staff-redesign`, 3766a04; not yet merged into develop) · **Found:** 2026-10-19, cold_apply staff redesign review
 - **Where:** `cold_apply/`
 - **Problem:**
   - `templates/staff.html` has a Bootstrap navbar in `block content`. All 23 cold_apply templates that extend it override `content`, so the navbar never renders.
