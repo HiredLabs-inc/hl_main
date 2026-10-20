@@ -61,6 +61,7 @@ def dashboard_view(request):
         "filters": filters,
         "rows": rows,
         "phases": phases,
+        "board_start": dashboard.board_start(phases),
         "results_template": f"pipeline/partials/{'board' if view == dashboard.BOARD else 'enrollment_table'}.html",
         "counts": dashboard.header_counts(),
         "stale_days": dashboard.DEFAULT_STALE_DAYS,

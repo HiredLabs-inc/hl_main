@@ -103,6 +103,13 @@ class BoardTest(BoardTestCase):
         services.move_to_step(self.mine, second, self.staff)
         self.assertEqual(board(self.get())[second.title], ["mine@example.com"])
 
+    def test_phone_starts_on_the_first_step_with_cards(self):
+        self.assertEqual(self.get().context["board_start"], self.job_search.first_step().pk)
+        second = Step.objects.filter(phase__flow=self.job_search)[1]
+        Enrollment.objects.filter(flow=self.job_search).update(current_step=second)
+        self.assertEqual(self.get().context["board_start"], second.pk)
+        self.assertEqual(dashboard.board_start([]), None)
+
     def test_phases_and_counts(self):
         response = self.get()
         groups = response.context["phases"]

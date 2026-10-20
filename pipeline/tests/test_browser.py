@@ -177,3 +177,33 @@ class DashboardBrowserTest(StaticLiveServerTestCase):
         enrollment.refresh_from_db()
         self.assertEqual(enrollment.current_step, third)
         self.assertEqual(enrollment.activities.filter(kind="step_change").count(), 1)
+
+    def test_board_at_phone_width(self):
+        page = self.page
+        page.set_viewport_size({"width": 390, "height": 844})
+        flow = Flow.objects.get(slug="resume-job-search")
+        first = flow.first_step()
+        second = Step.objects.create(phase=first.phase, title="Write bullets", order=1)
+        enrollment = services.enroll(self.person, flow, None)
+        page.goto(f"{self.live_server_url}{reverse('staff')}?tab=resume-job-search&view=board")
+
+        # One step at a time, starting on the first with someone on it
+        picker = page.locator("[data-board-picker]")
+        expect(picker).to_have_value(str(first.pk))
+        expect(page.locator(f"#board-count-{first.pk}")).to_be_visible()
+        expect(page.locator(f"#board-count-{second.pk}")).to_be_hidden()
+        page.get_by_role("button", name="Next step").click()
+        expect(picker).to_have_value(str(second.pk))
+        expect(page.locator(f"#board-count-{second.pk}")).to_be_visible()
+        expect(page.locator(f"#card-{enrollment.pk}")).to_be_hidden()
+        self.assertEqual(page.evaluate("document.documentElement.scrollWidth"), 390)
+
+        # Move opens a bottom sheet; the picker's counts follow the move
+        page.get_by_role("button", name="Previous step").click()
+        page.get_by_role("button", name="Move Nia New").click()
+        expect(page.get_by_text("Move Nia New to…")).to_be_visible()
+        page.get_by_role("menuitem", name="Write bullets").click()
+        expect(page.get_by_text("Moved Nia New to Write bullets.")).to_be_visible()
+        expect(picker.locator(f'option[value="{second.pk}"]')).to_have_text("Resume & Job Search · Write bullets (1)")
+        enrollment.refresh_from_db()
+        self.assertEqual(enrollment.current_step, second)

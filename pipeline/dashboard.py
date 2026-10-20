@@ -271,6 +271,13 @@ def board(user, flow, filters):
     return list(phases.values())
 
 
+def board_start(phases):
+    """The step a phone-width board opens on: the first with cards, else the first"""
+    columns = [column for group in phases for column in group.columns]
+    busy = [column for column in columns if column.count]
+    return (busy or columns)[0].step.pk if columns else None
+
+
 def card(enrollment_pk, user):
     """One board card, or None if the enrollment has ended"""
     found = cards(card_queryset().filter(pk=enrollment_pk), user)

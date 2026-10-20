@@ -8,6 +8,42 @@ import Sortable from 'sortablejs'
 
 const RING_MS = 4000
 const OVER = ['ring-2', 'ring-hl-blue']
+// Tailwind's md breakpoint. Below it the board shows one step at a time.
+const PHONE = '(max-width: 767px)'
+// No dragging on phones or touch screens: the Move menu does it there
+const NO_DRAG = matchMedia(`${PHONE}, (pointer: coarse)`)
+
+// Alpine state for board.html: whether empty steps collapse and, at phone
+// width, which step (of steps, their pks in board order) is showing
+window.boardView = (current, steps) => ({
+  collapse: true,
+  phone: false,
+  current,
+  steps,
+  init() {
+    const query = matchMedia(PHONE)
+    this.phone = query.matches
+    query.addEventListener('change', (event) => (this.phone = event.matches))
+  },
+  // A move recounts columns out of band; copy the counts into the step picker
+  relabel() {
+    this.$root.querySelectorAll('[data-board-picker] option').forEach((option) => {
+      const count = document.getElementById(`board-count-${option.value}`)
+      if (count) option.textContent = `${option.dataset.label} (${count.textContent.trim()})`
+    })
+  },
+  go(by) {
+    const count = this.steps.length
+    this.current = this.steps[(this.steps.indexOf(this.current) + by + count) % count]
+  },
+})
+
+NO_DRAG.addEventListener('change', () => {
+  document.querySelectorAll('[data-board-cards], [data-board-strip]').forEach((list) => {
+    const sortable = Sortable.get(list)
+    if (sortable) sortable.option('disabled', NO_DRAG.matches)
+  })
+})
 
 // A refused move (409, 403, 400) still answers with the card as it now is
 htmx.on('htmx:beforeSwap', (event) => {
@@ -53,6 +89,7 @@ function drop(card, step, strip) {
 function makeSortable(list) {
   if (Sortable.get(list)) return
   Sortable.create(list, {
+    disabled: NO_DRAG.matches,
     group: 'board',
     sort: false,
     draggable: '[data-board-card]',
@@ -112,6 +149,8 @@ htmx.onLoad((element) => {
   // The swap took focus from the menu; give it back once a collapsed column has opened
   if (!document.activeElement || document.activeElement === document.body) {
     setTimeout(() => {
+      // At phone width a card that moved to another step is out of sight
+      if (!element.offsetParent) return
       const button = element.querySelector('[data-move-button]')
       if (button) button.focus({ preventScroll: true })
       element.scrollIntoView({ block: 'nearest', inline: 'nearest' })

@@ -2,13 +2,15 @@
 One step on the board. A step nobody is on (whatever the filters) shows as a
 narrow strip until opened or "Collapse empty steps" is unticked. hidden rather
 than x-show, as in enrollment_row.html, on wrappers with no display class of
-their own (a class like flex would override hidden).
+their own (a class like flex would override hidden). At phone width only the
+picked step shows, at full width, and empty steps don't collapse.
 {% endcomment %}
 {% with step=column.step %}
-<div x-data="{ open: false }" x-on:board-open.window="if ($event.detail === {{ step.pk }}) open = true" class="shrink-0">
+<div x-data="{ open: false }" x-on:board-open.window="if ($event.detail === {{ step.pk }}) open = true"
+     class="shrink-0" x-bind:class="{ hidden: phone && current !== {{ step.pk }} }">
     {% if not column.open %}
         {# data-board-strip: dropping a card here opens the column (board.js) #}
-        <div x-bind:hidden="!collapse || open" data-board-strip="{{ step.pk }}" class="rounded-lg">
+        <div x-bind:hidden="phone || !collapse || open" data-board-strip="{{ step.pk }}" class="rounded-lg">
         <button type="button" x-on:click="open = true"
                 aria-label="Show {{ step.title }} (nobody on this step)"
                 class="flex min-h-[20rem] w-12 flex-col items-center gap-2 rounded-lg bg-hl-line/70 px-1 py-2 text-xs text-hl-ink hover:bg-hl-line">
@@ -17,8 +19,8 @@ their own (a class like flex would override hidden).
         </button>
         </div>
     {% endif %}
-    <div {% if not column.open %}hidden x-bind:hidden="collapse && !open"{% endif %}>
-    <div data-board-column class="flex w-64 flex-col gap-1.5 rounded-lg bg-hl-line/70 p-2">
+    <div {% if not column.open %}hidden x-bind:hidden="!phone && collapse && !open"{% endif %}>
+    <div data-board-column class="flex w-64 max-md:w-full flex-col gap-1.5 rounded-lg bg-hl-line/70 p-2">
         <div class="flex items-start justify-between gap-2 px-1 pb-1">
             <div class="min-w-0">
                 <h4 class="!mb-0 text-sm font-semibold text-hl-navy">{{ step.title }}</h4>
