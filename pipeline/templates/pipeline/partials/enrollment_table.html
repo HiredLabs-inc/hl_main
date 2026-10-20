@@ -1,7 +1,6 @@
+{% include 'pipeline/partials/view_switch.html' %}
 {% if not filters.is_valid %}
-    <div role="alert" class="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-        Some filters aren't valid: {% for field in filters %}{% for error in field.errors %}{{ field.label }}: {{ error }} {% endfor %}{% endfor %}
-    </div>
+    {% include 'pipeline/partials/filter_errors.html' %}
 {% elif not rows %}
     <div class="rounded-lg border border-dashed border-hl-line p-8 text-center text-sm text-hl-muted">
         Nobody matches. <a href="{% url 'staff' %}?tab={{ tab }}">Clear the filters</a>

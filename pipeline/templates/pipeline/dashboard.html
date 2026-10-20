@@ -2,7 +2,7 @@
 {% block page_title %}Dashboard{% endblock %}
 {% block content %}
 <div class="space-y-6">
-    <div id="count-strip" hx-get="{% url 'staff' %}?part=counts" hx-trigger="enrollment-changed from:body">
+    <div id="count-strip" hx-get="{% url 'staff' %}?part=counts" hx-trigger="enrollment-changed from:body, board-changed from:body">
         {% include 'pipeline/partials/count_strip.html' %}
     </div>
 
@@ -16,6 +16,7 @@
           hx-get="{% url 'staff' %}" hx-target="#enrollment-table" hx-push-url="true"
           hx-trigger="input delay:300ms">
         {{ filters.tab }}
+        {{ filters.view }}
         {% for field in filters.visible_fields %}
             <label class="flex flex-col gap-1 text-xs font-medium text-hl-muted">
                 {{ field.label }}
@@ -26,10 +27,10 @@
         <a href="{% url 'staff' %}?tab={{ tab }}" class="admin_panel pb-2 text-sm text-hl-muted hover:underline">Clear</a>
     </form>
 
-    {% comment %}Refreshed after any row action so moved rows land under the right heading. hx-disinherit
+    {% comment %}The table or the board. Refreshed after any row action so moved rows land under the right heading. hx-disinherit
     keeps the row controls from sending the filter form along with their own values.{% endcomment %}
     <div id="enrollment-table" hx-get="{% url 'staff' %}" hx-include="#dashboard-filters" hx-trigger="enrollment-changed from:body" hx-disinherit="*">
-        {% include 'pipeline/partials/enrollment_table.html' %}
+        {% include results_template %}
     </div>
 </div>
 <div id="person-panel"></div>

@@ -1,0 +1,41 @@
+{% comment %}
+Move: every step in the flow, by phase, with the current one marked. Each
+choice posts to pipeline:move with render=card and swaps the card; the board
+script files it under its new column. Escape closes the menu. At phone width
+the menu is a bottom sheet over a backdrop.
+{% endcomment %}
+{% with step=enrollment.current_step name=enrollment.person.get_full_name|default:enrollment.person.email %}
+{% if not enrollment.can_leave %}
+    <button type="button" disabled data-move-button title="{{ step.required_permission|yesno:'Only reviewers can move people off this step,' }}"
+            class="shrink-0 rounded-md border border-hl-line bg-hl-mist px-2 py-0.5 text-xs text-hl-muted">Reviewer only</button>
+{% else %}
+{# click.outside is on the wrapper: on the list, the click that opens it would close it again #}
+<div x-data="{ menu: false }" class="relative shrink-0" x-on:click.outside="menu = false"
+     x-on:keydown.escape.stop="menu = false; $refs.button.focus()">
+    <button type="button" x-ref="button" data-move-button aria-haspopup="true" x-bind:aria-expanded="menu"
+            aria-label="Move {{ name }}"
+            x-on:click="menu = !menu; menu && $nextTick(() => $refs.list.querySelector('button')?.focus())"
+            class="rounded-md border border-hl-line bg-white px-2 py-0.5 text-xs font-medium text-hl-navy-2 hover:bg-hl-mist max-md:px-3 max-md:py-2 max-md:text-sm">Move</button>
+    <div hidden x-bind:hidden="!menu" x-on:click="menu = false" class="fixed inset-0 z-30 bg-hl-navy/30 md:hidden" aria-hidden="true"></div>
+    <div hidden x-bind:hidden="!menu" x-ref="list" role="menu" aria-label="Move {{ name }} to"
+         class="absolute right-0 z-20 mt-1 max-h-80 w-64 overflow-y-auto rounded-md border border-hl-line bg-white p-1 text-sm shadow-lg
+                max-md:fixed max-md:inset-x-0 max-md:bottom-0 max-md:z-40 max-md:max-h-[70vh] max-md:w-auto max-md:rounded-b-none max-md:rounded-t-xl max-md:p-3 max-md:text-base">
+        <p class="px-2 pb-1 font-semibold text-hl-navy md:hidden">Move {{ name }} to…</p>
+        {% regroup enrollment.step_choices by phase as phases %}
+        {% for phase in phases %}
+            <p role="presentation" class="px-2 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wide text-hl-muted">{{ phase.grouper.title }}</p>
+            {% for choice in phase.list %}
+                {% if choice.pk == step.pk %}
+                    <span role="menuitem" aria-disabled="true" aria-current="step" class="block px-2 py-1 text-hl-muted max-md:py-2.5">{{ choice.title }} (current)</span>
+                {% else %}
+                    <button type="button" role="menuitem" class="block w-full rounded px-2 py-1 text-left text-hl-ink hover:bg-hl-mist focus:bg-hl-mist max-md:min-h-[44px] max-md:py-2.5"
+                            hx-post="{% url 'pipeline:move' enrollment.pk %}" hx-vals='{"step": "{{ choice.pk }}", "from_step": "{{ step.pk }}", "render": "card"}'
+                            hx-target="#card-{{ enrollment.pk }}" hx-swap="outerHTML" hx-indicator="#card-{{ enrollment.pk }}">{{ choice.title }}</button>
+                {% endif %}
+            {% endfor %}
+        {% endfor %}
+        {% if enrollment.step_choices|length < 2 %}<p class="px-2 py-1 text-xs text-hl-muted">No other steps in this flow.</p>{% endif %}
+    </div>
+</div>
+{% endif %}
+{% endwith %}

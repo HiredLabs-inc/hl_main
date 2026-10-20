@@ -1,0 +1,12 @@
+{% comment %}Table | Board, on flow tabs only. Plain links: the page reloads with the same filters.{% endcomment %}
+{% if has_board %}
+<div class="mb-3 flex justify-end">
+    <div class="inline-flex overflow-hidden rounded-md border border-hl-line text-sm" role="group" aria-label="View">
+        {% for value, label in view_choices %}
+            <a href="{% url 'staff' %}?{{ query }}&amp;view={{ value }}"
+               class="admin_panel px-3 py-1 {% if view == value %}bg-hl-navy text-white{% else %}bg-white text-hl-ink hover:bg-hl-mist{% endif %}"
+               {% if view == value %}aria-current="page"{% endif %}>{{ label }}</a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}

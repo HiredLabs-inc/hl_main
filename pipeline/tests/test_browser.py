@@ -91,3 +91,119 @@ class DashboardBrowserTest(StaticLiveServerTestCase):
         expect(dialog.get_by_text("Timeline")).to_be_visible()
         page.keyboard.press("Escape")
         expect(dialog).to_have_count(0)
+
+    def test_board_move_with_keyboard_and_undo(self):
+        page = self.page
+        flow = Flow.objects.get(slug="resume-job-search")
+        first = flow.first_step()
+        phase = first.phase.flow.phases.create(title="Phase 2", order=1)
+        second = Step.objects.create(phase=phase, title="Write bullets", order=0)
+        enrollment = services.enroll(self.person, flow, None)
+        page.goto(f"{self.live_server_url}{reverse('staff')}?tab=resume-job-search&view=board")
+
+        move = page.get_by_role("button", name="Move Nia New")
+        move.focus()
+        page.keyboard.press("Enter")
+        # The menu opens with focus on the first step it offers
+        expect(page.get_by_role("menuitem", name="Write bullets")).to_be_focused()
+        page.keyboard.press("Enter")
+        expect(page.get_by_text("Moved Nia New to Write bullets.")).to_be_visible()
+        card = page.locator(f"#card-{enrollment.pk}")
+        expect(page.locator(f'[data-board-cards="{second.pk}"]').locator(f"#card-{enrollment.pk}")).to_be_visible()
+        expect(card.get_by_role("button", name="Move Nia New")).to_be_focused()
+        expect(page.locator(f"#board-count-{second.pk}")).to_have_text("1")
+        enrollment.refresh_from_db()
+        self.assertEqual(enrollment.current_step, second)
+
+        page.get_by_role("button", name="Undo").click()
+        expect(page.locator(f'[data-board-cards="{first.pk}"]').locator(f"#card-{enrollment.pk}")).to_be_visible()
+        expect(page.locator(f"#board-count-{second.pk}")).to_have_text("0")
+        enrollment.refresh_from_db()
+        self.assertEqual(enrollment.current_step, first)
+
+    def drag(self, source, target):
+        """Drag with the mouse, as SortableJS's fallback mode expects"""
+        page = self.page
+        start, end = source.bounding_box(), target.bounding_box()
+        page.mouse.move(start["x"] + 10, start["y"] + start["height"] - 8)
+        page.mouse.down()
+        page.mouse.move(start["x"] + 30, start["y"] + start["height"], steps=5)
+        page.mouse.move(end["x"] + end["width"] / 2, end["y"] + 40, steps=15)
+        page.mouse.up()
+
+    def test_board_drag_to_a_collapsed_step(self):
+        page = self.page
+        flow = Flow.objects.get(slug="resume-job-search")
+        first = flow.first_step()
+        phase = flow.phases.create(title="Phase 2", order=1)
+        second = Step.objects.create(phase=phase, title="Write bullets", order=0)
+        enrollment = services.enroll(self.person, flow, None)
+        page.goto(f"{self.live_server_url}{reverse('staff')}?tab=resume-job-search&view=board")
+
+        card = page.locator(f"#card-{enrollment.pk}")
+        strip = page.locator(f'[data-board-strip="{second.pk}"]')
+        expect(strip).to_be_visible()
+        self.drag(card, strip)
+        expect(page.get_by_text("Moved Nia New to Write bullets.")).to_be_visible()
+        expect(page.locator(f'[data-board-cards="{second.pk}"]').locator(f"#card-{enrollment.pk}")).to_be_visible()
+        expect(page.locator(f"#board-count-{second.pk}")).to_have_text("1")
+        enrollment.refresh_from_db()
+        self.assertEqual(enrollment.current_step, second)
+        self.assertEqual(enrollment.activities.filter(kind="step_change").count(), 1)
+
+        # Back by dragging into the first step's column
+        self.drag(page.locator(f"#card-{enrollment.pk}"), page.locator(f'[data-board-cards="{first.pk}"]'))
+        # The card moves at once; the toast says the server saved it
+        expect(page.get_by_text("Moved Nia New to Resume & Job Search.")).to_be_visible()
+        expect(page.locator(f'[data-board-cards="{first.pk}"]').locator(f"#card-{enrollment.pk}")).to_be_visible()
+        enrollment.refresh_from_db()
+        self.assertEqual(enrollment.current_step, first)
+
+    def test_board_refused_drag_puts_the_card_where_it_is(self):
+        page = self.page
+        flow = Flow.objects.get(slug="resume-job-search")
+        first = flow.first_step()
+        second = Step.objects.create(phase=first.phase, title="Write bullets", order=1)
+        third = Step.objects.create(phase=first.phase, title="Apply", order=2)
+        enrollment = services.enroll(self.person, flow, None)
+        page.goto(f"{self.live_server_url}{reverse('staff')}?tab=resume-job-search&view=board")
+        page.get_by_label("Collapse empty steps").uncheck()
+
+        # Someone else moves them after the board loaded
+        services.move_to_step(enrollment, third, User.objects.get(email="staff@example.com"))
+        self.drag(page.locator(f"#card-{enrollment.pk}"), page.locator(f'[data-board-cards="{second.pk}"]'))
+        card = page.locator(f'[data-board-cards="{third.pk}"]').locator(f"#card-{enrollment.pk}")
+        expect(card.get_by_role("alert")).to_have_text("staff@example.com moved Nia to Apply just now.")
+        enrollment.refresh_from_db()
+        self.assertEqual(enrollment.current_step, third)
+        self.assertEqual(enrollment.activities.filter(kind="step_change").count(), 1)
+
+    def test_board_at_phone_width(self):
+        page = self.page
+        page.set_viewport_size({"width": 390, "height": 844})
+        flow = Flow.objects.get(slug="resume-job-search")
+        first = flow.first_step()
+        second = Step.objects.create(phase=first.phase, title="Write bullets", order=1)
+        enrollment = services.enroll(self.person, flow, None)
+        page.goto(f"{self.live_server_url}{reverse('staff')}?tab=resume-job-search&view=board")
+
+        # One step at a time, starting on the first with someone on it
+        picker = page.locator("[data-board-picker]")
+        expect(picker).to_have_value(str(first.pk))
+        expect(page.locator(f"#board-count-{first.pk}")).to_be_visible()
+        expect(page.locator(f"#board-count-{second.pk}")).to_be_hidden()
+        page.get_by_role("button", name="Next step").click()
+        expect(picker).to_have_value(str(second.pk))
+        expect(page.locator(f"#board-count-{second.pk}")).to_be_visible()
+        expect(page.locator(f"#card-{enrollment.pk}")).to_be_hidden()
+        self.assertEqual(page.evaluate("document.documentElement.scrollWidth"), 390)
+
+        # Move opens a bottom sheet; the picker's counts follow the move
+        page.get_by_role("button", name="Previous step").click()
+        page.get_by_role("button", name="Move Nia New").click()
+        expect(page.get_by_text("Move Nia New to…")).to_be_visible()
+        page.get_by_role("menuitem", name="Write bullets").click()
+        expect(page.get_by_text("Moved Nia New to Write bullets.")).to_be_visible()
+        expect(picker.locator(f'option[value="{second.pk}"]')).to_have_text("Resume & Job Search · Write bullets (1)")
+        enrollment.refresh_from_db()
+        self.assertEqual(enrollment.current_step, second)

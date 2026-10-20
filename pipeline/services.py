@@ -13,6 +13,10 @@ class AlreadyEnrolled(ValidationError):
     pass
 
 
+class StaleStep(ValidationError):
+    """The enrollment isn't on the step the caller last saw (someone else moved it)"""
+
+
 def _user_label(user):
     if user is None:
         return ""
@@ -74,9 +78,12 @@ def enroll(person, flow: Flow, actor, step: Step = None, assignee=None) -> Enrol
 
 
 @transaction.atomic
-def move_to_step(enrollment: Enrollment, step: Step, actor) -> Enrollment:
+def move_to_step(enrollment: Enrollment, step: Step, actor, from_step: Step = None) -> Enrollment:
+    """With from_step, refuse (StaleStep) unless the enrollment is still on it"""
     enrollment = _locked(enrollment)
     _check_open(enrollment)
+    if from_step is not None and enrollment.current_step_id != from_step.pk:
+        raise StaleStep(f"{enrollment} is no longer on {from_step.title}.")
     if step.phase.flow_id != enrollment.flow_id:
         raise ValidationError(f"{step} isn't part of {enrollment.flow}.")
     if step.pk == enrollment.current_step_id:

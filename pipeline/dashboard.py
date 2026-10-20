@@ -1,11 +1,14 @@
 """Queries behind the staff dashboard at /staff/: which enrollments a tab and
 its filters show, and the counts in the header strip."""
 from collections import defaultdict
+from urllib.parse import urlsplit
+from dataclasses import dataclass, field
 from datetime import timedelta
 
 from django import forms
 from django.contrib.auth import get_user_model
 from django.db.models import Count, OuterRef, Q, Subquery
+from django.http import QueryDict
 from django.utils import timezone
 
 from userprofile import bootcamp
@@ -19,6 +22,12 @@ INTAKE = "intake"
 MINE = "mine"
 ALL = "all"
 DEFAULT_STALE_DAYS = 14
+TABLE = "table"
+BOARD = "board"
+# Cards a board column shows at first and per "Show more"
+BOARD_PAGE = 25
+# Columns with more cards than this show one-line cards
+BOARD_COMPACT_OVER = 30
 
 
 class DashboardFilters(forms.Form):
@@ -29,6 +38,7 @@ class DashboardFilters(forms.Form):
     STATUS_CHOICES = [("", "Open")] + list(Enrollment.Status.choices)
 
     tab = forms.CharField(required=False, widget=forms.HiddenInput)
+    view = forms.CharField(required=False, widget=forms.HiddenInput)
     q = forms.CharField(required=False, label="Search", widget=forms.TextInput(attrs={"placeholder": "Name or email"}))
     assignee = forms.ChoiceField(required=False, choices=ASSIGNEE_CHOICES)
     phase = forms.ModelChoiceField(required=False, queryset=Phase.objects.none(), empty_label="Any phase")
@@ -65,6 +75,16 @@ def tabs():
     return flows + [(MINE, "My people"), (ALL, "Everyone")]
 
 
+def has_board(flow):
+    """Flow tabs get a board; Intake (triage needs its form) and the mixed tabs don't"""
+    return flow is not None and flow.slug != INTAKE
+
+
+def initials(user):
+    letters = (user.first_name[:1] + user.last_name[:1]) or user.email[:1]
+    return letters.upper()
+
+
 def open_enrollments():
     return Enrollment.objects.filter(ended_at__isnull=True)
 
@@ -86,17 +106,18 @@ def decorate(rows, user):
     steps_by_flow = defaultdict(list)
     for step in Step.objects.filter(phase__flow__in={row.flow_id for row in rows}).select_related("phase"):
         steps_by_flow[step.phase.flow_id].append(step)
-    open_flows = defaultdict(set)
-    for person_id, flow_id in open_enrollments().filter(person__in={row.person_id for row in rows}).values_list(
-        "person_id", "flow_id"
-    ):
-        open_flows[person_id].add(flow_id)
+    open_flows = defaultdict(dict)
+    for person_id, flow_id, flow_name in open_enrollments().filter(
+        person__in={row.person_id for row in rows}
+    ).values_list("person_id", "flow_id", "flow__name"):
+        open_flows[person_id][flow_id] = flow_name
     joinable = [flow for flow in Flow.objects.filter(active=True) if flow.slug != INTAKE]
     bootcamp.add_sessions(rows)
     for row in rows:
         row.step_choices = steps_by_flow[row.flow_id]
         row.can_leave = can_leave_step(user, row.current_step)
         row.enroll_choices = [flow for flow in joinable if flow.pk not in open_flows[row.person_id]]
+        row.also_in = [name for flow_id, name in open_flows[row.person_id].items() if flow_id != row.flow_id]
     return rows
 
 
@@ -111,7 +132,11 @@ def row(enrollment_pk, user):
 
 def enrollments(user, tab, filters):
     """Enrollments for a tab, filtered by a valid DashboardFilters, ready to render"""
-    qs = row_queryset()
+    return decorate(filtered(row_queryset(), user, tab, filters), user)
+
+
+def filtered(qs, user, tab, filters):
+    """qs narrowed to a tab and a valid DashboardFilters, in table order (by step, oldest in step first)"""
     if tab == MINE:
         qs = qs.filter(assignee=user)
     elif tab != ALL:
@@ -141,13 +166,153 @@ def enrollments(user, tab, filters):
                 | Q(person__last_name__icontains=word)
                 | Q(person__email__icontains=word)
             )
-    return decorate(
-        qs.order_by(
-            "flow__order", "current_step__phase__order", "current_step__phase_id",
-            "current_step__order", "current_step_id", "step_entered_at",
-        ),
-        user,
+    return qs.order_by(
+        "flow__order", "current_step__phase__order", "current_step__phase_id",
+        "current_step__order", "current_step_id", "step_entered_at",
     )
+
+
+@dataclass
+class Column:
+    """One step on a board. cards are the first ones shown (or the page after
+    offset); count is how many match the filters; open is everyone on the step,
+    whatever the filters, so filtering doesn't collapse columns."""
+
+    step: Step
+    cards: list
+    count: int
+    open: int
+    offset: int = 0
+
+    @property
+    def next_offset(self):
+        return self.offset + len(self.cards)
+
+    @property
+    def more(self):
+        return self.count - self.next_offset
+
+    @property
+    def next_page(self):
+        return min(self.more, BOARD_PAGE)
+
+    @property
+    def count_title(self):
+        return f"{self.count} of {self.open} match the filters" if self.count != self.open else ""
+
+    @property
+    def compact(self):
+        return self.count > BOARD_COMPACT_OVER
+
+    @property
+    def waiting_on_participant(self):
+        return self.step.owner == Step.Owner.PARTICIPANT
+
+
+@dataclass
+class BoardPhase:
+    phase: Phase
+    columns: list = field(default_factory=list)
+
+    @property
+    def count(self):
+        return sum(column.count for column in self.columns)
+
+
+def card_queryset():
+    """Open enrollments with what a board card shows: row_queryset, plus the
+    last activity's kind and the enrollment's latest status change reason"""
+    last_kind = Activity.objects.filter(person=OuterRef("person")).order_by("-created_at").values("kind")[:1]
+    reason = (
+        Activity.objects.filter(enrollment=OuterRef("pk"), kind=Activity.Kind.STATUS_CHANGE)
+        .order_by("-created_at")
+        .values("text")[:1]
+    )
+    return row_queryset().filter(ended_at__isnull=True).annotate(
+        last_activity_kind=Subquery(last_kind), status_reason=Subquery(reason)
+    )
+
+
+def cards(rows, user):
+    rows = decorate(rows, user)
+    now = timezone.now()
+    for row in rows:
+        row.last_activity_days = (now - row.last_activity).days if row.last_activity else None
+        row.last_activity_label = Activity.Kind(row.last_activity_kind).label if row.last_activity_kind else ""
+        # A soft rejection shows its reason ("Unclear DD214") while it's the latest activity
+        rejected = row.status == Enrollment.Status.REJECTED and row.last_activity_kind == Activity.Kind.STATUS_CHANGE
+        if rejected and row.status_reason:
+            row.last_activity_label = row.status_reason
+        row.assignee_initials = initials(row.assignee) if row.assignee else ""
+    return rows
+
+
+def board(user, flow, filters):
+    """A flow's open enrollments by step, under phase headings, for a valid
+    DashboardFilters. Ended enrollments are never on a board. The phase filter
+    hides the other phases; the other filters only hide cards."""
+    by_step = defaultdict(list)
+    for card in cards(filtered(card_queryset(), user, flow.slug, filters), user):
+        by_step[card.current_step_id].append(card)
+    steps = (
+        Step.objects.filter(phase__flow=flow)
+        .select_related("phase")
+        .annotate(open=Count("enrollments", filter=Q(enrollments__ended_at__isnull=True)))
+        .order_by(*Step._meta.ordering)  # Meta.ordering doesn't apply to GROUP BY queries
+    )
+    phase_filter = filters.cleaned_data.get("phase")
+    phases = {}
+    for step in steps:
+        if phase_filter and step.phase_id != phase_filter.pk:
+            continue
+        found = by_step[step.pk]
+        column = Column(step, found[:BOARD_PAGE], len(found), step.open)
+        phases.setdefault(step.phase_id, BoardPhase(step.phase)).columns.append(column)
+    return list(phases.values())
+
+
+def board_start(phases):
+    """The step a phone-width board opens on: the first with cards, else the first"""
+    columns = [column for group in phases for column in group.columns]
+    busy = [column for column in columns if column.count]
+    return (busy or columns)[0].step.pk if columns else None
+
+
+def card(enrollment_pk, user):
+    """One board card, or None if the enrollment has ended"""
+    found = cards(card_queryset().filter(pk=enrollment_pk), user)
+    return found[0] if found else None
+
+
+def page_filters(url, flow):
+    """DashboardFilters from the URL of the page a request came from (htmx's
+    HX-Current-URL), so a board action can recount with the board's filters"""
+    filters = DashboardFilters(QueryDict(urlsplit(url or "").query), flow=flow)
+    return filters if filters.is_valid() else DashboardFilters({}, flow=flow)
+
+
+def board_counts(user, flow, filters, steps):
+    """Card counts matching a valid DashboardFilters, for steps and their phases:
+    ({step pk: count}, {phase pk: count})"""
+    qs = filtered(open_enrollments(), user, flow.slug, filters).order_by()
+    step_counts = dict.fromkeys((step.pk for step in steps), 0)
+    step_counts.update(
+        qs.filter(current_step__in=steps).values("current_step").annotate(n=Count("pk")).values_list("current_step", "n")
+    )
+    phase_counts = dict.fromkeys((step.phase_id for step in steps), 0)
+    phase_counts.update(
+        qs.filter(current_step__phase__in=phase_counts)
+        .values("current_step__phase")
+        .annotate(n=Count("pk"))
+        .values_list("current_step__phase", "n")
+    )
+    return step_counts, phase_counts
+
+
+def board_column(user, flow, step, filters, offset):
+    """The page of a board column after offset ("Show more")"""
+    qs = filtered(card_queryset(), user, flow.slug, filters).filter(current_step=step)
+    return Column(step, cards(qs[offset : offset + BOARD_PAGE], user), qs.count(), 0, offset)
 
 
 def header_counts():
