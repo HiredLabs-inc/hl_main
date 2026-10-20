@@ -118,6 +118,7 @@ class ColdApplyAccessTest(TestCase):
         self.client.force_login(self.staff)
         self.assertEqual(self.client.get(reverse("staff")).status_code, 200)
         self.assertRedirects(self.client.get(reverse("cold_apply:index")), reverse("staff"))
+        self.assertRedirects(self.client.get(reverse("cold_apply:process")), reverse("staff_flows"))
 
     def test_owner_can_delete_own_bullet(self):
         self.client.force_login(self.owner.user)

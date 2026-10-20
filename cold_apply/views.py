@@ -59,7 +59,6 @@ from .forms import (
     FindNewJobsForm,
     NewJobSelectionForm,
     OverviewForm,
-    ParticipantForm,
     ResumeConfigForm,
 )
 from .models import (
@@ -69,9 +68,7 @@ from .models import (
     KeywordAnalysis,
     Location,
     Participant,
-    Phase,
     Skill,
-    Step,
     WeightedBullet,
 )
 from .static.scripts.keyword_analyzer.keyword_analyzer import (
@@ -85,7 +82,7 @@ from hl_main.gcs import SIGNED_URL_EXPIRATION, generate_signed_url
 @verified_required
 def home_view(request):
     if request.user.is_staff:
-        return redirect("cold_apply:index")
+        return redirect("staff")
 
     # Not onboarded yet: user_home sends them to onboarding
     if not hasattr(request.user, "participant"):
@@ -94,28 +91,20 @@ def home_view(request):
     return redirect("cold_apply:participant_detail", request.user.participant.id)
 
 
-# Index
-# @method_decorator(sign_up_completed, name="dispatch")
+# Old staff pages, replaced by the staff dashboard and workspace
 class ParticipantListView(StaffRequiredMixin, RedirectView):
-    """The old pipeline page; the staff dashboard replaces it"""
-
     pattern_name = "staff"
 
 
-# process/
-class PhaseListView(StaffRequiredMixin, ListView):
-    model = Phase
-    template_name = "cold_apply/process.html"
-    context_object_name = "phases"
+class PhaseListView(StaffRequiredMixin, RedirectView):
+    pattern_name = "staff_flows"
 
-    def get_queryset(self):
-        return Phase.objects.all().order_by("order")
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["now"] = timezone.now()
+class ParticipantUpdateView(StaffRequiredMixin, RedirectView):
+    """Steps are changed on the dashboard or the person's workspace now"""
 
-        return context
+    def get_redirect_url(self, pk):
+        return reverse("staff_person", args=[get_object_or_404(Participant, pk=pk).user_id])
 
 
 # General-use confirmation page for creating and updating.
@@ -188,10 +177,9 @@ class ParticipantDetailView(OwnedObjectMixin, FormMixin, DetailView):
         context["educations"] = Education.objects.filter(
             participant_id=self.kwargs["pk"]
         ).select_related("org", "degree", "concentration")
-        participant = Participant.objects.get(id=self.kwargs["pk"])
         context["now"] = timezone.now()
         try:
-            context["profile"] = participant.user.profile
+            context["profile"] = self.object.user.profile
         except ObjectDoesNotExist:
             context["profile"] = None
         if not settings.DEBUG and context['profile'] is not None and context['profile'].resume:
@@ -204,18 +192,6 @@ class ParticipantDetailView(OwnedObjectMixin, FormMixin, DetailView):
         return context
 
 
-class ParticipantUpdateView(StaffRequiredMixin, UpdateView):
-    model = Participant
-    form = ParticipantForm
-    template_name = "cold_apply/participant_update.html"
-    fields = ParticipantForm.Meta.fields
-    context_object_name = "participant"
-
-    def form_valid(self, form):
-        form.instance.updated_by = self.request.user
-        return super().form_valid(form)
-
-
 # Organizations
 class OrganizationCreateView(HtmxViewMixin, LoginRequiredMixin, CreateView):
     model = Organization
@@ -226,7 +202,7 @@ class OrganizationCreateView(HtmxViewMixin, LoginRequiredMixin, CreateView):
     fields = ["name", "website", "org_type"]
 
     # TODO OrganizationDetail view for success_url
-    success_url = reverse_lazy("cold_apply:index")
+    success_url = reverse_lazy("staff")
 
     def form_valid(self, form):
         form.instance.created_by = self.request.user
@@ -259,7 +235,7 @@ class TitleCreateView(HtmxViewMixin, LoginRequiredMixin, CreateView):
     htmx_template = "cold_apply/modals/title_create_modal.html"
     empty_response_on_save = True
     refresh_on_save = True
-    success_url = reverse_lazy("cold_apply:index")
+    success_url = reverse_lazy("staff")
     # TODO TitleDetail view for success_url
 
 
@@ -502,7 +478,7 @@ class ConcentrationCreateView(HtmxViewMixin, LoginRequiredMixin, CreateView):
     empty_response_on_save = True
     refresh_on_save = True
     fields = ["name"]
-    success_url = reverse_lazy("cold_apply:index")
+    success_url = reverse_lazy("staff")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -970,7 +946,7 @@ class PositionCreateView(HtmxViewMixin, LoginRequiredMixin, CreateView):
     empty_response_on_save = True
     refresh_on_save = True
     fields = ["title"]
-    success_url = reverse_lazy("cold_apply:index")
+    success_url = reverse_lazy("staff")
 
 
 class LocationCreateView(HtmxViewMixin, LoginRequiredMixin, CreateView):

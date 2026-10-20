@@ -1,8 +1,6 @@
-import importlib
 import os
 from datetime import timedelta
 
-from django.apps import apps
 from django.contrib.auth.models import User
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.urls import reverse
@@ -13,9 +11,9 @@ from pipeline import services
 from pipeline.models import Enrollment, Flow, Step
 from userprofile.models import BootCampSession
 
+from .old_pipeline import seed_fresh_flows
 from .test_dashboard import person
 
-seed_flows = importlib.import_module("pipeline.migrations.0002_seed_flows")
 
 
 class DashboardBrowserTest(StaticLiveServerTestCase):
@@ -38,7 +36,7 @@ class DashboardBrowserTest(StaticLiveServerTestCase):
     def setUp(self):
         # TransactionTestCases flush the database, including the flows seeded by migrations
         if not Flow.objects.exists():
-            seed_flows.seed_flows(apps)
+            seed_fresh_flows()
         User.objects.create_user("staff@example.com", "staff@example.com", "password", is_staff=True)
         intake = Flow.objects.get(slug="intake")
         self.person = person("new@example.com", "Nia", "New")

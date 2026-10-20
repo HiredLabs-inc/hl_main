@@ -1,4 +1,4 @@
-{% extends 'staff.html' %}
+{% extends 'staff_base.html' %}
 
 {% block content %}
     <h2>Update Veteran Status</h2>
@@ -32,7 +32,7 @@
         </form>
     {% endif %}
     <div class="container">
-        {% url 'cold_apply:index' as cancel_url %}
+        {% url 'staff' as cancel_url %}
         {% include "forms/standard_form.html" with form=form %}
     </div>
 

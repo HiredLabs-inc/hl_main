@@ -1,9 +1,7 @@
 import datetime
-import importlib
 import os
 from urllib.parse import urlencode
 
-from django.apps import apps
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
@@ -13,7 +11,7 @@ from django.urls import reverse
 from playwright.sync_api import sync_playwright
 
 from cold_apply.forms import ResumeConfigForm
-from cold_apply.models import Phase, Skill, SkillBullet, Step
+from cold_apply.models import Skill, SkillBullet
 from cold_apply.tests.factories import (
     ExperienceFactory,
     JobFactory,
@@ -24,6 +22,7 @@ from cold_apply.tests.factories import (
 )
 from pipeline import services
 from pipeline.models import Flow
+from pipeline.tests.old_pipeline import seed_fresh_flows
 from resume.models import (
     Bullet,
     CertProjectActivity,
@@ -40,16 +39,13 @@ from resume.pdf import (
     ResumeSections,
 )
 
-seed_flows = importlib.import_module("pipeline.migrations.0002_seed_flows")
 
 
 def make_resume_participant():
     """A participant with one job and three experiences with distinct start dates,
     each experience carrying factory bullets."""
-    phase = Phase.objects.create(title="Phase 1", start="start", end="end", result="result", active=True)
-    step = Step.objects.create(title="Phase 1.0", description="First step", phase=phase)
     user = UserFactory(first_name="Jane", last_name="Veteran", email="jane@example.com")
-    participant = ParticipantFactory(user=user, current_step=step, jobs=[], experiences=[])
+    participant = ParticipantFactory(user=user, jobs=[], experiences=[])
     # The staff dashboard lists people by enrollment
     services.enroll(user, Flow.objects.get(slug="resume-job-search"), actor=None)
     JobFactory(participant=participant, title=PositionFactory(title="Software Engineer"), status="Open")
@@ -93,7 +89,7 @@ class ColdApplyBrowserTest(StaticLiveServerTestCase):
     def setUp(self):
         # TransactionTestCases flush the database, including the flows seeded by migrations
         if not Flow.objects.exists():
-            seed_flows.seed_flows(apps)
+            seed_fresh_flows()
         User.objects.create_superuser(username="admin@example.com", email="admin@example.com", password="admin")
         self.participant = make_resume_participant()
 
@@ -158,13 +154,15 @@ class ParticipantUpdateViewTestCase(TestCase):
         cls.staff = User.objects.create_superuser(username="admin@example.com", email="admin@example.com", password="admin")
         cls.participant = ParticipantFactory(jobs=[], experiences=[])
 
-    def test_view_200(self):
+    def test_redirects_to_workspace(self):
         self.client.force_login(self.staff)
 
         url = reverse("cold_apply:update_participant", args=[self.participant.id])
 
         response = self.client.get(url)
-        self.assertEqual(response.status_code, 200)
+        self.assertRedirects(response, reverse("staff_person", args=[self.participant.user_id]))
+        missing = reverse("cold_apply:update_participant", args=[999999])
+        self.assertEqual(self.client.get(missing).status_code, 404)
 
         self.client.logout()
         unauth_response = self.client.get(url)

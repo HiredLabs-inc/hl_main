@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.utils import timezone
 
-from cold_apply.models import Participant, Step
+from cold_apply.models import Participant
 from hl_main.models import TrackedModel
 
 class OnboardingStep(models.TextChoices):
@@ -62,16 +62,8 @@ class Profile(TrackedModel):
         from .intake import start_intake  # imports allauth via guards; not safe while models load
 
         self.is_onboarded = True
-        # The old staff pages read Participant.current_step until Step 9 of the
-        # redesign. Use the old Verify Veteran Status step, not "the first step",
-        # which ties can send to Nurture (BUG-031).
-        step = (
-            Step.objects.filter(title="Verify Veteran Status").first()
-            or Step.objects.order_by("phase__order", "order").first()
-        )
-        participant, _ = Participant.objects.get_or_create(
-            user=self.user, defaults={"current_step": step}
-        )
+        # The jobs and resume tools hang off Participant
+        Participant.objects.get_or_create(user=self.user)
         start_intake(self.user, is_veteran=self.is_veteran is not False)
         return self.save()
 

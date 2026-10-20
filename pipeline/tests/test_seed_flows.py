@@ -1,18 +1,13 @@
-import importlib
 from datetime import timedelta
 
-from django.apps import apps
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.utils import timezone
 
-from cold_apply.models import Interaction, Participant
-from cold_apply.models import Phase as OldPhase
-from cold_apply.models import Step as OldStep
 from pipeline.models import Activity, Enrollment, Flow, Step
 from userprofile.models import Profile
 
-seed = importlib.import_module("pipeline.migrations.0002_seed_flows")
+from .old_pipeline import create_old_tables, seed
 
 # Prod phases and steps from the Step 0 query (design doc §8), as (phase, order,
 # active, [(step, order, owner)]). Several orders are tied, as in prod (BUG-031).
@@ -57,13 +52,20 @@ class FreshDatabaseTest(TestCase):
 
 
 class SeedFromProdShapeTest(TestCase):
+    """Each test recreates the old cold_apply tables; Postgres rolls the schema
+    changes back with the test's transaction"""
+
     def setUp(self):
-        seed.unseed_flows(apps)
+        self.old_apps = create_old_tables()
+        self.OldPhase, self.OldStep, self.Participant, self.Interaction = (
+            self.old_apps.get_model("cold_apply", name) for name in ("Phase", "Step", "Participant", "Interaction")
+        )
+        seed.unseed_flows(self.old_apps)
         self.old = {}
         for phase_title, phase_order, active, steps in PROD:
-            phase = OldPhase.objects.create(title=phase_title, order=phase_order, active=active, start="s", end="e", result="r")
+            phase = self.OldPhase.objects.create(title=phase_title, order=phase_order, active=active, start="s", end="e", result="r")
             for title, order, owner in steps:
-                self.old[(phase_title, title)] = OldStep.objects.create(
+                self.old[(phase_title, title)] = self.OldStep.objects.create(
                     phase=phase, title=title, order=order, owner=owner, description=f"About {title}"
                 )
         self.staff = User.objects.create_user("staff@example.com", is_staff=True)
@@ -72,13 +74,13 @@ class SeedFromProdShapeTest(TestCase):
         user = User.objects.create_user(email)
         if profile_dnc is not None:
             Profile.objects.create(user=user, dnc=profile_dnc)
-        return Participant.objects.create(user=user, current_step=self.old[(phase, step)] if phase else None)
+        return self.Participant.objects.create(user_id=user.pk, current_step=self.old[(phase, step)] if phase else None)
 
     def enrollment(self, participant):
-        return Enrollment.objects.get(person=participant.user)
+        return Enrollment.objects.get(person_id=participant.user_id)
 
     def test_flow_structure_follows_prod_with_ties_ordered_by_id(self):
-        seed.seed_flows(apps)
+        seed.seed_flows(self.old_apps)
         self.assertEqual(
             titles(Step.objects.filter(phase__flow__slug="resume-job-search", phase__title="Phase 3")),
             ["Send Initial Job and Resume Set", "Offer Resume & Job Search",
@@ -116,9 +118,9 @@ class SeedFromProdShapeTest(TestCase):
             (nurture, "nurture", "Nurture"),
             (applicant, "intake", "Verify Veteran Status"),
         ]
-        seed.seed_flows(apps)
+        seed.seed_flows(self.old_apps)
         for participant, flow, step in cases:
-            with self.subTest(participant=participant.user.email):
+            with self.subTest(participant=participant.user_id):
                 enrollment = self.enrollment(participant)
                 self.assertEqual((enrollment.flow.slug, enrollment.current_step.title), (flow, step))
                 self.assertEqual(enrollment.status, Enrollment.Status.ACTIVE)
@@ -131,17 +133,17 @@ class SeedFromProdShapeTest(TestCase):
         with_profile = self.participant("dnc@example.com", "Do Not Contact", "Do nothing", profile_dnc=False)
         without_profile = self.participant("dnc2@example.com", "Do Not Contact", "Do nothing")
         bystander = self.participant("ok@example.com", "Phase 1", "Send Initial Email", profile_dnc=False)
-        seed.seed_flows(apps)
+        seed.seed_flows(self.old_apps)
         for participant in (with_profile, without_profile):
-            self.assertTrue(Profile.objects.get(user=participant.user).dnc)
-            self.assertFalse(Enrollment.objects.filter(person=participant.user).exists())
-            self.assertEqual(Activity.objects.get(person=participant.user).kind, "note")
-        self.assertFalse(Profile.objects.get(user=bystander.user).dnc)
+            self.assertTrue(Profile.objects.get(user_id=participant.user_id).dnc)
+            self.assertFalse(Enrollment.objects.filter(person_id=participant.user_id).exists())
+            self.assertEqual(Activity.objects.get(person_id=participant.user_id).kind, "note")
+        self.assertFalse(Profile.objects.get(user_id=bystander.user_id).dnc)
 
     def test_no_show_and_rejection_become_statuses_on_the_step_before(self):
         no_show = self.participant("noshow@example.com", "Phase 4", "No Show")
         rejected = self.participant("rejected@example.com", "Boot Camp On-boarding", "Send Rejection Message")
-        seed.seed_flows(apps)
+        seed.seed_flows(self.old_apps)
         enrollment = self.enrollment(no_show)
         self.assertEqual((enrollment.current_step.title, enrollment.status), ("Apply to Jobs", "no_show"))
         enrollment = self.enrollment(rejected)
@@ -152,7 +154,7 @@ class SeedFromProdShapeTest(TestCase):
 
     def test_participant_without_step_goes_to_triage(self):
         lost = self.participant("lost@example.com")
-        seed.seed_flows(apps)
+        seed.seed_flows(self.old_apps)
         enrollment = self.enrollment(lost)
         self.assertEqual((enrollment.flow.slug, enrollment.current_step.title), ("intake", "Triage"))
 
@@ -160,27 +162,27 @@ class SeedFromProdShapeTest(TestCase):
         participant = self.participant("talk@example.com", "Phase 1", "Intake Call")
         when = timezone.now() - timedelta(days=30)
         for kind, notes in (("PHONE", "Left voicemail"), ("OTHER", None)):
-            interaction = Interaction.objects.create(
-                user=self.staff, participant=participant, interaction_type=kind, notes=notes
+            interaction = self.Interaction.objects.create(
+                user_id=self.staff.pk, participant=participant, interaction_type=kind, notes=notes
             )
-            Interaction.objects.filter(pk=interaction.pk).update(created_at=when)
-        seed.seed_flows(apps)
-        entries = Activity.objects.filter(person=participant.user, enrollment=None).order_by("id")
+            self.Interaction.objects.filter(pk=interaction.pk).update(created_at=when)
+        seed.seed_flows(self.old_apps)
+        entries = Activity.objects.filter(person_id=participant.user_id, enrollment=None).order_by("id")
         self.assertEqual(
             list(entries.values_list("kind", "text", "actor", "created_at")),
             [("phone", "Left voicemail", self.staff.pk, when), ("note", "", self.staff.pk, when)],
         )
 
     def test_unknown_phase_stops_the_migration(self):
-        OldPhase.objects.create(title="Mystery", start="", end="", result="")
+        self.OldPhase.objects.create(title="Mystery", start="", end="", result="")
         with self.assertRaisesMessage(RuntimeError, "Mystery"):
-            seed.seed_flows(apps)
+            seed.seed_flows(self.old_apps)
 
     def test_unseed_removes_pipeline_rows_but_keeps_dnc(self):
         participant = self.participant("dnc@example.com", "Do Not Contact", "Do nothing", profile_dnc=False)
         self.participant("job@example.com", "Phase 2", "Create Initial Job List")
-        seed.seed_flows(apps)
-        seed.unseed_flows(apps)
+        seed.seed_flows(self.old_apps)
+        seed.unseed_flows(self.old_apps)
         for model in (Flow, Step, Enrollment, Activity):
             self.assertFalse(model.objects.exists(), model.__name__)
-        self.assertTrue(Profile.objects.get(user=participant.user).dnc)
+        self.assertTrue(Profile.objects.get(user_id=participant.user_id).dnc)
