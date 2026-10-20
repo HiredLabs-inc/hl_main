@@ -1,0 +1,41 @@
+{% with person=enrollment.person profile=enrollment.person.profile step=enrollment.current_step %}
+<tr id="enrollment-{{ enrollment.pk }}" class="align-top hover:bg-hl-mist/60">
+    <td class="px-3 py-2">
+        {% if person.participant %}
+            <a href="{% url 'cold_apply:participant_detail' person.participant.pk %}" class="font-medium">{{ person.get_full_name|default:person.email }}</a>
+        {% else %}
+            <span class="font-medium text-hl-ink">{{ person.get_full_name|default:person.email }}</span>
+        {% endif %}
+        <span class="block text-xs text-hl-muted">{{ person.email }}</span>
+        {% if profile.dnc %}<span class="staff-badge staff-badge-bad mt-1">Do not contact</span>{% endif %}
+    </td>
+    <td class="px-3 py-2 text-hl-ink">
+        {% if show_flow_step %}<span class="block text-xs text-hl-muted">{{ step.phase.title }}</span>{% endif %}
+        {{ step.title }}
+        {% if enrollment.status != "active" %}
+            <span class="staff-badge {% if enrollment.status == 'rejected' or enrollment.status == 'no_show' %}staff-badge-warn{% else %}staff-badge-plain{% endif %} ms-1">{{ enrollment.get_status_display }}</span>
+        {% endif %}
+        {% if step.required_permission == "userprofile.review_veteran_status" and user.is_staff and perms.userprofile.review_veteran_status %}
+            <a href="{% url 'userprofile:veteran_status_update_view' person.pk %}" class="mt-1 block text-xs">Review veteran status</a>
+        {% endif %}
+    </td>
+    <td class="px-3 py-2 text-hl-ink">
+        {% if enrollment.assignee %}{{ enrollment.assignee.get_full_name|default:enrollment.assignee.email }}{% else %}<span class="text-hl-muted">Unassigned</span>{% endif %}
+    </td>
+    <td class="px-3 py-2">
+        {% if profile.is_veteran is False %}
+            <span class="staff-badge staff-badge-plain">Not a veteran</span>
+        {% elif profile.veteran_verified %}
+            <span class="staff-badge staff-badge-ok">Verified</span>
+        {% elif profile %}
+            <span class="staff-badge staff-badge-warn">Unverified</span>
+        {% endif %}
+    </td>
+    <td class="px-3 py-2 text-right tabular-nums {% if enrollment.days_in_step > stale_days %}font-semibold text-hl-amber{% else %}text-hl-ink{% endif %}">
+        {{ enrollment.days_in_step }}
+    </td>
+    <td class="px-3 py-2 text-hl-muted">
+        {% if enrollment.last_activity %}<time datetime="{{ enrollment.last_activity|date:'c' }}" title="{{ enrollment.last_activity }}">{{ enrollment.last_activity|timesince }} ago</time>{% else %}—{% endif %}
+    </td>
+</tr>
+{% endwith %}

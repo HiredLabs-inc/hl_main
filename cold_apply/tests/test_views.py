@@ -1,7 +1,9 @@
 import datetime
+import importlib
 import os
 from urllib.parse import urlencode
 
+from django.apps import apps
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
@@ -20,6 +22,8 @@ from cold_apply.tests.factories import (
     PositionFactory,
     UserFactory,
 )
+from pipeline import services
+from pipeline.models import Flow
 from resume.models import (
     Bullet,
     CertProjectActivity,
@@ -36,15 +40,18 @@ from resume.pdf import (
     ResumeSections,
 )
 
+seed_flows = importlib.import_module("pipeline.migrations.0002_seed_flows")
+
 
 def make_resume_participant():
     """A participant with one job and three experiences with distinct start dates,
     each experience carrying factory bullets."""
-    # The pipeline only lists participants whose current step is in an active phase
     phase = Phase.objects.create(title="Phase 1", start="start", end="end", result="result", active=True)
     step = Step.objects.create(title="Phase 1.0", description="First step", phase=phase)
     user = UserFactory(first_name="Jane", last_name="Veteran", email="jane@example.com")
     participant = ParticipantFactory(user=user, current_step=step, jobs=[], experiences=[])
+    # The staff dashboard lists people by enrollment
+    services.enroll(user, Flow.objects.get(slug="resume-job-search"), actor=None)
     JobFactory(participant=participant, title=PositionFactory(title="Software Engineer"), status="Open")
     for year in (2018, 2020, 2022):
         ExperienceFactory(
@@ -84,6 +91,9 @@ class ColdApplyBrowserTest(StaticLiveServerTestCase):
         cls.playwright.stop()
 
     def setUp(self):
+        # TransactionTestCases flush the database, including the flows seeded by migrations
+        if not Flow.objects.exists():
+            seed_flows.seed_flows(apps)
         User.objects.create_superuser(username="admin@example.com", email="admin@example.com", password="admin")
         self.participant = make_resume_participant()
 
@@ -94,7 +104,8 @@ class ColdApplyBrowserTest(StaticLiveServerTestCase):
         """
         context = self.browser.new_context()
         page = context.new_page()
-        page.goto(f"{self.live_server_url}{reverse('account_login')}?next={reverse('cold_apply:index')}")
+        dashboard = f"{reverse('staff')}?tab=resume-job-search"
+        page.goto(f"{self.live_server_url}{reverse('account_login')}?{urlencode({'next': dashboard})}")
         page.locator("#id_login").fill("admin@example.com")
         page.locator("#id_password").fill("admin")
         page.get_by_role("button", name="Sign In").click()

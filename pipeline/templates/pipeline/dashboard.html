@@ -1,0 +1,39 @@
+{% extends 'staff_base.html' %}
+{% block page_title %}Dashboard{% endblock %}
+{% block content %}
+<div class="space-y-6">
+    <section aria-label="Counts" class="flex flex-wrap gap-3">
+        {% for item in counts %}
+            <a href="{% url 'staff' %}?{% for key, value in item.params.items %}{{ key }}={{ value|urlencode }}{% if not forloop.last %}&amp;{% endif %}{% endfor %}"
+               class="admin_panel min-w-[9rem] flex-1 rounded-lg border border-hl-line bg-white px-4 py-3 hover:border-hl-steel hover:bg-hl-mist sm:flex-none">
+                <span class="block text-2xl font-semibold tabular-nums text-hl-navy">{{ item.count }}</span>
+                <span class="block text-sm text-hl-muted">{{ item.label }}</span>
+            </a>
+        {% endfor %}
+    </section>
+
+    <nav class="flex gap-1 overflow-x-auto border-b border-hl-line" aria-label="Dashboard tabs">
+        {% for slug, label in tabs %}
+            <a href="{% url 'staff' %}?tab={{ slug }}" class="admin_panel staff-tab {% if slug == tab %}staff-tab-current{% endif %}" {% if slug == tab %}aria-current="page"{% endif %}>{{ label }}</a>
+        {% endfor %}
+    </nav>
+
+    <form method="get" action="{% url 'staff' %}" class="flex flex-wrap items-end gap-3"
+          hx-get="{% url 'staff' %}" hx-target="#enrollment-table" hx-push-url="true"
+          hx-trigger="input delay:300ms">
+        {{ filters.tab }}
+        {% for field in filters.visible_fields %}
+            <label class="flex flex-col gap-1 text-xs font-medium text-hl-muted">
+                {{ field.label }}
+                {{ field }}
+            </label>
+        {% endfor %}
+        <button type="submit" class="btn btn-outline-secondary !py-1.5 !text-sm">Filter</button>
+        <a href="{% url 'staff' %}?tab={{ tab }}" class="admin_panel pb-2 text-sm text-hl-muted hover:underline">Clear</a>
+    </form>
+
+    <div id="enrollment-table">
+        {% include 'pipeline/partials/enrollment_table.html' %}
+    </div>
+</div>
+{% endblock %}

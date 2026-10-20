@@ -116,9 +116,8 @@ class ColdApplyAccessTest(TestCase):
 
     def test_staff_can_open_staff_pages(self):
         self.client.force_login(self.staff)
-        for name in ("cold_apply:index", "staff"):
-            with self.subTest(page=name):
-                self.assertEqual(self.client.get(reverse(name)).status_code, 200)
+        self.assertEqual(self.client.get(reverse("staff")).status_code, 200)
+        self.assertRedirects(self.client.get(reverse("cold_apply:index")), reverse("staff"))
 
     def test_owner_can_delete_own_bullet(self):
         self.client.force_login(self.owner.user)

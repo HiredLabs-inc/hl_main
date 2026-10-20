@@ -3,6 +3,8 @@ from django.contrib.auth import get_user_model
 from django.core.management import BaseCommand
 
 from cold_apply.models import Participant, Phase, Skill, Step
+from pipeline import services
+from pipeline.models import Flow
 from cold_apply.tests.factories import (
     JobFactory,
     ParticipantFactory,
@@ -77,8 +79,11 @@ class Command(BaseCommand):
         Position.objects.all().delete()
         Organization.objects.all().delete()
 
+        # One participant per flow, plus a second applicant, so every dashboard tab has someone
+        flows = ["intake", "intake", "resume-job-search", "boot-camp", "nurture"]
         for i in range(5):
             user = UserFactory(email=f"user{i}@email.com", password="password")
             participant = ParticipantFactory(user=user)
             print(participant.user.profile)
             job = JobFactory(participant=participant)
+            services.enroll(user, Flow.objects.get(slug=flows[i]), actor=admin_user)

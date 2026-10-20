@@ -8,6 +8,7 @@ Activity timeline.
 from django.conf import settings
 from django.db import models
 from django.db.models import Q
+from django.utils import timezone
 
 from hl_main.models import TrackedModel
 
@@ -116,6 +117,10 @@ class Enrollment(TrackedModel):
     @property
     def is_ended(self):
         return self.ended_at is not None
+
+    @property
+    def days_in_step(self):
+        return (timezone.now() - self.step_entered_at).days
 
 
 class Activity(models.Model):

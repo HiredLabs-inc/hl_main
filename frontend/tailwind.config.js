@@ -8,6 +8,8 @@ module.exports = {
     '../userprofile/templates/**/*.html',
     '../bookings/templates/**/*.html',
     '../cold_apply/templates/**/*.html',
+    '../pipeline/templates/**/*.html',
+    '../pipeline/*.py',
     '../resume/templates/**/*.html',
     "./src/**/*.{html,js}",
     "../core/templatetags/*.py",

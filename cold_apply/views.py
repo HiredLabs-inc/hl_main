@@ -22,6 +22,7 @@ from django.views.generic import (
     DetailView,
     FormView,
     ListView,
+    RedirectView,
     TemplateView,
     UpdateView,
 )
@@ -95,23 +96,11 @@ def home_view(request):
 
 # Index
 # @method_decorator(sign_up_completed, name="dispatch")
-class ParticipantListView(StaffRequiredMixin, ListView):
-    model = Phase
-    template_name = "cold_apply/participant_list.html"
-    context_object_name = "participants"
+class ParticipantListView(StaffRequiredMixin, RedirectView):
+    """The old pipeline page; the staff dashboard replaces it"""
 
-    queryset = (
-        Participant.objects.all()
-        .select_related("user__profile")
-        .order_by("current_step__order")
-    )
+    pattern_name = "staff"
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["phases"] = Phase.objects.all().order_by("order")
-        context["now"] = timezone.now()
-
-        return context
 
 # process/
 class PhaseListView(StaffRequiredMixin, ListView):

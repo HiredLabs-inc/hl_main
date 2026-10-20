@@ -12,8 +12,7 @@ from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
-from releases.models import App
-from userprofile.guards import staff_required, verified_required, veteran_reviewer_required
+from userprofile.guards import verified_required, veteran_reviewer_required
 from userprofile.intake import awaiting_veteran_review, verify_and_advance
 from userprofile.va_api import confirm_veteran_status
 
@@ -123,11 +122,6 @@ def welcome(request):
     return render(request, "welcome.html")
 
 # All views below require login
-@staff_required
-def staff(request):
-    context = {"apps": App.objects.all()}
-    return render(request, "staff_home.html", context)
-
 @login_required
 def profile_view(request):
     user_profile = Profile.objects.get_or_create(user=request.user)

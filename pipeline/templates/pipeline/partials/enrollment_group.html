@@ -1,0 +1,10 @@
+<tbody class="divide-y divide-hl-line">
+    <tr class="bg-white">
+        <th colspan="6" scope="colgroup" class="border-t border-hl-line px-3 pb-1 pt-4 text-sm font-semibold text-hl-navy">
+            {{ heading }} <span class="font-normal text-hl-muted">({{ group.list|length }})</span>
+        </th>
+    </tr>
+    {% for enrollment in group.list %}
+        {% include 'pipeline/partials/enrollment_row.html' %}
+    {% endfor %}
+</tbody>
