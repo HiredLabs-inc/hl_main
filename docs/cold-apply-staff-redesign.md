@@ -319,11 +319,26 @@ Other facts from the query:
   - On the veteran status page, the button is labelled with the next step ("Verified, move to Triage"). It appears only while the person's Intake enrollment is on the gated step. It sets `veteran_verified` and calls `move_to_step` in one transaction.
   - `Step.next_step()` was added to the pipeline model.
 
-### Step 5 — Staff layout and read-only dashboard at `/staff/`
+### Step 5 — Staff layout and read-only dashboard at `/staff/` — done 2026-10-19
 - Add `staff_base.html`: Tailwind, staff nav (§5.1) and Django messages. Today's `/staff/` app list (`staff_home.html`) moves into the nav.
 - `/staff/` shows tabs for Intake, each active flow, and My people. Filters (assignee, phase, status, in step > N days, search) are GET params, and the table body is swapped with htmx. The count strip links to filters. Rows come from a single partial, which Step 6 reuses.
 - Old `cold_apply:index` redirects to `/staff/`.
 - **Tests:** staff-only access, each filter, and a fixed query count with 50 enrollments.
+- **As built:**
+  - **Layout:** `templates/staff_base.html` has a navy staff bar with Dashboard, Stuck signups and Flows, plus a menu with tools (World Rates, public site, release notes per app), Admin for superusers, and account links. `staff.html` now just extends it, so the veteran status, stuck signups and World Rates pages get the new nav. On phones the links move to a second row.
+  - The old `staff_home.html` app list and `userprofile.views.staff` are gone.
+  - **Dashboard** (`pipeline/views.py`, `pipeline/dashboard.py`):
+    - Tabs: Intake, each other active flow, My people, and **Everyone**. Everyone was added so the "Unassigned" and "In step over 14 days" counts have a cross-flow view to link to.
+    - The count strip has one card per Intake step (e.g. "In Verify Veteran Status"), then Unassigned and "In step over 14 days".
+    - Filters: search (every word must match name or email), assignee, phase (flow tabs only), step, status (blank = all open), and days in step. They are a Django form read from GET params. The form fires htmx on `input` with a 300 ms delay and pushes the URL.
+    - Rows are grouped by step on flow tabs and by flow on My people and Everyone. Each row comes from `pipeline/partials/enrollment_row.html` (`id="enrollment-<pk>"`) for Step 6.
+    - Veteran reviewers get a "Review veteran status" link on gated rows.
+    - Names link to the old participant page until Step 7.
+  - **Flows page** at `/staff/flows/`: each active flow's phases and steps, with open counts linking to the dashboard. It replaces the old `process` page in the nav; that page still exists.
+  - `cold_apply:index` redirects to `/staff/`, and the old `participant_list.html` is deleted.
+  - `load_dev_data` now enrolls its 5 participants across the flows.
+  - **Gotcha:** `Meta.ordering` doesn't apply to GROUP BY queries, so the annotated step queries order explicitly.
+  - Tailwind now scans `pipeline/` templates and `.py` files.
 
 ### Step 6 — Inline actions and quick view
 - **Row controls:**
@@ -370,3 +385,4 @@ Tracked in `docs/backlog.md`: IDEA-001 assignee notifications, IDEA-002 kanban v
 - 2026-10-19: Step 2 implemented: `pipeline` app (Flow, Phase, Step, Enrollment, Activity; migration `pipeline/0001`), services, and admin. Enrollment and Activity are read-only in admin so the timeline stays complete. 158 tests passing (29 new).
 - 2026-10-19: Step 2 committed (99005ff). Step 3 implemented: data migration `pipeline/0002_seed_flows` with 10 tests built on the prod phase/step shape; checked forward, back and forward on the dev database. 168 tests passing. The known flaky `JobFactory` error (already in the bug log) showed up once.
 - 2026-10-19: Step 3 committed (4d8a610). Step 4 implemented: signups enter Intake, and veteran reviewers get a verify-and-advance button. 180 tests passing.
+- 2026-10-19: Step 4 committed (1cc7b0c). Step 5 implemented: staff layout, dashboard and Flows page; checked in a browser at desktop and phone widths. 197 tests passing.
