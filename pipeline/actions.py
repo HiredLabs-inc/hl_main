@@ -117,8 +117,10 @@ def session_view(request, enrollment_pk):
         session = bootcamp.BootCampSession.objects.filter(pk=_int(pk)).first() if pk else None
         if pk and session is None:
             raise ValidationError("Choose a session.")
-        bootcamp.assign_session(enrollment, session, request.user)
-        return f"Session set: {session.label}." if session else "Moved to the waitlist."
+        moved_to = bootcamp.assign_session(enrollment, session, request.user)
+        if session is None:
+            return "Moved to the waitlist."
+        return f"Session set: {session.label}." + (f" Moved to {moved_to.title}." if moved_to else "")
 
     return _act(request, enrollment_pk, action)
 

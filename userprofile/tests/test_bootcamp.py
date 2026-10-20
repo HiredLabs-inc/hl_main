@@ -8,7 +8,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from pipeline import services
-from pipeline.models import Activity, Flow
+from pipeline.models import Activity, Flow, Phase, Step
 from pipeline.tests.test_actions import events
 from pipeline.tests.test_dashboard import person
 from userprofile import bootcamp
@@ -73,6 +73,59 @@ class AssignSessionTest(BootCampTestCase):
         bootcamp.assign_session(self.enrollment, self.march, self.staff)
         with self.assertRaises(Exception), transaction.atomic():
             self.march.delete()
+
+
+class ConfirmationStepTest(BootCampTestCase):
+    """A session moves people on to Send Enrollment Confirmation, unless they're
+    already at or past it in On-boarding"""
+
+    def setUp(self):
+        super().setUp()
+        onboarding = self.enrollment.current_step.phase
+        self.start = self.enrollment.current_step
+        self.confirm = Step.objects.create(phase=onboarding, title="Send Enrollment Confirmation", order=self.start.order + 1)
+        self.active = Step.objects.create(phase=onboarding, title="Active Student", order=self.start.order + 2)
+        wait_list = Phase.objects.create(flow=self.boot_camp, title="Boot Camp Wait List", order=onboarding.order + 1)
+        self.priority = Step.objects.create(phase=wait_list, title="Priority Enrollment - Next Cycle", order=0)
+
+    def on(self, step):
+        services.move_to_step(self.enrollment, step, self.staff)
+        Activity.objects.filter(kind="step_change").delete()
+
+    def step_after_assigning(self, session):
+        bootcamp.assign_session(self.enrollment, session, self.staff)
+        self.enrollment.refresh_from_db()
+        return self.enrollment.current_step
+
+    def test_moves_from_earlier_steps_and_the_wait_list(self):
+        for step in (self.start, self.priority):
+            with self.subTest(step=step.title):
+                self.on(step)
+                bootcamp.assign_session(self.enrollment, None, self.staff)
+                self.assertEqual(self.step_after_assigning(self.march), self.confirm)
+                change = Activity.objects.get(kind="step_change")
+                self.assertEqual((change.from_value, change.to_value, change.actor), (step.title, self.confirm.title, self.staff))
+                Activity.objects.filter(kind="step_change").delete()
+
+    def test_stays_at_or_past_confirmation(self):
+        for step in (self.confirm, self.active):
+            with self.subTest(step=step.title):
+                self.on(step)
+                bootcamp.assign_session(self.enrollment, None, self.staff)
+                self.assertEqual(self.step_after_assigning(self.june), step)
+                self.assertFalse(Activity.objects.filter(kind="step_change").exists())
+
+    def test_waitlist_does_not_move(self):
+        self.on(self.priority)
+        bootcamp.assign_session(self.enrollment, self.march, self.staff)
+        self.on(self.priority)
+        self.assertEqual(self.step_after_assigning(None), self.priority)
+
+    def test_toast_says_where_they_moved(self):
+        response = self.client.post(reverse("pipeline:session", args=[self.enrollment.pk]), {"session": self.march.pk})
+        self.assertEqual(
+            events(response)["toast"]["text"], f"Session set: {self.march.label}. Moved to Send Enrollment Confirmation."
+        )
 
 
 class SessionActionTest(BootCampTestCase):
