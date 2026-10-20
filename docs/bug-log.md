@@ -46,6 +46,9 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 | BUG-031 | Medium | Fixed | userprofile | Suspected: new signups can land in Nurture, because phases and steps share order values |
 | BUG-032 | Low | Open | cold_apply | Participant page says "Not a Veteran Veteran (None)" for a veteran with no service branch |
 | BUG-033 | Low | Open | cold_apply | `load_dev_data` sometimes crashes: a Faker country name is longer than `rates.Country.name` (50) |
+| BUG-034 | Low | Open | pipeline | Board: a moved card that no longer matches the filters stays until the board refreshes |
+| BUG-035 | Low | Open | pipeline | Suspected: board card moved into a column of more than 25 can appear twice after "Show more" |
+| BUG-036 | Low | Open | pipeline | Board: a one-line card's hover preview shows behind its open Move menu |
 
 ---
 
@@ -256,3 +259,21 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 - **Where:** `cold_apply/tests/factories.py` `CountryFactory` (`name = factory.Faker("country")`), used through `JobFactory` → `LocationFactory` by `cold_apply/management/commands/load_dev_data.py`; `rates/models.py` `Country.name` is `max_length=50`
 - **Problem:** `python manage.py load_dev_data` failed with `DataError: value too long for type character varying(50)` while creating participants. Faker has country names over 50 characters ("British Indian Ocean Territory (Chagos Archipelago)" is 51), so the command fails at random. The error was seen once; which field overflowed is inferred, not traced.
 - **Fix idea:** truncate in the factory (`factory.LazyFunction(lambda: fake.country()[:50])`) or pick from a short fixed list.
+
+## BUG-034 — Board keeps a moved card that no longer matches the filters
+- **Severity:** Low · **Status:** Open · **Found:** 2026-10-20, kanban board B2 (known when built)
+- **Where:** `pipeline/actions.py` `_move_card` / `_card`; `frontend/src/board.js` (`htmx.onLoad` files the card under its new column)
+- **Problem:** a board move answers with the card and recounted columns, but doesn't redraw the board. If the moved card no longer matches the filters, it stays visible until the board refreshes. For example, with "Days in step over 14" set, a moved card's days reset to 0. The column count, recounted with the filters, then disagrees with the cards shown.
+- **Fix idea:** in `_card`, check the card against `dashboard.page_filters(...)`, and leave it out of the response when it doesn't match (`board.js` then drops it), or fade it with a "Hidden by filters" note.
+
+## BUG-035 — Board card can appear twice after "Show more"
+- **Severity:** Low · **Status:** Open · **Found:** 2026-10-20, kanban board B2 · **Suspected:** read from code, not reproduced
+- **Where:** `pipeline/dashboard.py` `board_column` (offset paging); `pipeline/views.py` `board_column_view`; `frontend/src/board.js`
+- **Problem:** "Show more" pages a column by offset, oldest in step first. A card moved into a column whose later pages aren't loaded yet is added at the end of the loaded cards. It's also the newest in step, so the last "Show more" page returns it again, and the page then has two elements with the same id.
+- **Fix idea:** send the ids of the cards already shown (or the last `step_entered_at` shown) with "Show more" and exclude them, or have `board.js` drop a loaded card whose id is already on the page.
+
+## BUG-036 — One-line card's preview shows behind its open Move menu
+- **Severity:** Low · **Status:** Open · **Found:** 2026-10-20, kanban board B2 browser check
+- **Where:** `pipeline/templates/pipeline/partials/board_card.html` (compact card: preview shown with `group-hover` / `group-focus-within`); `board_move_menu.html`
+- **Problem:** in a column of more than 30 cards, opening Move on a one-line card puts focus inside the card, so the full-card preview also appears and sits under the menu. Nothing is broken, but it looks cluttered.
+- **Fix idea:** hide the preview while that card's menu is open (e.g. a `data-menu-open` attribute on the card wrapper that the preview's classes check).
