@@ -340,13 +340,25 @@ Other facts from the query:
   - **Gotcha:** `Meta.ordering` doesn't apply to GROUP BY queries, so the annotated step queries order explicitly.
   - Tailwind now scans `pipeline/` templates and `.py` files.
 
-### Step 6 — Inline actions and quick view
+### Step 6 — Inline actions and quick view — done 2026-10-19
 - **Row controls:**
   - Step dropdown, assignee dropdown, note, and pause/complete/withdraw: each is an htmx POST to a small view that calls the service function and returns the updated row.
   - Steps the user lacks permission for are disabled.
 - **"Enroll in…":** on any row, plus the triage form on the Intake tab, with checkboxes for Boot Camp and Resume & Job Search.
 - **Side panel:** quick view with profile summary, enrollments and timeline, opened from the name.
 - **Tests:** each action, including permission refusal, a CSRF-protected POST and a 404 for a missing enrollment. One Playwright smoke test of triage from the dashboard.
+- **As built** (`pipeline/actions.py`, URLs under `/staff/` in `pipeline/urls.py`):
+  - The step and assignee are dropdowns in their cells. The step dropdown is disabled when the user can't leave the current step, and its tooltip says why.
+  - "⋯" opens an actions row under the person, not a dropdown menu, because a menu would be clipped by the table's scroll container. The actions row has:
+    - a note form, with kind note, email, phone or in person;
+    - status buttons: Make active, Pause, No show, Reject with a required reason, and Complete or Withdraw, which ask for confirmation because they can't be undone;
+    - **Triage** on Intake rows, and **Enroll in…** on other rows.
+  - Intake rows don't offer "Enroll in…", so nobody can skip veteran review that way. Rows on Verify Veteran Status say "Triage opens once veteran status is reviewed."
+  - Each action returns the updated row. It also sends an htmx `enrollment-changed` event, which makes the table (with the current filters) and the count strip reload, so moved or ended rows land in the right place.
+  - Refusals (validation or permission) return 200 with `HX-Reswap: none` and an error toast through the existing toaster. The page doesn't change.
+  - **Side panel:** clicking a name opens a drawer with profile badges and details, all enrollments, the last 50 timeline entries and a note form. Escape, the backdrop or Close shuts it. It links to the old participant page ("Open full page") until Step 7.
+  - **Gotcha:** `hx-include` is inherited. The table container includes the filter form for its refresh, so it sets `hx-disinherit="*"`. Otherwise every row control also posts the filters' empty `step`.
+  - On phones the table scrolls sideways, and the actions row stays pinned on screen.
 
 ### Step 7 — Staff participant workspace and People search
 - `/staff/people/` (search) and `/staff/people/<pk>/` (§5.3): header, enrollment cards, veteran panel (DD214 link only with the permission), timeline, profile details, and links to the existing work tools.
@@ -386,3 +398,4 @@ Tracked in `docs/backlog.md`: IDEA-001 assignee notifications, IDEA-002 kanban v
 - 2026-10-19: Step 2 committed (99005ff). Step 3 implemented: data migration `pipeline/0002_seed_flows` with 10 tests built on the prod phase/step shape; checked forward, back and forward on the dev database. 168 tests passing. The known flaky `JobFactory` error (already in the bug log) showed up once.
 - 2026-10-19: Step 3 committed (4d8a610). Step 4 implemented: signups enter Intake, and veteran reviewers get a verify-and-advance button. 180 tests passing.
 - 2026-10-19: Step 4 committed (1cc7b0c). Step 5 implemented: staff layout, dashboard and Flows page; checked in a browser at desktop and phone widths. 197 tests passing.
+- 2026-10-19: Step 5 committed (219cdfd). Step 6 implemented: row controls, triage, side panel; 2 Playwright tests; checked in a browser. 225 tests passing.
