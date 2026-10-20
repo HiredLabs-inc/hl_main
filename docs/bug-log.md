@@ -45,6 +45,7 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 | BUG-030 | Low | Open | cold_apply | Any logged-in user can create companies, titles, positions, concentrations and locations, and list locations |
 | BUG-031 | Medium | Fixed | userprofile | Suspected: new signups can land in Nurture, because phases and steps share order values |
 | BUG-032 | Low | Open | cold_apply | Participant page says "Not a Veteran Veteran (None)" for a veteran with no service branch |
+| BUG-033 | Low | Open | cold_apply | `load_dev_data` sometimes crashes: a Faker country name is longer than `rates.Country.name` (50) |
 
 ---
 
@@ -249,3 +250,9 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 - **Where:** `cold_apply/templates/cold_apply/participant_detail.html` (`{{object.user.profile.service_branch}} Veteran ({{ object.user.profile.rank_at_separation}})`); `Profile.service_branch` defaults to `"Not a Veteran"`, which isn't one of its choices
 - **Problem:** when `is_veteran` is true but no branch was chosen, the page prints the raw default and the missing rank: "Not a Veteran Veteran (None)". The participant sees this about themselves.
 - **Fix idea:** use `get_service_branch_display`, and skip the branch and rank when they're unset. Better, make the default `None`, since "Not a Veteran" duplicates `is_veteran`.
+
+## BUG-033 — `load_dev_data` sometimes crashes on a long country name
+- **Severity:** Low · **Status:** Open · **Found:** 2026-10-20, kanban board B1 browser check
+- **Where:** `cold_apply/tests/factories.py` `CountryFactory` (`name = factory.Faker("country")`), used through `JobFactory` → `LocationFactory` by `cold_apply/management/commands/load_dev_data.py`; `rates/models.py` `Country.name` is `max_length=50`
+- **Problem:** `python manage.py load_dev_data` failed with `DataError: value too long for type character varying(50)` while creating participants. Faker has country names over 50 characters ("British Indian Ocean Territory (Chagos Archipelago)" is 51), so the command fails at random. The error was seen once; which field overflowed is inferred, not traced.
+- **Fix idea:** truncate in the factory (`factory.LazyFunction(lambda: fake.country()[:50])`) or pick from a short fixed list.
