@@ -1,0 +1,33 @@
+{% comment %}
+One step on the board. A step nobody is on (whatever the filters) shows as a
+narrow strip until opened or "Collapse empty steps" is unticked. hidden rather
+than x-show, as in enrollment_row.html, on wrappers with no display class of
+their own (a class like flex would override hidden).
+{% endcomment %}
+{% with step=column.step %}
+<div x-data="{ open: false }" class="shrink-0">
+    {% if not column.open %}
+        <div x-bind:hidden="!collapse || open">
+        <button type="button" x-on:click="open = true"
+                aria-label="Show {{ step.title }} (nobody on this step)"
+                class="flex min-h-[20rem] w-12 flex-col items-center gap-2 rounded-lg bg-hl-line/70 px-1 py-2 text-xs text-hl-ink hover:bg-hl-line">
+            <span class="rounded-full bg-white px-2 font-semibold tabular-nums">0</span>
+            <span class="rotate-180 whitespace-nowrap [writing-mode:vertical-rl]">{{ step.title }}</span>
+        </button>
+        </div>
+    {% endif %}
+    <div {% if not column.open %}hidden x-bind:hidden="collapse && !open"{% endif %}>
+    <div class="flex w-64 flex-col gap-1.5 rounded-lg bg-hl-line/70 p-2">
+        <div class="flex items-start justify-between gap-2 px-1 pb-1">
+            <div class="min-w-0">
+                <h4 class="!mb-0 text-sm font-semibold text-hl-navy">{{ step.title }}</h4>
+                {% if column.waiting_on_participant %}<p class="text-xs text-hl-muted">Waiting on participant</p>{% endif %}
+            </div>
+            <span class="rounded-full bg-white px-2 text-xs font-semibold tabular-nums text-hl-ink"
+                  {% if column.count != column.open %}title="{{ column.count }} of {{ column.open }} match the filters"{% endif %}>{{ column.count }}</span>
+        </div>
+        {% include 'pipeline/partials/board_cards.html' %}
+    </div>
+    </div>
+</div>
+{% endwith %}

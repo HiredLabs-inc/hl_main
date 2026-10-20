@@ -4,7 +4,7 @@ Branch `feature/kanban-board` (from `develop`), worktree `.claude/worktrees/kanb
 
 **Mockup:** https://claude.ai/artifact/XgapZE6b6efDJAAchPaAZ6 (private until shared). Four artboards: the interactive board for Resume & Job Search, card anatomy and states, a 121-person column (Nurture), and phone width.
 
-> **Status:** design agreed with Jeff on 2026-10-19 (decisions in §6). Implementation starts after staff redesign Step 6 is merged.
+> **Status:** design agreed with Jeff on 2026-10-19 (decisions in §6). B1 (read-only board) done 2026-10-20; B2 next.
 
 ## 1. Context
 IDEA-002 in `docs/backlog.md`, from `docs/cold-apply-staff-redesign.md` §4.4 and §5.2: "a second view of a flow tab on `/staff/`, with a column per phase or step and a card per enrollment. Moving a card calls the same `move_to_step` service as the table's dropdown."
@@ -136,3 +136,4 @@ B1 and B2 alone are usable, so B3 and B4 can wait if staff don't miss them.
 ## 7. Status
 - 2026-10-19: design and mockup drafted for review.
 - 2026-10-19: Jeff answered the open questions (§6); design agreed.
+- 2026-10-20: B1 done. `dashboard.board()` and `board_column()` share the table's `filtered()` queryset; the view is a hidden filter field so htmx refreshes keep it. The column endpoint is `pipeline:board_column` (`/staff/flows/<slug>/board/steps/<pk>/`). Cards carry `id="card-<pk>"` and the decorated `step_choices` / `can_leave` for B2's Move menu. Tests in `pipeline/tests/test_board.py`.

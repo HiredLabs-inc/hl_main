@@ -1,0 +1,35 @@
+{% comment %}
+A flow tab as a board: a column per step under phase headings, a card per open
+enrollment, oldest in step first. Steps nobody is on collapse to a strip
+(Alpine: collapse here, open per column). Needs phases (from dashboard.board),
+flow, filters, query and stale_days.
+{% endcomment %}
+{% include 'pipeline/partials/view_switch.html' %}
+{% if not filters.is_valid %}
+    {% include 'pipeline/partials/filter_errors.html' %}
+{% else %}
+<div x-data="{ collapse: true }" class="space-y-2">
+    <label class="inline-flex items-center gap-2 text-sm text-hl-ink">
+        <input type="checkbox" x-model="collapse" checked class="rounded border-hl-line text-hl-navy focus:ring-hl-blue">
+        Collapse empty steps
+    </label>
+    {# relative: keeps absolutely positioned bits (sr-only text, card previews) inside the scroll box #}
+    <div class="relative overflow-x-auto rounded-lg border border-hl-line bg-hl-mist p-3" role="region" aria-label="{{ flow.name }} board" tabindex="0">
+        <div class="flex items-start gap-6">
+            {% for group in phases %}
+                <section class="flex shrink-0 flex-col" aria-labelledby="board-phase-{{ group.phase.pk }}">
+                    <div class="mb-2 flex items-baseline gap-2 border-b-2 border-hl-line px-1 pb-2">
+                        <h3 id="board-phase-{{ group.phase.pk }}" class="!mb-0 text-xs font-semibold uppercase tracking-wide text-hl-navy">{{ group.phase.title }}</h3>
+                        <span class="text-xs text-hl-muted">{{ group.count }} {{ group.count|pluralize:"person,people" }}</span>
+                    </div>
+                    <div class="flex items-start gap-2">
+                        {% for column in group.columns %}
+                            {% include 'pipeline/partials/board_column.html' %}
+                        {% endfor %}
+                    </div>
+                </section>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}

@@ -1,0 +1,22 @@
+{% comment %}
+One enrollment on the board. In a compact column (over 30 cards) it's one
+line, name and days; hovering or focusing it shows the full card over it.
+That copy is only a picture (aria-hidden, no pointer events), so the link
+underneath still takes the click.
+{% endcomment %}
+{% if compact %}
+{% with person=enrollment.person %}
+<div class="group relative">
+    <div class="flex items-center justify-between gap-2 rounded-md border border-hl-line bg-white px-2.5 py-1.5">
+        <a href="{% url 'staff_person' person.pk %}" hx-get="{% url 'pipeline:panel' person.pk %}" hx-target="#person-panel"
+           class="truncate text-sm font-semibold">{{ person.get_full_name|default:person.email }}</a>
+        <span class="staff-badge {% if enrollment.days_in_step > stale_days %}staff-badge-warn{% else %}staff-badge-plain{% endif %}">{{ enrollment.days_in_step }}d</span>
+    </div>
+    <div class="pointer-events-none absolute inset-x-0 top-0 z-10 hidden group-hover:block group-focus-within:block" aria-hidden="true">
+        {% include 'pipeline/partials/board_card_body.html' with picture=True %}
+    </div>
+</div>
+{% endwith %}
+{% else %}
+    {% include 'pipeline/partials/board_card_body.html' %}
+{% endif %}
