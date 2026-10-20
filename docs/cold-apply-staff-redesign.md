@@ -360,11 +360,31 @@ Other facts from the query:
   - **Gotcha:** `hx-include` is inherited. The table container includes the filter form for its refresh, so it sets `hx-disinherit="*"`. Otherwise every row control also posts the filters' empty `step`.
   - On phones the table scrolls sideways, and the actions row stays pinned on screen.
 
-### Step 7 — Staff participant workspace and People search
+### Step 7 — Staff participant workspace and People search — done 2026-10-19
 - `/staff/people/` (search) and `/staff/people/<pk>/` (§5.3): header, enrollment cards, veteran panel (DD214 link only with the permission), timeline, profile details, and links to the existing work tools.
 - DD214 opens are now logged as Activity.
 - Staff links to `participant_detail` point to the workspace. The staff-only blocks are removed from `participant_detail.html`, which becomes participant-only. This fixes BUG-022, BUG-023 and BUG-025 by replacing the code that has them.
 - **Tests:** access, every panel renders with missing profile data, and the DD214 link is hidden without the permission.
+- **As built** (`userprofile/people.py`, templates in `userprofile/templates/userprofile/people/`):
+  - **People** (`/staff/people/`, added to the nav): non-staff users who have a profile or an enrollment, newest first, 50 per page. Search matches every word against name or email and updates as you type. Each row shows open flows with their step, a DNC badge, a veteran badge and the join date.
+  - **Workspace** (`/staff/people/<user_pk>/`; staff accounts return 404):
+    - **Header:** name, DNC and veteran badges, email, phone, location, joined.
+    - **Flows:** the dashboard's row partial with the flow name in place of the person, so it has the same controls. It also lists ended enrollments.
+    - **"Enroll in":** a form for flows they aren't in, including Intake. It's hidden while they're in Intake, so other flows come through triage.
+    - **Timeline:** with a note form.
+    - **Veteran status:** branch, rank, specialty and years for all staff. The DD214 and "Review veteran status" links are for reviewers only; other staff see "Only veteran reviewers can open the DD214."
+    - **Work tools:** links to jobs and tailored resumes, job search, add a job, education and experience, experience by skill.
+    - **Profile:** resume link (signed URL in production), boot camp interest, training, skills, preferences, job links.
+    - **Background:** the 3 most recent experiences and all education entries.
+    - The flows and timeline sections reload on `enrollment-changed`.
+  - The dashboard row name and the panel's "Open full page" now go to the workspace. `pipeline` no longer references cold_apply at all.
+  - New endpoints: `pipeline:person_note`, a note not tied to one enrollment that returns the timeline partial and replaces the panel-only note endpoint; and `pipeline:person_enroll`.
+  - Opening a DD214 now also writes a `document_opened` Activity ("DD214", by whom).
+  - **`participant_detail.html` is now the jobs tool for both participants and staff.**
+    - Removed: the staff DNC block (BUG-022), the blank phone and email lines (BUG-023), the veteran review button, current phase and step, training, skills and job links, the "Update Participant Phase" link, "Back to Pipeline", and a dead script that called `bootstrap.Collapse`.
+    - Staff get breadcrumbs People › name › Jobs and an "Open staff workspace" link.
+    - "Highest Education" became "Education" and lists every entry, since Education has no dates or level to rank by (BUG-025).
+  - `ParticipantUpdateView` (the old phase editor) is no longer linked from anywhere; Step 9 removes it.
 
 ### Step 8 — Boot camp sessions
 - Link Boot Camp enrollments to `BootCampSession` on the userprofile side (`BootCampSession.enrollments`, at most one session per enrollment), so `pipeline` stays generic. An enrollment with no session is on the waitlist.
@@ -399,3 +419,4 @@ Tracked in `docs/backlog.md`: IDEA-001 assignee notifications, IDEA-002 kanban v
 - 2026-10-19: Step 3 committed (4d8a610). Step 4 implemented: signups enter Intake, and veteran reviewers get a verify-and-advance button. 180 tests passing.
 - 2026-10-19: Step 4 committed (1cc7b0c). Step 5 implemented: staff layout, dashboard and Flows page; checked in a browser at desktop and phone widths. 197 tests passing.
 - 2026-10-19: Step 5 committed (219cdfd). Step 6 implemented: row controls, triage, side panel; 2 Playwright tests; checked in a browser. 225 tests passing.
+- 2026-10-19: Step 6 committed (f7c690f). Step 7 implemented: People search, staff workspace, DD214 opens on the timeline, participant page trimmed (fixes BUG-022, BUG-023, BUG-025). 242 tests passing.
