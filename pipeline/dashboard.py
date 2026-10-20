@@ -8,6 +8,8 @@ from django.contrib.auth import get_user_model
 from django.db.models import Count, OuterRef, Q, Subquery
 from django.utils import timezone
 
+from userprofile import bootcamp
+
 from .models import Activity, Enrollment, Flow, Phase, Step
 from .services import can_leave_step
 
@@ -33,6 +35,8 @@ class DashboardFilters(forms.Form):
     step = forms.ModelChoiceField(required=False, queryset=Step.objects.none(), empty_label="Any step")
     status = forms.ChoiceField(required=False, choices=STATUS_CHOICES)
     days = forms.IntegerField(required=False, min_value=1, label="Days in step over")
+    # Boot Camp tab only: "waitlist" or a session pk
+    session = forms.ChoiceField(required=False)
 
     def __init__(self, data, flow=None):
         super().__init__(data)
@@ -42,6 +46,12 @@ class DashboardFilters(forms.Form):
         else:
             del self.fields["phase"]
             self.fields["step"].queryset = Step.objects.select_related("phase__flow")
+        if flow is not None and flow.slug == bootcamp.FLOW_SLUG:
+            self.fields["session"].choices = [("", "Any session"), ("waitlist", bootcamp.WAITLIST)] + [
+                (str(session.pk), session.label) for session in bootcamp.BootCampSession.objects.all()
+            ]
+        else:
+            del self.fields["session"]
         for field in self.visible_fields():
             field.field.widget.attrs["class"] = "staff-field"
         self.fields["q"].widget.attrs.update({"class": "staff-field w-56", "type": "search"})
@@ -70,7 +80,8 @@ def row_queryset():
 def decorate(rows, user):
     """Add what each row's controls need, in a fixed number of queries:
     step_choices (the flow's steps), can_leave (the user may move them off
-    their current step) and enroll_choices (active flows they could join)."""
+    their current step) and enroll_choices (active flows they could join).
+    Boot Camp rows also get session (None means waitlist) and session_choices."""
     rows = list(rows)
     steps_by_flow = defaultdict(list)
     for step in Step.objects.filter(phase__flow__in={row.flow_id for row in rows}).select_related("phase"):
@@ -81,6 +92,7 @@ def decorate(rows, user):
     ):
         open_flows[person_id].add(flow_id)
     joinable = [flow for flow in Flow.objects.filter(active=True) if flow.slug != INTAKE]
+    bootcamp.add_sessions(rows)
     for row in rows:
         row.step_choices = steps_by_flow[row.flow_id]
         row.can_leave = can_leave_step(user, row.current_step)
@@ -116,6 +128,10 @@ def enrollments(user, tab, filters):
         qs = qs.filter(current_step__phase=data["phase"])
     if data.get("step"):
         qs = qs.filter(current_step=data["step"])
+    if data.get("session") == "waitlist":
+        qs = qs.filter(bootcamp_seat__isnull=True)
+    elif data.get("session"):
+        qs = qs.filter(bootcamp_seat__session_id=data["session"])
     if data.get("days"):
         qs = qs.filter(step_entered_at__lt=timezone.now() - timedelta(days=data["days"]))
     if data.get("q"):

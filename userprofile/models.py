@@ -143,6 +143,10 @@ class BootCampSession(models.Model):
 
     start_date = models.DateField()
     created_at = models.DateTimeField(auto_now_add=True)
+    # Boot Camp enrollments with a seat; an enrollment without one is on the waitlist
+    enrollments = models.ManyToManyField(
+        "pipeline.Enrollment", through="BootCampSeat", related_name="bootcamp_sessions", blank=True
+    )
 
     class Meta:
         ordering = ["start_date"]
@@ -150,6 +154,22 @@ class BootCampSession(models.Model):
     def __str__(self) -> str:
         return f"Boot camp starting {self.start_date.isoformat()}"
 
+    @property
+    def label(self) -> str:
+        return f"Starts {self.start_date:%b} {self.start_date.day}, {self.start_date.year}"
+
     @classmethod
     def next_session(cls):
         return cls.objects.filter(start_date__gte=timezone.localdate()).order_by("start_date").first()
+
+
+class BootCampSeat(models.Model):
+    """A Boot Camp enrollment's place in a session: at most one per enrollment.
+    Kept here rather than in pipeline so pipeline knows nothing about boot camps."""
+
+    session = models.ForeignKey(BootCampSession, on_delete=models.PROTECT, related_name="seats")
+    enrollment = models.OneToOneField("pipeline.Enrollment", on_delete=models.CASCADE, related_name="bootcamp_seat")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self) -> str:
+        return f"{self.enrollment.person} in {self.session}"

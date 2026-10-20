@@ -9,6 +9,7 @@ from django.core.exceptions import ObjectDoesNotExist, PermissionDenied, Validat
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_GET, require_POST
 
+from userprofile import bootcamp
 from userprofile.guards import staff_required
 
 from . import dashboard, services
@@ -108,6 +109,22 @@ def status_view(request, enrollment_pk):
 
 @require_POST
 @staff_required
+def session_view(request, enrollment_pk):
+    """Place a Boot Camp enrollment in a session, or back on the waitlist (blank)"""
+
+    def action(enrollment):
+        pk = request.POST.get("session")
+        session = bootcamp.BootCampSession.objects.filter(pk=_int(pk)).first() if pk else None
+        if pk and session is None:
+            raise ValidationError("Choose a session.")
+        bootcamp.assign_session(enrollment, session, request.user)
+        return f"Session set: {session.label}." if session else "Moved to the waitlist."
+
+    return _act(request, enrollment_pk, action)
+
+
+@require_POST
+@staff_required
 def note_view(request, enrollment_pk):
     def action(enrollment):
         services.add_note(
@@ -186,12 +203,14 @@ def panel_view(request, user_pk):
         profile = person.profile
     except ObjectDoesNotExist:
         profile = None
+    enrollments = list(
+        person.enrollments.select_related("flow", "current_step__phase", "assignee").order_by("ended_at", "flow__order")
+    )
+    bootcamp.add_sessions(enrollments)
     context = {
         **timeline_context(person),
         "profile": profile,
-        "enrollments": person.enrollments.select_related("flow", "current_step__phase", "assignee").order_by(
-            "ended_at", "flow__order"
-        ),
+        "enrollments": enrollments,
     }
     return render(request, "pipeline/partials/person_panel.html", context)
 

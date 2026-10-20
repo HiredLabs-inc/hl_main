@@ -44,6 +44,9 @@
                             <span class="block text-xs">
                                 {{ enrollment.current_step.title }}{% if not enrollment.is_ended %} · {{ enrollment.days_in_step }} day{{ enrollment.days_in_step|pluralize }} in step · {% if enrollment.assignee %}{{ enrollment.assignee.get_full_name|default:enrollment.assignee.email }}{% else %}unassigned{% endif %}{% else %} · ended {{ enrollment.ended_at|date:"M j, Y" }}{% endif %}
                             </span>
+                            {% if enrollment.flow.slug == "boot-camp" and not enrollment.is_ended %}
+                                {% include 'pipeline/partials/session_select.html' %}
+                            {% endif %}
                         </li>
                     {% empty %}
                         <li class="px-3 py-2 text-hl-muted">Not in any flow.</li>

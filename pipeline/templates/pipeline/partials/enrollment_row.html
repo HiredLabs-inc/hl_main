@@ -31,6 +31,9 @@ staff_users and stale_days.
                 </optgroup>
             {% endfor %}
         </select>
+        {% if enrollment.flow.slug == "boot-camp" %}
+            {% include 'pipeline/partials/session_select.html' with in_row=True %}
+        {% endif %}
         {% if enrollment.status != "active" %}
             <span class="staff-badge {% if enrollment.status == 'rejected' or enrollment.status == 'no_show' %}staff-badge-warn{% else %}staff-badge-plain{% endif %} mt-1">{{ enrollment.get_status_display }}</span>
         {% endif %}
@@ -68,7 +71,8 @@ staff_users and stale_days.
                 class="rounded-md px-2 py-1 text-hl-muted hover:bg-hl-mist hover:text-hl-ink" aria-label="More actions for {{ name }}">⋯</button>
     </td>
 </tr>
-<tr id="actions-{{ enrollment.pk }}" x-show="open" x-cloak class="bg-hl-mist/60">
+{% comment %}hidden rather than x-show: htmx settles the style attribute of elements whose id survives a swap, which undid x-show's display: none and left this row open after every action.{% endcomment %}
+<tr id="actions-{{ enrollment.pk }}" hidden x-bind:hidden="!open" class="bg-hl-mist/60">
     <td colspan="7" class="px-3 py-3">
         {# Sticky so the actions stay on screen while the table scrolls sideways on phones #}
         <div class="sticky left-3 max-w-[calc(100vw-3.5rem)] md:static md:max-w-none">

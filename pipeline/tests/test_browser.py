@@ -1,14 +1,17 @@
 import importlib
 import os
+from datetime import timedelta
 
 from django.apps import apps
 from django.contrib.auth.models import User
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.urls import reverse
+from django.utils import timezone
 from playwright.sync_api import expect, sync_playwright
 
 from pipeline import services
 from pipeline.models import Enrollment, Flow, Step
+from userprofile.models import BootCampSession
 
 from .test_dashboard import person
 
@@ -50,7 +53,7 @@ class DashboardBrowserTest(StaticLiveServerTestCase):
     def tearDown(self):
         self.page.close()
 
-    def test_triage_then_move_step(self):
+    def test_triage_move_step_and_assign_session(self):
         page = self.page
         page.get_by_role("button", name="More actions for Nia New").click()
         page.get_by_label("Boot Camp").check()
@@ -69,6 +72,18 @@ class DashboardBrowserTest(StaticLiveServerTestCase):
         expect(page.get_by_text(f"Moved to {last_step.title}.")).to_be_visible()
         boot_camp.refresh_from_db()
         self.assertEqual(boot_camp.current_step, last_step)
+        # The actions row stays closed after the row is swapped
+        actions = page.locator(f"#actions-{boot_camp.pk}")
+        expect(actions).to_be_hidden()
+
+        session = BootCampSession.objects.create(start_date=timezone.localdate() + timedelta(days=30))
+        page.reload()
+        page.get_by_label("Boot camp session for Nia New").select_option(str(session.pk))
+        expect(page.get_by_text(f"Session set: {session.label}.")).to_be_visible()
+        self.assertEqual(boot_camp.bootcamp_seat.session, session)
+        expect(actions).to_be_hidden()
+        page.get_by_role("button", name="More actions for Nia New").click()
+        expect(actions).to_be_visible()
 
     def test_side_panel_opens_and_closes(self):
         page = self.page

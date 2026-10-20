@@ -134,6 +134,7 @@ class Activity(models.Model):
         ASSIGNEE_CHANGE = "assignee_change", "Assignee change"
         STATUS_CHANGE = "status_change", "Status change"
         DOCUMENT_OPENED = "document_opened", "Document opened"
+        SESSION_CHANGE = "session_change", "Boot camp session"
 
     # Kinds staff can write by hand; the rest are recorded by pipeline.services
     CONTACT_KINDS = {Kind.NOTE, Kind.EMAIL, Kind.PHONE, Kind.IN_PERSON}

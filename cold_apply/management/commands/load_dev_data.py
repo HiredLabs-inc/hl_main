@@ -1,6 +1,9 @@
+from datetime import timedelta
+
 from allauth.account.models import EmailAddress
 from django.contrib.auth import get_user_model
 from django.core.management import BaseCommand
+from django.utils import timezone
 
 from cold_apply.models import Participant, Phase, Skill, Step
 from pipeline import services
@@ -12,7 +15,7 @@ from cold_apply.tests.factories import (
     UserFactory,
 )
 from resume.models import Degree, Organization, Position
-from userprofile.models import Profile, ServicePackage
+from userprofile.models import BootCampSession, Profile, ServicePackage
 
 User = get_user_model()
 
@@ -78,6 +81,10 @@ class Command(BaseCommand):
 
         Position.objects.all().delete()
         Organization.objects.all().delete()
+
+        # An upcoming session, so the Boot Camp tab has one to assign
+        if not BootCampSession.objects.filter(start_date__gte=timezone.localdate()).exists():
+            BootCampSession.objects.create(start_date=timezone.localdate() + timedelta(days=45))
 
         # One participant per flow, plus a second applicant, so every dashboard tab has someone
         flows = ["intake", "intake", "resume-job-search", "boot-camp", "nurture"]
