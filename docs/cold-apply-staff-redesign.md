@@ -392,7 +392,13 @@ Other facts from the query:
 - **Tests:** assigning a session, the waitlist filter, and one session per enrollment.
 - **As built** (`userprofile/bootcamp.py`, model `BootCampSeat`):
   - `BootCampSeat` links a session to an enrollment, with a one-to-one on the enrollment. `BootCampSession.enrollments` is a many-to-many through it. A session that has people in it can't be deleted (PROTECT).
-  - **Assigning a session doesn't change the step. Jeff to decide.** The Boot Camp flow has no *Session assigned* step: prod's steps run from Send Commitment Form to Active Student, and a fresh database has one placeholder step. So assigning only records a "Boot camp session: Waitlist → Starts Dec 3, 2026" entry on the timeline (new Activity kind `session_change`). Staff move the step themselves. If one of the prod steps should follow automatically (perhaps *Send Enrollment Confirmation*), it's a one-line change.
+  - Each session change goes on the timeline, e.g. "Boot camp session: Waitlist → Starts Dec 3, 2026" (new Activity kind `session_change`).
+  - **Assigning a session moves the person to *Send Enrollment Confirmation*** (Jeff, 2026-10-20). There's no *Session assigned* step in prod, so this replaces it.
+    - The move is recorded as a normal step change, and the toast says where they moved.
+    - People already at or after that step in On-boarding (Send Calendar Invite … Active Student) stay where they are, so changing someone's session doesn't send them back.
+    - People on Wait List steps or earlier On-boarding steps move.
+    - Moving someone back to the waitlist doesn't change their step.
+    - On a fresh database there's no such step, so nothing moves.
   - Boot Camp rows have a session dropdown under the step dropdown, and so does the side panel. The first option is "Waitlist (no session)", followed by upcoming sessions. A session that has already started stays in the list for people who are in it.
   - The Boot Camp tab has a **Session** filter: Any session, Waitlist, or a session.
   - Sessions are still created in Django admin.
@@ -455,3 +461,4 @@ Tracked in `docs/backlog.md`: IDEA-001 assignee notifications, IDEA-002 kanban v
 - 2026-10-19: Step 6 committed (f7c690f). Step 7 implemented: People search, staff workspace, DD214 opens on the timeline, participant page trimmed (fixes BUG-022, BUG-023, BUG-025). 242 tests passing.
 - 2026-10-19: Step 7 committed (e0b44c1, c4c80f1); develop merged in (f833a14). Step 8 implemented: boot camp sessions and the waitlist filter, plus the fix for the actions row reopening. 254 tests passing.
 - 2026-10-20: Step 8 committed (6e52c5b, 2b1f69a). Step 9 implemented: old pipeline models, views and templates removed; old URLs redirect. 253 tests passing.
+- 2026-10-20: Step 9 committed (3766a04, f2c8950). Jeff chose Send Enrollment Confirmation as the step a session moves people to; built, with 4 new tests.
