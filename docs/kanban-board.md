@@ -4,7 +4,7 @@ Branch `feature/kanban-board` (from `develop`), worktree `.claude/worktrees/kanb
 
 **Mockup:** https://claude.ai/artifact/XgapZE6b6efDJAAchPaAZ6 (private until shared). Four artboards: the interactive board for Resume & Job Search, card anatomy and states, a 121-person column (Nurture), and phone width.
 
-> **Status:** design agreed with Jeff on 2026-10-19 (decisions in §6). B1 (read-only board) done 2026-10-20; B2 next.
+> **Status:** design agreed with Jeff on 2026-10-19 (decisions in §6). B1 (read-only board) and B2 (Move menu) done 2026-10-20; B3 next.
 
 ## 1. Context
 IDEA-002 in `docs/backlog.md`, from `docs/cold-apply-staff-redesign.md` §4.4 and §5.2: "a second view of a flow tab on `/staff/`, with a column per phase or step and a card per enrollment. Moving a card calls the same `move_to_step` service as the table's dropdown."
@@ -137,3 +137,5 @@ B1 and B2 alone are usable, so B3 and B4 can wait if staff don't miss them.
 - 2026-10-19: design and mockup drafted for review.
 - 2026-10-19: Jeff answered the open questions (§6); design agreed.
 - 2026-10-20: B1 done. `dashboard.board()` and `board_column()` share the table's `filtered()` queryset; the view is a hidden filter field so htmx refreshes keep it. The column endpoint is `pipeline:board_column` (`/staff/flows/<slug>/board/steps/<pk>/`). Cards carry `id="card-<pk>"` and the decorated `step_choices` / `can_leave` for B2's Move menu. Tests in `pipeline/tests/test_board.py`.
+- 2026-10-20: B2 done. `move_to_step(from_step=...)` raises `StaleStep` under the row lock; the table's step dropdown sends `from_step` too. A board move (`render=card`) answers with `board_move.html`: the card, plus out-of-band column and phase counts recounted with the filters from `HX-Current-URL` (the filter form can't be sent with the move, because its `step` field would clash). It answers 200, 409, 403 or 400 with `HX-Board-Card`. `frontend/src/board.js` swaps refusals too, files the card under its step's column, opens a collapsed column, gives focus back to Move and fades the ring. It also does Undo from the toaster (`toast.undo`). Board moves fire `board-changed` (count strip only) instead of `enrollment-changed`, so the board isn't redrawn.
+

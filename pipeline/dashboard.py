@@ -1,12 +1,14 @@
 """Queries behind the staff dashboard at /staff/: which enrollments a tab and
 its filters show, and the counts in the header strip."""
 from collections import defaultdict
+from urllib.parse import urlsplit
 from dataclasses import dataclass, field
 from datetime import timedelta
 
 from django import forms
 from django.contrib.auth import get_user_model
 from django.db.models import Count, OuterRef, Q, Subquery
+from django.http import QueryDict
 from django.utils import timezone
 
 from userprofile import bootcamp
@@ -195,6 +197,10 @@ class Column:
         return min(self.more, BOARD_PAGE)
 
     @property
+    def count_title(self):
+        return f"{self.count} of {self.open} match the filters" if self.count != self.open else ""
+
+    @property
     def compact(self):
         return self.count > BOARD_COMPACT_OVER
 
@@ -263,6 +269,37 @@ def board(user, flow, filters):
         column = Column(step, found[:BOARD_PAGE], len(found), step.open)
         phases.setdefault(step.phase_id, BoardPhase(step.phase)).columns.append(column)
     return list(phases.values())
+
+
+def card(enrollment_pk, user):
+    """One board card, or None if the enrollment has ended"""
+    found = cards(card_queryset().filter(pk=enrollment_pk), user)
+    return found[0] if found else None
+
+
+def page_filters(url, flow):
+    """DashboardFilters from the URL of the page a request came from (htmx's
+    HX-Current-URL), so a board action can recount with the board's filters"""
+    filters = DashboardFilters(QueryDict(urlsplit(url or "").query), flow=flow)
+    return filters if filters.is_valid() else DashboardFilters({}, flow=flow)
+
+
+def board_counts(user, flow, filters, steps):
+    """Card counts matching a valid DashboardFilters, for steps and their phases:
+    ({step pk: count}, {phase pk: count})"""
+    qs = filtered(open_enrollments(), user, flow.slug, filters).order_by()
+    step_counts = dict.fromkeys((step.pk for step in steps), 0)
+    step_counts.update(
+        qs.filter(current_step__in=steps).values("current_step").annotate(n=Count("pk")).values_list("current_step", "n")
+    )
+    phase_counts = dict.fromkeys((step.phase_id for step in steps), 0)
+    phase_counts.update(
+        qs.filter(current_step__phase__in=phase_counts)
+        .values("current_step__phase")
+        .annotate(n=Count("pk"))
+        .values_list("current_step__phase", "n")
+    )
+    return step_counts, phase_counts
 
 
 def board_column(user, flow, step, filters, offset):

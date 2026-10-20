@@ -1,17 +1,10 @@
 {% comment %}
-A board column's cards, then "Show more" while some are left. "Show more" gets
-the next page from pipeline:board_column, which answers with this partial to
-replace the "Show more" block. Needs column, flow, query and stale_days.
+The next page of a board column, from pipeline:board_column: the cards, then
+"Show more" again while some are left. It replaces the old "Show more" block;
+the board script moves the cards into the column. Needs column, flow, query
+and stale_days.
 {% endcomment %}
 {% for enrollment in column.cards %}
     {% include 'pipeline/partials/board_card.html' with compact=column.compact %}
 {% endfor %}
-{% if column.more > 0 %}
-    <div class="flex flex-col gap-1 px-1 py-2 text-center text-xs text-hl-ink">
-        <span>Showing {{ column.next_offset }} of {{ column.count }}, oldest in step first</span>
-        <button type="button" class="font-semibold text-hl-navy hover:underline"
-                hx-get="{% url 'pipeline:board_column' flow.slug column.step.pk %}?offset={{ column.next_offset }}"
-                hx-include="#dashboard-filters" hx-target="closest div" hx-swap="outerHTML">Show {{ column.next_page }} more</button>
-        <a href="{% url 'staff' %}?{{ query }}&amp;view=table&amp;step={{ column.step.pk }}" class="admin_panel font-semibold text-hl-navy hover:underline">Open all {{ column.count }} in the table</a>
-    </div>
-{% endif %}
+{% include 'pipeline/partials/board_more.html' %}

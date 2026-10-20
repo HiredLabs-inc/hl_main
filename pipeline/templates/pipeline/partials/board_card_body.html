@@ -1,8 +1,7 @@
-{% comment %}The full card. With picture, the name isn't a link (see board_card.html).{% endcomment %}
+{% comment %}The full card. With picture, it's only a picture: no links or menu (see board_card.html).{% endcomment %}
 {% with person=enrollment.person profile=enrollment.person.profile assignee=enrollment.assignee %}
 {% with name=person.get_full_name|default:person.email %}
-<article {% if not picture %}id="card-{{ enrollment.pk }}"{% endif %}
-         class="flex flex-col gap-2 rounded-md border border-hl-line p-2.5 shadow-sm {% if enrollment.status == 'active' %}bg-white{% else %}bg-hl-mist{% endif %}">
+<article class="flex flex-col gap-2 rounded-md border border-hl-line p-2.5 shadow-sm {% if enrollment.status == 'active' %}bg-white{% else %}bg-hl-mist{% endif %}">
     <div class="flex items-start justify-between gap-2">
         {% if picture %}
             <span class="text-sm font-semibold text-hl-navy">{{ name }}</span>
@@ -35,13 +34,17 @@
         {% endif %}
         {% for flow_name in enrollment.also_in %}<span class="staff-badge staff-badge-plain">Also in {{ flow_name }}</span>{% endfor %}
     </div>
-    <p class="text-xs text-hl-muted">
-        {% if enrollment.last_activity %}
-            {{ enrollment.last_activity_label }} · <time datetime="{{ enrollment.last_activity|date:'c' }}" title="{{ enrollment.last_activity }}">{% if enrollment.last_activity_days %}{{ enrollment.last_activity_days }}d ago{% else %}today{% endif %}</time>
-        {% else %}
-            No activity yet
-        {% endif %}
-    </p>
+    <div class="flex items-center justify-between gap-2">
+        <p class="min-w-0 text-xs text-hl-muted">
+            {% if enrollment.last_activity %}
+                {{ enrollment.last_activity_label }} · <time datetime="{{ enrollment.last_activity|date:'c' }}" title="{{ enrollment.last_activity }}">{% if enrollment.last_activity_days %}{{ enrollment.last_activity_days }}d ago{% else %}today{% endif %}</time>
+            {% else %}
+                No activity yet
+            {% endif %}
+        </p>
+        {% if not picture %}{% include 'pipeline/partials/board_move_menu.html' %}{% endif %}
+    </div>
+    {% if error %}<p role="alert" class="rounded-md bg-red-50 px-2 py-1.5 text-xs text-red-700">{{ error }}</p>{% endif %}
 </article>
 {% endwith %}
 {% endwith %}

@@ -2,7 +2,7 @@
 {% block page_title %}Dashboard{% endblock %}
 {% block content %}
 <div class="space-y-6">
-    <div id="count-strip" hx-get="{% url 'staff' %}?part=counts" hx-trigger="enrollment-changed from:body">
+    <div id="count-strip" hx-get="{% url 'staff' %}?part=counts" hx-trigger="enrollment-changed from:body, board-changed from:body">
         {% include 'pipeline/partials/count_strip.html' %}
     </div>
 

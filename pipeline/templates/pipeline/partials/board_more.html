@@ -1,0 +1,10 @@
+{% comment %}"Show more" under a board column, while some cards aren't shown yet{% endcomment %}
+{% if column.more > 0 %}
+    <div class="flex flex-col gap-1 px-1 py-2 text-center text-xs text-hl-ink">
+        <span>Showing {{ column.next_offset }} of {{ column.count }}, oldest in step first</span>
+        <button type="button" class="font-semibold text-hl-navy hover:underline"
+                hx-get="{% url 'pipeline:board_column' flow.slug column.step.pk %}?offset={{ column.next_offset }}"
+                hx-include="#dashboard-filters" hx-target="closest div" hx-swap="outerHTML">Show {{ column.next_page }} more</button>
+        <a href="{% url 'staff' %}?{{ query }}&amp;view=table&amp;step={{ column.step.pk }}" class="admin_panel font-semibold text-hl-navy hover:underline">Open all {{ column.count }} in the table</a>
+    </div>
+{% endif %}

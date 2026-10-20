@@ -22,6 +22,7 @@ staff_users and stale_days.
         {% if show_flow_step %}<span class="block text-xs text-hl-muted">{{ step.phase.title }}</span>{% endif %}
         <select name="step" aria-label="Step for {{ name }}" class="staff-field w-full max-w-[16rem] !py-1"
                 hx-post="{% url 'pipeline:move' enrollment.pk %}" hx-target="#enrollment-{{ enrollment.pk }}" hx-swap="outerHTML"
+                hx-vals='{"from_step": "{{ step.pk }}"}'
                 {% if enrollment.is_ended %}disabled
                 {% elif not enrollment.can_leave %}disabled title="Only veteran reviewers can move people off {{ step.title }}"{% endif %}>
             {% regroup enrollment.step_choices by phase as phases %}

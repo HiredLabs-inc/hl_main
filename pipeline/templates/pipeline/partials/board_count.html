@@ -1,0 +1,3 @@
+{% comment %}A board column's card count. oob when a move answers with it.{% endcomment %}
+<span id="board-count-{{ pk }}" {% if oob %}hx-swap-oob="true"{% endif %} class="rounded-full bg-white px-2 text-xs font-semibold tabular-nums text-hl-ink"
+      {% if title %}title="{{ title }}"{% endif %}>{{ count }}</span>

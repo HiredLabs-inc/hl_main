@@ -91,3 +91,32 @@ class DashboardBrowserTest(StaticLiveServerTestCase):
         expect(dialog.get_by_text("Timeline")).to_be_visible()
         page.keyboard.press("Escape")
         expect(dialog).to_have_count(0)
+
+    def test_board_move_with_keyboard_and_undo(self):
+        page = self.page
+        flow = Flow.objects.get(slug="resume-job-search")
+        first = flow.first_step()
+        phase = first.phase.flow.phases.create(title="Phase 2", order=1)
+        second = Step.objects.create(phase=phase, title="Write bullets", order=0)
+        enrollment = services.enroll(self.person, flow, None)
+        page.goto(f"{self.live_server_url}{reverse('staff')}?tab=resume-job-search&view=board")
+
+        move = page.get_by_role("button", name="Move Nia New")
+        move.focus()
+        page.keyboard.press("Enter")
+        # The menu opens with focus on the first step it offers
+        expect(page.get_by_role("menuitem", name="Write bullets")).to_be_focused()
+        page.keyboard.press("Enter")
+        expect(page.get_by_text("Moved Nia New to Write bullets.")).to_be_visible()
+        card = page.locator(f"#card-{enrollment.pk}")
+        expect(page.locator(f'[data-board-cards="{second.pk}"]').locator(f"#card-{enrollment.pk}")).to_be_visible()
+        expect(card.get_by_role("button", name="Move Nia New")).to_be_focused()
+        expect(page.locator(f"#board-count-{second.pk}")).to_have_text("1")
+        enrollment.refresh_from_db()
+        self.assertEqual(enrollment.current_step, second)
+
+        page.get_by_role("button", name="Undo").click()
+        expect(page.locator(f'[data-board-cards="{first.pk}"]').locator(f"#card-{enrollment.pk}")).to_be_visible()
+        expect(page.locator(f"#board-count-{second.pk}")).to_have_text("0")
+        enrollment.refresh_from_db()
+        self.assertEqual(enrollment.current_step, first)

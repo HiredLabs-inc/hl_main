@@ -1,3 +1,4 @@
+import json
 from datetime import timedelta
 
 from django.contrib.auth.models import User
@@ -257,3 +258,98 @@ class ColumnTest(TestCase):
         column = dashboard.Column(step, cards=list(range(25)), count=60, open=60, offset=25)
         self.assertEqual((column.next_offset, column.more, column.next_page), (50, 10, 10))
         self.assertTrue(column.compact)
+
+
+class MoveCardTest(BoardTestCase):
+    """The board's Move: pipeline:move with render=card"""
+
+    def setUp(self):
+        super().setUp()
+        self.first, self.second, self.third, self.fourth = Step.objects.filter(phase__flow=self.job_search)
+
+    def move(self, enrollment, step, from_step=None, page="", **headers):
+        return self.client.post(
+            reverse("pipeline:move", args=[enrollment.pk]),
+            {"step": step.pk, "from_step": (from_step or enrollment.current_step).pk, "render": "card"},
+            HTTP_HX_CURRENT_URL=f"http://testserver/staff/?tab={JOB_SEARCH}&view=board{page}",
+            **headers,
+        )
+
+    def step_changes(self, enrollment):
+        return enrollment.activities.filter(kind="step_change").count()
+
+    def test_move_answers_with_the_card_and_counts(self):
+        response = self.move(self.mine, self.third)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "pipeline/partials/board_move.html")
+        self.assertEqual(Enrollment.objects.get(pk=self.mine.pk).current_step, self.third)
+        self.assertEqual(self.step_changes(self.mine), 1)
+        self.assertEqual(response["HX-Board-Card"], "true")
+        self.assertContains(response, f'id="card-{self.mine.pk}" data-board-card data-step="{self.third.pk}" data-board-moved')
+        self.assertEqual(response.context["step_counts"], {self.first.pk: 2, self.third.pk: 1})
+        self.assertEqual(response.context["phase_counts"], {self.first.phase_id: 2, self.third.phase_id: 1})
+        self.assertContains(response, f'id="board-count-{self.third.pk}" hx-swap-oob="true"')
+        self.assertContains(response, f'id="board-phase-count-{self.third.phase_id}" hx-swap-oob="true"')
+
+    def test_counts_use_the_page_filters(self):
+        response = self.move(self.mine, self.third, page="&assignee=unassigned")
+        self.assertEqual(response.context["step_counts"], {self.first.pk: 1, self.third.pk: 0})
+
+    def test_toast_offers_undo_and_undo_moves_back(self):
+        toast = json.loads(self.move(self.mine, self.third)["HX-Trigger"])["toast"]
+        self.assertEqual(toast["text"], "Moved Mia Mine to Step 3.")
+        undo = toast["undo"]
+        self.assertEqual(undo["card"], f"card-{self.mine.pk}")
+        self.assertEqual(undo["values"], {"step": self.first.pk, "from_step": self.third.pk, "render": "card"})
+        response = self.client.post(undo["url"], undo["values"])
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Enrollment.objects.get(pk=self.mine.pk).current_step, self.first)
+        self.assertEqual(self.step_changes(self.mine), 2)
+
+    def test_stale_board_is_409(self):
+        services.move_to_step(self.mine, self.second, self.staff)
+        response = self.move(self.mine, self.third, from_step=self.first)
+        self.assertEqual(response.status_code, 409)
+        self.assertEqual(Enrollment.objects.get(pk=self.mine.pk).current_step, self.second)
+        self.assertEqual(self.step_changes(self.mine), 1)
+        self.assertContains(response, "Sam Staff moved Mia to Step 2 just now.", status_code=409)
+        self.assertContains(response, f'data-step="{self.second.pk}"', status_code=409)
+        self.assertNotIn("toast", json.loads(response["HX-Trigger"]))
+
+    def test_gated_step_is_403(self):
+        self.first.required_permission = "userprofile.review_veteran_status"
+        self.first.save()
+        self.assertContains(self.get(), "Reviewer only")
+        response = self.move(self.mine, self.third)
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(self.step_changes(self.mine), 0)
+        self.assertContains(response, "Only veteran reviewers can move people off Resume", status_code=403)
+
+    def test_ended_enrollment_is_400_and_the_card_goes(self):
+        done = Enrollment.objects.get(person__email="done@example.com")
+        response = self.move(done, self.third)
+        self.assertEqual(response.status_code, 400)
+        self.assertIsNone(response.context["enrollment"])
+        self.assertNotContains(response, "data-board-card", status_code=400)
+        self.assertEqual(json.loads(response["HX-Trigger"])["toast"]["text"], "This enrollment has ended.")
+        self.assertEqual(self.step_changes(done), 0)
+
+    def test_step_from_another_flow_is_400(self):
+        response = self.move(self.mine, self.verify)
+        self.assertEqual(response.status_code, 400)
+        self.assertContains(response, "Choose a step in this flow.", status_code=400)
+
+    def test_menu_lists_the_flow_steps(self):
+        response = self.get()
+        self.assertContains(response, f"Move {self.mine.person.get_full_name()}")
+        self.assertContains(response, "Resume &amp; Job Search (current)", count=3)
+        self.assertContains(response, '"from_step": "%d", "render": "card"' % self.first.pk)
+
+    def test_table_refuses_a_stale_move(self):
+        services.move_to_step(self.mine, self.second, self.other_staff)
+        response = self.client.post(
+            reverse("pipeline:move", args=[self.mine.pk]), {"step": self.third.pk, "from_step": self.first.pk}
+        )
+        self.assertEqual(response["HX-Reswap"], "none")
+        self.assertIn("moved Mia to Step 2", json.loads(response["HX-Trigger"])["toast"]["text"])
+        self.assertEqual(Enrollment.objects.get(pk=self.mine.pk).current_step, self.second)
