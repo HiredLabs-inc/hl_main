@@ -14,6 +14,8 @@ def dashboard_view(request):
     tab = request.GET.get("tab") or dashboard.INTAKE
     if tab not in dict(tabs):
         raise Http404
+    if request.GET.get("part") == "counts":
+        return render(request, "pipeline/partials/count_strip.html", {"counts": dashboard.header_counts()})
     flow = Flow.objects.filter(slug=tab).first()
     filters = dashboard.DashboardFilters(request.GET, flow=flow)
     rows = dashboard.enrollments(request.user, tab, filters) if filters.is_valid() else []
@@ -25,6 +27,7 @@ def dashboard_view(request):
         "rows": rows,
         "counts": dashboard.header_counts(),
         "stale_days": dashboard.DEFAULT_STALE_DAYS,
+        "staff_users": dashboard.staff_users(),
     }
     if request.headers.get("HX-Request"):
         return render(request, "pipeline/partials/enrollment_table.html", context)

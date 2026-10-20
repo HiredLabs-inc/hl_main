@@ -49,6 +49,7 @@ urlpatterns = [
     path("welcome/", userprofile_views.welcome, name="welcome"),
     path("staff/", pipeline_views.dashboard_view, name="staff"),
     path("staff/flows/", pipeline_views.flows_view, name="staff_flows"),
+    path("staff/", include("pipeline.urls")),
     path("staff/stuck-signups/", stuck_signups.stuck_signups_view, name="stuck_signups"),
     path("staff/people/<int:user_pk>/service-doc/", userprofile_views.service_doc_view, name="service_doc"),
     path(

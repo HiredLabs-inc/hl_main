@@ -158,3 +158,8 @@ class Activity(models.Model):
 
     def __str__(self):
         return f"{self.person}: {self.get_kind_display()} ({self.created_at:%Y-%m-%d})"
+
+    @property
+    def is_contact(self):
+        """Written by staff (a note or contact) rather than recorded by a change"""
+        return self.kind in self.CONTACT_KINDS

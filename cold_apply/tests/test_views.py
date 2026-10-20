@@ -110,7 +110,9 @@ class ColdApplyBrowserTest(StaticLiveServerTestCase):
         page.locator("#id_password").fill("admin")
         page.get_by_role("button", name="Sign In").click()
 
+        # The name opens the quick view; the participant page is one click further
         page.get_by_role("link", name="Jane Veteran").first.click()
+        page.get_by_role("link", name="Open full page").click()
         page.get_by_role("link", name="Software Engineer").first.click()
         with page.expect_popup() as page1_info:
             page.get_by_role("link", name="Tailor Resume").click()
