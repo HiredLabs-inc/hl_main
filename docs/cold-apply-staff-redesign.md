@@ -437,10 +437,14 @@ Other facts from the query:
     - `SeedFromProdShapeTest` does this inside each test's transaction (Postgres rolls back the schema changes).
     - The browser tests, which flush the database, create the tables, seed and drop them.
 
-### Step 10 — Rollout
+### Step 10 — Rollout — done 2026-10-20 (stage); prod with the next release
 - Deploy to stage (`git push origin develop:staging`, done by Jeff). Check the Step 3 migration against stage data, then go through the dashboard as a staff user without the permission and as a superuser.
 - **Prod checklist:** rerun the Step 0 query and confirm the mapping still holds, take a database backup before deploying (deploys run migrations automatically, and `cold_apply/0004` drops the old tables in the same deploy), and add any reviewers to the group.
 - Update the bug log entries to `Fixed` with their commits.
+- **As done:**
+  - The branch was merged into develop (88e3475) and deployed to stage; Jeff checked it there.
+  - The bug log marks BUG-021 to BUG-029 and BUG-031 fixed, with commits. BUG-030 stays open by decision (§7), and BUG-032 is still open.
+  - The prod checklist above still applies when the next release goes out: rerun the Step 0 query, back up the database, add reviewers.
 
 ### Not in this plan
 Tracked in `docs/backlog.md`: IDEA-001 assignee notifications, IDEA-002 kanban view, IDEA-003 reference data management, IDEA-004 self-service participant portal (and BUG-030), IDEA-005 volunteer logins.
@@ -462,3 +466,4 @@ Tracked in `docs/backlog.md`: IDEA-001 assignee notifications, IDEA-002 kanban v
 - 2026-10-19: Step 7 committed (e0b44c1, c4c80f1); develop merged in (f833a14). Step 8 implemented: boot camp sessions and the waitlist filter, plus the fix for the actions row reopening. 254 tests passing.
 - 2026-10-20: Step 8 committed (6e52c5b, 2b1f69a). Step 9 implemented: old pipeline models, views and templates removed; old URLs redirect. 253 tests passing.
 - 2026-10-20: Step 9 committed (3766a04, f2c8950). Jeff chose Send Enrollment Confirmation as the step a session moves people to; built, with 4 new tests.
+- 2026-10-20: Branch merged into develop (88e3475) and deployed to stage; Jeff finished his part of Step 10. Bug log updated. All plan steps are done; prod gets it with the next release.
