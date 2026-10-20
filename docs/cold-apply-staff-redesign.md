@@ -306,10 +306,18 @@ Other facts from the query:
   - Reversing the migration deletes all pipeline rows. It leaves `Profile.dnc` alone, since one profile was already marked before.
   - `load_dev_data` still creates only old cold_apply phases, so dev participants have no enrollments until Step 4 or 5 updates it.
 
-### Step 4 — New signups enter Intake
+### Step 4 — New signups enter Intake — done 2026-10-19
 - `Profile.handle_onboard_complete` still creates the `Participant`, which the job and resume tools need. It no longer picks "the first step" (BUG-031: ties can drop new signups into Nurture). It creates an Intake enrollment at *Verify Veteran Status*. A non-veteran goes straight to *Triage*.
 - Verifying a veteran (Step 1 page) offers "Verified, move to Triage", which calls `move_to_step`.
 - **Tests:** onboarding creates exactly one Intake enrollment, and running it again doesn't duplicate it (keep the BUG-003 behaviour).
+- **As built** (`userprofile/intake.py`):
+  - Onboarding enrolls the person in Intake only if they have **no enrollment in any flow**. Running onboarding again, or onboarding someone already moved into another flow by Step 3, adds nothing.
+  - The start step is the first Intake step. For non-veterans (`is_veteran=False`), a first step gated by the veteran review permission is skipped. Steps are found by flow and permission, not by title, so renaming them in admin doesn't break this.
+  - The person is recorded as the actor on their own `enrolled` entry.
+  - If the Intake flow is missing, onboarding still completes and an error is logged.
+  - `Participant.current_step` is still set for the old staff pages, which are removed in Step 9. It now uses the old *Verify Veteran Status* step if one exists, instead of "the first step" (BUG-031).
+  - On the veteran status page, the button is labelled with the next step ("Verified, move to Triage"). It appears only while the person's Intake enrollment is on the gated step. It sets `veteran_verified` and calls `move_to_step` in one transaction.
+  - `Step.next_step()` was added to the pipeline model.
 
 ### Step 5 — Staff layout and read-only dashboard at `/staff/`
 - Add `staff_base.html`: Tailwind, staff nav (§5.1) and Django messages. Today's `/staff/` app list (`staff_home.html`) moves into the nav.
@@ -361,3 +369,4 @@ Tracked in `docs/backlog.md`: IDEA-001 assignee notifications, IDEA-002 kanban v
 - 2026-10-19: Step 1 merged into develop (fcca49a); it reaches prod with the next release, not 3.2.3.
 - 2026-10-19: Step 2 implemented: `pipeline` app (Flow, Phase, Step, Enrollment, Activity; migration `pipeline/0001`), services, and admin. Enrollment and Activity are read-only in admin so the timeline stays complete. 158 tests passing (29 new).
 - 2026-10-19: Step 2 committed (99005ff). Step 3 implemented: data migration `pipeline/0002_seed_flows` with 10 tests built on the prod phase/step shape; checked forward, back and forward on the dev database. 168 tests passing. The known flaky `JobFactory` error (already in the bug log) showed up once.
+- 2026-10-19: Step 3 committed (4d8a610). Step 4 implemented: signups enter Intake, and veteran reviewers get a verify-and-advance button. 180 tests passing.
