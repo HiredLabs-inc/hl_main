@@ -386,10 +386,18 @@ Other facts from the query:
     - "Highest Education" became "Education" and lists every entry, since Education has no dates or level to rank by (BUG-025).
   - `ParticipantUpdateView` (the old phase editor) is no longer linked from anywhere; Step 9 removes it.
 
-### Step 8 — Boot camp sessions
+### Step 8 — Boot camp sessions — done 2026-10-19
 - Link Boot Camp enrollments to `BootCampSession` on the userprofile side (`BootCampSession.enrollments`, at most one session per enrollment), so `pipeline` stays generic. An enrollment with no session is on the waitlist.
 - Assign a session from the row or the side panel, which moves the enrollment to *Session assigned*. The Boot Camp tab gets a session filter.
 - **Tests:** assigning a session, the waitlist filter, and one session per enrollment.
+- **As built** (`userprofile/bootcamp.py`, model `BootCampSeat`):
+  - `BootCampSeat` links a session to an enrollment, with a one-to-one on the enrollment. `BootCampSession.enrollments` is a many-to-many through it. A session that has people in it can't be deleted (PROTECT).
+  - **Assigning a session doesn't change the step. Jeff to decide.** The Boot Camp flow has no *Session assigned* step: prod's steps run from Send Commitment Form to Active Student, and a fresh database has one placeholder step. So assigning only records a "Boot camp session: Waitlist → Starts Dec 3, 2026" entry on the timeline (new Activity kind `session_change`). Staff move the step themselves. If one of the prod steps should follow automatically (perhaps *Send Enrollment Confirmation*), it's a one-line change.
+  - Boot Camp rows have a session dropdown under the step dropdown, and so does the side panel. The first option is "Waitlist (no session)", followed by upcoming sessions. A session that has already started stays in the list for people who are in it.
+  - The Boot Camp tab has a **Session** filter: Any session, Waitlist, or a session.
+  - Sessions are still created in Django admin.
+  - Also fixed a Step 6 bug: after any row action, the row's "⋯" actions row reopened. htmx restores the `style` attribute of elements that keep their `id` across a swap, which undid Alpine's `x-show`. The row now uses a bound `hidden` attribute. The browser test checks this.
+  - `load_dev_data` creates an upcoming session.
 
 ### Step 9 — Cleanup (fixes BUG-026, BUG-029)
 - Remove `Participant.current_step` and cold_apply `Phase`, `Step`, `Interaction` and `Application` (dropped, §7). Remove `ParticipantListView`, `PhaseListView`, `participant_list.html`, `process.html`, `staff.html`, `cold_apply/index.html`, `ParticipantUpdateView` and its form.
@@ -420,3 +428,4 @@ Tracked in `docs/backlog.md`: IDEA-001 assignee notifications, IDEA-002 kanban v
 - 2026-10-19: Step 4 committed (1cc7b0c). Step 5 implemented: staff layout, dashboard and Flows page; checked in a browser at desktop and phone widths. 197 tests passing.
 - 2026-10-19: Step 5 committed (219cdfd). Step 6 implemented: row controls, triage, side panel; 2 Playwright tests; checked in a browser. 225 tests passing.
 - 2026-10-19: Step 6 committed (f7c690f). Step 7 implemented: People search, staff workspace, DD214 opens on the timeline, participant page trimmed (fixes BUG-022, BUG-023, BUG-025). 242 tests passing.
+- 2026-10-19: Step 7 committed (e0b44c1, c4c80f1); develop merged in (f833a14). Step 8 implemented: boot camp sessions and the waitlist filter, plus the fix for the actions row reopening. 254 tests passing.
