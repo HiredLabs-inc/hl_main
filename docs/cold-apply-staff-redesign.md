@@ -279,7 +279,7 @@ Other facts from the query:
 - **`pipeline/services.py`:** `enroll`, `move_to_step`, `assign`, `set_status`, `add_note`, `complete_triage`, plus `record_document_opened` for Step 7. Each one runs in a transaction, writes its Activity row and checks `required_permission`. Every UI path calls these functions; no view writes enrollments directly.
 - **Tests:** each service function, the uniqueness constraint, the permission-gated step, and an Activity row written for every change.
 
-### Step 3 — Seed flows and migrate existing data (fixes BUG-024)
+### Step 3 — Seed flows and migrate existing data (fixes BUG-024) — done 2026-10-19
 - **The data migration builds the flows from the prod rows in Step 0.** It copies phase and step titles, descriptions, owners and order. Steps that share an order value are ordered by id and renumbered.
 
 | New flow | Built from (prod phase → steps) | Added |
@@ -297,6 +297,14 @@ Other facts from the query:
   - `step_entered_at` starts as `Participant.updated_at`, the best value available.
 - `Interaction` rows become Activity notes. Prod has none, but the code path stays for dev and stage data.
 - **Tests:** run the migration on factory data that covers every mapping case, including the DNC case and tied order values. Before the prod deploy, also run it on a copy of stage data. Then rerun the Step 0 query on prod to confirm no phases or steps were added since 2026-10-19.
+- **As built** (`pipeline/migrations/0002_seed_flows.py`):
+  - Old phases are matched to flows by title: *Applicants* → Intake, *Phase N* → Resume & Job Search, *Boot Camp …* → Boot Camp, *Nurture* → Nurture, *Do Not Contact* → `dnc`. **Any other phase title stops the migration** with an error naming it, rather than guessing. Because deploys auto-migrate, the prod recheck matters: a new phase would fail the deploy.
+  - People on *No Show* or *Send Rejection Message* stay on the copied step before it in the same phase, with status `no_show` or `rejected`. That puts the prod No Show participant on *Apply to Jobs*, as agreed.
+  - Each migrated enrollment gets an `enrolled` Activity ("Moved from the old Cold Apply steps") with no actor, plus a `status_change` entry for no show or rejected. DNC people get a note instead. The enrollment's `created_at` is the participant's `created_at`.
+  - `Participant.active` is ignored: it is only shown in admin and nothing else reads it.
+  - On a fresh database (tests, new dev setups) there are no old phases, so Intake gets *Applicants: Verify Veteran Status, Triage* and each other flow gets a single placeholder step named after it.
+  - Reversing the migration deletes all pipeline rows. It leaves `Profile.dnc` alone, since one profile was already marked before.
+  - `load_dev_data` still creates only old cold_apply phases, so dev participants have no enrollments until Step 4 or 5 updates it.
 
 ### Step 4 — New signups enter Intake
 - `Profile.handle_onboard_complete` still creates the `Participant`, which the job and resume tools need. It no longer picks "the first step" (BUG-031: ties can drop new signups into Nurture). It creates an Intake enrollment at *Verify Veteran Status*. A non-veteran goes straight to *Triage*.
@@ -352,3 +360,4 @@ Tracked in `docs/backlog.md`: IDEA-001 assignee notifications, IDEA-002 kanban v
 - 2026-10-19: Step 1 implemented: 129 tests passing (15 new in `userprofile/tests/test_service_doc.py`); migration `userprofile/0022` checked both ways.
 - 2026-10-19: Step 1 merged into develop (fcca49a); it reaches prod with the next release, not 3.2.3.
 - 2026-10-19: Step 2 implemented: `pipeline` app (Flow, Phase, Step, Enrollment, Activity; migration `pipeline/0001`), services, and admin. Enrollment and Activity are read-only in admin so the timeline stays complete. 158 tests passing (29 new).
+- 2026-10-19: Step 2 committed (99005ff). Step 3 implemented: data migration `pipeline/0002_seed_flows` with 10 tests built on the prod phase/step shape; checked forward, back and forward on the dev database. 168 tests passing. The known flaky `JobFactory` error (already in the bug log) showed up once.
