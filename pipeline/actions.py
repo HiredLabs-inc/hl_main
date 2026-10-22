@@ -207,6 +207,16 @@ def status_view(request, enrollment_pk):
 
 @require_POST
 @staff_required
+def reopen_view(request, enrollment_pk):
+    def action(enrollment):
+        services.reopen(enrollment, request.user)
+        return f"Reopened {enrollment.flow.name}."
+
+    return _act(request, enrollment_pk, action)
+
+
+@require_POST
+@staff_required
 def session_view(request, enrollment_pk):
     """Place a Boot Camp enrollment in a session, or back on the waitlist (blank)"""
 

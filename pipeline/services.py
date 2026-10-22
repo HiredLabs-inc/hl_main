@@ -120,21 +120,43 @@ def assign(enrollment: Enrollment, assignee, actor) -> Enrollment:
     return enrollment
 
 
-@transaction.atomic
-def set_status(enrollment: Enrollment, status, actor, reason="") -> Enrollment:
-    """Completed and withdrawn end the enrollment for good. Rejected needs a reason
-    (e.g. "unclear DD214"), which is kept on the timeline."""
-    status = Enrollment.Status(status)
-    enrollment = _locked(enrollment)
-    _check_open(enrollment)
-    reason = reason.strip()
-    if status == Enrollment.Status.REJECTED and not reason:
-        raise ValidationError("Give a reason for the rejection.")
+# Functions (enrollment, refusals) that adjust ending_options for a flow, e.g.
+# Boot Camp's session rules; userprofile registers its own when the app loads
+STATUS_RULES = []
+
+
+def ending_options(enrollment: Enrollment, steps=None) -> dict:
+    """{status: refusal} for each status that ends an enrollment; a blank refusal
+    means it's allowed. Completed needs a final step (completes_flow); Dropped
+    is refused unless a flow's rule allows it. steps (the flow's steps, if the
+    caller has them) saves a query."""
+    flow = enrollment.flow
+    refusals = dict.fromkeys(Enrollment.ENDED_STATUSES, "")
+    if not enrollment.current_step.completes_flow:
+        if steps is None:
+            steps = Step.objects.filter(phase__flow_id=enrollment.flow_id)
+        final = next((step for step in steps if step.completes_flow), None)
+        refusals[Enrollment.Status.COMPLETED] = (
+            f"Move them to {final.title} first." if final else f"{flow} enrollments can't be completed; withdraw instead."
+        )
+    refusals[Enrollment.Status.DROPPED] = f"{flow} enrollments can't be dropped; withdraw instead."
+    for rule in STATUS_RULES:
+        rule(enrollment, refusals)
+    return refusals
+
+
+def ending_choices(enrollment: Enrollment, steps=None) -> list:
+    """The statuses this enrollment can end with (or switch to, if it has ended)"""
+    refusals = ending_options(enrollment, steps)
+    return [status for status in Enrollment.Status if status in refusals and not refusals[status] and status != enrollment.status]
+
+
+def _change_status(enrollment, status, actor, reason=""):
     if status == enrollment.status:
         return enrollment
     previous = enrollment.get_status_display()
     enrollment.status = status
-    if status in Enrollment.ENDED_STATUSES:
+    if status in Enrollment.ENDED_STATUSES and enrollment.ended_at is None:
         enrollment.ended_at = timezone.now()
     enrollment.save(update_fields=["status", "ended_at", "updated_at"])
     _record(
@@ -142,6 +164,57 @@ def set_status(enrollment: Enrollment, status, actor, reason="") -> Enrollment:
         actor,
         Activity.Kind.STATUS_CHANGE,
         text=reason,
+        from_value=previous,
+        to_value=enrollment.get_status_display(),
+    )
+    return enrollment
+
+
+@transaction.atomic
+def set_status(enrollment: Enrollment, status, actor, reason="") -> Enrollment:
+    """Completed, withdrawn and dropped end the enrollment, when ending_options
+    allows it; an ended enrollment can switch between them, keeping its end
+    date. Rejected needs a reason (e.g. "unclear DD214"), which is kept on the
+    timeline."""
+    status = Enrollment.Status(status)
+    enrollment = _locked(enrollment)
+    ending = status in Enrollment.ENDED_STATUSES
+    if enrollment.is_ended and not ending:
+        raise ValidationError(f"{enrollment} has ended. Reopen it first.")
+    reason = reason.strip()
+    if status == Enrollment.Status.REJECTED and not reason:
+        raise ValidationError("Give a reason for the rejection.")
+    if status == enrollment.status:
+        return enrollment
+    if ending:
+        refusal = ending_options(enrollment)[status]
+        if refusal:
+            raise ValidationError(refusal)
+    return _change_status(enrollment, status, actor, reason)
+
+
+@transaction.atomic
+def reopen(enrollment: Enrollment, actor, reason="") -> Enrollment:
+    """Make an ended enrollment active again, e.g. to fix a mistaken ending.
+    Raises AlreadyEnrolled if the person has since been enrolled in the flow again."""
+    enrollment = _locked(enrollment)
+    if not enrollment.is_ended:
+        return enrollment
+    previous = enrollment.get_status_display()
+    enrollment.status = Enrollment.Status.ACTIVE
+    enrollment.ended_at = None
+    try:
+        with transaction.atomic():
+            enrollment.save(update_fields=["status", "ended_at", "updated_at"])
+    except IntegrityError:
+        raise AlreadyEnrolled(
+            f"{_user_label(enrollment.person)} already has an open {enrollment.flow} enrollment, so this one can't be reopened."
+        )
+    _record(
+        enrollment,
+        actor,
+        Activity.Kind.STATUS_CHANGE,
+        text=reason.strip() or "Reopened",
         from_value=previous,
         to_value=enrollment.get_status_display(),
     )
@@ -184,5 +257,6 @@ def complete_triage(intake: Enrollment, flows, actor):
         if Enrollment.objects.filter(person_id=intake.person_id, flow=flow, ended_at__isnull=True).exists():
             continue
         created.append(enroll(intake.person, flow, actor))
-    set_status(intake, Enrollment.Status.COMPLETED, actor)
+    # Triage is how Intake ends, so it skips the final-step check
+    _change_status(intake, Enrollment.Status.COMPLETED, actor)
     return created

@@ -8,14 +8,17 @@ from django.db import connection
 from django.db.migrations.loader import MigrationLoader
 
 seed = importlib.import_module("pipeline.migrations.0002_seed_flows")
+final_steps = importlib.import_module("pipeline.migrations.0004_enrollment_endings")
 
 OLD_MODELS = ("Phase", "Step", "Interaction")  # in dependency order
 
 
 @cache
 def old_apps():
-    """The apps registry as the seed migration saw it"""
-    return MigrationLoader(None, ignore_no_migrations=True).project_state(("pipeline", "0002_seed_flows")).apps
+    """The apps registry with the old cold_apply tables, as the seed migration
+    saw them, and pipeline's models as they are now (0004 added a column the
+    seed's own state doesn't know about)"""
+    return MigrationLoader(None, ignore_no_migrations=True).project_state(("pipeline", "0004_enrollment_endings")).apps
 
 
 def _current_step(apps):
@@ -46,5 +49,6 @@ def seed_fresh_flows():
     apps = create_old_tables()
     try:
         seed.seed_flows(apps)
+        final_steps.add_final_steps(apps)
     finally:
         drop_old_tables()
