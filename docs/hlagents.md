@@ -2,7 +2,7 @@
 
 Branch `feature/hlagents-01` (develop merged in 2026-10-21), worktree `.claude/worktrees/hlagents-01`.
 
-> **Status:** draft, 2026-10-21. Direction agreed in Q&A with Jeff (§6). Open questions are in §7. No code has been written beyond the empty `hlagents` app and the prototype in `examples/utils/`.
+> **Status:** agreed 2026-10-22 (§6). Jeff answered the open questions in §7. H1 is in progress.
 
 ## 1. Context
 We have two working prototype agents in `examples/utils/` that run outside the app:
@@ -54,16 +54,18 @@ UI (templates + htmx)  ──►  AgentRun  ──►  background_tasks (Cloud T
    `FundingAgent` and `OutreachAgent` replace `SearchAgent` and `db_interactions.py`.
 4. **Loop** (`hlagents/loop.py`). A port of `agent_loop` that adds:
    - a cap on iterations
+   - a **cost cap** (§3.8): the loop stops before a provider call when the run or today's total is at its cap
    - unknown tools and tool exceptions returned to the model as tool messages instead of crashing
    - `AgentRun.messages` saved after every turn, so the run page shows progress and a crash keeps the history
 
 ### 3.2 Models (`hlagents/models.py`)
 | Model | Fields | Notes |
 |---|---|---|
-| `ProviderConfig` | name, kind, base_url, secret_env, active | `secret_env` names the env var or secret that holds the key. **Keys are never stored in the DB.** |
+| `ProviderConfig` | name, kind, base_url, secret_env, input_cost_per_mtok, output_cost_per_mtok, active | `secret_env` names the env var or secret that holds the key. **Keys are never stored in the DB.** Costs are admin-entered estimates in $ per million tokens. They're 0 for Ollama Cloud, which is a subscription. |
 | `AgentConfig` | name, agent_type, provider FK, model, system_prompt, default_request, tools (JSON), tool_descriptions (JSON), max_iterations, active | `agent_type` is a choice from the code registry. Seeded from the prototype prompts by a data migration. You can have several configs per type, for example to compare two models. |
-| `AgentRun` | config FK, snapshot (provider, model, prompt), started_by, status, messages (JSON), error, iterations, task FK, created/updated | The snapshot records what was actually used, even if the config changes later. Status: queued / running / done / failed. |
-| `Lead` | kind, org_name, first_name, last_name, contact_email, funding_amount, application_deadline, url, justification, review_status, source_run FK, dedupe_key | Unique on (kind, dedupe_key). The key is the normalized org name for funding and the normalized email for outreach, as in the prototype. Review status: new / approved / rejected. |
+| `AgentRun` | config FK, snapshot (provider, model, prompt), started_by, status, messages (JSON), error, iterations, input_tokens, output_tokens, tool_calls, cost, task FK, created/updated | The snapshot records what was actually used, even if the config changes later. Status: queued / running / done / failed / capped. |
+| `Lead` | kind, source, org_name, first_name, last_name, contact_email, funding_amount, application_deadline, url, justification, review_status, opted_out_at, source_run FK, dedupe_key | Unique on (kind, dedupe_key). The key is the normalized org name for funding and the normalized email for outreach, as in the prototype. Source: agent / import (community partners CSV, §3.9). Review status: new / approved / rejected. Rejected leads are kept until someone deletes them, which also keeps agents from finding them again. `opted_out_at` only marks the record; the opt-out itself is handled in the email. `funding_amount` and `application_deadline` are text, because models return ranges and phrases like "rolling". |
+| `AgentLimits` | run_cost_cap, daily_cost_cap, tool_costs (JSON, $ per call) | A single row, edited by admins in the settings page (§3.8). |
 
 ### 3.3 Running an agent
 1. **Run** creates an `AgentRun` with the system prompt and `default_request` (editable before you start). It then calls `background_tasks.queue.queue_task("/agents/tasks/run/<id>/", …)`.
@@ -95,6 +97,20 @@ Built with Django templates, htmx, Alpine, Tailwind and Preline, in the same sty
 - Add `ollama` and `tavily-python` to `requirements.txt`.
 - Delete `examples/` once everything in it is ported.
 
+### 3.8 Cost cap
+- Every provider reply reports its token counts (Ollama: `prompt_eval_count` and `eval_count`). The loop adds them to the run, along with each tool call. The run's `cost` is tokens × the provider's rates, plus tool calls × `AgentLimits.tool_costs` (Tavily is about $0.008 per basic search).
+- Before each provider call, the loop stops the run with status **capped** if the run's cost is at `run_cost_cap`, or if today's total across all runs is at `daily_cost_cap`. A capped run keeps its messages. A follow-up continues it only if there's room under the caps.
+- Admins change the caps and rates in `/agents/settings/` without a deploy. The defaults are $1 per run and $10 per day.
+
+### 3.9 Community partners CSV
+The outreach prototype dedupes against an uploaded CSV of current **community partners**: organizations we already have a relationship with (we send them boot camp announcements, and they send us events). They aren't funders.
+- `/agents/leads/import/` uploads that CSV. Each row becomes an Outreach lead with source **import** and review status approved. Once H4 lands, it is enrolled at the Outreach flow's **Partner** step. Rows already present (same email) are updated, not duplicated, so the import can be run again whenever the list changes.
+- Agents dedupe against these leads like any other, so they never re-find a current partner.
+- Columns are matched by header. `EMAIL` is required, as in the prototype. The other headers will be mapped once we have a sample file.
+
+### 3.10 Activity log
+Everything is logged in the pipeline activity log from the start: a lead being found by a run, imported, edited, approved, rejected, or opted out. That requires `Activity.lead` (§3.6). The Activity half of the pipeline change moves into H2, so logging starts with the review UI. H4 does the Enrollment half.
+
 ## 4. Implementation
 ### 4.1 Tests
 - A `FakeProvider` that returns scripted replies (a tool call, then final JSON) tests the loop, the parsing, lead dedupe and follow-ups without network access. Tavily is stubbed.
@@ -107,9 +123,9 @@ Built with Django templates, htmx, Alpine, Tailwind and Preline, in the same sty
 |---|---|---|
 | H0 | Merge develop, write this doc, agree on it | §7 answered |
 | H1 | Core: providers, tools, agent types, loop, models, migrations, seed configs; wire `hlagents.urls` | Unit tests pass with `FakeProvider` |
-| H2 | Runs and review UI: worker task, `/agents/`, run page, leads list, permission gate | Both agents run locally against Ollama Cloud and their leads can be reviewed |
-| H3 | Chat follow-ups and settings UI | Switching an agent's model in the UI changes the next run |
-| H4 | Pipeline: generalize Enrollment and Activity, seed the flows, approve → enroll | An approved lead appears on the Funding board |
+| H2 | Runs and review UI: `Activity.lead` and logging (§3.10), worker task, `/agents/`, run page, leads list with opt-out, partners CSV import, permission gate | Both agents run locally against Ollama Cloud, and their leads can be reviewed and show up in the log |
+| H3 | Chat follow-ups and settings UI, including cost caps and rates | Switching an agent's model in the UI changes the next run, and lowering the cap stops a run |
+| H4 | Pipeline: generalize Enrollment, seed the Funding and Outreach flows, approve → enroll | An approved lead appears on the Funding board, and imported partners appear at Partner |
 | H5 | Secrets on stage, deploy to stage, prod checklist | Works on stage |
 
 ## 6. Decisions (2026-10-21)
@@ -121,10 +137,33 @@ Built with Django templates, htmx, Alpine, Tailwind and Preline, in the same sty
 6. **Results:** Django models, fed into pipeline flows by **generalizing Enrollment**.
 7. **Configuration** (provider, model, prompt, tools) is edited in the **agents UI**.
 
+Added 2026-10-22, from Jeff's answers in §7:
+
+8. **Cost cap** to start, adjustable by admins without a deploy. The unit is estimated dollars, per run and per day (§3.8).
+9. **Opt-out:** a mark on the lead (`opted_out_at`) only. The opt-out itself happens in the email.
+10. **Rejected leads** are kept until someone deletes them.
+11. The **community partners CSV** is imported as Outreach leads, and the import can be repeated (§3.9).
+12. **Flow steps** to start with. Funding: Found → Researching → Applying → Submitted → Awarded / Declined. Outreach: Found → Contacted → Replied → Partner. We'll revise them after people have used them.
+13. **Everything goes in the activity log** from the start (§3.10).
+14. **Resume generation** (BUG-038) and **keyword extraction** will move onto this provider layer later, as separate efforts (IDEA-007).
+15. The **default model** for the seeded agents is `gpt-oss:120b` on Ollama Cloud. It's chosen for tool calling and can be changed in settings. *(Claude's pick. Change it if the prototype used something else.)*
+
 ## 7. Open questions
+Answered 2026-10-22, and folded into §6 and §3. Still open:
+- A sample header row from the community partners CSV (§3.9).
+- Which model the prototype runs used, if it wasn't `gpt-oss:120b`.
+
+Original questions and answers:
+
 1. Which Ollama Cloud model(s) should be the defaults? Do we want a cost or iteration cap per run, or a daily cap?
+- cost cap to start, but this needs to an adjustable setting that can be changed by by admins
 2. The outreach agent collects individuals' emails from the web. What do the privacy policy and CAN-SPAM require of us? How long do we keep rejected leads?
+- There needs to be a way to mark leads as opted out. We'll deal with the opt out in the email, though, so nothing other than a mark on the record for now. Keep rejected leads until deleted. 
 3. What is the contacts CSV the outreach prototype dedupes against (`input_file_path`)? Should it be imported as existing leads, and should it be importable again later?
+- it is an uploaded csv file with current "community partners" - those organizations, with which we have a relatonship. We send them announcements of upcoming boot camps, they send us event stuff, or whatever else they do. It's not funders, but communit partners
 4. What are the steps for the Funding flow (for example Found → Researching → Applying → Submitted → Awarded/Declined) and the Outreach flow (for example Found → Contacted → Replied → Partner)?
+- Those are good to start. We can change them later once we have people use it for a bit and get some feedback.
 5. Should lead edits and review decisions go in the pipeline activity log from the start, or only once a lead is enrolled?
+- All of it should hit the log for now
 6. Should resume generation (`cold_apply/text_generation.py`, which uses the retired `text-bison@001`, BUG-038) move onto this provider layer later?
+- yes. Also the keyword extraction, which now uses an in-house algorithm. That too will run through this layer eventually, but those are separate efforts.
