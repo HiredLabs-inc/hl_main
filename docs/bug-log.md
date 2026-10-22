@@ -24,8 +24,8 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 | BUG-034 | Low | Open | pipeline | Board: a moved card that no longer matches the filters stays until the board refreshes |
 | BUG-035 | Low | Open | pipeline | Suspected: board card moved into a column of more than 25 can appear twice after "Show more" |
 | BUG-036 | Low | Open | pipeline | Board: a one-line card's hover preview shows behind its open Move menu |
-| BUG-037 | Medium | Open | pipeline | "Completed" and "Withdrawn" do basically the same thing. 
 | BUG-038 | Medium | Open | cold_apply | Suspected: AI bullet and overview generation calls the retired Vertex `text-bison@001` model |
+| BUG-039 | Low | Open | dev data | `load_dev_data` sometimes crashes on a duplicate Faker company name (`resume.Organization.name` is unique) |
 ---
 ## BUG-019 — A request can hit a closed database connection
 - **Severity:** Medium · **Status:** Open · **Found:** 2026-10-17, stage sign-up test after build 8f748ade (46858e2) · **Suspected:** seen once, not reproduced
@@ -77,25 +77,17 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 - **Fix idea:** hide the preview while that card's menu is open (e.g. a `data-menu-open` attribute on the card wrapper that the preview's classes check).
 
 
-## BUG-037 — "Completed" and "Withdrawn" basically do the same thing
-- **Severity:** Medium · **Status:** Open · **Found:** 2026-10-21, manual interaction in prod
-- **Where:** Anywhere a participant can be marked as "withdrawn" or "completed" in respect to a flow, in which they are enrolled
-- **Problem:** When attempting to mark a recent graduate of the boot camp as "completed" expecting that to mark 
-the participant as having completed the boot camp, the record marked that the participant had completed the flow, and 
-they disappeared from the dashboard. The participant was found in under "people", but the "completed" record was never
-tied to a boot camp cohort, and the record can no longer be changed.
-- **Fix idea:** Add a way to mark a participant as having completed a service, which can be thought of as the last step 
-in the boot camp or resume service flows - "graduation" for boot camp, something else for the other service. Enforce
-a particular session to move someone into "completed". If they never complete boot camp, they should either be withdrawn
-or added to the waitlist. Boot camp should only be "completed" if they did the course. There should also be a "dropped" 
-phase for anyone who was an active student, but did not complete the course (to our knowledge). Also, the records must
-be editable. Admins might make mistakes, and the current interface is too rigid, which will create very dirty data.
-
 ## BUG-038 — AI text generation uses a retired Vertex model
 - **Severity:** Medium · **Status:** Open · **Found:** 2026-10-21, reading code for the hlagents design (`docs/hlagents.md` on `feature/hlagents-01`) · **Suspected:** read from code, not reproduced
 - **Where:** `cold_apply/text_generation.py` `generate_text()` (used by `cold_apply/views.py` and `cold_apply/forms.py`), and `cold_apply/management/commands/vertex.py`
 - **Problem:** `generate_text` loads `TextGenerationModel.from_pretrained("text-bison@001")`. Google has retired the PaLM text models, so bullet rewriting and overview generation probably fail. It also `print`s every prompt and response.
 - **Fix idea:** move to a current model, ideally through the hlagents provider layer once it exists, so the provider can be switched in one place.
+
+## BUG-039 — `load_dev_data` sometimes crashes on a duplicate company name
+- **Severity:** Low · **Status:** Open · **Found:** 2026-10-21, BUG-037 browser check · **Suspected:** seen once, not reproduced
+- **Where:** `cold_apply/management/commands/load_dev_data.py`, through the factories in `cold_apply/tests/factories.py`; `resume.Organization.name` is unique
+- **Problem:** `python manage.py load_dev_data` failed with `IntegrityError: duplicate key value violates unique constraint "resume_organization_name_key"` (`Smith Inc`). Faker repeats company names, so the command fails at random partway through, like BUG-033.
+- **Fix idea:** use `django_get_or_create = ("name",)` on the organization factory, or `factory.Sequence` / `fake.unique.company()`.
 
 ## Fixed and Skipped
 
@@ -128,6 +120,7 @@ be editable. Admins might make mistakes, and the current interface is too rigid,
 | BUG-028 | Low | Fixed | userprofile | Suspected: Profile admin search raises FieldError (`user`, `nickname`) |
 | BUG-029 | Low | Fixed | cold_apply | Dead or misleading code in the staff pages (`staff.html` navbar, `index.html`, Bootstrap script, URL typo) |
 | BUG-031 | Medium | Fixed | userprofile | Suspected: new signups can land in Nurture, because phases and steps share order values |
+| BUG-037 | Medium | Fixed | pipeline | "Completed" and "Withdrawn" did the same thing, and ended enrollments couldn't be changed |
 ---
 ## BUG-001 — Deletes and keyword refresh run on GET links (CSRF)
 - **Severity:** High · **Status:** Fixed (`fix/bug-001-csrf-get-deletes`, 1d04bee; merged into `feature/signup-login-redesign`) · **Found:** 2026-10-16, signup redesign Step 1
@@ -305,3 +298,19 @@ be editable. Admins might make mistakes, and the current interface is too rigid,
 - **Where:** `userprofile/models.py` `Profile.handle_onboard_complete` (`Step.objects.order_by("phase__order", "order").first()`)
 - **Problem:** on prod, Applicants, Phase 1 and Nurture all have phase order 0, and their first steps all have step order 0 (Verify Veteran Status, Send Initial Email, Boot Camp Alumni / Monthly Newsletter). Postgres may return any of these ties first, so a new participant can start in Nurture instead of Applicants.
 - **Fix idea:** the cold_apply staff redesign (Step 4) replaces this with an explicit Intake enrollment. Until then, give Applicants a unique lowest order in admin.
+
+## BUG-037 — "Completed" and "Withdrawn" basically do the same thing
+- **Severity:** Medium · **Status:** Fixed (`fix/bug-037-enrollment-endings`, 6048766; merged into develop in 2fe518d and deployed to stage; reaches prod with the next release) · **Found:** 2026-10-21, manual interaction in prod
+- **Where:** Anywhere a participant can be marked as "withdrawn" or "completed" in respect to a flow, in which they are enrolled
+- **Problem:** When attempting to mark a recent graduate of the boot camp as "completed" expecting that to mark 
+the participant as having completed the boot camp, the record marked that the participant had completed the flow, and 
+they disappeared from the dashboard. The participant was found in under "people", but the "completed" record was never
+tied to a boot camp cohort, and the record can no longer be changed.
+- **Fix idea:** Add a way to mark a participant as having completed a service, which can be thought of as the last step 
+in the boot camp or resume service flows - "graduation" for boot camp, something else for the other service. Enforce
+a particular session to move someone into "completed". If they never complete boot camp, they should either be withdrawn
+or added to the waitlist. Boot camp should only be "completed" if they did the course. There should also be a "dropped" 
+phase for anyone who was an active student, but did not complete the course (to our knowledge). Also, the records must
+be editable. Admins might make mistakes, and the current interface is too rigid, which will create very dirty data.
+- **Fix:** Completed is only allowed from a flow's final step (`Step.completes_flow`; migration `pipeline/0004` adds Graduated for Boot Camp and a placeholder Service Complete for Resume & Job Search). New Dropped status. For Boot Camp, once their session has started they can be dropped or completed, not withdrawn; before that, only withdrawn (`userprofile/bootcamp.py` `status_rule`). Ended enrollments can be reopened, switch how they ended, and be given a session, including a past one. The dashboard only shows the endings that apply.
+- **After the prod release:** on the Boot Camp tab, set Status to Completed and fix the graduate: Reopen → pick their cohort under "Past sessions" → move to Graduated → Complete. Find other Boot Camp enrollments completed without a cohort with `Enrollment.objects.filter(flow__slug="boot-camp", status="completed", bootcamp_seat__isnull=True)`. Check where the new Graduation phase sits on the prod board (it's added after the last Boot Camp phase) and reorder if needed.
