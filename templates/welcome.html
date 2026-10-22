@@ -1,40 +1,14 @@
 {% extends 'new_home_base.html' %}
-{% load form_helpers %}
-{% load components %}
-{% include 'modal.html' %}
 
-    {% wrapper breadcrumbs %}
-    <div>
-        <nav class="flex container mx-auto p-2 text-sm" aria-label="Breadcrumb">
-            <ol class="inline-flex items-center space-x-1 md:space-x-3 overflow-x-auto">
-                {% block breadcrumbs %}
-                {% endblock breadcrumbs %}
-            </ol>
-        </nav>
-    </div>
-    {% endwrapper %}
+{% block title %}Welcome | Hired Labs{% endblock title %}
 
-    {% block body %}
-        <div class="md:container grid grid-cols-1 gap-4 justify-items-center md:mx-auto px-4 max-w-3xl">
-               <h2>
-                  Thank you for confirming your email and joining our community!
-                </h2>
-                  <p>
-                    We’ve received your information and will reach out to you via email
-                      in the next 2-3 business days.
-                    </p>
-                      <p>
-                      If you do not receive an email or have any questions,
-                          please feel free to contact us at: info@hiredlabs.org.
-                    </p>
-
-        <form method="post" action="{% url 'account_logout' %}">
-            {% csrf_token %}
-            {% if redirect_field_value %}
-            <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}"/>
-            {% endif %}
-            <button class="auth-primary-button" type="submit">Done</button>
-        </form>
-        </div>
-    {% endblock body %}
-
+{% block body %}
+<div class="hl-page">
+    <section class="hl-container hl-section flex max-w-2xl flex-col items-start gap-5">
+        <h1 class="hl-h2">Thank you for confirming your email and joining our community!</h1>
+        <p class="hl-lead">We've received your information and will reach out to you via email in the next 2-3 business days.</p>
+        <p class="leading-relaxed text-hl-ink">If you do not receive an email or have any questions, please feel free to contact us at <a href="mailto:info@hiredlabs.org">info@hiredlabs.org</a>.</p>
+        <a href="{% url 'home' %}" class="auth-primary-button">Done</a>
+    </section>
+</div>
+{% endblock body %}

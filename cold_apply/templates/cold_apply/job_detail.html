@@ -4,7 +4,7 @@
 
 {% block breadcrumbs %}
     {% if request.user.is_staff  %}
-        {% breadcrumb 'Pipeline' 'cold_apply:index' %}
+        {% breadcrumb 'Dashboard' 'staff' %}
     {% endif %}
     {% breadcrumb object.participant.user.get_full_name 'cold_apply:participant_detail' object.participant_id %}
     {% breadcrumb object.title|truncatechars:25 %}
@@ -58,8 +58,10 @@
     <div class="row py-3">
         <div class="col">
             <h3 class="text-xl font-bold mb-3">Actions</h3>
-            <a class="btn btn-primary" href="{% url 'cold_apply:refresh_keywords' object.id %}">Refresh
-                Keywords</a>
+            <form class="inline" method="post" action="{% url 'cold_apply:refresh_keywords' object.id %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary">Refresh Keywords</button>
+            </form>
             <a class="btn btn-primary" href="{% url 'cold_apply:configure_tailored_resume'  job_pk=object.id %}" target="_blank">Tailor Resume</a>
             <a class="btn btn-primary" href="{% url 'cold_apply:update_job' object.id %}?from={{request.path}}">Edit Job</a>
         </div>

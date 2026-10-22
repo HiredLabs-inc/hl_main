@@ -1,0 +1,27 @@
+{% extends "account/base.html" %}
+
+{% load i18n %}
+
+{% block head_title %}{% trans "Check Your Email" %}{% endblock %}
+
+{% block content %}
+<h1 class="text-center">{% trans "Check Your Email" %}</h1>
+
+{% if error %}
+<div role="alert" class="mt-4 rounded border-s-4 border-red-500 bg-red-50 p-4 text-sm text-red-700">{{ error }}</div>
+{% elif resent %}
+<div role="status" class="mt-4 rounded border-s-4 border-green-500 bg-green-50 p-4 text-sm text-green-800">{% trans "We sent the email again." %}</div>
+{% endif %}
+
+<p class="mt-4">{% blocktrans %}We sent an email to <strong>{{ email }}</strong>. Follow the link in it to finish signing up. The link works for 7 days.{% endblocktrans %}</p>
+<p class="mt-3">{% trans "If you don't see it within a few minutes, check your spam folder." %}</p>
+
+<form method="post" action="{% url 'signup_sent' %}" class="mt-6">
+  {% csrf_token %}
+  <button type="submit" class="auth-primary-button">{% if error %}{% trans "Try again" %}{% else %}{% trans "Resend the email" %}{% endif %}</button>
+</form>
+<form method="post" action="{% url 'signup_change_email' %}" class="mt-3 text-center">
+  {% csrf_token %}
+  <button type="submit" class="text-sm font-semibold text-hl-navy hover:text-hl-orange-text">{% trans "Use a different email" %}</button>
+</form>
+{% endblock %}

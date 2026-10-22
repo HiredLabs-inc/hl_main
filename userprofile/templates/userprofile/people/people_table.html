@@ -1,0 +1,50 @@
+{% if not page.object_list %}
+    <div class="rounded-lg border border-dashed border-hl-line p-8 text-center text-sm text-hl-muted">
+        {% if q %}Nobody matches “{{ q }}”.{% else %}Nobody has signed up yet.{% endif %}
+    </div>
+{% else %}
+    <div class="overflow-x-auto rounded-lg border border-hl-line bg-white">
+        <table class="w-full min-w-[44rem] text-left text-sm">
+            <thead class="bg-hl-mist text-xs uppercase tracking-wide text-hl-muted">
+                <tr>
+                    <th scope="col" class="px-3 py-2 font-medium">Name</th>
+                    <th scope="col" class="px-3 py-2 font-medium">Open flows</th>
+                    <th scope="col" class="px-3 py-2 font-medium">Veteran</th>
+                    <th scope="col" class="px-3 py-2 font-medium">Joined</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-hl-line">
+                {% for person in page.object_list %}
+                    <tr class="align-top hover:bg-hl-mist/60">
+                        <td class="px-3 py-2">
+                            <a href="{% url 'staff_person' person.pk %}" class="font-medium">{{ person.get_full_name|default:person.email }}</a>
+                            <span class="block text-xs text-hl-muted">{{ person.email }}</span>
+                            {% if person.profile.dnc %}<span class="staff-badge staff-badge-bad mt-1">Do not contact</span>{% endif %}
+                        </td>
+                        <td class="px-3 py-2 text-hl-ink">
+                            {% for enrollment in person.open_enrollments %}
+                                <span class="block">{{ enrollment.flow.name }} <span class="text-hl-muted">· {{ enrollment.current_step.title }}</span>
+                                    {% if enrollment.status != "active" %}<span class="staff-badge staff-badge-plain ms-1">{{ enrollment.get_status_display }}</span>{% endif %}</span>
+                            {% empty %}
+                                <span class="text-hl-muted">None</span>
+                            {% endfor %}
+                        </td>
+                        <td class="px-3 py-2">
+                            {% include 'userprofile/people/veteran_badge.html' with profile=person.profile %}
+                        </td>
+                        <td class="px-3 py-2 text-hl-muted">{{ person.date_joined|date:"M j, Y" }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if page.has_other_pages %}
+        <nav class="mt-3 flex items-center gap-3 text-sm" aria-label="Pages">
+            {% if page.has_previous %}<a href="?{% if q %}q={{ q|urlencode }}&amp;{% endif %}page={{ page.previous_page_number }}">Previous</a>{% endif %}
+            <span class="text-hl-muted">Page {{ page.number }} of {{ page.paginator.num_pages }} · {{ page.paginator.count }} people</span>
+            {% if page.has_next %}<a href="?{% if q %}q={{ q|urlencode }}&amp;{% endif %}page={{ page.next_page_number }}">Next</a>{% endif %}
+        </nav>
+    {% else %}
+        <p class="mt-2 text-xs text-hl-muted">{{ page.paginator.count }} {{ page.paginator.count|pluralize:"person,people" }}</p>
+    {% endif %}
+{% endif %}

@@ -1,6 +1,9 @@
+from functools import wraps
+
 from allauth.account.utils import has_verified_email
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.auth.views import redirect_to_login
+from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import redirect
 
@@ -45,3 +48,78 @@ class VerifiedRequiredMixin(UserPassesTestMixin):
 
     def handle_no_permission(self) -> HttpResponseRedirect:
         return self.unauthorised_response
+
+
+def staff_required(view):
+    """Decorator for staff-only views: anonymous users are sent to login,
+    logged-in non-staff users get a 403"""
+
+    @wraps(view)
+    def decorator(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect_to_login(request.get_full_path())
+        if not request.user.is_staff:
+            raise PermissionDenied
+        return view(request, *args, **kwargs)
+
+    return decorator
+
+
+VETERAN_REVIEW_PERMISSION = "userprofile.review_veteran_status"
+
+
+def can_review_veteran_status(user):
+    """Only staff holding review_veteran_status (or superusers) may open DD214s
+    and change veteran status"""
+    return user.is_staff and user.has_perm(VETERAN_REVIEW_PERMISSION)
+
+
+def veteran_reviewer_required(view):
+    """Decorator for views that expose service documents or change veteran
+    status: anonymous users are sent to login, everyone else without the
+    permission gets a 403"""
+
+    @wraps(view)
+    def decorator(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect_to_login(request.get_full_path())
+        if not can_review_veteran_status(request.user):
+            raise PermissionDenied
+        return view(request, *args, **kwargs)
+
+    return decorator
+
+
+class StaffRequiredMixin(UserPassesTestMixin):
+    """CBV version of staff_required"""
+
+    def test_func(self):
+        return self.request.user.is_staff
+
+
+def app_permission_required(app_label):
+    """Decorator for views gated by any permission in a Django app, the same check
+    as {% if perms.<app_label> %}: anonymous users are sent to login, logged-in
+    users without the permission get a 403"""
+
+    def wrapper(view):
+        @wraps(view)
+        def decorator(request, *args, **kwargs):
+            if not request.user.is_authenticated:
+                return redirect_to_login(request.get_full_path())
+            if not request.user.has_module_perms(app_label):
+                raise PermissionDenied
+            return view(request, *args, **kwargs)
+
+        return decorator
+
+    return wrapper
+
+
+class AppPermissionRequiredMixin(UserPassesTestMixin):
+    """CBV version of app_permission_required; set app_label on the view"""
+
+    app_label: str = None
+
+    def test_func(self):
+        return self.request.user.has_module_perms(self.app_label)

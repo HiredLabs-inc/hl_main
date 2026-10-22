@@ -45,12 +45,11 @@ from .views import (
     regenerate_bullet_view,
     tailored_resume_view,
     task_get_jobs_for_participant,
-    view_uploaded_resume,
 )
 
 app_name = "cold_apply"
 
-# Index: list of current participants and link to process overview
+# The old pipeline, process and step-change pages redirect to the staff pages
 urlpatterns = [
     path("", home_view, name="home"),
     path("participants/", ParticipantListView.as_view(), name="index"),
@@ -69,11 +68,6 @@ urlpatterns += [
         ParticipantUpdateView.as_view(),
         name="update_participant",
     ),
-    path(
-        "participants/confirm_update/",
-        ConfirmCreateView.as_view(),
-        name="confirm_update_participant",
-    ),
 ]
 
 # Companies CU (no read or delete) TODO: Add delete
@@ -85,7 +79,7 @@ urlpatterns += [
         name="confirm_add_company",
     ),
     path(
-        "companiies/<int:pk>/update/",
+        "companies/<int:pk>/update/",
         OrganizationUpdateView.as_view(),
         name="update_company",
     ),
@@ -315,8 +309,3 @@ urlpatterns += [
         name="task_get_jobs_for_participant",
     ),
 ]
-
-# Uploaded Resume
-urlpatterns += [
-    path("uploaded_resume/<int:pk>/", view_uploaded_resume, name="view_uploaded_resume"),
-    ]

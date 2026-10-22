@@ -1,0 +1,37 @@
+{% load static %}
+{# Public site header. Used by new_home_base.html. Alpine handles the mobile menu. #}
+<header class="border-b border-hl-line bg-white" x-data="{ open: false }">
+    <nav aria-label="Main" class="hl-container flex flex-wrap items-center justify-between gap-x-8 gap-y-2 py-4">
+        <a href="{% url 'home' %}" class="flex items-center py-1">
+            <img src="{% static 'main/images/HiredLabs-transparent.png' %}" alt="Hired Labs home" class="h-7 w-auto md:h-8" width="160" height="32">
+        </a>
+
+        <button type="button"
+                class="inline-flex h-11 w-11 items-center justify-center rounded-lg text-hl-navy hover:bg-hl-mist focus:outline-none focus-visible:ring-2 focus-visible:ring-orange lg:hidden"
+                aria-controls="site-menu" :aria-expanded="open.toString()" aria-expanded="false" @click="open = !open">
+            <span class="sr-only">Open main menu</span>
+            <svg x-show="!open" class="h-6 w-6" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+            <svg x-show="open" x-cloak class="h-6 w-6" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+
+        <div id="site-menu" class="hidden w-full flex-col gap-1 pb-4 lg:flex lg:w-auto lg:flex-1 lg:flex-row lg:items-center lg:justify-between lg:gap-8 lg:pb-0"
+             :class="open ? '!flex' : ''">
+            <ul class="flex flex-col lg:flex-row lg:items-center lg:gap-7">
+                <li><a href="{% url 'how_it_works' %}#boot-camp" class="hl-nav-link block">Boot camp</a></li>
+                <li><a href="{% url 'how_it_works' %}#career-support" class="hl-nav-link block">Career support</a></li>
+                <li><a href="{% url 'about' %}" class="hl-nav-link block">About</a></li>
+                <li><a href="{% url 'impact' %}" class="hl-nav-link block">Impact</a></li>
+                <li><a href="{% url 'home' %}#donate" class="hl-nav-link block">Donate</a></li>
+            </ul>
+            <div class="mt-2 flex flex-wrap items-center gap-3 text-[15px] font-semibold lg:mt-0">
+                {% if user.is_authenticated %}
+                    <a href="{% url 'userprofile:user_home' %}" class="rounded-[10px] bg-hl-navy px-5 py-3 text-white no-underline hover:bg-hl-navy-2 hover:text-white">My account</a>
+                    {% include 'components/logout_button.html' with button_class="px-4 py-3 font-semibold text-hl-navy hover:text-hl-orange-text" label="Log out" %}
+                {% else %}
+                    <a href="{% url 'account_login' %}" class="px-4 py-3 text-hl-navy no-underline hover:text-hl-orange-text">Log in</a>
+                    <a href="{% url 'custom_account_signup' %}" class="rounded-[10px] bg-hl-navy px-5 py-3 text-white no-underline hover:bg-hl-navy-2 hover:text-white">Sign up</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+</header>

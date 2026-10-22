@@ -1,0 +1,12 @@
+{% extends "account/email/base_message.txt" %}
+{% load i18n %}
+
+{% block content %}{% autoescape off %}{% blocktrans %}Someone (hopefully you) asked to sign up to Hired Labs with this email address, but it already has an account.
+
+Log in here:
+{{ login_url }}
+
+Forgot your password, or never set one? Reset it here:
+{{ reset_url }}
+
+If this wasn't you, you can ignore this email.{% endblocktrans %}{% endautoescape %}{% endblock content %}

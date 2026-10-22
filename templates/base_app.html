@@ -55,7 +55,7 @@
                                 </strong>
                                     {% if perms.cold_apply %}
                                         {% if user.is_staff %}
-                                            <a class="block rounded-lg px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-700" href="{% url 'cold_apply:index' %}">Cold Apply</a>
+                                            <a class="block rounded-lg px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-700" href="{% url 'staff' %}">Cold Apply</a>
                                         {% else %}
                                             <a class="block rounded-lg px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-700" href="{% url 'cold_apply:home' %}">Cold Apply</a>
                                         {% endif %}
@@ -70,7 +70,7 @@
                                     <strong class="block p-2 text-xs font-medium uppercase text-gray-400">
                                     Settings
                                 </strong>
-                                    <a class="block rounded-lg px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-700" href="{% url 'account_logout' %}">Logout</a>
+                                    {% include 'components/logout_button.html' with button_class="block w-full text-left rounded-lg px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-700" label="Logout" %}
                                     <a class="block rounded-lg px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-700" href="{% url 'userprofile:profile_view' %}">View Profile</a>
                                     <a class="block rounded-lg px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-700"  href="{% url 'account_change_password' %}">Change Password</a>
                                     <a class="block rounded-lg px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-700"  href="{% url 'account_email' %}">Change Email</a>

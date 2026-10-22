@@ -1,7 +1,9 @@
 {% extends 'base_app.html' %}
 {% load components %}
 {% block breadcrumbs %}
-    {% breadcrumb 'Pipeline' 'cold_apply:index' %}
+    {% if request.user.is_staff %}
+        {% breadcrumb 'Dashboard' 'staff' %}
+    {% endif %}
     {% breadcrumb participant.user.get_full_name 'cold_apply:participant_detail' participant.id %}
     {% breadcrumb 'Update' %}
 {% endblock breadcrumbs %}

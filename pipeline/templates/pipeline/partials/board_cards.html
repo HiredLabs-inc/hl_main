@@ -1,0 +1,10 @@
+{% comment %}
+The next page of a board column, from pipeline:board_column: the cards, then
+"Show more" again while some are left. It replaces the old "Show more" block;
+the board script moves the cards into the column. Needs column, flow, query
+and stale_days.
+{% endcomment %}
+{% for enrollment in column.cards %}
+    {% include 'pipeline/partials/board_card.html' with compact=column.compact %}
+{% endfor %}
+{% include 'pipeline/partials/board_more.html' %}

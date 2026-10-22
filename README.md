@@ -65,7 +65,7 @@ docker compose up
 ```
 With the development server running, you'll be able to access the web apps by logging in with these credentials:
 
-        username: admin
+        email: admin@admin.com
         password: admin
 
 Your browser may warn you that this password is not secure. You can create another superuser with a more secure password,

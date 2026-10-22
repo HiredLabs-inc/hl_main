@@ -14,15 +14,20 @@ from cold_apply.models import (
     Skill,
     SkillBullet,
     State,
-    Step,
 )
 from rates.models import Country
 from resume.models import Bullet, Experience, Organization, Position
-from userprofile.models import OnboardingStep, Profile
+from userprofile.models import Profile
 
 User = get_user_model()
 
 fake = faker.Faker()
+
+
+def existing_or_new(model, model_factory):
+    """Reuse a random existing row (e.g. data seeded by load_dev_data) or create one,
+    so factories work both against seeded dev data and an empty test database."""
+    return model.objects.order_by("?").first() or model_factory()
 
 custom_bullet_text = [
     "Led a cross-functional team to successfully launch a new product",
@@ -147,23 +152,18 @@ class ProfileFactory(DjangoModelFactory):
     class Meta:
         model = Profile
 
-    # Replace with the correct path to UserFactory
-    nickname = factory.Faker("first_name")
     phone = factory.Faker("phone_number")
     state = factory.Faker("state_abbr")
     city = factory.Faker("city")
-    zip_code = factory.Faker("postcode")
     linkedin = factory.Faker("url")
-    service_package = None  # Replace with a ServicePackage instance if needed
     is_veteran = True
     veteran_verified = True
     is_onboarded = True
-    resume = None  # Replace with a FileField instance if needed
+    resume = None
     special_training = factory.Faker("paragraph")
     special_skills = factory.Faker("paragraph")
     job_links = factory.Faker("paragraph")
     work_preferences = factory.Faker("paragraph")
-    onboarding_step = OnboardingStep.COMPLETE
     dnc = factory.Faker("boolean")
 
 
@@ -257,7 +257,7 @@ class JobFactory(DjangoModelFactory):
     salary = factory.Iterator(["20000", "30000", "40000", "50000", "60000"])
     location_detail = factory.Faker("city")
     location = factory.SubFactory(LocationFactory)
-    remote = factory.Faker("sentence", nb_words=5)
+    remote = factory.Faker("random_element", elements=["Remote", "Hybrid", "On-site"])
     source_id = factory.Faker("uuid4")
     auto_generated = False
 
@@ -266,9 +266,7 @@ class SkillBulletFactory(DjangoModelFactory):
     class Meta:
         model = SkillBullet
 
-    skill = factory.Iterator(
-        Skill.objects.all()
-    )  # Replace with the correct path to SkillFactory
+    skill = factory.LazyFunction(lambda: existing_or_new(Skill, SkillFactory))
 
 
 class BulletFactory(DjangoModelFactory):
@@ -288,12 +286,8 @@ class ExperienceFactory(DjangoModelFactory):
 
     start_date = factory.Faker("date_this_decade", locale="en_US")
     end_date = factory.LazyAttribute(lambda o: o.start_date + timedelta(days=365))
-    org = factory.Iterator(
-        Organization.objects.all()
-    )  # Replace with the correct path to OrganizationFactory
-    position = factory.Iterator(
-        Position.objects.all()
-    )  # Replace with the correct path to PositionFactory
+    org = factory.LazyFunction(lambda: existing_or_new(Organization, OrganizationFactory))
+    position = factory.LazyFunction(lambda: existing_or_new(Position, PositionFactory))
 
     bullets = factory.RelatedFactoryList(BulletFactory, "experience", size=5)
 
@@ -304,7 +298,6 @@ class ParticipantFactory(DjangoModelFactory):
 
     user = factory.SubFactory(UserFactory)
     active = True
-    current_step = factory.Iterator(Step.objects.all())
     jobs = factory.RelatedFactoryList(JobFactory, "participant", size=10)
     experiences = factory.RelatedFactoryList(ExperienceFactory, "participant", size=3)
 
@@ -313,7 +306,5 @@ class SkillFactory(DjangoModelFactory):
     class Meta:
         model = Skill
 
-    title = factory.Faker(
-        "word", length=50
-    )  # You can adjust the data generation strategy if needed
+    title = factory.Sequence(lambda n: f"{fake.word()}_{n}")
     type = factory.Faker("random_element", elements=["Hard", "Soft"])

@@ -1,0 +1,70 @@
+# Build, migrate and deploy one environment.
+# Run by the hl-<env>-deploy Cloud Build triggers (infra/terraform/modules/hl-env):
+#   staging -> stage (hl-main-stage), main -> prod (hl-main-prod).
+substitutions:
+  _ENV: stage
+  _REGION: us-west1
+  _IMAGE: us-west1-docker.pkg.dev/hl-main-prod/hl-images/hl-main
+  _START_SQL: "false"
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: 5400s
+
+steps:
+- id: pull-cache
+  name: gcr.io/cloud-builders/docker
+  entrypoint: bash
+  args: ['-c', 'docker pull $_IMAGE:$_ENV || exit 0']
+
+- id: build
+  name: gcr.io/cloud-builders/docker
+  args: ['build', '-t', '$_IMAGE:$SHORT_SHA', '-t', '$_IMAGE:$_ENV', '--cache-from', '$_IMAGE:$_ENV', '.']
+
+- id: push
+  name: gcr.io/cloud-builders/docker
+  args: ['push', '--all-tags', '$_IMAGE']
+
+# Stage's database is stopped by default; start it (the nightly scheduler stops it again).
+# Starting can take ~15 min, longer than gcloud waits, so start it async and poll (up to 30 min).
+# A failed patch (e.g. a start already in progress) still falls through to the poll.
+# The instance can report RUNNABLE before the start finishes, so also wait for its operations.
+- id: start-sql
+  name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+  entrypoint: bash
+  args:
+  - -c
+  - |
+    if [ "$_START_SQL" = "true" ]; then
+      gcloud sql instances patch hl-$_ENV-sql --activation-policy=ALWAYS --async --quiet ||
+        echo "patch failed; waiting for the instance anyway"
+      for i in $$(seq 60); do
+        pending=$$(gcloud sql operations list --instance=hl-$_ENV-sql --limit=10 --filter='status!=DONE' --format='value(name)')
+        state=$$(gcloud sql instances describe hl-$_ENV-sql --format='value(state)')
+        echo "hl-$_ENV-sql: $$state, pending operations: $${pending:-none}"
+        [ -z "$$pending" ] && [ "$$state" = "RUNNABLE" ] && exit 0
+        sleep 30
+      done
+      echo "hl-$_ENV-sql not RUNNABLE after 30 min" >&2
+      exit 1
+    fi
+
+- id: migrate
+  name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+  entrypoint: bash
+  args:
+  - -c
+  - |
+    gcloud run jobs update hl-$_ENV-migrate --region=$_REGION --image=$_IMAGE:$SHORT_SHA &&
+    gcloud run jobs execute hl-$_ENV-migrate --region=$_REGION --wait &&
+    gcloud run jobs update hl-$_ENV-manage --region=$_REGION --image=$_IMAGE:$SHORT_SHA &&
+    gcloud run jobs update hl-$_ENV-signup-reminders --region=$_REGION --image=$_IMAGE:$SHORT_SHA
+
+- id: deploy-web
+  name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+  args: ['gcloud', 'run', 'deploy', 'hl-$_ENV-web', '--region=$_REGION', '--image=$_IMAGE:$SHORT_SHA']
+
+- id: deploy-worker
+  name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+  args: ['gcloud', 'run', 'deploy', 'hl-$_ENV-worker', '--region=$_REGION', '--image=$_IMAGE:$SHORT_SHA']

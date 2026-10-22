@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% load releases_tags %}
+{% comment %}
+Layout for staff pages: staff nav, then the page. Django messages are shown by
+the toaster in base.html.
+{% endcomment %}
+{% block title %}{% block page_title %}Staff{% endblock page_title %} · Hired Labs{% endblock title %}
+{% block body %}
+{% include 'modal.html' %}
+{% with current=request.resolver_match.url_name %}
+<header class="staff-chrome sticky top-0 z-20 bg-hl-navy text-white shadow-sm">
+    <div class="container mx-auto flex flex-wrap items-center gap-x-4 px-4">
+        <a href="{% url 'staff' %}" class="shrink-0 py-3 font-semibold tracking-tight">Hired Labs <span class="font-normal text-hl-steel">Staff</span></a>
+        {# On phones the links get their own row under the brand and menu #}
+        <nav class="order-last -mx-1 flex w-full items-center gap-1 overflow-x-auto pb-2 text-sm sm:order-none sm:mx-0 sm:w-auto sm:flex-1 sm:pb-0" aria-label="Staff">
+            {% if user.is_staff %}
+                <a href="{% url 'staff' %}" class="staff-nav-link {% if current == 'staff' %}staff-nav-link-current{% endif %}" {% if current == 'staff' %}aria-current="page"{% endif %}>Dashboard</a>
+                <a href="{% url 'staff_people' %}" class="staff-nav-link {% if current == 'staff_people' or current == 'staff_person' %}staff-nav-link-current{% endif %}" {% if current == 'staff_people' %}aria-current="page"{% endif %}>People</a>
+                <a href="{% url 'stuck_signups' %}" class="staff-nav-link {% if current == 'stuck_signups' %}staff-nav-link-current{% endif %}" {% if current == 'stuck_signups' %}aria-current="page"{% endif %}>Stuck signups</a>
+                <a href="{% url 'staff_flows' %}" class="staff-nav-link {% if current == 'staff_flows' %}staff-nav-link-current{% endif %}" {% if current == 'staff_flows' %}aria-current="page"{% endif %}>Flows</a>
+            {% endif %}
+        </nav>
+        <div x-data="{ open: false }" class="relative ms-auto shrink-0 sm:ms-0">
+            <button type="button" x-on:click="open = !open" x-bind:aria-expanded="open" aria-haspopup="true"
+                    class="flex items-center gap-1 rounded-md px-2 py-1.5 text-sm text-hl-steel hover:bg-hl-navy-2 hover:text-white">
+                Menu
+                <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+            </button>
+            <div x-cloak x-show="open" x-transition x-on:click.away="open = false" x-on:keydown.escape.window="open = false"
+                 class="absolute end-0 mt-2 w-60 rounded-md border border-hl-line bg-white p-2 text-sm text-hl-ink shadow-lg" role="menu">
+                <p class="px-3 pb-1 pt-2 text-xs font-medium uppercase text-hl-muted">Tools</p>
+                {% if perms.rates %}<a class="staff-menu-item" href="{% url 'rates:index' %}">World Rates</a>{% endif %}
+                <a class="staff-menu-item" href="{% url 'home' %}">Public site</a>
+                {% if user.is_staff %}
+                    {% release_apps as apps %}
+                    {% for app in apps %}<a class="staff-menu-item" href="{% url 'releases:index' app.pk %}">Release notes: {{ app.name }}</a>{% endfor %}
+                {% endif %}
+                {% if user.is_superuser %}<a class="staff-menu-item" href="{% url 'admin:index' %}">Admin</a>{% endif %}
+                <p class="px-3 pb-1 pt-3 text-xs font-medium uppercase text-hl-muted">Account</p>
+                <a class="staff-menu-item" href="{% url 'account_change_password' %}">Change password</a>
+                {% include 'components/logout_button.html' with button_class="staff-menu-item w-full text-left" label="Log out" %}
+            </div>
+        </div>
+    </div>
+</header>
+{% endwith %}
+<main class="container mx-auto px-4 pb-20 pt-6">
+    {% block content %}
+    {% endblock content %}
+</main>
+{% endblock body %}

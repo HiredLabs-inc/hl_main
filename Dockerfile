@@ -20,11 +20,8 @@ ARG DEBIAN_FRONTEND=noninteractive
 ARG TZ=America/Los_Angeles
 ARG DOCKER_IMAGE_NAME_TEMPLATE="mcr.microsoft.com/playwright:v1.35.0-jammy"
 
-# Build args for Django and GCP settings
+# Build arg for the runtime Django settings module
 ARG DJANGO_SETTINGS_MODULE=$DJANGO_SETTINGS_MODULE
-ARG GCP_PROJECT_ID=$GCP_PROJECT_ID
-ARG GCP_SECRETS_NAME=$GCP_SECRETS_NAME
-ARG GOOGLE_APPLICATION_CREDENTIALS=$GOOGLE_APPLICATION_CREDENTIALS
 
 ENV APP_HOME /app
 WORKDIR $APP_HOME
@@ -77,6 +74,8 @@ RUN mkdir /ms-playwright && \
     rm -rf ~/.npm/ && \
     chmod -R 777 /ms-playwright
 
+# playwright==1.35 defaults to playwright.azureedge.net, which has been shut down.
+ENV PLAYWRIGHT_DOWNLOAD_HOST=https://playwright.download.prss.microsoft.com/dbazure/download/playwright
 RUN playwright install-deps
 RUN playwright install
 
@@ -84,19 +83,17 @@ RUN playwright install
 COPY . .
 COPY --from=frontend_builder /app/frontend/build ./frontend/build
 
-# Make sure build and runtime know where to find ADC and which settings to use.
-# Allows passing DJANGO_SETTINGS_MODULE as a build-arg (docker build --build-arg) or
-# fall back to a reasonable default. The credentials file is copied into /app/creds
-# below and this ENV makes google.auth.default() pick it up during build/runtime.
-ENV GOOGLE_APPLICATION_CREDENTIALS=/app/creds/application_default_credentials.json
-ENV DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE:-hl_main.settings.stage}
+# Runtime settings module; can be passed as a build-arg (docker build --build-arg).
+# No credentials are baked into the image: on Cloud Run, google.auth.default()
+# uses the service's runtime service account via the metadata server.
+ENV DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE:-hl_main.settings.cloud}
 
 # https://github.com/canonical/base-2204-python38/blob/main/Dockerfile
 
 RUN python -m nltk.downloader stopwords -d /usr/local/nltk_data
 
-COPY ./creds ./creds
-RUN python manage.py collectstatic --no-input
+# collectstatic needs no secrets or database, so use the build-only settings.
+RUN DJANGO_SETTINGS_MODULE=hl_main.settings.build python manage.py collectstatic --no-input
 
 
 # Run the web service on container startup. Here we use the gunicorn

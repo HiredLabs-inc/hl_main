@@ -4,29 +4,70 @@ from typing import Any
 from django import forms
 from django.core.exceptions import BadRequest
 from django.utils.translation import gettext as _
-from django.contrib.auth.models import User
+from django.conf import settings
 
+from allauth.account.adapter import get_adapter
+from allauth.account.forms import ResetPasswordForm
 from userprofile.va_api import VAApiException, confirm_veteran_status
-from allauth.account.forms import SignupForm
+from . import turnstile
 from .models import Profile, VeteranProfile, Comment
 
 logger = logging.getLogger(__name__)
 
-class CustomSignupForm(SignupForm):
-    class Meta:
-        model = User
-        fields = ["email"]
+class HoneypotInput(forms.TextInput):
+    """A text input that people never see (components/form_input.html hides
+    fields whose widget is_hidden) but form-filling bots do."""
 
-    def __init__(self, *args, **kwargs):
-        super(CustomSignupForm, self).__init__(*args, **kwargs)
-        self.fields.pop('password1')
-        self.fields.pop('password2')
+    is_hidden = True
 
-    def save(self, request):
-        user = super(CustomSignupForm, self).save(request)
-        user.set_unusable_password()
-        user.save()
-        return user
+    def __init__(self):
+        super().__init__(attrs={"autocomplete": "off", "tabindex": "-1"})
+
+
+class BotCheckForm(forms.Form):
+    """Honeypot plus Cloudflare Turnstile. Templates include
+    components/bot_check.html to render the widget. Pass request= so Cloudflare
+    also gets the client IP (optional)."""
+
+    BOT_CHECK_ERROR = _("We couldn't confirm you're a person. Please try again.")
+
+    website = forms.CharField(required=False, label="Leave this empty", widget=HoneypotInput())
+
+    def __init__(self, *args, request=None, **kwargs):
+        self.request = request
+        super().__init__(*args, **kwargs)
+
+    @property
+    def turnstile_site_key(self):
+        return settings.TURNSTILE_SITE_KEY
+
+    def clean(self):
+        cleaned_data = super().clean()
+        remote_ip = get_adapter().get_client_ip(self.request) if self.request else None
+        if self.cleaned_data.get("website") or not turnstile.verify(
+            self.data.get(turnstile.RESPONSE_FIELD), remote_ip
+        ):
+            raise forms.ValidationError(self.BOT_CHECK_ERROR)
+        return cleaned_data
+
+
+class SignupEmailForm(BotCheckForm):
+    # User.username holds the email and is limited to 150 characters.
+    email = forms.EmailField(
+        max_length=150,
+        label=_("Email"),
+        widget=forms.EmailInput(attrs={"autocomplete": "email", "placeholder": _("you@example.com")}),
+    )
+
+    field_order = ["email", "website"]
+
+    def clean_email(self):
+        return self.cleaned_data["email"].strip().lower()
+
+
+class BotCheckedResetPasswordForm(BotCheckForm, ResetPasswordForm):
+    field_order = ["email", "website"]
+
 
 class ButtonRadioSelectWidget(forms.RadioSelect):
     template_name = "forms/widgets/button_radio_select.html"
@@ -167,10 +208,13 @@ class VeteranStatusUpdateForm(forms.ModelForm):
         model = Profile
         fields = ["veteran_verified", "is_veteran"]
 
-class CommentForm(forms.ModelForm):
+class CommentForm(BotCheckForm, forms.ModelForm):
     name = forms.CharField(max_length=200)
     email = forms.EmailField()
     comment = forms.CharField(widget=forms.Textarea)
+
+    field_order = ["name", "email", "comment", "website"]
+
     class Meta:
         model = Comment
         fields = ["name", "email", "comment"]

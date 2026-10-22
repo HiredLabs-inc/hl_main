@@ -2,22 +2,25 @@
 
 {% load i18n %}
 
-{% block head_title %}{% trans "Signup" %}{% endblock %}
+{% block head_title %}{% trans "Sign Up" %}{% endblock %}
 
 {% block content %}
 <h1 class="text-center">{% trans "Employment Services & Coding Bootcamp Sign Up" %}</h1>
 
+<p class="mt-3">{% trans "Enter your email and we'll send you a link to finish signing up." %}</p>
 
-<form class="signup space-y-6" id="signup_form" method="post" action="{% url 'custom_account_signup' %}">
+<form class="signup space-y-6 mt-6" id="signup_form" method="post" action="{% url 'custom_account_signup' %}">
   {% csrf_token %}
   {% for field in form %}
     {% include 'components/form_input.html' %}
   {% endfor %}
-  {% if redirect_field_value %}
-  <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
-  {% endif %}
-  <button type="submit" class="auth-primary-button">{% trans "Sign Up" %}</button>
+  {% include 'components/bot_check.html' %}
+  {% include 'components/form_errors.html' with title='Sign up failed' %}
+  <button type="submit" class="auth-primary-button">{% trans "Email me a link" %}</button>
 </form>
 
+<p class="mt-6 text-center text-sm text-gray-500">
+  {% trans "Already have an account?" %}
+  <a href="{% url 'account_login' %}" class="font-semibold text-hl-navy hover:text-hl-orange-text">{% trans "Log in" %}</a>
+</p>
 {% endblock %}
-

@@ -1,0 +1,113 @@
+{% extends 'staff_base.html' %}
+{% block page_title %}{{ person.get_full_name|default:person.email }}{% endblock %}
+{% block content %}
+{% with name=person.get_full_name|default:person.email %}
+<div class="space-y-6">
+    <header class="space-y-2">
+        <p class="text-sm"><a href="{% url 'staff_people' %}" class="admin_panel text-hl-muted hover:underline">People</a> <span class="text-hl-muted">›</span></p>
+        <div class="flex flex-wrap items-center gap-2">
+            <h1 class="!mb-0">{{ name }}</h1>
+            {% if profile.dnc %}<span class="staff-badge staff-badge-bad">Do not contact</span>{% endif %}
+            {% include 'userprofile/people/veteran_badge.html' %}
+        </div>
+        <dl class="flex flex-wrap gap-x-6 gap-y-1 text-sm text-hl-ink">
+            <div class="flex gap-1.5"><dt class="text-hl-muted">Email</dt><dd><a href="mailto:{{ person.email }}">{{ person.email }}</a></dd></div>
+            {% if profile.phone and profile.phone != "None Entered" %}<div class="flex gap-1.5"><dt class="text-hl-muted">Phone</dt><dd>{{ profile.phone }}</dd></div>{% endif %}
+            {% if profile.city or profile.state %}<div class="flex gap-1.5"><dt class="text-hl-muted">Location</dt><dd>{{ profile.city }}{% if profile.city and profile.state %}, {% endif %}{{ profile.state }}</dd></div>{% endif %}
+            <div class="flex gap-1.5"><dt class="text-hl-muted">Joined</dt><dd>{{ person.date_joined|date:"M j, Y" }}</dd></div>
+            {% if not profile %}<div class="text-hl-amber">No profile yet: they haven't finished onboarding.</div>{% endif %}
+        </dl>
+    </header>
+
+    <div class="grid gap-6 lg:grid-cols-3">
+        <div class="min-w-0 space-y-6 lg:col-span-2">
+            <section aria-labelledby="flows-heading" class="space-y-3">
+                <h2 id="flows-heading" class="!mb-0 text-lg">Flows</h2>
+                <div id="person-flows" hx-get="{% url 'staff_person' person.pk %}?part=flows" hx-trigger="enrollment-changed from:body" hx-disinherit="*">
+                    {% include 'userprofile/people/person_flows.html' %}
+                </div>
+            </section>
+
+            <section aria-labelledby="timeline-heading" class="space-y-3">
+                <h2 id="timeline-heading" class="!mb-0 text-lg">Timeline</h2>
+                <div id="timeline-{{ person.pk }}" class="rounded-lg border border-hl-line bg-white p-4 text-sm"
+                     hx-get="{% url 'staff_person' person.pk %}?part=timeline" hx-trigger="enrollment-changed from:body" hx-disinherit="*">
+                    {% include 'pipeline/partials/timeline.html' %}
+                </div>
+            </section>
+        </div>
+
+        <aside class="min-w-0 space-y-6 text-sm">
+            <section aria-labelledby="veteran-heading" class="rounded-lg border border-hl-line bg-white p-4">
+                <h2 id="veteran-heading" class="!mb-2 text-base">Veteran status</h2>
+                {% if not profile %}
+                    <p class="text-hl-muted">Not given yet.</p>
+                {% elif profile.is_veteran is False %}
+                    <p class="text-hl-ink">Not a veteran.</p>
+                {% else %}
+                    <dl class="grid grid-cols-[8rem_1fr] gap-x-3 gap-y-1 text-hl-ink">
+                        <dt class="text-hl-muted">Verified</dt><dd>{{ profile.veteran_verified|yesno:"Yes,No" }}</dd>
+                        {% if profile.service_branch and profile.service_branch != "Not a Veteran" %}<dt class="text-hl-muted">Branch</dt><dd>{{ profile.get_service_branch_display }}</dd>{% endif %}
+                        {% if profile.rank_at_separation %}<dt class="text-hl-muted">Rank</dt><dd>{{ profile.rank_at_separation }}</dd>{% endif %}
+                        {% if profile.military_specialiaty %}<dt class="text-hl-muted">Specialty</dt><dd>{{ profile.military_specialiaty }}</dd>{% endif %}
+                        {% if profile.years_of_service is not None %}<dt class="text-hl-muted">Years served</dt><dd>{{ profile.years_of_service }}</dd>{% endif %}
+                        <dt class="text-hl-muted">DD214</dt><dd>{% if profile.service_doc %}Uploaded{% else %}Not uploaded{% endif %}</dd>
+                    </dl>
+                    {% if can_review %}
+                        <div class="mt-3 flex flex-wrap gap-2">
+                            {% if profile.service_doc %}<a href="{% url 'service_doc' person.pk %}" target="_blank" rel="noopener" class="btn btn-outline-secondary !px-3 !py-1 !text-sm">Open DD214</a>{% endif %}
+                            <a href="{% url 'userprofile:veteran_status_update_view' person.pk %}" class="btn btn-outline-secondary !px-3 !py-1 !text-sm">Review veteran status</a>
+                        </div>
+                    {% elif profile.service_doc %}
+                        <p class="mt-3 text-xs text-hl-muted">Only veteran reviewers can open the DD214.</p>
+                    {% endif %}
+                {% endif %}
+            </section>
+
+            {% if participant %}
+                <section aria-labelledby="tools-heading" class="rounded-lg border border-hl-line bg-white p-4">
+                    <h2 id="tools-heading" class="!mb-2 text-base">Work tools</h2>
+                    <ul class="space-y-1.5">
+                        <li><a href="{% url 'cold_apply:participant_detail' participant.pk %}">Jobs and tailored resumes</a></li>
+                        <li><a href="{% url 'cold_apply:find_new_jobs' participant.pk %}">Search for new jobs</a></li>
+                        <li><a href="{% url 'cold_apply:create_job' participant.pk %}">Add a job</a></li>
+                        <li><a href="{% url 'cold_apply:participant_experience_list' participant.pk %}">Education and experience</a></li>
+                        <li><a href="{% url 'cold_apply:participant_experience_by_skill_list' participant.pk %}">Experience by skill</a></li>
+                    </ul>
+                </section>
+            {% endif %}
+
+            <section aria-labelledby="profile-heading" class="rounded-lg border border-hl-line bg-white p-4">
+                <h2 id="profile-heading" class="!mb-2 text-base">Profile</h2>
+                {% if profile %}
+                    <dl class="space-y-2 text-hl-ink">
+                        <div><dt class="text-hl-muted">Uploaded resume</dt><dd>{% if resume_url %}<a href="{{ resume_url }}" target="_blank" rel="noopener">Open resume</a>{% else %}None{% endif %}</dd></div>
+                        <div><dt class="text-hl-muted">Boot camp interest</dt><dd>{{ profile.bootcamp|yesno:"Yes,No" }}</dd></div>
+                        {% if profile.special_training %}<div><dt class="text-hl-muted">Special training</dt><dd class="whitespace-pre-line">{{ profile.special_training }}</dd></div>{% endif %}
+                        {% if profile.special_skills %}<div><dt class="text-hl-muted">Special skills</dt><dd class="whitespace-pre-line">{{ profile.special_skills }}</dd></div>{% endif %}
+                        {% if profile.work_preferences %}<div><dt class="text-hl-muted">Work preferences</dt><dd class="whitespace-pre-line">{{ profile.work_preferences }}</dd></div>{% endif %}
+                        {% if profile.job_links %}<div><dt class="text-hl-muted">Job links</dt><dd class="whitespace-pre-line break-words">{{ profile.job_links|urlize }}</dd></div>{% endif %}
+                    </dl>
+                {% else %}
+                    <p class="text-hl-muted">No profile yet.</p>
+                {% endif %}
+            </section>
+
+            {% if participant %}
+                <section aria-labelledby="background-heading" class="rounded-lg border border-hl-line bg-white p-4">
+                    <h2 id="background-heading" class="!mb-2 text-base">Background</h2>
+                    <h3 class="!mb-1 text-xs font-semibold uppercase tracking-wide text-hl-muted">Recent experience</h3>
+                    <ul class="mb-3 space-y-1 text-hl-ink">
+                        {% for experience in experiences %}<li>{{ experience }}</li>{% empty %}<li class="text-hl-muted">None yet</li>{% endfor %}
+                    </ul>
+                    <h3 class="!mb-1 text-xs font-semibold uppercase tracking-wide text-hl-muted">Education</h3>
+                    <ul class="space-y-1 text-hl-ink">
+                        {% for education in educations %}<li>{{ education }}</li>{% empty %}<li class="text-hl-muted">None yet</li>{% endfor %}
+                    </ul>
+                </section>
+            {% endif %}
+        </aside>
+    </div>
+</div>
+{% endwith %}
+{% endblock %}

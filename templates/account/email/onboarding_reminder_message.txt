@@ -1,0 +1,10 @@
+{% extends "account/email/base_message.txt" %}
+{% load i18n %}
+
+{% block content %}{% autoescape off %}{% blocktrans %}You created a Hired Labs account but haven't finished your profile yet. We need it before we can start helping with your job search.
+
+Log in to pick up where you left off:
+{{ login_url }}
+
+Forgot your password? Reset it here:
+{{ reset_url }}{% endblocktrans %}{% endautoescape %}{% endblock content %}

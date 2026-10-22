@@ -1,0 +1,22 @@
+{% load static %}
+{# Public site footer. Used by new_home_base.html. #}
+<footer class="border-t border-hl-line bg-white">
+    <div class="hl-container flex flex-wrap justify-between gap-x-12 gap-y-6 py-10 text-sm text-hl-muted">
+        <div class="flex flex-col gap-2">
+            <a href="{% url 'home' %}" class="mb-1 inline-flex">
+                <img src="{% static 'main/images/HiredLabs-transparent.png' %}" alt="Hired Labs home" class="h-6 w-auto" width="120" height="24">
+            </a>
+            <span>&copy; {% now "Y" %} Hired Labs, Inc. A 501(c)(3) nonprofit. <span class="whitespace-nowrap">EIN 92-0765713.</span></span>
+            <span>Fiscal agent: Stiles Hall.</span>
+            <a href="mailto:info@hiredlabs.org" class="text-hl-muted hover:text-hl-orange-text">info@hiredlabs.org</a>
+        </div>
+        <ul class="flex flex-wrap items-start gap-x-6 gap-y-1">
+            <li><a href="{% url 'how_it_works' %}#boot-camp" class="block py-1.5 text-hl-muted no-underline hover:text-hl-orange-text">Boot camp</a></li>
+            <li><a href="{% url 'how_it_works' %}#career-support" class="block py-1.5 text-hl-muted no-underline hover:text-hl-orange-text">Career support</a></li>
+            <li><a href="{% url 'about' %}" class="block py-1.5 text-hl-muted no-underline hover:text-hl-orange-text">About</a></li>
+            <li><a href="{% url 'impact' %}" class="block py-1.5 text-hl-muted no-underline hover:text-hl-orange-text">Impact</a></li>
+            <li><a href="{% url 'privacy_policy' %}" class="block py-1.5 text-hl-muted no-underline hover:text-hl-orange-text">Privacy Policy</a></li>
+            <li><a href="{% url 'terms_of_service' %}" class="block py-1.5 text-hl-muted no-underline hover:text-hl-orange-text">Terms of Service</a></li>
+        </ul>
+    </div>
+</footer>

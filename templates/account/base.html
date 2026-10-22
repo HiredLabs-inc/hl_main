@@ -1,46 +1,21 @@
 {% extends 'new_home_base.html' %}
-{% load static %}
 {% load i18n %}
 
+{% block title %}{% block head_title %}{% trans "Account" %}{% endblock head_title %} | Hired Labs{% endblock title %}
 
 {% block body %}
-  <div class="flex flex-col px-6 py-12 lg:px-8">
-    <div class="sm:mx-auto sm:w-full sm:max-w-sm">
-      <a href="{% url 'home' %}">
-        <img class="mx-auto h-10 w-auto" src="{% static 'main/images/HiredLabs-transparent.png' %}" alt="Hired Labs">
-      </a>
-      {% comment %} <h2 class="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">{% block head_title%}{% endblock %}</h2> {% endcomment %}
-    </div>
-    
-    
-    <div class="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-
-      {% comment %} <div>
-        <strong>{% trans "Menu:" %}</strong>
-        <ul>
-          {% if user.is_authenticated %}
-          <li><a href="{% url 'account_email' %}">{% trans "Change E-mail" %}</a></li>
-          <li><a href="{% url 'account_logout' %}">{% trans "Sign Out" %}</a></li>
-          {% else %}
-          <li><a href="{% url 'account_login' %}">{% trans "Sign In" %}</a></li>
-          <li><a href="{% url 'account_signup' %}">{% trans "Sign Up" %}</a></li>
-          {% endif %}
-        </ul>
-      </div> {% endcomment %}
+  <div class="bg-hl-mist px-4 py-12 sm:py-16">
+    <div class="mx-auto w-full max-w-md rounded-2xl border border-hl-line bg-white p-6 shadow-sm sm:p-10">
       {% block content %}
       {% endblock content %}
       {% block bottom_nav %}
-
-      <div class="mt-5 flex flex-col md:flex-row justify-between text-sm gap-3">
-      <a href="{% url 'home' %}" class="font-semibold text-blue-600 hover:text-blue-500"" >Back to Main Page</a>
-        <a href="#" class="font-semibold text-blue-600 hover:text-blue-500" onclick="history.back()" >Cancel</a>
+      <div class="mt-6 flex flex-col justify-between gap-3 border-t border-hl-line pt-5 text-sm md:flex-row">
+        <a href="{% url 'home' %}" class="font-semibold text-hl-navy hover:text-hl-orange-text">Back to Main Page</a>
+        <a href="#" class="font-semibold text-hl-navy hover:text-hl-orange-text" onclick="history.back(); return false;">Cancel</a>
       </div>
       {% endblock bottom_nav %}
     </div>
   </div>
-
-  
+  {% block extra_body %}
+  {% endblock extra_body %}
 {% endblock body %}
-{% block extra_body %}
-{% endblock extra_body %}
-

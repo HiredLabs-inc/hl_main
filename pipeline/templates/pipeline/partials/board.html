@@ -1,0 +1,62 @@
+{% comment %}
+A flow tab as a board: a column per step under phase headings, a card per open
+enrollment, oldest in step first. Steps nobody is on collapse to a strip
+(Alpine: collapse here, open per column). At phone width it shows one step at
+a time, chosen with the picker (boardView in frontend/src/board.js). Needs
+phases (from dashboard.board), board_start, flow, filters, query and stale_days.
+{% endcomment %}
+{% include 'pipeline/partials/view_switch.html' %}
+{% if not filters.is_valid %}
+    {% include 'pipeline/partials/filter_errors.html' %}
+{% else %}
+<div x-data="boardView({{ board_start }}, [{% for group in phases %}{% for column in group.columns %}{{ column.step.pk }}, {% endfor %}{% endfor %}])"
+     x-on:htmx:after-settle.camel.window="relabel()" class="space-y-2">
+    <div class="space-y-2 md:hidden">
+        <div class="flex items-center gap-2">
+            <button type="button" x-on:click="go(-1)" aria-label="Previous step"
+                    class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-hl-line bg-white text-hl-navy-2">
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
+            <label class="min-w-0 flex-1">
+                <span class="sr-only">Step</span>
+                <select x-model.number="current" data-board-picker class="staff-field h-11 w-full">
+                    {% for group in phases %}{% for column in group.columns %}
+                        <option value="{{ column.step.pk }}" data-label="{{ group.phase.title }} · {{ column.step.title }}" {% if column.step.pk == board_start %}selected{% endif %}>{{ group.phase.title }} · {{ column.step.title }} ({{ column.count }})</option>
+                    {% endfor %}{% endfor %}
+                </select>
+            </label>
+            <button type="button" x-on:click="go(1)" aria-label="Next step"
+                    class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-hl-line bg-white text-hl-navy-2">
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+            </button>
+        </div>
+        <div class="flex items-center justify-center gap-1" aria-hidden="true">
+            <template x-for="pk in steps" :key="pk">
+                <span class="h-1.5 rounded-full" :class="pk === current ? 'w-4 bg-hl-navy' : 'w-1.5 bg-hl-line'"></span>
+            </template>
+        </div>
+    </div>
+    <label class="inline-flex items-center gap-2 text-sm text-hl-ink max-md:hidden">
+        <input type="checkbox" x-model="collapse" checked class="rounded border-hl-line text-hl-navy focus:ring-hl-blue">
+        Collapse empty steps
+    </label>
+    {# relative: keeps absolutely positioned bits (sr-only text, card previews) inside the scroll box #}
+    <div class="relative overflow-x-auto rounded-lg border border-hl-line bg-hl-mist p-3 max-md:p-2" role="region" aria-label="{{ flow.name }} board" tabindex="0">
+        <div class="flex items-start gap-6 max-md:block">
+            {% for group in phases %}
+                <section class="flex shrink-0 flex-col max-md:block" aria-labelledby="board-phase-{{ group.phase.pk }}">
+                    <div class="mb-2 flex items-baseline gap-2 border-b-2 border-hl-line px-1 pb-2 max-md:hidden">
+                        <h3 id="board-phase-{{ group.phase.pk }}" class="!mb-0 text-xs font-semibold uppercase tracking-wide text-hl-navy">{{ group.phase.title }}</h3>
+                        <span id="board-phase-count-{{ group.phase.pk }}" class="text-xs text-hl-muted">{{ group.count }} {{ group.count|pluralize:"person,people" }}</span>
+                    </div>
+                    <div class="flex items-start gap-2 max-md:block">
+                        {% for column in group.columns %}
+                            {% include 'pipeline/partials/board_column.html' %}
+                        {% endfor %}
+                    </div>
+                </section>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}

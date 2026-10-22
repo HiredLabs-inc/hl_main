@@ -32,6 +32,9 @@ env = Env()
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
+# True only on Cloud Run (cloud.py); gates Cloud Tasks and token checks
+PRODUCTION = False
+
 
 ALLOWED_HOSTS = ["*"]
 MEDIA_URL = "media/"
@@ -53,6 +56,7 @@ INSTALLED_APPS = [
     "allauth.socialaccount",
     # hiredlabs apps
     "cold_apply.apps.ColdApplyConfig",
+    "pipeline.apps.PipelineConfig",
     "rates.apps.RatesConfig",
     "releases.apps.ReleasesConfig",
     "resume.apps.ResumeConfig",
@@ -92,6 +96,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "userprofile.context_processors.public_site",
             ],
             "builtins": [
                 "frontend.templatetags.breadcrumbs",
@@ -162,7 +167,6 @@ STATICFILES_DIRS = (
 
 STATIC_URL = "static/"
 RESUME_OUT_PATH = os.path.join(BASE_DIR, "resume_parser/static/output/")
-SERVICE_ACCOUNT_FILE = os.path.join(BASE_DIR, "creds/application_default_credentials.json")
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
@@ -192,11 +196,22 @@ ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
 ACCOUNT_LOGIN_ON_PASSWORD_RESET = True
 ACCOUNT_SESSION_REMEMBER = True
 
-# Use custom form for signup to use only email verification without a password
+# Signup itself is userprofile.signup (allauth signup is closed in the adapter).
 ACCOUNT_FORMS = {
-    "signup": "userprofile.forms.CustomSignupForm",
+    "reset_password": "userprofile.forms.BotCheckedResetPasswordForm",
 }
 
 LOGIN_REDIRECT_URL = "userprofile:user_home"
 
 ACCOUNT_ADAPTER = "hl_main.adapter.CustomAccountAdapter"
+
+# Cloudflare Turnstile (bot check on signup, password reset and contact forms).
+# The defaults are Cloudflare's test keys, which always pass; cloud.py requires real ones.
+# Base of links in emails sent outside a request (the send_signup_reminders command).
+PUBLIC_BASE_URL = env("PUBLIC_BASE_URL", default="http://localhost:8000")
+
+TURNSTILE_SITE_KEY = env("TURNSTILE_SITE_KEY", default="1x00000000000000000000AA")
+TURNSTILE_SECRET_KEY = env("TURNSTILE_SECRET_KEY", default="1x0000000000000000000000000000000AA")
+
+# Where comments from the contact form are emailed (userprofile.views.contact).
+COMMENT_NOTIFICATION_EMAILS = ["info@hiredlabs.org"]

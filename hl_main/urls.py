@@ -17,14 +17,20 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
+from django.views.generic import RedirectView
 
-import hlagents
-from userprofile import views as userprofile_views
+from pipeline import views as pipeline_views
+from userprofile import people, signup, stuck_signups, views as userprofile_views
 
 urlpatterns = [
     path("admin/", admin.site.urls, name="admin"),
+    # Signup lives in userprofile.signup; allauth's own signup URL redirects there.
+    path("accounts/signup/", RedirectView.as_view(pattern_name="custom_account_signup")),
+    path("accounts/sign-up/", signup.signup_view, name="custom_account_signup"),
+    path("accounts/sign-up/sent/", signup.signup_sent_view, name="signup_sent"),
+    path("accounts/sign-up/change-email/", signup.signup_change_email_view, name="signup_change_email"),
+    path("accounts/sign-up/complete/<str:token>/", signup.signup_complete_view, name="signup_complete"),
     path("accounts/", include("allauth.urls")),
-    path("accounts/sign-up/", userprofile_views.CustomSignupView.as_view(), name="custom_account_signup"),
     path(
         "accounts/verified_email_required",
         userprofile_views.verified_email_required_view,
@@ -41,7 +47,18 @@ urlpatterns = [
     path("volunteer/", userprofile_views.contact, name="volunteer"),
     path("thank-you/", userprofile_views.thanks, name="thanks"),
     path("welcome/", userprofile_views.welcome, name="welcome"),
-    path("staff/", userprofile_views.staff, name="staff"),
+    path("staff/", pipeline_views.dashboard_view, name="staff"),
+    path("staff/flows/", pipeline_views.flows_view, name="staff_flows"),
+    path("staff/", include("pipeline.urls")),
+    path("staff/people/", people.people_view, name="staff_people"),
+    path("staff/people/<int:user_pk>/", people.person_view, name="staff_person"),
+    path("staff/stuck-signups/", stuck_signups.stuck_signups_view, name="stuck_signups"),
+    path("staff/people/<int:user_pk>/service-doc/", userprofile_views.service_doc_view, name="service_doc"),
+    path(
+        "staff/stuck-signups/<str:kind>/<int:pk>/<str:action>/",
+        stuck_signups.stuck_signup_action_view,
+        name="stuck_signup_action",
+    ),
     path("userprofile/", include("userprofile.urls")),
     path("cold_apply/", include("cold_apply.urls")),
     path("resume/", include("resume.urls")),

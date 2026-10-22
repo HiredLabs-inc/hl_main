@@ -4,9 +4,11 @@
       </svg>
       
 </a>
-<a class="btn btn-danger  !px-3 !py-2" onclick="return confirm('Delete Job?')" href="{% url 'cold_apply:delete_job' job.id %}">
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-      </svg>
-      
-</a>
+<form class="inline" method="post" action="{% url 'cold_apply:delete_job' job.id %}">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger  !px-3 !py-2" onclick="return confirm('Delete Job?')">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+    </button>
+</form>
