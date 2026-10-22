@@ -25,6 +25,7 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 | BUG-035 | Low | Open | pipeline | Suspected: board card moved into a column of more than 25 can appear twice after "Show more" |
 | BUG-036 | Low | Open | pipeline | Board: a one-line card's hover preview shows behind its open Move menu |
 | BUG-037 | Medium | Open | pipeline | "Completed" and "Withdrawn" do basically the same thing. 
+| BUG-038 | Medium | Open | cold_apply | Suspected: AI bullet and overview generation calls the retired Vertex `text-bison@001` model |
 ---
 ## BUG-019 — A request can hit a closed database connection
 - **Severity:** Medium · **Status:** Open · **Found:** 2026-10-17, stage sign-up test after build 8f748ade (46858e2) · **Suspected:** seen once, not reproduced
@@ -89,6 +90,12 @@ a particular session to move someone into "completed". If they never complete bo
 or added to the waitlist. Boot camp should only be "completed" if they did the course. There should also be a "dropped" 
 phase for anyone who was an active student, but did not complete the course (to our knowledge). Also, the records must
 be editable. Admins might make mistakes, and the current interface is too rigid, which will create very dirty data.
+
+## BUG-038 — AI text generation uses a retired Vertex model
+- **Severity:** Medium · **Status:** Open · **Found:** 2026-10-21, reading code for the hlagents design (`docs/hlagents.md` on `feature/hlagents-01`) · **Suspected:** read from code, not reproduced
+- **Where:** `cold_apply/text_generation.py` `generate_text()` (used by `cold_apply/views.py` and `cold_apply/forms.py`), and `cold_apply/management/commands/vertex.py`
+- **Problem:** `generate_text` loads `TextGenerationModel.from_pretrained("text-bison@001")`. Google has retired the PaLM text models, so bullet rewriting and overview generation probably fail. It also `print`s every prompt and response.
+- **Fix idea:** move to a current model, ideally through the hlagents provider layer once it exists, so the provider can be switched in one place.
 
 ## Fixed and Skipped
 
