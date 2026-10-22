@@ -8,7 +8,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from pipeline import services
-from pipeline.models import Activity, Flow, Phase, Step
+from pipeline.models import Activity, Enrollment, Flow, Phase, Step
 from pipeline.tests.test_actions import events
 from pipeline.tests.test_dashboard import person
 from userprofile import bootcamp
@@ -60,13 +60,10 @@ class AssignSessionTest(BootCampTestCase):
         with self.assertRaises(IntegrityError), transaction.atomic():
             BootCampSeat.objects.create(enrollment=self.enrollment, session=self.june)
 
-    def test_only_open_boot_camp_enrollments(self):
+    def test_only_boot_camp_enrollments(self):
         other = services.enroll(self.enrollment.person, self.job_search, None)
         with self.assertRaisesMessage(ValidationError, "Only Boot Camp"):
             bootcamp.assign_session(other, self.march, self.staff)
-        services.set_status(self.enrollment, "withdrawn", self.staff)
-        with self.assertRaisesMessage(ValidationError, "has ended"):
-            bootcamp.assign_session(self.enrollment, self.march, self.staff)
         self.assertFalse(BootCampSeat.objects.exists())
 
     def test_sessions_with_people_cant_be_deleted(self):
@@ -121,6 +118,13 @@ class ConfirmationStepTest(BootCampTestCase):
         self.on(self.priority)
         self.assertEqual(self.step_after_assigning(None), self.priority)
 
+    def test_ended_enrollment_gets_a_session_without_moving(self):
+        """To record which cohort someone was in after the fact (BUG-037)"""
+        services.set_status(self.enrollment, "withdrawn", self.staff)
+        self.assertIsNone(bootcamp.assign_session(self.enrollment, self.past, self.staff))
+        self.enrollment.refresh_from_db()
+        self.assertEqual((self.seat().session, self.enrollment.current_step), (self.past, self.start))
+
     def test_toast_says_where_they_moved(self):
         response = self.client.post(reverse("pipeline:session", args=[self.enrollment.pk]), {"session": self.march.pk})
         self.assertEqual(
@@ -172,18 +176,76 @@ class DashboardTest(BootCampTestCase):
         self.assertNotIn("session", response.context["filters"].fields)
         self.assertNotContains(response, 'name="session"')
 
-    def test_row_offers_upcoming_sessions_and_keeps_a_started_one(self):
+    def test_row_offers_upcoming_then_past_sessions(self):
         response, _ = self.rows()
         self.assertContains(response, "Waitlist (no session)")
         self.assertContains(response, self.march.label, count=2)  # filter and row
+        self.assertContains(response, '<optgroup label="Past sessions">')
         row = response.context["rows"][0]
-        self.assertEqual(row.session_choices, [self.march, self.june])
+        self.assertEqual((row.session_choices, row.past_sessions), ([self.march, self.june], [self.past]))
         bootcamp.assign_session(self.enrollment, self.past, self.staff)
         row = self.rows()[0].context["rows"][0]
-        self.assertEqual((row.session, row.session_choices), (self.past, [self.past, self.march, self.june]))
+        self.assertEqual(row.session, self.past)
 
     def test_panel_and_timeline(self):
         bootcamp.assign_session(self.enrollment, self.march, self.staff)
         response = self.client.get(reverse("pipeline:panel", args=[self.enrollment.person.pk]))
         self.assertContains(response, f'<option value="{self.march.pk}" selected>')
         self.assertContains(response, f"Boot camp session</span>: Waitlist → {self.march.label}")
+
+
+class EndingTest(BootCampTestCase):
+    """Completed needs Graduated and a session that has started; Dropped needs
+    a started session; Withdrawn is for people whose session hasn't (BUG-037)"""
+
+    def setUp(self):
+        super().setUp()
+        self.graduated = Step.objects.get(phase__flow=self.boot_camp, completes_flow=True)
+
+    def choices(self):
+        self.enrollment.refresh_from_db()
+        return services.ending_choices(self.enrollment)
+
+    def refusal(self, status):
+        self.enrollment.refresh_from_db()
+        return services.ending_options(self.enrollment)[status]
+
+    def test_before_their_session_only_withdraw(self):
+        for session in (None, self.march):
+            with self.subTest(session=session):
+                bootcamp.assign_session(self.enrollment, session, self.staff)
+                services.move_to_step(self.enrollment, self.graduated, self.staff)
+                self.assertEqual(self.choices(), [Enrollment.Status.WITHDRAWN])
+                self.assertEqual(self.refusal("completed"), "Give them a session that has started first.")
+                self.assertIn("withdraw them instead", self.refusal("dropped"))
+
+    def test_after_their_session_starts_drop_or_complete(self):
+        bootcamp.assign_session(self.enrollment, self.past, self.staff)
+        self.assertEqual(self.choices(), [Enrollment.Status.DROPPED])
+        self.assertEqual(self.refusal("withdrawn"), "Their session has started; drop them instead.")
+        self.assertEqual(self.refusal("completed"), "Move them to Graduated first.")
+        services.move_to_step(self.enrollment, self.graduated, self.staff)
+        self.assertEqual(self.choices(), [Enrollment.Status.COMPLETED, Enrollment.Status.DROPPED])
+        with self.assertRaisesMessage(ValidationError, "drop them instead"):
+            services.set_status(self.enrollment, "withdrawn", self.staff)
+        services.set_status(self.enrollment, "dropped", self.staff)
+        self.assertTrue(self.choices() == [Enrollment.Status.COMPLETED] and self.enrollment.is_ended)
+
+    def test_fixing_a_graduate_completed_without_a_session(self):
+        """The prod case: completed with no cohort, then fixed from the dashboard"""
+        Enrollment.objects.filter(pk=self.enrollment.pk).update(status="completed", ended_at=timezone.now())
+        self.enrollment.refresh_from_db()
+        services.reopen(self.enrollment, self.staff)
+        bootcamp.assign_session(self.enrollment, self.past, self.staff)
+        services.move_to_step(self.enrollment, self.graduated, self.staff)
+        services.set_status(self.enrollment, "completed", self.staff)
+        self.enrollment.refresh_from_db()
+        self.assertEqual((self.enrollment.status, self.seat().session), ("completed", self.past))
+        self.assertTrue(self.enrollment.is_ended)
+
+    def test_dashboard_buttons(self):
+        bootcamp.assign_session(self.enrollment, self.past, self.staff)
+        response = self.client.get(reverse("staff"), {"tab": "boot-camp"})
+        self.assertContains(response, 'name="status" value="dropped"')
+        self.assertNotContains(response, 'name="status" value="withdrawn"')
+        self.assertNotContains(response, 'name="status" value="completed"')

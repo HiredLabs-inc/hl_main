@@ -130,11 +130,25 @@ class StatusTest(ActionTestCase):
     def test_unknown_status_refused(self):
         self.assertRefused(self.post("status", {"status": "lost"}), "Unknown status")
 
-    def test_ended_enrollment_shows_no_controls(self):
+    def test_only_allowed_endings_offered(self):
+        response = self.client.get(reverse("staff"), {"tab": "resume-job-search"})
+        self.assertContains(response, 'name="status" value="withdrawn"')
+        self.assertNotContains(response, 'name="status" value="completed"')
+        self.assertNotContains(response, 'name="status" value="dropped"')
+        self.assertRefused(self.post("status", {"status": "completed"}), "Move them to Service Complete first.")
+
+    def test_ended_enrollment_can_be_reopened(self):
         response = self.post("status", {"status": "withdrawn"})
         self.assertChanged(response, "Status set to Withdrawn.")
-        self.assertContains(response, "can't be changed")
-        self.assertRefused(self.post("status", {"status": "active"}), "has ended")
+        self.assertContains(response, reverse("pipeline:reopen", args=[self.enrollment.pk]))
+        self.assertRefused(self.post("status", {"status": "active"}), "Reopen it first")
+        self.assertChanged(self.post("reopen"), "Reopened Resume & Job Search.")
+        self.assertEqual((self.refresh().status, self.enrollment.ended_at), ("active", None))
+
+    def test_reopen_refused_when_enrolled_again(self):
+        self.post("status", {"status": "withdrawn"})
+        services.enroll(self.vet, self.job_search, None)
+        self.assertRefused(self.post("reopen"), "already has an open")
 
 
 class NoteTest(ActionTestCase):

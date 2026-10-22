@@ -1,0 +1,10 @@
+{% comment %}Buttons for the statuses in enrollment.ending_choices (pipeline.services.ending_choices). switching: the enrollment has already ended, so they change how it ended.{% endcomment %}
+{% for status in enrollment.ending_choices %}
+    {% if status == "completed" %}
+        {% include 'pipeline/partials/status_button.html' with value=status label=switching|yesno:"Mark completed,Complete" confirm="Mark this enrollment completed? They finished." %}
+    {% elif status == "dropped" %}
+        {% include 'pipeline/partials/status_button.html' with value=status label=switching|yesno:"Mark dropped,Drop" confirm="Mark this enrollment dropped? They started but didn't finish." %}
+    {% elif status == "withdrawn" %}
+        {% include 'pipeline/partials/status_button.html' with value=status label=switching|yesno:"Mark withdrawn,Withdraw" confirm="Mark this enrollment withdrawn? They left before taking part." %}
+    {% endif %}
+{% endfor %}

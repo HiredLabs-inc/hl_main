@@ -71,7 +71,7 @@ class EnrollTest(PipelineTestCase):
 
     def test_can_reenroll_after_enrollment_ends(self):
         first = services.enroll(self.person, self.job_search, self.staff)
-        services.set_status(first, Enrollment.Status.COMPLETED, self.staff)
+        services.set_status(first, Enrollment.Status.WITHDRAWN, self.staff)
         second = services.enroll(self.person, self.job_search, self.staff)
         self.assertNotEqual(first.pk, second.pk)
 
@@ -174,14 +174,58 @@ class SetStatusTest(PipelineTestCase):
             enrollment = services.set_status(enrollment, status, self.staff)
             self.assertIsNone(enrollment.ended_at)
 
-    def test_completed_and_withdrawn_end_for_good(self):
-        for status in (Enrollment.Status.COMPLETED, Enrollment.Status.WITHDRAWN):
-            with self.subTest(status=status):
-                enrollment = services.enroll(self.person, self.job_search, self.staff)
-                enrollment = services.set_status(enrollment, status, self.staff)
-                self.assertIsNotNone(enrollment.ended_at)
-                with self.assertRaises(ValidationError):
-                    services.set_status(enrollment, Enrollment.Status.ACTIVE, self.staff)
+    def final_step(self):
+        return Step.objects.create(phase=self.job_list.phase, title="Service Complete", order=1, completes_flow=True)
+
+    def test_completed_only_from_a_final_step(self):
+        enrollment = services.enroll(self.person, self.job_search, self.staff)
+        with self.assertRaisesMessage(ValidationError, "can't be completed"):
+            services.set_status(enrollment, Enrollment.Status.COMPLETED, self.staff)
+        final = self.final_step()
+        with self.assertRaisesMessage(ValidationError, "Move them to Service Complete first."):
+            services.set_status(enrollment, Enrollment.Status.COMPLETED, self.staff)
+        self.assertEqual(services.ending_choices(enrollment), [Enrollment.Status.WITHDRAWN])
+        enrollment = services.move_to_step(enrollment, final, self.staff)
+        self.assertEqual(services.ending_choices(enrollment), [Enrollment.Status.COMPLETED, Enrollment.Status.WITHDRAWN])
+        enrollment = services.set_status(enrollment, Enrollment.Status.COMPLETED, self.staff)
+        self.assertIsNotNone(enrollment.ended_at)
+
+    def test_withdrawn_ends_and_dropped_needs_a_flow_rule(self):
+        enrollment = services.enroll(self.person, self.job_search, self.staff)
+        with self.assertRaisesMessage(ValidationError, "can't be dropped"):
+            services.set_status(enrollment, Enrollment.Status.DROPPED, self.staff)
+        enrollment = services.set_status(enrollment, Enrollment.Status.WITHDRAWN, self.staff)
+        self.assertIsNotNone(enrollment.ended_at)
+
+    def test_ended_can_change_how_it_ended_but_not_go_back(self):
+        enrollment = services.enroll(self.person, self.job_search, self.staff, step=self.final_step())
+        enrollment = services.set_status(enrollment, Enrollment.Status.COMPLETED, self.staff)
+        ended_at = enrollment.ended_at
+        with self.assertRaisesMessage(ValidationError, "Reopen it first"):
+            services.set_status(enrollment, Enrollment.Status.ACTIVE, self.staff)
+        self.assertEqual(services.ending_choices(enrollment), [Enrollment.Status.WITHDRAWN])
+        enrollment = services.set_status(enrollment, Enrollment.Status.WITHDRAWN, self.staff)
+        self.assertEqual((enrollment.status, enrollment.ended_at), (Enrollment.Status.WITHDRAWN, ended_at))
+        change = enrollment.activities.filter(kind="status_change").first()
+        self.assertEqual((change.from_value, change.to_value), ("Completed", "Withdrawn"))
+
+    def test_reopen(self):
+        enrollment = services.enroll(self.person, self.job_search, self.staff)
+        enrollment = services.set_status(enrollment, Enrollment.Status.WITHDRAWN, self.staff)
+        enrollment = services.reopen(enrollment, self.staff)
+        self.assertEqual((enrollment.status, enrollment.ended_at), (Enrollment.Status.ACTIVE, None))
+        change = enrollment.activities.filter(kind="status_change").first()
+        self.assertEqual((change.text, change.from_value, change.to_value, change.actor), ("Reopened", "Withdrawn", "Active", self.staff))
+        services.reopen(enrollment, self.staff)
+        self.assertEqual(enrollment.activities.filter(kind="status_change").count(), 2)
+
+    def test_reopen_refused_after_enrolling_again(self):
+        first = services.set_status(services.enroll(self.person, self.job_search, self.staff), "withdrawn", self.staff)
+        services.enroll(self.person, self.job_search, self.staff)
+        with self.assertRaisesMessage(services.AlreadyEnrolled, "already has an open Resume & Job Search enrollment"):
+            services.reopen(first, self.staff)
+        first.refresh_from_db()
+        self.assertTrue(first.is_ended)
 
     def test_unknown_status_refused(self):
         enrollment = services.enroll(self.person, self.job_search, self.staff)

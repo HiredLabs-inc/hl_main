@@ -61,6 +61,8 @@ class Step(models.Model):
     # "app_label.codename". Only users with this permission can move an
     # enrollment off this step (e.g. Verify Veteran Status).
     required_permission = models.CharField(max_length=100, blank=True)
+    # A final step: enrollments can only be completed from one (e.g. Graduated)
+    completes_flow = models.BooleanField(default=False)
 
     class Meta:
         ordering = ["phase__flow__order", "phase__flow_id", "phase__order", "phase_id", "order", "id"]
@@ -87,10 +89,13 @@ class Enrollment(TrackedModel):
         REJECTED = "rejected", "Rejected"
         NO_SHOW = "no_show", "No show"
         COMPLETED = "completed", "Completed"
+        # Left before taking part (e.g. before their boot camp session started)
         WITHDRAWN = "withdrawn", "Withdrawn"
+        # Took part (e.g. an active boot camp student) but didn't finish
+        DROPPED = "dropped", "Dropped"
 
-    # Statuses that close the enrollment; it can't be reopened afterwards
-    ENDED_STATUSES = {Status.COMPLETED, Status.WITHDRAWN}
+    # Statuses that close the enrollment. pipeline.services.reopen undoes them.
+    ENDED_STATUSES = {Status.COMPLETED, Status.WITHDRAWN, Status.DROPPED}
 
     person = models.ForeignKey(User, on_delete=models.CASCADE, related_name="enrollments")
     flow = models.ForeignKey(Flow, on_delete=models.PROTECT, related_name="enrollments")

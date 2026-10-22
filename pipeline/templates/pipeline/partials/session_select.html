@@ -1,9 +1,16 @@
-{% comment %}A Boot Camp enrollment's session, blank for the waitlist. Needs enrollment (with session and session_choices) and name. In a row (in_row) it swaps the row; elsewhere the page refreshes from the enrollment-changed event.{% endcomment %}
+{% comment %}A Boot Camp enrollment's session, blank for the waitlist. Needs enrollment (with session, session_choices and past_sessions) and name. Past sessions are there to record which cohort someone was in. In a row (in_row) it swaps the row; elsewhere the page refreshes from the enrollment-changed event.{% endcomment %}
 <select name="session" aria-label="Boot camp session for {{ name }}" class="staff-field mt-1 w-full max-w-[16rem] !py-1"
-        hx-post="{% url 'pipeline:session' enrollment.pk %}" {% if in_row %}hx-target="#enrollment-{{ enrollment.pk }}" hx-swap="outerHTML"{% else %}hx-swap="none"{% endif %} {% if enrollment.is_ended %}disabled{% endif %}>
+        hx-post="{% url 'pipeline:session' enrollment.pk %}" {% if in_row %}hx-target="#enrollment-{{ enrollment.pk }}" hx-swap="outerHTML"{% else %}hx-swap="none"{% endif %}>
     <option value="">Waitlist (no session)</option>
     {% for session in enrollment.session_choices %}
         <option value="{{ session.pk }}" {% if session.pk == enrollment.session.pk %}selected{% endif %}>{{ session.label }}</option>
     {% endfor %}
+    {% if enrollment.past_sessions %}
+        <optgroup label="Past sessions">
+            {% for session in enrollment.past_sessions %}
+                <option value="{{ session.pk }}" {% if session.pk == enrollment.session.pk %}selected{% endif %}>{{ session.label }}</option>
+            {% endfor %}
+        </optgroup>
+    {% endif %}
 </select>
-{% if not enrollment.session_choices %}<span class="block text-xs text-hl-muted">No sessions scheduled yet.</span>{% endif %}
+{% if not enrollment.session_choices and not enrollment.past_sessions %}<span class="block text-xs text-hl-muted">No sessions scheduled yet.</span>{% endif %}
