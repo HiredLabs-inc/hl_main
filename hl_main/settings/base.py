@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     "resume.apps.ResumeConfig",
     "userprofile.apps.UserprofileConfig",
     "background_tasks.apps.BackgroundTasksConfig",
+    "hlagents.apps.HlagentsConfig",
     "frontend.apps.FrontendConfig",
 ]
 
@@ -215,3 +216,7 @@ TURNSTILE_SECRET_KEY = env("TURNSTILE_SECRET_KEY", default="1x000000000000000000
 
 # Where comments from the contact form are emailed (userprofile.views.contact).
 COMMENT_NOTIFICATION_EMAILS = ["info@hiredlabs.org"]
+
+# Web search for hlagents (docs/hlagents.md §3.7). Provider keys are read from the
+# env var named by each ProviderConfig.secret_env.
+TAVILY_API_KEY = env("TAVILY_API_KEY", default="")

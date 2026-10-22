@@ -2,7 +2,7 @@
 
 Branch `feature/hlagents-01` (develop merged in 2026-10-21), worktree `.claude/worktrees/hlagents-01`.
 
-> **Status:** agreed 2026-10-22 (§6). Jeff answered the open questions in §7. H1 is in progress.
+> **Status:** agreed 2026-10-22 (§6). Jeff answered the open questions in §7. H1 is done (§8). H2 is next.
 
 ## 1. Context
 We have two working prototype agents in `examples/utils/` that run outside the app:
@@ -167,3 +167,15 @@ Original questions and answers:
 - All of it should hit the log for now
 6. Should resume generation (`cold_apply/text_generation.py`, which uses the retired `text-bison@001`, BUG-038) move onto this provider layer later?
 - yes. Also the keyword extraction, which now uses an in-house algorithm. That too will run through this layer eventually, but those are separate efforts.
+
+## 8. Status
+### H1 — Core (done 2026-10-22)
+- **Agent types:** `hlagents/agents/`. `AgentType.parse` accepts plain JSON, a code fence, or a list wrapped in a one-key object. Funding leads are deduped on the normalized org name. Outreach leads are deduped on the normalized email, and a missing or invalid email skips the candidate.
+- **Providers:** `hlagents/providers/` (`ChatProvider`, `ChatResult`, `OllamaProvider`, `get_provider`). The key is read from the env var named by `ProviderConfig.secret_env`, and a missing key fails the run with a clear error.
+- **Tools:** `hlagents/tools/` (`web_search` via Tavily, `TAVILY_API_KEY` in `base.py` and `cloud.py`, default empty).
+- **Loop:** `hlagents/loop.py` `run_agent(run, provider=None)`. Unknown tools, disabled tools, tool exceptions and bad arguments go back to the model as `{"error": …}`. The run and daily caps are checked before each provider call. The step limit comes from `AgentConfig.max_iterations`.
+- **Services and models:** `hlagents/services.py` (`create_run`, `save_leads`) and `hlagents/models.py`. Migration `0002_seed_agents` seeds the Ollama Cloud provider (`OLLAMA_API_KEY`), the two agents with the prototype prompts and `gpt-oss:120b`, and `AgentLimits` ($1 per run, $10 per day, $0.008 per search).
+- **Wiring:** the app is in `INSTALLED_APPS`, and `/agents/` is included with no pages yet. Admin is registered for all models.
+- **Dependencies:** `ollama==0.6.3`, `tavily-python==0.8.5`.
+- **Tests:** `hlagents/tests/` has 39 tests using `FakeProvider` and a mocked `TavilyClient`. The full suite (336 tests) passes.
+- `examples/` stays until H2 has run both agents against Ollama Cloud for real.

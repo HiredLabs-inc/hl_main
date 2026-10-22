@@ -64,7 +64,7 @@ urlpatterns = [
     path("resume/", include("resume.urls")),
     path("releases/", include("releases.urls")),
     path("rates/", include("rates.urls")),
-    # path("hlagents/", include("hlagents.urls")),
+    path("agents/", include("hlagents.urls")),
 ] + static(
     settings.MEDIA_URL, document_root=settings.MEDIA_ROOT
 )  # this only works in development
