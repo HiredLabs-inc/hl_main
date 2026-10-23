@@ -2,7 +2,7 @@
 
 Branch `feature/hlagents-01` (develop merged in 2026-10-21), worktree `.claude/worktrees/hlagents-01`.
 
-> **Status:** agreed 2026-10-22 (§6). Jeff answered the open questions in §7. H1–H4 are done (§8). H5 (stage) is next.
+> **Status:** agreed 2026-10-22 (§6). Jeff answered the open questions in §7. H1–H4 are done (§8). H5 (stage) is a checklist for Jeff (§8).
 
 ## 1. Context
 We have two working prototype agents in `examples/utils/` that run outside the app:
@@ -247,3 +247,19 @@ Original questions and answers:
 - **Migration note:** `pipeline/0005` gives `pipeline_flow.subject` a database default of `person`. Older data migrations (`0002_seed_flows`, which tests run again) create flows through historical models that don't know the field. Django 4.2 has no `db_default`.
 - **Access:** the boards are under `/staff/`, so only staff see them. Volunteers in the Agents group review and edit leads in `/agents/`, but don't see boards until volunteer logins (IDEA-005) decide what they get.
 - **Tests:** 425 in the full suite, including `pipeline/tests/test_leads.py` and the lead flow tests in `hlagents/tests/test_services.py`.
+
+### H5 — Stage, then prod (checklist, not started)
+Deploys run `migrate` automatically (`infra/cloudbuild/deploy.yaml`). Nothing here needs Terraform: the worker's 900 s timeout and the 10-minute Cloud Tasks deadline already cover the 480 s run limit.
+1. **Secrets:** add `OLLAMA_API_KEY` and `TAVILY_API_KEY` to the environment's `.env` secret (the one `GCP_SECRETS_NAME` names) in `hl-main-stage`, and later `hl-main-prod`. Use separate keys per environment if the providers allow it, so stage usage can be told apart.
+2. **Merge** `feature/hlagents-01` into develop, then push develop and staging. Migrations that run:
+   - `pipeline` 0004, 0005
+   - `hlagents` 0001–0006
+   - `hlagents` 0004 adds every active staff user to **Agents**
+3. **Admins:** add whoever should change agents, providers and caps to **Agent admins** (superusers already can).
+4. **Check on stage:**
+   - Run each agent once.
+   - Follow up on a run.
+   - Approve a lead and find it on the Funding board.
+   - Import the real partners CSV and check bounces and the Partner step.
+   - Lower the run cap and confirm a run stops.
+5. **Prod:** the same secrets and Agent admins, at the next release. Look at the caps first: the defaults are $1 per run and $10 per day, and Ollama Cloud's rates are set to $0 because it's a subscription.
