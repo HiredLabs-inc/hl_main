@@ -233,6 +233,7 @@ Original questions and answers:
 - **Flows:** migration `hlagents/0006` seeds them and enrolls leads that were already approved.
   - **Funding:** Prospect (Found, Researching) → Application (Applying, Submitted) → Decision (Awarded, Declined)
   - **Outreach:** Prospect (Found) → Outreach (Contacted, Replied) → Partner (Partner)
+  - Awarded, Declined and Partner are final steps (`completes_flow`, BUG-037), so a lead enrollment can be completed from them. Withdrawn is always allowed; Dropped isn't (it's Boot Camp only).
 - **Review:**
   - Approving a lead enrolls it at Found. Imported partners go to Partner.
   - Rejecting it withdraws its open enrollment (reason "Lead rejected"). Approving it again starts a new enrollment.
@@ -244,7 +245,7 @@ Original questions and answers:
   - Cards and rows link to the lead's page, and show Opted out and bounce badges. Search covers org, name and email.
   - **People only:** My people, Everyone, the Unassigned and stale counts, "Enroll in" choices, triage and the person panel. A lead can't be enrolled in other flows by hand.
 - **Lead page:** shows the lead's flow and step. For staff, the flow name links to its tab.
-- **Migration note:** `pipeline/0005` gives `pipeline_flow.subject` a database default of `person`. Older data migrations (`0002_seed_flows`, which tests run again) create flows through historical models that don't know the field. Django 4.2 has no `db_default`.
+- **Migration note:** `pipeline/0006` gives `pipeline_flow.subject` a database default of `person`. Older data migrations (`0002_seed_flows`, which tests run again) create flows through historical models that don't know the field. Django 4.2 has no `db_default`.
 - **Access:** the boards are under `/staff/`, so only staff see them. Volunteers in the Agents group review and edit leads in `/agents/`, but don't see boards until volunteer logins (IDEA-005) decide what they get.
 - **Tests:** 425 in the full suite, including `pipeline/tests/test_leads.py` and the lead flow tests in `hlagents/tests/test_services.py`.
 
@@ -252,7 +253,7 @@ Original questions and answers:
 Deploys run `migrate` automatically (`infra/cloudbuild/deploy.yaml`). Nothing here needs Terraform: the worker's 900 s timeout and the 10-minute Cloud Tasks deadline already cover the 480 s run limit.
 1. **Secrets:** add `OLLAMA_API_KEY` and `TAVILY_API_KEY` to the environment's `.env` secret (the one `GCP_SECRETS_NAME` names) in `hl-main-stage`, and later `hl-main-prod`. Use separate keys per environment if the providers allow it, so stage usage can be told apart.
 2. **Merge** `feature/hlagents-01` into develop, then push develop and staging. Migrations that run:
-   - `pipeline` 0004, 0005
+   - `pipeline` 0005, 0006 (renumbered after develop's `0004_enrollment_endings`, BUG-037)
    - `hlagents` 0001–0006
    - `hlagents` 0004 adds every active staff user to **Agents**
 3. **Admins:** add whoever should change agents, providers and caps to **Agent admins** (superusers already can).

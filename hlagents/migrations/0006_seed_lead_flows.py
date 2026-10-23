@@ -23,6 +23,8 @@ FLOWS = [
     ),
 ]
 PARTNER_STEP = "Partner"
+# Steps an enrollment can be completed from (pipeline Step.completes_flow, BUG-037)
+FINAL_STEPS = {"Awarded", "Declined", "Partner"}
 
 
 def seed(apps, schema_editor):
@@ -42,7 +44,7 @@ def seed(apps, schema_editor):
         for phase_order, (title, steps) in enumerate(phases):
             phase = Phase.objects.create(flow=flow, title=title, order=phase_order)
             for step_order, step in enumerate(steps):
-                Step.objects.create(phase=phase, title=step, order=step_order)
+                Step.objects.create(phase=phase, title=step, order=step_order, completes_flow=step in FINAL_STEPS)
 
     now = timezone.now()
     for lead in Lead.objects.filter(review_status="approved"):
@@ -64,7 +66,7 @@ def unseed(apps, schema_editor):
 class Migration(migrations.Migration):
     dependencies = [
         ("hlagents", "0005_agent_admins_and_prompts"),
-        ("pipeline", "0005_lead_enrollments"),
+        ("pipeline", "0006_lead_enrollments"),
     ]
 
     operations = [

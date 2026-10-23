@@ -97,6 +97,7 @@ class DashboardBrowserTest(StaticLiveServerTestCase):
         flow = Flow.objects.get(slug="resume-job-search")
         first = flow.first_step()
         phase = first.phase.flow.phases.create(title="Phase 2", order=1)
+        flow.phases.filter(steps__completes_flow=True).update(order=2)  # keep the seeded final phase last
         second = Step.objects.create(phase=phase, title="Write bullets", order=0)
         enrollment = services.enroll(self.person, flow, None)
         page.goto(f"{self.live_server_url}{reverse('staff')}?tab=resume-job-search&view=board")
@@ -136,6 +137,7 @@ class DashboardBrowserTest(StaticLiveServerTestCase):
         flow = Flow.objects.get(slug="resume-job-search")
         first = flow.first_step()
         phase = flow.phases.create(title="Phase 2", order=1)
+        flow.phases.filter(steps__completes_flow=True).update(order=2)  # keep the seeded final phase last
         second = Step.objects.create(phase=phase, title="Write bullets", order=0)
         enrollment = services.enroll(self.person, flow, None)
         page.goto(f"{self.live_server_url}{reverse('staff')}?tab=resume-job-search&view=board")

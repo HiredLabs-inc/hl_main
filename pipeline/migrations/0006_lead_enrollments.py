@@ -10,7 +10,7 @@ class Migration(migrations.Migration):
     dependencies = [
         ('hlagents', '0005_agent_admins_and_prompts'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('pipeline', '0004_activity_lead'),
+        ('pipeline', '0005_activity_lead'),
     ]
 
     operations = [

@@ -15,7 +15,7 @@ from django.utils import timezone
 from userprofile import bootcamp
 
 from .models import Activity, Enrollment, Flow, Phase, Step
-from .services import can_leave_step
+from .services import can_leave_step, ending_choices
 
 User = get_user_model()
 
@@ -35,7 +35,7 @@ class DashboardFilters(forms.Form):
     """GET params, so filtered views can be bookmarked. Blank means "any"."""
 
     ASSIGNEE_CHOICES = [("", "Anyone"), ("me", "Me"), ("unassigned", "Unassigned")]
-    # Blank status means every open enrollment (not completed or withdrawn)
+    # Blank status means every open enrollment (not completed, withdrawn or dropped)
     STATUS_CHOICES = [("", "Open")] + list(Enrollment.Status.choices)
 
     tab = forms.CharField(required=False, widget=forms.HiddenInput)
@@ -114,9 +114,11 @@ def row_queryset():
 def decorate(rows, user):
     """Add what each row's controls need, in a fixed number of queries:
     step_choices (the flow's steps), can_leave (the user may move them off
-    their current step) and enroll_choices (active flows they could join; none
-    for a lead).
-    Boot Camp rows also get session (None means waitlist) and session_choices."""
+    their current step), enroll_choices (active flows they could join; none
+    for a lead) and ending_choices (the statuses it can end with, or switch to
+    once ended).
+    Boot Camp rows also get session (None means waitlist), session_choices and
+    past_sessions."""
     rows = list(rows)
     steps_by_flow = defaultdict(list)
     for step in Step.objects.filter(phase__flow__in={row.flow_id for row in rows}).select_related("phase"):
@@ -131,6 +133,7 @@ def decorate(rows, user):
     for row in rows:
         row.step_choices = steps_by_flow[row.flow_id]
         row.can_leave = can_leave_step(user, row.current_step)
+        row.ending_choices = ending_choices(row, steps=row.step_choices)
         if row.person_id is None:
             row.enroll_choices = row.also_in = []
             continue

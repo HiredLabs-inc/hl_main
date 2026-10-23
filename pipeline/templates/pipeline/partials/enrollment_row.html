@@ -85,7 +85,15 @@ staff_users and stale_days.
         {# Sticky so the actions stay on screen while the table scrolls sideways on phones #}
         <div class="sticky left-3 max-w-[calc(100vw-3.5rem)] md:static md:max-w-none">
         {% if enrollment.is_ended %}
-            <p class="text-sm text-hl-muted">This enrollment is {{ enrollment.get_status_display|lower }} and can't be changed.</p>
+            <div class="space-y-2">
+                <p class="text-xs font-semibold uppercase tracking-wide text-hl-muted">Status: {{ enrollment.get_status_display }} · ended {{ enrollment.ended_at|date:"M j, Y" }}</p>
+                <div class="flex flex-wrap gap-2">
+                    <form hx-post="{% url 'pipeline:reopen' enrollment.pk %}" hx-target="#enrollment-{{ enrollment.pk }}" hx-swap="outerHTML" hx-confirm="Reopen this enrollment? It goes back on the dashboard as active.">
+                        <button type="submit" class="btn btn-outline-secondary !px-3 !py-1 !text-sm">Reopen</button>
+                    </form>
+                    {% include 'pipeline/partials/ending_buttons.html' with switching=True %}
+                </div>
+            </div>
         {% else %}
         <div class="grid gap-4 md:grid-cols-3">
             <form hx-post="{% url 'pipeline:note' enrollment.pk %}" hx-target="#enrollment-{{ enrollment.pk }}" hx-swap="outerHTML" class="space-y-2">
@@ -103,8 +111,7 @@ staff_users and stale_days.
                     {% if enrollment.status != "active" %}{% include 'pipeline/partials/status_button.html' with value="active" label="Make active" %}{% endif %}
                     {% if enrollment.status != "paused" %}{% include 'pipeline/partials/status_button.html' with value="paused" label="Pause" %}{% endif %}
                     {% if enrollment.status != "no_show" %}{% include 'pipeline/partials/status_button.html' with value="no_show" label="No show" %}{% endif %}
-                    {% include 'pipeline/partials/status_button.html' with value="completed" label="Complete" confirm="Complete this enrollment? It can't be reopened." %}
-                    {% include 'pipeline/partials/status_button.html' with value="withdrawn" label="Withdraw" confirm="Withdraw from this flow? It can't be reopened." %}
+                    {% include 'pipeline/partials/ending_buttons.html' %}
                 </div>
                 {% if enrollment.status != "rejected" %}
                     <form hx-post="{% url 'pipeline:status' enrollment.pk %}" hx-target="#enrollment-{{ enrollment.pk }}" hx-swap="outerHTML" class="flex gap-2">

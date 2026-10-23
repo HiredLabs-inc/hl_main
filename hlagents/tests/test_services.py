@@ -249,3 +249,5 @@ class LeadFlowTest(LeadTestCase):
         steps = Step.objects.filter(phase__flow__slug="outreach").values_list("title", flat=True)
         self.assertEqual(list(steps), ["Found", "Contacted", "Replied", "Partner"])
         self.assertEqual(set(Flow.objects.filter(subject="lead").values_list("slug", flat=True)), {"funding", "outreach"})
+        final = Step.objects.filter(phase__flow__subject="lead", completes_flow=True).values_list("title", flat=True)
+        self.assertEqual(sorted(final), ["Awarded", "Declined", "Partner"])
