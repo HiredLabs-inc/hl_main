@@ -226,3 +226,8 @@ HLAGENTS_PROVIDER_SECRETS = ["OLLAMA_API_KEY"]
 # Seconds an agent run may take. Cloud Tasks waits 10 minutes before retrying a
 # task, and the worker only starts queued runs, so a retry can't run one twice.
 HLAGENTS_RUN_TIME_LIMIT = 480
+
+# Resume bullet and overview generation (cold_apply/text_generation.py), on Vertex AI
+# (Gemini models aren't served from us-west1 for our projects, so use the global endpoint)
+GEMINI_MODEL = env("GEMINI_MODEL", default="gemini-3.8-flash")
+GEMINI_LOCATION = env("GEMINI_LOCATION", default="global")

@@ -36,7 +36,7 @@ from cold_apply.resume_formatting import (
     group_bullets_by_experience,
     group_bullets_by_skill,
 )
-from cold_apply.text_generation import generate_bullet, rewrite_bullet_for_job
+from cold_apply.text_generation import TextGenerationError, rewrite_bullet_for_job
 from hl_main.mixins import HtmxViewMixin
 from rates.models import Country
 from resume.models import (
@@ -751,7 +751,11 @@ class OverviewCreateView(HtmxViewMixin, ParticipantAccessMixin, CreateView):
 
     def form_valid(self, form):
         form.instance.participant_id = self.kwargs["pk"]
-        return super().form_valid(form)
+        try:
+            return super().form_valid(form)
+        except TextGenerationError as e:
+            form.add_error(None, str(e))
+            return self.form_invalid(form)
 
 
 class OverviewUpdateView(HtmxViewMixin, OwnedObjectMixin, UpdateView):
@@ -853,9 +857,11 @@ class BulletCreateView(HtmxViewMixin, ParticipantAccessMixin, CreateView):
         }
 
     def form_valid(self, form):
-        # form.instance.created_by = self.request.user
-        # form.instance.updated_by = self.request.user
-        return super().form_valid(form)
+        try:
+            return super().form_valid(form)
+        except TextGenerationError as e:
+            form.add_error(None, str(e))
+            return self.form_invalid(form)
 
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
         return {
@@ -875,7 +881,10 @@ def regenerate_bullet_view(request, bullet_id, job_id):
     )
     job = get_object_or_404(owned_by(Job.objects, request.user, "participant__user"), pk=job_id)
 
-    rewritten_text = rewrite_bullet_for_job(bullet, job)
+    try:
+        rewritten_text = rewrite_bullet_for_job(bullet, job)
+    except TextGenerationError as e:
+        return HttpResponse(str(e), status=502)
     bullet.text = rewritten_text
     bullet.auto_generated = True
     bullet.save()
