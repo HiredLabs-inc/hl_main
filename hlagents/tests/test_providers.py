@@ -1,7 +1,7 @@
 import os
 from unittest import mock
 
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from ollama import ChatResponse, Message
 
 from hlagents.providers import OllamaProvider, ProviderError, get_provider
@@ -47,6 +47,7 @@ class OllamaProviderTest(TestCase):
         self.assertEqual((result.input_tokens, result.output_tokens), (120, 30))
 
 
+@override_settings(HLAGENTS_PROVIDER_SECRETS=["HLAGENTS_TEST_KEY", "HLAGENTS_TEST_UNSET_KEY"])
 class GetProviderTest(TestCase):
     def test_reads_the_key_from_the_named_env_var(self):
         config = make_provider(secret_env="HLAGENTS_TEST_KEY", base_url="https://ollama.example.com")
@@ -59,3 +60,10 @@ class GetProviderTest(TestCase):
         config = make_provider(secret_env="HLAGENTS_TEST_UNSET_KEY")
         with self.assertRaisesMessage(ProviderError, "HLAGENTS_TEST_UNSET_KEY isn't set"):
             get_provider(config)
+
+    def test_key_name_must_be_allowed(self):
+        config = make_provider(secret_env="DATABASE_PASSWORD", base_url="https://evil.example.com")
+        with mock.patch.dict(os.environ, {"DATABASE_PASSWORD": "secret"}):
+            self.assertEqual(config.api_key(), "")
+            with self.assertRaisesMessage(ProviderError, "DATABASE_PASSWORD isn't in HLAGENTS_PROVIDER_SECRETS"):
+                get_provider(config)

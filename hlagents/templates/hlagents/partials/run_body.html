@@ -19,7 +19,7 @@
                 {% for entry in conversation %}
                     <li class="rounded-md border border-hl-line bg-white px-3 py-2 {% if entry.kind == 'user' %}border-l-4 !border-l-hl-orange{% endif %}">
                         {% if entry.kind == 'user' %}
-                            <p class="text-xs font-medium text-hl-muted">Request</p>
+                            <p class="text-xs font-medium text-hl-muted">{{ entry.detail }}</p>
                             <p class="whitespace-pre-line text-hl-ink">{{ entry.text }}</p>
                         {% elif entry.kind == 'search' %}
                             <p class="text-hl-ink"><span class="text-xs font-medium text-hl-muted">Searched</span> {{ entry.text }}</p>
@@ -37,6 +37,17 @@
                     </li>
                 {% endfor %}
             </ol>
+            {% if follow_up_problem %}
+                <p class="mt-3 text-sm text-hl-muted">Follow-ups are off: {{ follow_up_problem }}</p>
+            {% elif follow_up_form %}
+                <form method="post" action="{% url 'hlagents:follow_up' run.pk %}" class="mt-3 space-y-2">
+                    {% csrf_token %}
+                    <label for="{{ follow_up_form.message.id_for_label }}" class="text-xs font-medium text-hl-muted">Follow up</label>
+                    {{ follow_up_form.message }}
+                    <p class="text-xs text-hl-muted">For example "Find 5 more in Texas" or "Only foundations". New leads are added to this run.</p>
+                    <button type="submit" class="btn btn-primary !py-1.5 !text-sm">Send</button>
+                </form>
+            {% endif %}
         </section>
 
         <section aria-labelledby="leads-heading">

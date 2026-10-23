@@ -13,8 +13,17 @@ from userprofile.guards import app_permission_required
 
 from . import services
 from .conversation import conversation
-from .forms import LeadFilterForm, LeadForm, PartnersImportForm, RunForm
-from .models import AgentConfig, AgentRun, Lead
+from .forms import (
+    AgentConfigForm,
+    FollowUpForm,
+    LeadFilterForm,
+    LeadForm,
+    LimitsForm,
+    PartnersImportForm,
+    ProviderConfigForm,
+    RunForm,
+)
+from .models import AgentConfig, AgentLimits, AgentRun, Lead, ProviderConfig
 from .tasks import run_agent_task
 
 agents_required = app_permission_required("hlagents")
@@ -31,6 +40,7 @@ def index_view(request):
     for config in configs:
         config.last_run = config.runs.first()
         config.form = RunForm(initial={"request": config.default_request}, prefix=f"agent-{config.pk}")
+        config.problem = services.start_problem(config)
     runs = AgentRun.objects.select_related("config", "started_by").annotate(lead_count=Count("leads"))[:20]
     return render(request, "hlagents/index.html", {"configs": configs, "runs": runs})
 
@@ -44,29 +54,55 @@ def start_run_view(request, config_pk):
     if not form.is_valid():
         messages.error(request, "The request can't be empty.")
         return redirect("hlagents:index")
-    run = services.start_run(config, request.user, form.cleaned_data["request"])
+    try:
+        run = services.start_run(config, request.user, form.cleaned_data["request"])
+    except ValidationError as e:
+        messages.error(request, e.messages[0])
+        return redirect("hlagents:index")
     return redirect("hlagents:run", run.pk)
 
 
-def _run_context(run):
-    return {
+def _run_context(request, run):
+    context = {
         "run": run,
         "conversation": conversation(run.messages),
         "leads": run.leads.all(),
     }
+    if not run.in_progress() and request.user.has_perm("hlagents.add_agentrun"):
+        context["follow_up_problem"] = services.follow_up_problem(run)
+        if not context["follow_up_problem"]:
+            context["follow_up_form"] = FollowUpForm()
+    return context
+
+
+def _get_run(pk):
+    return get_object_or_404(AgentRun.objects.select_related("config", "provider", "started_by"), pk=pk)
 
 
 @agents_required
 def run_view(request, pk):
-    run = get_object_or_404(AgentRun.objects.select_related("config", "provider", "started_by"), pk=pk)
-    return render(request, "hlagents/run.html", _run_context(run))
+    return render(request, "hlagents/run.html", _run_context(request, _get_run(pk)))
 
 
 @agents_required
 def run_status_view(request, pk):
     """The run body, polled while the run is queued or running"""
-    run = get_object_or_404(AgentRun.objects.select_related("config", "provider", "started_by"), pk=pk)
-    return render(request, "hlagents/partials/run_body.html", _run_context(run))
+    return render(request, "hlagents/partials/run_body.html", _run_context(request, _get_run(pk)))
+
+
+@agents_required
+@require_POST
+def follow_up_view(request, pk):
+    _require(request.user, "hlagents.add_agentrun")
+    run = _get_run(pk)
+    form = FollowUpForm(request.POST)
+    try:
+        if not form.is_valid():
+            raise ValidationError("The message can't be empty.")
+        services.follow_up(run, form.cleaned_data["message"])
+    except ValidationError as e:
+        messages.error(request, e.messages[0])
+    return redirect("hlagents:run", run.pk)
 
 
 @agents_required
@@ -162,6 +198,72 @@ def import_view(request):
             )
             return redirect(f"{reverse('hlagents:leads')}?kind=outreach&source=import")
     return render(request, "hlagents/import.html", {"form": form})
+
+
+@agents_required
+def settings_view(request):
+    _require(request.user, "hlagents.change_agentconfig")
+    limits = AgentLimits.get()
+    can_change_limits = request.user.has_perm("hlagents.change_agentlimits")
+    limits_form = LimitsForm(request.POST or None, instance=limits)
+    if request.method == "POST":
+        _require(request.user, "hlagents.change_agentlimits")
+        if limits_form.is_valid():
+            limits_form.save()
+            messages.success(request, "Saved the caps and rates.")
+            return redirect("hlagents:settings")
+    providers = ProviderConfig.objects.all()
+    for provider in providers:
+        provider.problem = provider.key_problem()
+    return render(
+        request,
+        "hlagents/settings.html",
+        {
+            "agents": AgentConfig.objects.select_related("provider"),
+            "providers": providers,
+            "limits": limits,
+            "limits_form": limits_form if can_change_limits else None,
+            "spent_today": AgentRun.spent_today(),
+        },
+    )
+
+
+@agents_required
+def agent_settings_view(request, pk=None):
+    """Edit an agent, or add one (?copy=<pk> starts from a copy of another)."""
+    if pk is None:
+        _require(request.user, "hlagents.add_agentconfig")
+        agent = AgentConfig()
+        copy_pk = request.GET.get("copy", "")
+        if copy_pk.isdigit():
+            source = get_object_or_404(AgentConfig, pk=copy_pk)
+            agent = AgentConfig(**{f: getattr(source, f) for f in AgentConfigForm.Meta.fields + ["tool_descriptions"]})
+            agent.name = f"{source.name} (copy)"
+    else:
+        _require(request.user, "hlagents.change_agentconfig")
+        agent = get_object_or_404(AgentConfig, pk=pk)
+    form = AgentConfigForm(request.POST or None, instance=agent)
+    if request.method == "POST" and form.is_valid():
+        agent = form.save()
+        messages.success(request, f"Saved {agent}. The next run uses these settings.")
+        return redirect("hlagents:settings")
+    return render(request, "hlagents/agent_settings.html", {"form": form, "agent": agent})
+
+
+@agents_required
+def provider_settings_view(request, pk=None):
+    if pk is None:
+        _require(request.user, "hlagents.add_providerconfig")
+        provider = ProviderConfig()
+    else:
+        _require(request.user, "hlagents.change_providerconfig")
+        provider = get_object_or_404(ProviderConfig, pk=pk)
+    form = ProviderConfigForm(request.POST or None, instance=provider)
+    if request.method == "POST" and form.is_valid():
+        provider = form.save()
+        messages.success(request, f"Saved {provider}.")
+        return redirect("hlagents:settings")
+    return render(request, "hlagents/provider_settings.html", {"form": form, "provider": provider})
 
 
 @csrf_exempt

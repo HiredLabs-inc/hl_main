@@ -40,7 +40,19 @@ class ProviderConfig(TrackedModel):
         return self.name
 
     def api_key(self):
-        return os.environ.get(self.secret_env, "") if self.secret_env else ""
+        if self.secret_env not in settings.HLAGENTS_PROVIDER_SECRETS:
+            return ""
+        return os.environ.get(self.secret_env, "")
+
+    def key_problem(self):
+        """Why the provider's key can't be used, or "" if it can (or none is needed)."""
+        if not self.secret_env:
+            return ""
+        if self.secret_env not in settings.HLAGENTS_PROVIDER_SECRETS:
+            return f"{self.secret_env} isn't in HLAGENTS_PROVIDER_SECRETS, so {self} can't be used."
+        if not self.api_key():
+            return f"{self.secret_env} isn't set, so {self} can't be used."
+        return ""
 
     def token_cost(self, input_tokens, output_tokens):
         return (

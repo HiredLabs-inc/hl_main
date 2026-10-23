@@ -13,6 +13,6 @@ PROVIDERS = {
 
 def get_provider(config) -> ChatProvider:
     """A provider for a ProviderConfig."""
-    if config.secret_env and not config.api_key():
-        raise ProviderError(f"{config.secret_env} isn't set, so {config} can't be used.")
+    if problem := config.key_problem():
+        raise ProviderError(problem)
     return PROVIDERS[config.kind](base_url=config.base_url, api_key=config.api_key())

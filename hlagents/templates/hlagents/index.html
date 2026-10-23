@@ -10,6 +10,7 @@
         <div class="flex gap-2">
             <a href="{% url 'hlagents:leads' %}" class="btn btn-outline-secondary !py-1.5 !text-sm">Leads</a>
             {% if perms.hlagents.add_lead %}<a href="{% url 'hlagents:import' %}" class="btn btn-outline-secondary !py-1.5 !text-sm">Import partners</a>{% endif %}
+            {% if perms.hlagents.change_agentconfig %}<a href="{% url 'hlagents:settings' %}" class="btn btn-outline-secondary !py-1.5 !text-sm">Settings</a>{% endif %}
         </div>
     </div>
 
@@ -24,7 +25,9 @@
                         <p class="mt-1 text-xs text-hl-muted">Last run <a href="{% url 'hlagents:run' config.last_run.pk %}">{{ config.last_run.created_at|timesince }} ago</a> {% include 'hlagents/partials/run_status.html' with run=config.last_run %}</p>
                     {% endif %}
                 </div>
-                {% if perms.hlagents.add_agentrun %}
+                {% if config.problem %}
+                    <p class="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900" role="status">{{ config.problem }}</p>
+                {% elif perms.hlagents.add_agentrun %}
                     <form method="post" action="{% url 'hlagents:start_run' config.pk %}" class="space-y-2">
                         {% csrf_token %}
                         <label for="{{ config.form.request.id_for_label }}" class="text-xs font-medium text-hl-muted">Request</label>

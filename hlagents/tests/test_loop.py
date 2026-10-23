@@ -121,6 +121,7 @@ class RunAgentTest(TestCase):
         self.assertEqual(run.error, "provider down")
         self.assertEqual([m["role"] for m in run.messages], ["system", "user", "assistant", "tool"])
 
+    @override_settings(HLAGENTS_PROVIDER_SECRETS=["HLAGENTS_TEST_UNSET_KEY"])
     def test_missing_provider_key_fails_the_run(self, tavily):
         provider = make_provider(secret_env="HLAGENTS_TEST_UNSET_KEY")
         run = make_run(make_config(provider=provider))

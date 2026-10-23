@@ -18,7 +18,9 @@ def _tool_summary(content):
 
 
 def conversation(messages):
-    """[{kind, text, detail}], where kind is system, user, thinking, search, result or answer."""
+    """[{kind, text, detail}], where kind is system, user, thinking, search, result
+    or answer. A user entry's detail is "Request" for the first and "Follow-up"
+    after that."""
     entries = []
     for message in messages:
         role = message.get("role")
@@ -26,7 +28,8 @@ def conversation(messages):
         if role == "system":
             entries.append({"kind": "system", "text": "System prompt", "detail": content})
         elif role == "user":
-            entries.append({"kind": "user", "text": content})
+            label = "Follow-up" if any(e["kind"] == "user" for e in entries) else "Request"
+            entries.append({"kind": "user", "text": content, "detail": label})
         elif role == "tool":
             entries.append({"kind": "result", "text": _tool_summary(content), "detail": content})
         elif role == "assistant":

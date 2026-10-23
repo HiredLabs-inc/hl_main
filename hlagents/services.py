@@ -11,7 +11,7 @@ from django.utils import timezone
 
 from background_tasks.queue import queue_task
 from hlagents.agents import agent_for_lead_kind
-from hlagents.models import AgentConfig, AgentRun, Lead
+from hlagents.models import AgentConfig, AgentLimits, AgentRun, Lead
 from pipeline.models import Activity
 
 # Fields staff can edit, per lead kind
@@ -53,11 +53,65 @@ def create_run(config: AgentConfig, started_by, request: str = "") -> AgentRun:
     )
 
 
-def start_run(config: AgentConfig, started_by, request: str = "") -> AgentRun:
-    """Create a run and queue it for the worker."""
-    run = create_run(config, started_by, request)
+def _cap_problem(run=None):
+    """Why no run can start, or this run can't continue, under the cost caps; or ""."""
+    limits = AgentLimits.get()
+    if AgentRun.spent_today() >= limits.daily_cost_cap:
+        return f"Today's runs have reached the ${limits.daily_cost_cap} daily cap."
+    if run is not None and run.cost >= limits.run_cost_cap:
+        return f"This run has reached the ${limits.run_cost_cap} run cap."
+    return ""
+
+
+def _provider_problem(provider):
+    if not provider.active:
+        return f"{provider} is turned off in settings."
+    return provider.key_problem()
+
+
+def start_problem(config: AgentConfig) -> str:
+    """Why the config can't start a run right now, or ""."""
+    return _provider_problem(config.provider) or _cap_problem()
+
+
+def follow_up_problem(run: AgentRun) -> str:
+    """Why the run can't take a follow-up right now, or ""."""
+    if run.in_progress():
+        return "The agent is still working on this run."
+    return _provider_problem(run.provider) or _cap_problem(run)
+
+
+def _queue(run):
     run.task = queue_task(reverse("hlagents:task_run_agent"), {"run_id": run.pk})
     run.save(update_fields=["task", "updated_at"])
+
+
+def start_run(config: AgentConfig, started_by, request: str = "") -> AgentRun:
+    """Create a run and queue it for the worker. Raises ValidationError if it
+    can't start (start_problem)."""
+    if problem := start_problem(config):
+        raise ValidationError(problem)
+    run = create_run(config, started_by, request)
+    _queue(run)
+    return run
+
+
+def follow_up(run: AgentRun, text: str) -> AgentRun:
+    """Add a message to a finished run and queue it again. New candidates are
+    added to the same run (docs/hlagents.md §3.3). Raises ValidationError if
+    the run can't continue (follow_up_problem)."""
+    text = (text or "").strip()
+    if not text:
+        raise ValidationError("The message can't be empty.")
+    with transaction.atomic():
+        run = AgentRun.objects.select_for_update().select_related("provider").get(pk=run.pk)
+        if problem := follow_up_problem(run):
+            raise ValidationError(problem)
+        run.messages.append({"role": "user", "content": text})
+        run.status = AgentRun.Status.QUEUED
+        run.result = run.error = ""
+        run.save()
+    _queue(run)
     return run
 
 

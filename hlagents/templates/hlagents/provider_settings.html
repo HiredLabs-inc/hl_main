@@ -1,0 +1,17 @@
+{% extends 'staff_base.html' %}
+{% block page_title %}{% if provider.pk %}{{ provider.name }}{% else %}New provider{% endif %} · Agent settings{% endblock %}
+{% block content %}
+<div class="max-w-2xl space-y-4">
+    <p class="text-sm"><a href="{% url 'hlagents:settings' %}">← Agent settings</a></p>
+    <h1 class="!mb-0">{% if provider.pk %}{{ provider.name }}{% else %}New provider{% endif %}</h1>
+    <form method="post" class="space-y-4 rounded-lg border border-hl-line bg-white p-4">
+        {% csrf_token %}
+        {% for error in form.non_field_errors %}<p class="text-sm text-red-700" role="alert">{{ error }}</p>{% endfor %}
+        {% for field in form %}{% include 'hlagents/partials/form_field.html' %}{% endfor %}
+        <div class="flex gap-2">
+            <button type="submit" class="btn btn-primary !py-1.5 !text-sm">Save</button>
+            <a href="{% url 'hlagents:settings' %}" class="btn btn-outline-secondary !py-1.5 !text-sm">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

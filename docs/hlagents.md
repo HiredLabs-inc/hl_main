@@ -2,7 +2,7 @@
 
 Branch `feature/hlagents-01` (develop merged in 2026-10-21), worktree `.claude/worktrees/hlagents-01`.
 
-> **Status:** agreed 2026-10-22 (§6). Jeff answered the open questions in §7. H1 and H2 are done (§8). H3 is next.
+> **Status:** agreed 2026-10-22 (§6). Jeff answered the open questions in §7. H1, H2 and H3 are done (§8). H4 is next.
 
 ## 1. Context
 We have two working prototype agents in `examples/utils/` that run outside the app:
@@ -83,7 +83,8 @@ Built with Django templates, htmx, Alpine, Tailwind and Preline, in the same sty
 
 ### 3.5 Permissions
 - Every page uses `app_permission_required("hlagents")` from `userprofile/guards.py`. Staff are granted the permission now. Volunteers get it when IDEA-005 (volunteer logins) lands, with no code change.
-- The settings pages also require `hlagents.change_agentconfig`.
+- The settings pages also require `hlagents.change_agentconfig`. Providers also need `change_providerconfig`, and the cost caps need `change_agentlimits`. The **Agent admins** group has all three. It starts empty: superusers already have every permission, and others are added by hand.
+- A provider's API key can only come from an env var listed in `HLAGENTS_PROVIDER_SECRETS` (in settings, so changing it takes a deploy). The key is sent to the provider's base URL, so otherwise anyone who can edit providers could send any secret in the environment to a server of their choosing.
 
 ### 3.6 Pipeline integration
 `pipeline.Enrollment.person` is a required FK to `User`, and funders and contacts aren't users. Decision: **generalize Enrollment.**
@@ -174,7 +175,7 @@ Original questions and answers:
 - **Providers:** `hlagents/providers/` (`ChatProvider`, `ChatResult`, `OllamaProvider`, `get_provider`). The key is read from the env var named by `ProviderConfig.secret_env`, and a missing key fails the run with a clear error.
 - **Tools:** `hlagents/tools/` (`web_search` via Tavily, `TAVILY_API_KEY` in `base.py` and `cloud.py`, default empty).
 - **Loop:** `hlagents/loop.py` `run_agent(run, provider=None)`. Unknown tools, disabled tools, tool exceptions and bad arguments go back to the model as `{"error": …}`. The run and daily caps are checked before each provider call. The step limit comes from `AgentConfig.max_iterations`.
-- **Services and models:** `hlagents/services.py` (`create_run`, `save_leads`) and `hlagents/models.py`. Migration `0002_seed_agents` seeds the Ollama Cloud provider (`OLLAMA_API_KEY`), the two agents with the prototype prompts and `gpt-oss:120b`, and `AgentLimits` ($1 per run, $10 per day, $0.008 per search).
+- **Services and models:** `hlagents/services.py` (`create_run`, `save_leads`) and `hlagents/models.py`. Migration `0002_seed_agents` seeds the Ollama Cloud provider (`OLLAMA_API_KEY`), the two agents with the prototype prompts and `gemma4:31b`, and `AgentLimits` ($1 per run, $10 per day, $0.008 per search).
 - **Wiring:** the app is in `INSTALLED_APPS`, and `/agents/` is included with no pages yet. Admin is registered for all models.
 - **Dependencies:** `ollama==0.6.3`, `tavily-python==0.8.5`.
 - **Dev keys:** `OLLAMA_API_KEY` and `TAVILY_API_KEY` go in `.env.local` in the repo root. It's gitignored, and compose loads it into `django` and `django-tasks` if it exists. `.env.dev` isn't loaded, because its `GOOGLE_APPLICATION_CREDENTIALS` would override the mounted gcloud credentials.
@@ -205,3 +206,24 @@ Original questions and answers:
   - It returns agency homepages rather than specific opportunities.
   - The outreach prompt says "exactly 10", which overrides a request for 5. It returned VA researchers, who may not be the outreach targets we want.
 - **Tests:** 79 in `hlagents`, and the full suite (376) passes.
+
+### H3 — Follow-ups and settings (done 2026-10-22)
+- **Follow-ups:** a finished, failed or capped run has a follow-up box under its conversation. `services.follow_up` adds the message and queues the run again. The agent sees the whole conversation, any new candidates are added to the same run, and `result` describes the latest turn. A follow-up is refused, with the reason shown in place of the box, while the run is in progress, at the run or daily cap, or when the provider is off or has no key. The step limit applies to each turn. The cost cap applies to the run and all its follow-ups.
+- **Starting runs** checks the same things. An agent card shows the reason instead of the Run button.
+- **Settings pages:**
+  - `/agents/settings/`: lists agents and providers, shows whether each provider's key is set (the name only, never the value) and today's spend, and has the caps and tool rates form.
+  - `/agents/settings/agents/<id>/`: edit provider, model, default request, system prompt, tools, tool descriptions, step limit and active. An agent's type is fixed once it exists.
+  - `/agents/settings/agents/new/` (`?copy=<id>` starts from a copy of another agent, for example to compare two models).
+  - `/agents/settings/providers/<id>/` and `/new/`.
+- **Permissions:** migration `0005` adds the **Agent admins** group, and `HLAGENTS_PROVIDER_SECRETS` limits which env vars a provider can use as its key (§3.5).
+- **Prompts:** migration `0005` replaces the seeded prompts and default requests, but only where they are still the seeded text. The changes:
+  - Funding: the amount and deadline come from the funder's page, or are left blank. The criteria range is never used. The URL must be the specific program's page.
+  - Outreach: the count comes from the request (10 if it doesn't give one). The prompt lists the roles that fit and those that don't (researchers, clinicians and so on). Emails must appear in a search result and are never guessed.
+  - Both: follow-ups return only new candidates, and an empty result is `[]`.
+- **Real runs (2026-10-22, `gemma4:31b`):**
+  - Outreach in Ohio: asked for 5 and got 5. They were county veteran service officers and outreach staff with published county addresses. One was a shared `veterans@` mailbox.
+  - Funding: no amounts are copied from the criteria any more; they're blank instead. A follow-up asking for 3 more, only foundations and corporate programs, added 3 leads to the same run. Over two turns: 8 searches, about $0.06.
+- **Still weak, next steps for lead quality:**
+  - Funding URLs are often home pages (grants.gov, legalzoom.com), and amounts are blank. The model only sees search snippets and can't open a funder's page to check it. Adding a page-reading tool (Tavily extract) would let it verify.
+  - The outreach agent could drop shared mailboxes in code, not only by prompt.
+- **Tests:** 109 in `hlagents`, and the full suite (406) passes.

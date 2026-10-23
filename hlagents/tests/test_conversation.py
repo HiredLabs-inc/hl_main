@@ -19,6 +19,7 @@ class ConversationTest(SimpleTestCase):
             {"role": "tool", "tool_name": "web_search", "content": json.dumps({"results": [{}, {}]})},
             {"role": "tool", "tool_name": "web_search", "content": json.dumps({"error": "rate limited"})},
             {"role": "assistant", "content": "[]"},
+            {"role": "user", "content": "Only Texas."},
         ]
         self.assertEqual(
             [(e["kind"], e["text"]) for e in conversation(messages)],
@@ -30,5 +31,7 @@ class ConversationTest(SimpleTestCase):
                 ("result", "2 results"),
                 ("result", "Error: rate limited"),
                 ("answer", "[]"),
+                ("user", "Only Texas."),
             ],
         )
+        self.assertEqual([e["detail"] for e in conversation(messages) if e["kind"] == "user"], ["Request", "Follow-up"])
