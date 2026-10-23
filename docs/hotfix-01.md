@@ -17,3 +17,8 @@ The hang is caused by executing nltk.download('stopwords') dynamically at runtim
 
 Concurrency Deadlock / Thread Blocking: Your Cloud Run service has its container concurrency limit set to 80. When multiple requests hit the cold-starting container simultaneously, they all try to download and extract the same zip file to /root/nltk_data/ at the same time. This causes write/file locks, thread blocks, or an infinite wait.
 Network & Gateway Delays: Downloading packages at runtime over the public internet during a client request introduces unpredictable latency. If the external NLTK servers are slow or experience socket timeouts, your container thread remains blocked indefinitely.
+
+3. Resolution (2026-10-23)
+The concurrency theory above was a guess; the actual cause was simpler. `cold_apply/static/scripts/resume_writer/vars.py` called `nltk.download("stopwords")` when it was imported, and Django imports it on the first request to a new instance. The Dockerfile already put stopwords in the image at /usr/local/nltk_data, but ubuntu's system Python doesn't search that path, so NLTK downloaded them again at runtime.
+Fix (698d0fe, merged into develop in bafc8f4, pushed to staging): the Dockerfile sets `NLTK_DATA=/usr/local/nltk_data`, and the runtime download is removed. Verified offline in the image; cold_apply tests pass. Goes to prod with the next release.
+Related NLTK data that isn't in the image (unused today): BUG-043.
