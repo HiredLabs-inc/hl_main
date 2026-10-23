@@ -2,7 +2,7 @@
 
 Branch `feature/volunteer-logins` (from `develop` at 20bc6a0), worktree `.claude/worktrees/volunteer-logins`.
 
-> **Status:** draft, 2026-10-22. Jeff answered the first round of questions (§6); §3 is updated to match. The new open questions are in §7. Nothing is built yet.
+> **Status:** draft, 2026-10-22. Jeff answered two rounds of questions (§6), and §3 matches them. No questions are open (§7). Nothing is built yet.
 
 ## 1. Context
 IDEA-005 in `docs/backlog.md`: let volunteers log in with a limited role. It comes from the signup/login redesign ("no volunteer login yet") and from `docs/cold-apply-staff-redesign.md` §5.5 and §7.
@@ -15,7 +15,7 @@ IDEA-005 in `docs/backlog.md`: let volunteers log in with a limited role. It com
 | cold_apply `owned_by` / `can_access_participant` (`cold_apply/guards.py:7-18`) | about 30 views | Staff see every participant's jobs, experience and resumes; everyone else sees only their own |
 | `can_review_veteran_status` (`guards.py:71`) | DD214 download, veteran status edit, admin `service_doc` | `is_staff` **and** `userprofile.review_veteran_status` (the "Veteran reviewers" group) |
 | `app_permission_required(app)` (`guards.py:100`) | releases, rates, and hlagents (on its branch) | Any permission in the app. **Does not need `is_staff`.** |
-| Assignee rules | `pipeline/dashboard.py:127` `staff_users()`, `pipeline/services.py:61,106` | Only active `is_staff` users can be assigned |
+| Assignee rules | `pipeline/dashboard.py:145` `staff_users()`, `pipeline/services.py:69,115` | Only active `is_staff` users can be assigned |
 | Django admin | default | Any `is_staff` user can reach `/admin/` and sees the models they hold permissions on |
 
 **Everyone who isn't staff is treated as a participant:**
@@ -49,33 +49,35 @@ IDEA-005 in `docs/backlog.md`: let volunteers log in with a limited role. It com
   - **People** (`people.py:38`) shows non-staff users with a profile or an enrollment, which includes unfinished signups. Change: leave out volunteers who aren't onboarded.
   - **Onboarding reminders** (`reminders.py:41` `unfinished_users`) leave out volunteers, so a volunteer is never nagged to finish onboarding.
   - **Legacy purge** (`purge.py:17`) leaves out volunteers.
-- Volunteer accounts are created through the invite (§3.4), so they never go through onboarding or get a `Participant` or an Intake enrollment.
+- Volunteer accounts are created through the invite (§3.4), so they skip onboarding and don't get a `Participant` or an Intake enrollment unless they ask for one.
+- **Volunteer to participant** (§6): the volunteer home has a "Get job search help" card that starts the normal onboarding. Until onboarding is finished, the card reads "Continue onboarding". Finishing it creates the `Participant` and starts Intake, the same as for anyone else (`userprofile/models.py:61-68`). From then on they're a participant-volunteer (§3.6), and their own Intake enrollment shows up for staff like any other. Volunteers who are partway through onboarding still don't get reminders, since the volunteer home already shows them where they left off.
 
 ### 3.3 Phase V1: hlagents volunteers
 - **Landing:** `user_home` (`userprofile/views.py:57`) checks `is_staff`, then `is_volunteer`, then onboarding. A volunteer lands on a **small volunteer home** (§6), `/volunteer/`: a heading, a card for each tool they have permissions for (Agents; the Funding and Outreach boards), and "My profile" if they're also a participant.
-- **Agents:** the invite adds new volunteers to **Agents**. `/agents/` then works with no code change.
-- **Lead boards:** volunteers see **every** Funding and Outreach enrollment and who it's assigned to, other volunteers included (§6). The People tabs (My people, Everyone, triage, the person panel) stay staff-only.
-  - New permission `pipeline.view_lead_flows`, added to Agents. Staff keep seeing everything through `is_staff` until V2.
-  - A volunteer opening `/staff/` gets the dashboard with only the Funding and Outreach tabs. Alternatively, the same views can be served at a `/volunteer/leads/` URL; decide during the build.
-  - What volunteers can **do** on those boards (move cards, assign, end) is an open question (§7 Q1).
+- **Agents:** a volunteer the inviter puts in **Agents** (§3.4) can use `/agents/` with no code change, including moving a lead's stage (hlagents H6).
+- **Lead boards:** volunteers see **every** Funding and Outreach enrollment and who it's assigned to, other volunteers included. They can do **everything staff can** there (§6): move cards, assign to anyone, and complete or end enrollments. The People tabs (My people, Everyone, triage, the person panel) stay staff-only.
+  - New permission `pipeline.work_lead_flows`, added to Agents. Until V2, staff pass through `is_staff`.
+  - **Where:** the `/staff/` dashboard, with tabs filtered by permission (§6). A volunteer with `work_lead_flows` sees only the Funding and Outreach tabs. If they open `/staff/` itself, they go to the first tab they can see. People and flow URLs still give them a 403.
+  - **Gates:** `dashboard_view`, `board_column_view` and the enrollment actions in `pipeline/actions.py` check the flow. A lead flow (`flow.subject == lead`) needs `is_staff` or `work_lead_flows`, and a person flow needs `is_staff`. The check is a helper, `can_work_flow(user, flow)`, which V2 extends to person flows.
+  - **Assignees on lead enrollments:** the choices become "active staff, plus active users with `work_lead_flows`". `enroll()` and `assign()` (`pipeline/services.py:69,115`) accept those users for lead enrollments only. Assignee choices for person flows don't change until V2.
 - **Layout:** volunteers use `staff_base.html` with a nav built from permissions: Agents and Leads yes; People, Stuck signups, Flows, Admin and release notes no (§3.7).
 - **Badge:** a "Volunteer" badge next to the name in the timeline actor, the assignee list and board cards, and on People rows for participant-volunteers (§6).
 
 ### 3.4 Volunteer invite (V1)
 Jeff chose a **staff invite** (§6). It's a staff page, `/staff/volunteers/`:
 - **List:** current volunteers (name, email, groups, last login, active), plus pending invites with Resend and Revoke.
-- **Invite:** email, first and last name. Sending creates a `VolunteerInvite` (email, name, `invited_by`, `created_at`, `accepted_at`, `user`) and emails a link.
+- **Invite:** email, first and last name, and **groups**. The inviter must tick at least one group (§6). Volunteers is always added and isn't shown. Staff and Veteran reviewers are never offered: Veteran reviewers would be useless without `is_staff`, and Staff means employee powers. Every other group is offered (Agents today). Sending creates a `VolunteerInvite` (email, name, `groups` M2M, `invited_by`, `created_at`, `accepted_at`, `user`) and emails a link.
 - **Token:** reuse the `make_token`/`read_token` pattern from `userprofile/signup.py` with its own salt (`userprofile.volunteer_invite`) and the same `LINK_MAX_AGE`. It uses its own model, not `PendingSignup`, so signup reminders and expiry (`reminders.py`) never touch invites.
 - **Accepting:**
-  - **New email:** the page asks for a password, then creates the user with a verified `EmailAddress`, adds Volunteers and Agents, logs them in, and sends them to `/volunteer/`. No onboarding.
+  - **New email:** the page asks for a password, then creates the user with a verified `EmailAddress`, adds Volunteers and the invite's groups, logs them in, and sends them to `/volunteer/`. No onboarding.
   - **Email already has an account** (e.g. a former participant): the link asks them to log in as that account, then adds the groups. Their participant data is untouched (§3.6).
   - **Expired or used:** "ask staff for a new invite", the same way the signup link handles it.
 - **Who can invite:** any staff in V1 (`staff_required`). In V2 this becomes a permission, `userprofile.invite_volunteers`, held by the Staff group.
-- Other groups (anything past Agents) are added in Django admin.
+- Groups can be changed later in Django admin. An Edit groups action on `/staff/volunteers/` could come later.
 
 ### 3.5 Phase V2: Staff group and participant work (later)
 Only when volunteers get enrollment work.
-- **Staff group** (§6): a data migration creates **Staff** with permissions for every staff power and adds every active `is_staff` user. Sketch of the permissions: `pipeline.work_enrollments`, `pipeline.view_lead_flows`, `pipeline.manage_flows`, `userprofile.view_people`, `userprofile.invite_volunteers`, `cold_apply.view_all_participants`, plus the existing Agents group.
+- **Staff group** (§6): a data migration creates **Staff** with permissions for every staff power and adds every active `is_staff` user. Sketch of the permissions: `pipeline.work_enrollments`, `pipeline.work_lead_flows`, `pipeline.manage_flows`, `userprofile.view_people`, `userprofile.invite_volunteers`, `cold_apply.view_all_participants`, plus the existing Agents group.
   - Every `staff_required` gate becomes a check of one of those permissions (`perm_required(perm)`, a sibling of `app_permission_required`). `StaffRequiredMixin` does the same.
   - `is_staff` then means only "an employee who can reach `/admin/`". The DD214 check keeps requiring it.
   - **New staff** need to join Staff as well as get `is_staff`. To catch anyone missed, `/staff/` can warn on login for `is_staff` users with no Staff group.
@@ -83,8 +85,8 @@ Only when volunteers get enrollment work.
   - Dashboard and board querysets add `assignee=request.user` for person flows.
   - The quick view, person page and timeline 404 unless the volunteer has an open enrollment for that person assigned to them.
   - In cold_apply, `owned_by` / `can_access_participant` gain a third branch, "assigned to me", and staff go through `cold_apply.view_all_participants` instead of `is_staff`.
-- **Assignee choices:** `staff_users()` (`pipeline/dashboard.py:127`) becomes "active users with `work_enrollments`". The checks in `enroll()` and `assign()` (`pipeline/services.py:61,106`) change to match.
-- **What volunteers can't do on person enrollments** (unless Jeff says otherwise): reassign to someone else, unassign themselves, or see unassigned enrollments.
+- **Assignee choices:** `staff_users()` (`pipeline/dashboard.py:145`) becomes "active users with `work_enrollments`" for person flows. Lead flows already use `work_lead_flows` from V1 (§3.3). The checks in `enroll()` and `assign()` (`pipeline/services.py:69,115`) change to match.
+- **What volunteers can't do on person enrollments** (unless Jeff says otherwise; lead enrollments have no such limits, §3.3): reassign to someone else, unassign themselves, or see unassigned enrollments.
 
 ### 3.6 Dual role (participant + volunteer)
 - One login can be both (§6). A participant-volunteer keeps their participant pages (`welcome`, their resume tools), and the volunteer home links to "My profile".
@@ -108,11 +110,11 @@ Only when volunteers get enrollment work.
 ## 4. Implementation notes
 **V1 files:**
 - `userprofile/guards.py`: `is_volunteer`, `is_participant`.
-- `userprofile/models.py`: `VolunteerInvite`. Migrations: the Volunteers group, `VolunteerInvite`, and `pipeline.view_lead_flows` on Agents.
-- `userprofile/volunteers.py` (new): invite list/send/resend/revoke, accept, and the volunteer home. Templates and invite email under `templates/userprofile/volunteers/` and `templates/account/email/`.
+- `userprofile/models.py`: `VolunteerInvite`. Migrations: the Volunteers group, `VolunteerInvite`, and `pipeline.work_lead_flows` (a `Meta.permissions` entry on `Enrollment`) on Agents.
+- `userprofile/volunteers.py` (new): invite list/send/resend/revoke, accept, and the volunteer home with its onboarding card. Templates and invite email under `templates/userprofile/volunteers/` and `templates/account/email/`.
 - `userprofile/views.py`: `user_home`.
 - `userprofile/people.py`, `reminders.py`, `purge.py`: leave out volunteers who aren't participants.
-- `pipeline/views.py`: lead tabs and boards for `view_lead_flows`; People tabs stay `is_staff`.
+- `pipeline/guards.py` (new): `can_work_flow`. `pipeline/views.py`, `actions.py`: tabs filtered by permission, flow-based gates. `dashboard.py` `staff_users()` and `services.py` `enroll()`/`assign()`: lead assignees.
 - `templates/staff_base.html`, `base_app.html`: nav from permissions; volunteer badge partial.
 
 **V2 files:**
@@ -122,9 +124,10 @@ Only when volunteers get enrollment work.
 - `userprofile/people.py`, `cold_apply/guards.py`, and the cold_apply `StaffRequiredMixin` views.
 
 **Tests:** follow the current pattern (`force_login`, assert 403/404/redirect). Add a `volunteer()` helper next to `reviewer()` (`userprofile/tests/test_service_doc.py:19`). Then:
-- invites: send, accept for a new email and for an existing account, expired, reused and revoked links, and no onboarding after accepting;
+- invites: send (at least one group required; Staff and Veteran reviewers not offered), accept for a new email and for an existing account (the chosen groups are added), expired, reused and revoked links, and no onboarding after accepting;
+- volunteer home: the onboarding card starts onboarding, and finishing it makes them a participant (People, Intake);
 - `user_home` sends a volunteer to `/volunteer/`, and a 403 for a volunteer on every `staff_required` view except the lead tabs;
-- lead tabs show every lead enrollment and its assignee, but not person enrollments;
+- lead tabs: a volunteer sees every lead enrollment and its assignee, can move, assign (including to another volunteer), complete and end them, and gets a 403 on person flows and their actions;
 - the DD214 view gives a 403 for a volunteer, even with the reviewer permission;
 - People, reminders and purge leave out volunteers who aren't onboarded, but keep onboarded participant-volunteers;
 - V2: a participant-volunteer can't see or be assigned their own enrollment.
@@ -132,7 +135,7 @@ Only when volunteers get enrollment work.
 Run the tests in docker compose (`-p hl-volunteer`).
 
 ## 5. Plan
-- **V1, hlagents volunteers:** the Volunteers group, `is_volunteer` / `is_participant`, the invite flow, `user_home` and the volunteer home, lead boards for volunteers, People/reminders/purge filters, the permission-based nav, the badge, and the DD214 guard test. hlagents is already on develop, so this can start once develop is merged into the branch.
+- **V1, hlagents volunteers:** the Volunteers group, `is_volunteer` / `is_participant`, the invite flow with group choice, `user_home` and the volunteer home (with onboarding), lead boards with full staff actions, People/reminders/purge filters, the permission-based nav, the badge, and the DD214 guard test. hlagents (through H6) is merged into the branch. When V1 is built and the suite passes, merge into develop.
 - **V2, Staff group and enrollment work:** the Staff group migration, permission gates in place of `is_staff`, assigned-only visibility for people, assignee choices, and self-exclusion. Only when volunteers need it.
 
 ## 6. Decisions
@@ -151,12 +154,18 @@ Run the tests in docker compose (`-p hl-volunteer`).
 | 2026-10-22 | A participant is a user who finished onboarding | Jeff |
 | 2026-10-22 | Staff see a Volunteer badge | Jeff |
 | 2026-10-22 | No volunteer agreement for now | Jeff |
+| 2026-10-22 | On the lead boards, volunteers can do everything staff can (move, assign to anyone, complete, end) | Jeff |
+| 2026-10-22 | The inviter must pick the volunteer's groups | Jeff |
+| 2026-10-22 | Volunteers can start onboarding from their volunteer home | Jeff |
+| 2026-10-22 | Lead boards stay at `/staff/`, with tabs filtered by permission | Jeff |
 
 ## 7. Open questions
-1. **Lead boards:** hlagents H6 (`hlagents.md` §8) already lets anyone with `change_lead`, the Agents group included, move a lead's stage from `/agents/`. Completing an enrollment (Awarded, Declined, Partner) and assigning stay on the staff board. What else should volunteers do on the boards? View only (stages are moved in `/agents/`); also assign leads to themselves; or everything staff can (assign to anyone, complete and end enrollments)?
-2. **Invite groups:** does the invite always add Volunteers + Agents, or should the inviter tick groups on the invite form?
-3. **Volunteer to participant:** can a volunteer start onboarding from their volunteer home (for example, a volunteer who wants job search help), or does staff decide that?
-4. **Lead board URL:** volunteers see a trimmed `/staff/` dashboard, or a separate `/volunteer/leads/`? Leaning `/staff/` with tabs filtered by permission, because it's less code and V2 needs the same filtering anyway.
+None right now. Questions from rounds 1 and 2 are recorded in §6.
+
+Calls made in §3 without asking. Change any of them if they're wrong:
+- The invite never offers Staff or Veteran reviewers (§3.4).
+- Volunteers partway through onboarding get no reminder emails (§3.2).
+- One permission, `work_lead_flows`, covers both viewing and working the lead boards. There's no separate view-only permission (§3.3).
 
 ## 8. Found along the way
 Logged in `docs/bug-log.md` (2026-10-22):
