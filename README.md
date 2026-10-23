@@ -15,6 +15,13 @@ GCP_PROJECT_ID=whatever-project-id-you-want
 GOOGLE_APPLICATION_CREDENTIALS=gcloud/application_default_credentials.json
 ```
 
+Optional: for the AI agents at /agents/, create `.env.local` in the repo root. It's gitignored, and docker compose loads it into the django containers.
+```bash
+# .env.local
+OLLAMA_API_KEY=...
+TAVILY_API_KEY=...
+```
+
 Create /hl_main/creds subdirectory
 Create SSH key for local environment
 

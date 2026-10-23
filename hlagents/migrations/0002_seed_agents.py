@@ -6,7 +6,9 @@ from here on.
 """
 from django.db import migrations
 
-DEFAULT_MODEL = "gpt-oss:120b"
+# The prototype ran gemma4:31b-cloud through a local Ollama. Calling
+# https://ollama.com directly takes the name without "-cloud".
+DEFAULT_MODEL = "gemma4:31b"
 
 FUNDING_PROMPT = """You are a research assistant helping a veteran-services nonprofit find open funding opportunities 
 (grants, foundation programs, corporate giving programs) to apply to. The organization provides free technical training 

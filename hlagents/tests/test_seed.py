@@ -12,7 +12,7 @@ class SeedTest(TestCase):
         agents = {a.agent_type: a for a in AgentConfig.objects.all()}
         self.assertEqual(set(agents), {"funding", "outreach"})
         for agent in agents.values():
-            self.assertEqual((agent.provider, agent.model, agent.tools), (provider, "gpt-oss:120b", ["web_search"]))
+            self.assertEqual((agent.provider, agent.model, agent.tools), (provider, "gemma4:31b", ["web_search"]))
             self.assertTrue(set(agent.tools) <= set(TOOLS))
         self.assertIn("funding opportunities", agents["funding"].system_prompt)
         self.assertIn("Return ONLY the JSON", agents["outreach"].system_prompt)

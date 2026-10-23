@@ -37,6 +37,10 @@ services:
     ports:
       - 8000:8000
     command: python manage.py runserver_plus 0.0.0.0:8000
+    # Optional dev-only secrets such as OLLAMA_API_KEY and TAVILY_API_KEY (see README)
+    env_file:
+      - path: .env.local
+        required: false
     environment:
       - DJANGO_SETTINGS_MODULE=hl_main.settings.dev
 
@@ -60,6 +64,10 @@ services:
       - $HOME/.config/gcloud:/root/.config/gcloud:ro
     ports:
       - "8001:8001"
+    # Optional dev-only secrets such as OLLAMA_API_KEY and TAVILY_API_KEY (see README)
+    env_file:
+      - path: .env.local
+        required: false
     environment:
       - DJANGO_ROLE=tasks
       - DJANGO_SETTINGS_MODULE=hl_main.settings.dev

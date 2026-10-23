@@ -106,7 +106,9 @@ Built with Django templates, htmx, Alpine, Tailwind and Preline, in the same sty
 The outreach prototype dedupes against an uploaded CSV of current **community partners**: organizations we already have a relationship with (we send them boot camp announcements, and they send us events). They aren't funders.
 - `/agents/leads/import/` uploads that CSV. Each row becomes an Outreach lead with source **import** and review status approved. Once H4 lands, it is enrolled at the Outreach flow's **Partner** step. Rows already present (same email) are updated, not duplicated, so the import can be run again whenever the list changes.
 - Agents dedupe against these leads like any other, so they never re-find a current partner.
-- Columns are matched by header. `EMAIL` is required, as in the prototype. The other headers will be mapped once we have a sample file.
+- The file's columns are `EMAIL` and `Status`. `Status` is mostly blank. Otherwise it's `Bounced`, sometimes with a count, such as `Bounced #3`.
+- `Lead` gets a `bounces` count. Blank is 0, `Bounced` is 1, and `Bounced #N` is N. Bounced partners are still imported, so agents don't re-find them, and the leads list shows the bounce count. Unknown `Status` values stop the import and list the rows, rather than guessing.
+- The CSV has no names or orgs, so imported leads have only an email until someone edits them.
 
 ### 3.10 Activity log
 Everything is logged in the pipeline activity log from the start: a lead being found by a run, imported, edited, approved, rejected, or opted out. That requires `Activity.lead` (§3.6). The Activity half of the pipeline change moves into H2, so logging starts with the review UI. H4 does the Enrollment half.
@@ -146,12 +148,10 @@ Added 2026-10-22, from Jeff's answers in §7:
 12. **Flow steps** to start with. Funding: Found → Researching → Applying → Submitted → Awarded / Declined. Outreach: Found → Contacted → Replied → Partner. We'll revise them after people have used them.
 13. **Everything goes in the activity log** from the start (§3.10).
 14. **Resume generation** (BUG-038) and **keyword extraction** will move onto this provider layer later, as separate efforts (IDEA-007).
-15. The **default model** for the seeded agents is `gpt-oss:120b` on Ollama Cloud. It's chosen for tool calling and can be changed in settings. *(Claude's pick. Change it if the prototype used something else.)*
+15. The **default model** for the seeded agents is `gemma4:31b`, the model the prototype used (2026-10-22). The prototype ran it as `gemma4:31b-cloud` through a local Ollama. The `-cloud` suffix is only for local Ollama; calling `https://ollama.com` directly takes the plain name. This gets confirmed on the first real run in H2.
 
 ## 7. Open questions
-Answered 2026-10-22, and folded into §6 and §3. Still open:
-- A sample header row from the community partners CSV (§3.9).
-- Which model the prototype runs used, if it wasn't `gpt-oss:120b`.
+Answered 2026-10-22, and folded into §6 and §3, including the partners CSV columns and the prototype model. Nothing is open.
 
 Original questions and answers:
 
@@ -177,5 +177,6 @@ Original questions and answers:
 - **Services and models:** `hlagents/services.py` (`create_run`, `save_leads`) and `hlagents/models.py`. Migration `0002_seed_agents` seeds the Ollama Cloud provider (`OLLAMA_API_KEY`), the two agents with the prototype prompts and `gpt-oss:120b`, and `AgentLimits` ($1 per run, $10 per day, $0.008 per search).
 - **Wiring:** the app is in `INSTALLED_APPS`, and `/agents/` is included with no pages yet. Admin is registered for all models.
 - **Dependencies:** `ollama==0.6.3`, `tavily-python==0.8.5`.
+- **Dev keys:** `OLLAMA_API_KEY` and `TAVILY_API_KEY` go in `.env.local` in the repo root. It's gitignored, and compose loads it into `django` and `django-tasks` if it exists. `.env.dev` isn't loaded, because its `GOOGLE_APPLICATION_CREDENTIALS` would override the mounted gcloud credentials.
 - **Tests:** `hlagents/tests/` has 39 tests using `FakeProvider` and a mocked `TavilyClient`. The full suite (336 tests) passes.
 - `examples/` stays until H2 has run both agents against Ollama Cloud for real.
