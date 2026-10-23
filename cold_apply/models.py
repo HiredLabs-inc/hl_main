@@ -116,7 +116,7 @@ class KeywordAnalysis(models.Model):
 
 class WeightedBullet(models.Model):
     participant = models.ForeignKey(Participant, on_delete=models.CASCADE)
-    position = models.ForeignKey(Position, on_delete=models.CASCADE)
+    position = models.ForeignKey(Position, on_delete=models.PROTECT)
     bullet = models.ForeignKey(Bullet, on_delete=models.CASCADE)
     weight = models.FloatField()
 
@@ -186,6 +186,8 @@ class Location(models.Model):
     city = models.CharField(max_length=200)
     state = models.ForeignKey(State, on_delete=models.SET_NULL, null=True)
     country = models.ForeignKey(Country, on_delete=models.SET_NULL, null=True)
+    # See resume.models.Organization.created_by
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
 
     def __str__(self):
         if not self.country.name == "United States":

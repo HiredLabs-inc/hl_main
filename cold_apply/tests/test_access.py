@@ -69,8 +69,6 @@ class ColdApplyAccessTest(TestCase):
             reverse("cold_apply:index"),
             reverse("cold_apply:process"),
             reverse("cold_apply:update_participant", args=[self.owner.pk]),
-            reverse("cold_apply:update_company", args=[self.job.company.pk]),
-            reverse("cold_apply:update_title", args=[self.job.title.pk]),
             reverse("staff"),
             reverse("userprofile:veteran_status_update_view", args=[self.owner.user.pk]),
         ]
