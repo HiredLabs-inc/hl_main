@@ -28,7 +28,6 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 | BUG-039 | Low | Open | dev data | `load_dev_data` sometimes crashes on a duplicate Faker company name (`resume.Organization.name` is unique) |
 | BUG-040 | Medium | Open | resume | `/resume/resumes/<pk>` has no login check and always returns a 500 (undefined `overview`) |
 | BUG-041 | Low | Open | cold_apply | `ConfirmApplicationView` is dead code: no URL, no template, no auth |
-| BUG-042 | Low | Open | staff UI | Release-notes links show to all staff, but plain staff get a 403 |
 ---
 ## BUG-019 — A request can hit a closed database connection
 - **Severity:** Medium · **Status:** Open · **Found:** 2026-10-17, stage sign-up test after build 8f748ade (46858e2) · **Suspected:** seen once, not reproduced
@@ -104,12 +103,6 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 - **Problem:** a `TemplateView` with no auth. No URL points to it, and its template `confirm_application_submit.html` doesn't exist. It's left over from the dropped `Application` model.
 - **Fix idea:** delete it.
 
-## BUG-042 — Release-notes links show to staff who can't open them
-- **Severity:** Low · **Status:** Open · **Found:** 2026-10-22, IDEA-005 code survey
-- **Where:** `templates/staff_base.html:34-37`
-- **Problem:** the Tools menu shows "Release notes: …" links to every `is_staff` user. The release views need `releases` app permissions since BUG-002, so staff without them get a 403.
-- **Fix idea:** wrap the links in `{% if perms.releases %}`, like the World Rates link above them. This fits the permission-based nav in `docs/volunteer-logins.md` §3.6.
-
 ## Fixed and Skipped
 
 | ID | Severity | Status | Area | Summary |
@@ -142,6 +135,7 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 | BUG-029 | Low | Fixed | cold_apply | Dead or misleading code in the staff pages (`staff.html` navbar, `index.html`, Bootstrap script, URL typo) |
 | BUG-031 | Medium | Fixed | userprofile | Suspected: new signups can land in Nurture, because phases and steps share order values |
 | BUG-037 | Medium | Fixed | pipeline | "Completed" and "Withdrawn" did the same thing, and ended enrollments couldn't be changed |
+| BUG-042 | Low | Fixed | staff UI | Release-notes links show to all staff, but plain staff get a 403 |
 ---
 ## BUG-001 — Deletes and keyword refresh run on GET links (CSRF)
 - **Severity:** High · **Status:** Fixed (`fix/bug-001-csrf-get-deletes`, 1d04bee; merged into `feature/signup-login-redesign`) · **Found:** 2026-10-16, signup redesign Step 1
@@ -335,3 +329,9 @@ phase for anyone who was an active student, but did not complete the course (to 
 be editable. Admins might make mistakes, and the current interface is too rigid, which will create very dirty data.
 - **Fix:** Completed is only allowed from a flow's final step (`Step.completes_flow`; migration `pipeline/0004` adds Graduated for Boot Camp and a placeholder Service Complete for Resume & Job Search). New Dropped status. For Boot Camp, once their session has started they can be dropped or completed, not withdrawn; before that, only withdrawn (`userprofile/bootcamp.py` `status_rule`). Ended enrollments can be reopened, switch how they ended, and be given a session, including a past one. The dashboard only shows the endings that apply.
 - **After the prod release:** on the Boot Camp tab, set Status to Completed and fix the graduate: Reopen → pick their cohort under "Past sessions" → move to Graduated → Complete. Find other Boot Camp enrollments completed without a cohort with `Enrollment.objects.filter(flow__slug="boot-camp", status="completed", bootcamp_seat__isnull=True)`. Check where the new Graduation phase sits on the prod board (it's added after the last Boot Camp phase) and reorder if needed.
+
+## BUG-042 — Release-notes links show to staff who can't open them
+- **Severity:** Low · **Status:** Fixed (`feature/volunteer-logins`, fa7c027; merged into develop in 3f7c025; reaches stage and prod with the next deploys) · **Found:** 2026-10-22, IDEA-005 code survey
+- **Where:** `templates/staff_base.html:34-37`
+- **Problem:** the Tools menu shows "Release notes: …" links to every `is_staff` user. The release views need `releases` app permissions since BUG-002, so staff without them get a 403.
+- **Fix:** the links are under `{% if perms.releases %}`, like World Rates, as part of the permission-based staff nav (`docs/volunteer-logins.md` §3.7). Test: `userprofile/tests/test_volunteers.py` `test_release_notes_follow_the_permission`.

@@ -17,7 +17,7 @@ Design and development ideas that came up during other work and are **not bugs**
 | IDEA-002 | Done | pipeline | Kanban view of a flow on the staff dashboard |
 | IDEA-003 | Idea | cold_apply | Staff pages to list, merge and delete companies, titles and locations |
 | IDEA-004 | Idea | cold_apply | Self-service participant portal with its own access level |
-| IDEA-005 | Planned | accounts | Volunteer logins |
+| IDEA-005 | In progress | accounts | Volunteer logins |
 | IDEA-006 | Idea | pipeline | Define the Nurture flow (today it's a placeholder) |
 | IDEA-007 | Idea | cold_apply | Move resume generation and keyword extraction onto the hlagents provider layer |
 
@@ -45,7 +45,7 @@ Design and development ideas that came up during other work and are **not bugs**
 - **Notes:** the portal and access level don't exist yet. Today only staff create companies, titles and locations, but any logged-in user technically can (BUG-030). Decide which reference data participants may create when this portal is designed.
 
 ## IDEA-005 — Volunteer logins
-- **Status:** Planned (`feature/volunteer-logins`, draft doc `docs/volunteer-logins.md`, 2026-10-22) · **Area:** accounts · **Source:** signup/login redesign ("no volunteer login yet"); `docs/cold-apply-staff-redesign.md` §5.5 and §7 (2026-10-19)
+- **Status:** In progress: V1 (invites, volunteer home, lead boards) merged into develop in 3f7c025 on 2026-10-22; V2 (Staff group, assigned-only people work) when needed. Doc `docs/volunteer-logins.md` §5 · **Area:** accounts · **Source:** signup/login redesign ("no volunteer login yet"); `docs/cold-apply-staff-redesign.md` §5.5 and §7 (2026-10-19)
 - **What:** let volunteers log in with a limited role, so they can be assignees on enrollments and do selected staff work.
 - **Notes:** Jeff expects volunteers, but not soon. Assignee choices are limited to `is_staff` users until then. A volunteer role will need its own permission set, with no DD214 access.
 
