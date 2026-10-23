@@ -137,6 +137,8 @@ def generate_text(prompt: str) -> str:
         # Short resume text doesn't need thinking, and thinking tokens count
         # against max_output_tokens
         thinking_config=types.ThinkingConfig(thinking_budget=0),
+        # No tools are passed, so automatic function calling only logs a warning
+        automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
     )
     try:
         response = client.models.generate_content(
