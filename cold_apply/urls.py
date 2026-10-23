@@ -15,10 +15,7 @@ from .views import (
     JobUpdateView,
     LocationCreateView,
     LocationDetailView,
-    LocationListView,
-    LocationUpdateView,
     OrganizationCreateView,
-    OrganizationUpdateView,
     OverviewCreateView,
     OverviewDeleteView,
     OverviewDetailView,
@@ -30,8 +27,10 @@ from .views import (
     ParticipantUpdateView,
     PhaseListView,
     PositionCreateView,
+    ReferenceDeleteView,
+    ReferenceListView,
+    ReferenceUpdateView,
     TitleCreateView,
-    TitleUpdateView,
     configure_tailored_resume_view,
     delete_bullet,
     delete_education,
@@ -70,7 +69,7 @@ urlpatterns += [
     ),
 ]
 
-# Companies CU (no read or delete) TODO: Add delete
+# Companies: create here; list, update and delete under reference/ below
 urlpatterns += [
     path("add_company/", OrganizationCreateView.as_view(), name="create_company"),
     path(
@@ -80,7 +79,7 @@ urlpatterns += [
     ),
     path(
         "companies/<int:pk>/update/",
-        OrganizationUpdateView.as_view(),
+        ReferenceUpdateView.as_view(kind="companies"),
         name="update_company",
     ),
     path(
@@ -93,11 +92,11 @@ urlpatterns += [
     ),
 ]
 
-# Titles CU (no read or delete) TODO: Add delete
+# Titles: create here; list, update and delete under reference/ below
 urlpatterns += [
     path("titles/add_title/", TitleCreateView.as_view(), name="create_title"),
     path("titles/confirm_add/", ConfirmCreateView.as_view(), name="confirm_add_title"),
-    path("titles/<int:pk>/update/", TitleUpdateView.as_view(), name="update_title"),
+    path("titles/<int:pk>/update/", ReferenceUpdateView.as_view(kind="titles"), name="update_title"),
     path(
         "titles/confirm_update/",
         ConfirmCreateView.as_view(),
@@ -292,11 +291,18 @@ urlpatterns += [
     path("locations/create/", LocationCreateView.as_view(), name="create_location"),
     path(
         "locations/<int:pk>/update",
-        LocationUpdateView.as_view(),
+        ReferenceUpdateView.as_view(kind="locations"),
         name="update_location",
     ),
     path("locations/<int:pk>/", LocationDetailView.as_view(), name="location_detail"),
-    path("locations/", LocationListView.as_view(), name="location_list"),
+    path("locations/", ReferenceListView.as_view(kind="locations"), name="location_list"),
+]
+
+# Shared reference data: list, update and delete what you added (BUG-030)
+urlpatterns += [
+    path("reference/<slug:kind>/", ReferenceListView.as_view(), name="reference_list"),
+    path("reference/<slug:kind>/<int:pk>/update/", ReferenceUpdateView.as_view(), name="update_reference"),
+    path("reference/<slug:kind>/<int:pk>/delete/", ReferenceDeleteView.as_view(), name="delete_reference"),
 ]
 
 

@@ -24,4 +24,6 @@
     <hr class="my-6">
     <a class="btn btn-primary" hx-get="{% url 'cold_apply:create_company' %}" hx-target="#modal">Add Organization</a>
     <a class="btn btn-primary" hx-get="{% url 'cold_apply:create_position'%}" hx-target="#modal">Add Position</a>
+    <a class="btn btn-outline-primary" href="{% url 'cold_apply:reference_list' 'companies' %}" target="_blank">Manage organizations</a>
+    <a class="btn btn-outline-primary" href="{% url 'cold_apply:reference_list' 'titles' %}" target="_blank">Manage positions</a>
 {% endblock %}

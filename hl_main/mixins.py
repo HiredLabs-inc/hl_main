@@ -23,10 +23,13 @@ class HtmxViewMixin:
             #     "cold_apply:participant_experience_list",
             #     kwargs={"pk": self.object.experience.participant_id},
             # )
-            headers = {"Hx-Refresh": "true"} if self.refresh_on_save else {}
-
-            return HttpResponse(
-                headers=headers, status=204 if self.empty_response_on_save else 200
-            )
+            return self.htmx_saved_response()
 
         return response
+
+    def htmx_saved_response(self):
+        headers = {"Hx-Refresh": "true"} if self.refresh_on_save else {}
+
+        return HttpResponse(
+            headers=headers, status=204 if self.empty_response_on_save else 200
+        )

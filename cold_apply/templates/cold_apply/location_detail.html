@@ -1,5 +1,4 @@
-
-{% extends 'staff_base.html' %}
+{% extends 'base_app.html' %}
 
 {% block content %}
     <h3>Location Detail</h3>
@@ -9,9 +8,5 @@
     <div>
         <a class="btn btn-primary" href="{% url 'cold_apply:update_location' location.id %}">Update</a>
         <a class="btn btn-primary" href="{% url 'cold_apply:location_list'  %}">See All Locations </a>
-
     </div>
-    
-    
 {% endblock %}
-

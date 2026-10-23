@@ -9,6 +9,7 @@
                         hx-target="#modal">
                         Add new Title
                     </a>
+                    · <a href="{% url 'cold_apply:reference_list' 'titles' %}" target="_blank">Manage</a>
                 </div>
             {% endif %}
             {% if field.name == "company" %}
@@ -19,6 +20,7 @@
                         hx-target="#modal">
                         Add new Company
                     </a>
+                    · <a href="{% url 'cold_apply:reference_list' 'companies' %}" target="_blank">Manage</a>
                 </div>
             {% endif %}
             {% if field.name == "location" %}
@@ -33,7 +35,8 @@
                         hx-get="{{create_location_url}}"
                         hx-target="#modal">
                         Add new Location
-                    </a></div>
+                    </a>
+                    · <a href="{% url 'cold_apply:reference_list' 'locations' %}" target="_blank">Manage</a></div>
                     
                 </div>
             {% endif %}

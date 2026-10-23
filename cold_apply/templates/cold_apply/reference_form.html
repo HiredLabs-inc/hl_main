@@ -1,0 +1,22 @@
+{% extends 'base_app.html' %}
+{% block breadcrumbs %}
+    {% if request.user.is_staff %}
+        {% breadcrumb 'Dashboard' 'staff' %}
+    {% endif %}
+    {% breadcrumb ref.label 'cold_apply:reference_list' ref.slug %}
+    {% breadcrumb object|stringformat:"s" %}
+{% endblock breadcrumbs %}
+
+{% block content %}
+    <h3>Edit {{ object }}</h3>
+    <form class="post-form space-y-4 max-w-md" method="post">
+        {% csrf_token %}
+        {% for field in form %}
+            {% include "components/form_input.html" %}
+        {% endfor %}
+        <div>
+            <input class="btn btn-primary" type="submit" value="Save">
+            <a class="btn btn-outline-primary" href="{% url 'cold_apply:reference_list' ref.slug %}">Cancel</a>
+        </div>
+    </form>
+{% endblock %}

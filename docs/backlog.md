@@ -22,6 +22,7 @@ Design and development ideas that came up during other work and are **not bugs**
 | IDEA-006 | Idea | pipeline | Define the Nurture flow (today it's a placeholder) |
 | IDEA-007 | Idea | cold_apply | Move resume generation and keyword extraction onto the hlagents provider layer |
 | IDEA-008 | Idea | hlagents | Move agents to Google AI APIs where possible |
+| IDEA-009 | Idea | cold_apply | Parse an uploaded resume into experience, education, companies, titles and locations |
 
 ---
 
@@ -38,7 +39,7 @@ Design and development ideas that came up during other work and are **not bugs**
 ## IDEA-004 — Self-service participant portal
 - **Status:** Idea · **Area:** cold_apply · **Source:** `docs/cold-apply-staff-redesign.md` §7, BUG-030 (2026-10-19)
 - **What:** a portal where participants use some of the tools themselves (add experience, education and bullets, view jobs), with an access level separate from staff.
-- **Notes:** the portal and access level don't exist yet. Today only staff create companies, titles and locations, but any logged-in user technically can (BUG-030). Decide which reference data participants may create when this portal is designed.
+- **Notes:** the portal and access level don't exist yet. Participants can already create companies, titles, concentrations and locations from their forms, and edit or delete the ones they added while nobody else uses them (BUG-030, `cold_apply/reference.py`).
 
 ## IDEA-006 — Define the Nurture flow
 - **Status:** Idea · **Area:** pipeline · **Source:** `docs/cold-apply-staff-redesign.md` §7 (2026-10-19)
@@ -55,6 +56,10 @@ Design and development ideas that came up during other work and are **not bugs**
 - **What:** run all agents (funding, outreach, and unbuilt, future agents) through GCP AI APIs instead of Tavily and Ollama
 - **Notes:** needs hlagents H1
 
+## IDEA-009 — Resume parser
+- **Status:** Idea · **Area:** cold_apply · **Source:** BUG-030 discussion (2026-10-23)
+- **What:** a participant or staff member uploads a resume (PDF or DOCX), and an LLM extracts experiences, education, bullets, companies, titles and locations. The person reviews the extracted values before they're saved. Each value is matched case-insensitively to an existing row (the matching BUG-030 added), and only unmatched values create new rows. Less typing, fewer duplicates.
+- **Notes:** an earlier parser lived in a separate `resume_parser` app. It isn't in this repo's history, but `ML_MODELS_PATH`, `ENTITIES_PATH` and `RESUME_OUT_PATH` in `hl_main/settings/base.py` still point at it. This would use Gemini on Vertex like `cold_apply/text_generation.py` (or hlagents, see IDEA-007). Related to IDEA-003 (merging duplicates).
 
 ## Completed
 | ID | Status | Area | Summary |

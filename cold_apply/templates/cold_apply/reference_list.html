@@ -1,0 +1,77 @@
+{% extends 'base_app.html' %}
+{% comment %}
+Shared reference data (BUG-030). Staff see every row; participants see what they
+added. Delete shows only for rows nothing uses (cold_apply/reference.py).
+{% endcomment %}
+{% block breadcrumbs %}
+    {% if request.user.is_staff %}
+        {% breadcrumb 'Dashboard' 'staff' %}
+    {% endif %}
+    {% breadcrumb ref.label %}
+{% endblock breadcrumbs %}
+
+{% block content %}
+    <nav class="mb-4 flex flex-wrap gap-2" aria-label="Reference data">
+        {% for kind in kinds %}
+            <a href="{% url 'cold_apply:reference_list' kind.slug %}"
+               class="btn {% if kind.slug == ref.slug %}btn-primary{% else %}btn-outline-primary{% endif %}"
+               {% if kind.slug == ref.slug %}aria-current="page"{% endif %}>{{ kind.label }}</a>
+        {% endfor %}
+    </nav>
+
+    <h3>{% if request.user.is_staff %}{{ ref.label }}{% else %}{{ ref.label }} you added{% endif %}</h3>
+
+    <form method="get" class="my-4 flex max-w-md gap-2">
+        <input type="search" name="q" value="{{ q }}" placeholder="Search" aria-label="Search {{ ref.label|lower }}" class="w-full rounded border px-2">
+        <button class="btn btn-primary" type="submit">Search</button>
+    </form>
+
+    {% if rows %}
+        <table class="table w-full border">
+            <thead>
+                <tr>
+                    <th class="th">Name</th>
+                    <th class="th">Used by</th>
+                    <th class="th"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in rows %}
+                    <tr>
+                        <td class="td">{{ row.obj }}</td>
+                        <td class="td">{{ row.uses }} record{{ row.uses|pluralize }}</td>
+                        <td class="td">
+                            <div class="flex justify-end gap-2">
+                                {% if row.can_edit %}
+                                    <a class="btn btn-outline-primary" href="{% url 'cold_apply:update_reference' ref.slug row.obj.pk %}">Edit</a>
+                                {% endif %}
+                                {% if row.can_delete %}
+                                    <form method="post" action="{% url 'cold_apply:delete_reference' ref.slug row.obj.pk %}"
+                                          onsubmit="return confirm('Delete {{ row.obj|escapejs }}?')">
+                                        {% csrf_token %}
+                                        <button class="btn btn-outline-danger" type="submit">Delete</button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% if is_paginated %}
+            <div class="mt-4 flex items-center gap-4">
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}&q={{ q|urlencode }}">Previous</a>
+                {% endif %}
+                <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}&q={{ q|urlencode }}">Next</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    {% elif request.user.is_staff or q %}
+        <p>Nothing found.</p>
+    {% else %}
+        <p>You haven't added any {{ ref.label|lower }}. When you add one from your Experience, Education or Job forms, it shows up here so you can fix or remove it.</p>
+    {% endif %}
+{% endblock %}

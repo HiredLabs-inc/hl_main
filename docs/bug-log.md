@@ -16,13 +16,7 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 
 | ID | Severity | Status | Area | Summary |
 |---|---|---|---|---|
-| BUG-030 | Low | Open | cold_apply | Any logged-in user can create companies, titles, positions, concentrations and locations, and list locations |
 ---
-## BUG-030 — Any logged-in user can create shared reference data
-- **Severity:** Low · **Status:** Open · **Found:** 2026-10-19, cold_apply staff redesign review
-- **Where:** `cold_apply/views.py` `OrganizationCreateView`, `TitleCreateView`, `PositionCreateView`, `ConcentrationCreateView`, `LocationCreateView`, `LocationDetailView`, `LocationListView` (all `LoginRequiredMixin`)
-- **Problem:** any participant can add companies, titles, positions, concentrations and locations, and list all locations. This may be intended, because participants pick these values on their own forms. Confirm before restricting.
-
 ## Fixed and Skipped
 
 | ID | Severity | Status | Area | Summary |
@@ -55,6 +49,7 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 | BUG-027 | Low | Fixed | cold_apply | Veteran status button is superuser-only but the view allows any staff |
 | BUG-028 | Low | Fixed | userprofile | Suspected: Profile admin search raises FieldError (`user`, `nickname`) |
 | BUG-029 | Low | Fixed | cold_apply | Dead or misleading code in the staff pages (`staff.html` navbar, `index.html`, Bootstrap script, URL typo) |
+| BUG-030 | Low | Fixed | cold_apply | Any logged-in user can create companies, titles, positions, concentrations and locations, and list locations |
 | BUG-031 | Medium | Fixed | userprofile | Suspected: new signups can land in Nurture, because phases and steps share order values |
 | BUG-032 | Low | Fixed | cold_apply | Participant page said "Not a Veteran Veteran (None)" for a veteran with no service branch |
 | BUG-033 | Low | Fixed | cold_apply | `load_dev_data` sometimes crashes: a Faker country name is longer than `rates.Country.name` (50) |
@@ -255,6 +250,13 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
   - `ParticipantListView.model = Phase` although it lists Participants. `ParticipantDetailView` fetches the participant again instead of using `self.object`.
   - The URL `companiies/<pk>/update/` is misspelled.
 - **Fix idea:** remove these as part of the staff redesign.
+
+## BUG-030 — Any logged-in user can create shared reference data
+- **Severity:** Low · **Status:** Fixed (`fix/reference-data`, 4f703c5) · **Found:** 2026-10-19, cold_apply staff redesign review
+- **Where:** `cold_apply/views.py` `OrganizationCreateView`, `TitleCreateView`, `PositionCreateView`, `ConcentrationCreateView`, `LocationCreateView`, `LocationDetailView`, `LocationListView` (all `LoginRequiredMixin`)
+- **Problem:** any participant can add companies, titles, positions, concentrations and locations, and list all locations. This may be intended, because participants pick these values on their own forms. Confirm before restricting.
+- **Decision (2026-10-23):** participants creating these is intended (their Experience, Education and Job forms link to the create views). The fix gives everyone appropriate update and delete rights instead of making it staff-only.
+- **Fix:** creating needs staff or a Participant record (`ParticipantOrStaffMixin`), and a value that already exists in any case is reused instead of added (Concentration collected exact duplicates before). New `created_by` on Organization, Position, Concentration and Location; older and imported rows have none, so only staff manage them. Shared pages under `cold_apply/reference/<kind>/` replace the location list and the staff-only update views: participants list what they added and can edit it while nobody else's records use it; staff list and edit everything. Delete (POST) is allowed only for unused rows, the creator's or any for staff. The resume foreign keys to these rows (Experience, Education, CertProjectActivity, Overview, WeightedBullet) are `PROTECT` instead of `CASCADE`, so one delete can no longer remove every participant's experience at a company. Rules: `cold_apply/reference.py`. Tests: `cold_apply/tests/test_reference_data.py`. Merging duplicates stays IDEA-003; prefilling from a resume is IDEA-009.
 
 ## BUG-031 — New signups can land in the wrong phase
 - **Severity:** Medium · **Status:** Fixed (`feature/cold-apply-staff-redesign`, 1cc7b0c, Step 4: signups get an explicit Intake enrollment; the old step is chosen by title, not "the first step"; merged into develop in 88e3475 and deployed to stage; reaches prod with the next release) · **Found:** 2026-10-19, read-only prod query for the cold_apply staff redesign · **Suspected:** read from code and prod data, not reproduced
