@@ -16,24 +16,14 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 
 | ID | Severity | Status | Area | Summary |
 |---|---|---|---|---|
-| BUG-020 | Low | Open | tests | Suspected: `ColdApplyAccessTest` setup sometimes fails with a value too long for a 50-character column |
 | BUG-030 | Low | Open | cold_apply | Any logged-in user can create companies, titles, positions, concentrations and locations, and list locations |
 | BUG-032 | Low | Open | cold_apply | Participant page says "Not a Veteran Veteran (None)" for a veteran with no service branch |
-| BUG-033 | Low | Open | cold_apply | `load_dev_data` sometimes crashes: a Faker country name is longer than `rates.Country.name` (50) |
 | BUG-034 | Low | Open | pipeline | Board: a moved card that no longer matches the filters stays until the board refreshes |
 | BUG-035 | Low | Open | pipeline | Suspected: board card moved into a column of more than 25 can appear twice after "Show more" |
 | BUG-036 | Low | Open | pipeline | Board: a one-line card's hover preview shows behind its open Move menu |
-| BUG-039 | Low | Open | dev data | `load_dev_data` sometimes crashes on a duplicate Faker company name (`resume.Organization.name` is unique) |
 | BUG-041 | Low | Open | cold_apply | `ConfirmApplicationView` is dead code: no URL, no template, no auth |
 | BUG-043 | Low | Open | cold_apply | NLTK tokenizer/tagger code needs data the image doesn't include (only `stopwords` is baked in) |
 ---
-## BUG-020 — Flaky cold_apply test data: value too long for a 50-character column
-- **Severity:** Low · **Status:** Open · **Found:** 2026-10-18, full test run during signup redesign Step 7 · **Suspected:** seen once; the rerun passed (95 tests)
-- **Where:** `cold_apply/tests/test_access.py:32` (`JobFactory(participant=cls.owner)` in `setUpTestData`), factories in `cold_apply/tests/factories.py`
-- **Problem:** `psycopg.errors.StringDataRightTruncation: value too long for type character varying(50)`. A Faker-generated value sometimes exceeds a `max_length=50` column, so the whole test class errors.
-- **Checked:** the only 50-character column in `cold_apply/models.py` is `Job.remote`, which the factory fills from a fixed list. The value probably comes from a SubFactory (Organization, Position or Location), or from a column whose database length differs from the model. Not tracked down.
-- **Fix idea:** find the column with `\d` on the test tables after a failure, then cap that factory field, e.g. `factory.LazyFunction(lambda: fake.company()[:50])`.
-
 ## BUG-030 — Any logged-in user can create shared reference data
 - **Severity:** Low · **Status:** Open · **Found:** 2026-10-19, cold_apply staff redesign review
 - **Where:** `cold_apply/views.py` `OrganizationCreateView`, `TitleCreateView`, `PositionCreateView`, `ConcentrationCreateView`, `LocationCreateView`, `LocationDetailView`, `LocationListView` (all `LoginRequiredMixin`)
@@ -44,12 +34,6 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 - **Where:** `cold_apply/templates/cold_apply/participant_detail.html` (`{{object.user.profile.service_branch}} Veteran ({{ object.user.profile.rank_at_separation}})`); `Profile.service_branch` defaults to `"Not a Veteran"`, which isn't one of its choices
 - **Problem:** when `is_veteran` is true but no branch was chosen, the page prints the raw default and the missing rank: "Not a Veteran Veteran (None)". The participant sees this about themselves.
 - **Fix idea:** use `get_service_branch_display`, and skip the branch and rank when they're unset. Better, make the default `None`, since "Not a Veteran" duplicates `is_veteran`.
-
-## BUG-033 — `load_dev_data` sometimes crashes on a long country name
-- **Severity:** Low · **Status:** Open · **Found:** 2026-10-20, kanban board B1 browser check
-- **Where:** `cold_apply/tests/factories.py` `CountryFactory` (`name = factory.Faker("country")`), used through `JobFactory` → `LocationFactory` by `cold_apply/management/commands/load_dev_data.py`; `rates/models.py` `Country.name` is `max_length=50`
-- **Problem:** `python manage.py load_dev_data` failed with `DataError: value too long for type character varying(50)` while creating participants. Faker has country names over 50 characters ("British Indian Ocean Territory (Chagos Archipelago)" is 51), so the command fails at random. The error was seen once; which field overflowed is inferred, not traced.
-- **Fix idea:** truncate in the factory (`factory.LazyFunction(lambda: fake.country()[:50])`) or pick from a short fixed list.
 
 ## BUG-034 — Board keeps a moved card that no longer matches the filters
 - **Severity:** Low · **Status:** Open · **Found:** 2026-10-20, kanban board B2 (known when built)
@@ -68,12 +52,6 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 - **Where:** `pipeline/templates/pipeline/partials/board_card.html` (compact card: preview shown with `group-hover` / `group-focus-within`); `board_move_menu.html`
 - **Problem:** in a column of more than 30 cards, opening Move on a one-line card puts focus inside the card, so the full-card preview also appears and sits under the menu. Nothing is broken, but it looks cluttered.
 - **Fix idea:** hide the preview while that card's menu is open (e.g. a `data-menu-open` attribute on the card wrapper that the preview's classes check).
-
-## BUG-039 — `load_dev_data` sometimes crashes on a duplicate company name
-- **Severity:** Low · **Status:** Open · **Found:** 2026-10-21, BUG-037 browser check · **Suspected:** seen once, not reproduced
-- **Where:** `cold_apply/management/commands/load_dev_data.py`, through the factories in `cold_apply/tests/factories.py`; `resume.Organization.name` is unique
-- **Problem:** `python manage.py load_dev_data` failed with `IntegrityError: duplicate key value violates unique constraint "resume_organization_name_key"` (`Smith Inc`). Faker repeats company names, so the command fails at random partway through, like BUG-033.
-- **Fix idea:** use `django_get_or_create = ("name",)` on the organization factory, or `factory.Sequence` / `fake.unique.company()`.
 
 ## BUG-041 — `ConfirmApplicationView` is dead code
 - **Severity:** Low · **Status:** Open · **Found:** 2026-10-22, IDEA-005 code survey
@@ -109,6 +87,7 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 | BUG-017 | Low | Fixed | settings | `asgi.py` defaults to `hl_main.settings`, which isn't a valid settings module |
 | BUG-018 | Medium | Fixed | infra | Stage deploy fails at `start-sql` when the stopped database takes too long to start |
 | BUG-019 | Medium | Fixed | settings | Suspected: a request can hit a closed database connection (one 500 on stage sign-up) |
+| BUG-020 | Low | Fixed | tests | Suspected: `ColdApplyAccessTest` setup sometimes fails with a value too long for a 50-character column |
 | BUG-021 | High | Fixed | userprofile | Every staff user can open DD214s (veteran status page and Django admin) |
 | BUG-022 | Medium | Fixed | cold_apply | Do Not Contact badge is never shown to staff |
 | BUG-023 | Medium | Fixed | cold_apply | Participant page shows blank phone and email |
@@ -119,8 +98,10 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 | BUG-028 | Low | Fixed | userprofile | Suspected: Profile admin search raises FieldError (`user`, `nickname`) |
 | BUG-029 | Low | Fixed | cold_apply | Dead or misleading code in the staff pages (`staff.html` navbar, `index.html`, Bootstrap script, URL typo) |
 | BUG-031 | Medium | Fixed | userprofile | Suspected: new signups can land in Nurture, because phases and steps share order values |
+| BUG-033 | Low | Fixed | cold_apply | `load_dev_data` sometimes crashes: a Faker country name is longer than `rates.Country.name` (50) |
 | BUG-037 | Medium | Fixed | pipeline | "Completed" and "Withdrawn" did the same thing, and ended enrollments couldn't be changed |
 | BUG-038 | Medium | Fixed | cold_apply | AI bullet and overview generation called the retired Vertex `text-bison@001` model |
+| BUG-039 | Low | Fixed | dev data | `load_dev_data` sometimes crashes on a duplicate Faker company name (`resume.Organization.name` is unique) |
 | BUG-040 | Medium | Fixed | resume | `/resume/resumes/<pk>` had no login check and always returned a 500 (undefined `overview`) |
 | BUG-042 | Low | Fixed | staff UI | Release-notes links show to all staff, but plain staff get a 403 |
 ---
@@ -245,6 +226,14 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 - **Fix idea:** if it happens again, compare instance and thread timing. Options: set `CONN_MAX_AGE` with `CONN_HEALTH_CHECKS = True` so dead connections are replaced, or check what in the request could close the connection (gunicorn `gthread`, 8 threads).
 - **Fix notes:** the cause is still unknown, so this is a mitigation. `cloud.py` sets `CONN_MAX_AGE = 60` and `CONN_HEALTH_CHECKS = True`. A reused connection is checked before a request uses it, and a closed one is replaced. It hadn't recurred by 2026-10-23: the logs show only the 2026-10-18 error on stage, and none on prod. Peak Cloud SQL connections over that week were 3 on each, against about 25 allowed on `db-f1-micro`. Reopen if `the connection is closed` appears in the logs again, or if connections near the limit.
 
+## BUG-020 — Flaky cold_apply test data: value too long for a 50-character column
+- **Severity:** Low · **Status:** Fixed (`fix/low-bugs-2`, 45b5c00) · **Found:** 2026-10-18, full test run during signup redesign Step 7 · **Suspected:** seen once; the rerun passed (95 tests)
+- **Where:** `cold_apply/tests/test_access.py:32` (`JobFactory(participant=cls.owner)` in `setUpTestData`), factories in `cold_apply/tests/factories.py`
+- **Problem:** `psycopg.errors.StringDataRightTruncation: value too long for type character varying(50)`. A Faker-generated value sometimes exceeds a `max_length=50` column, so the whole test class errors.
+- **Checked:** the only 50-character column in `cold_apply/models.py` is `Job.remote`, which the factory fills from a fixed list. The value probably comes from a SubFactory (Organization, Position or Location), or from a column whose database length differs from the model. Not tracked down.
+- **Fix idea:** find the column with `\d` on the test tables after a failure, then cap that factory field, e.g. `factory.LazyFunction(lambda: fake.company()[:50])`.
+- **Fix notes:** the column was `rates.Country.name`, the only factory-filled column Faker can overflow (checked every factory field against its model's limit). `JobFactory` → `LocationFactory` → `CountryFactory`, so this was BUG-033. Fixed with it. Test: `cold_apply/tests/test_factories.py`.
+
 ## BUG-021 — Every staff user can open DD214s
 - **Severity:** High · **Status:** Fixed (`feature/cold-apply-staff-redesign`, 8adb309; merged into develop; deployed with the next release) · **Found:** 2026-10-19, cold_apply staff redesign review
 - **Where:** `userprofile/views.py` `update_veteran_status_view` (`@staff_required`, makes a signed URL for `profile.service_doc`); `userprofile/admin.py` `ProfileAdmin` and `VeteranProfileAdmin` (the default change form shows `service_doc` as a link, and GCS storage signs it for 24 h by default)
@@ -309,6 +298,13 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 - **Problem:** on prod, Applicants, Phase 1 and Nurture all have phase order 0, and their first steps all have step order 0 (Verify Veteran Status, Send Initial Email, Boot Camp Alumni / Monthly Newsletter). Postgres may return any of these ties first, so a new participant can start in Nurture instead of Applicants.
 - **Fix idea:** the cold_apply staff redesign (Step 4) replaces this with an explicit Intake enrollment. Until then, give Applicants a unique lowest order in admin.
 
+## BUG-033 — `load_dev_data` sometimes crashes on a long country name
+- **Severity:** Low · **Status:** Fixed (`fix/low-bugs-2`, 45b5c00) · **Found:** 2026-10-20, kanban board B1 browser check
+- **Where:** `cold_apply/tests/factories.py` `CountryFactory` (`name = factory.Faker("country")`), used through `JobFactory` → `LocationFactory` by `cold_apply/management/commands/load_dev_data.py`; `rates/models.py` `Country.name` is `max_length=50`
+- **Problem:** `python manage.py load_dev_data` failed with `DataError: value too long for type character varying(50)` while creating participants. Faker has country names over 50 characters ("British Indian Ocean Territory (Chagos Archipelago)" is 51), so the command fails at random. The error was seen once; which field overflowed is inferred, not traced.
+- **Fix idea:** truncate in the factory (`factory.LazyFunction(lambda: fake.country()[:50])`) or pick from a short fixed list.
+- **Fix notes:** confirmed: of Faker's 245 en_US countries only "British Indian Ocean Territory (Chagos Archipelago)" (51) is too long, so each country failed about 1 time in 245, and `load_dev_data` (about 55 countries) about 1 run in 5. `CountryFactory` now truncates to `Country.name`'s `max_length`. Test: `cold_apply/tests/test_factories.py`.
+
 ## BUG-037 — "Completed" and "Withdrawn" basically do the same thing
 - **Severity:** Medium · **Status:** Fixed (`fix/bug-037-enrollment-endings`, 6048766; merged into develop in 2fe518d and deployed to stage; reaches prod with the next release) · **Found:** 2026-10-21, manual interaction in prod
 - **Where:** Anywhere a participant can be marked as "withdrawn" or "completed" in respect to a flow, in which they are enrolled
@@ -331,6 +327,13 @@ be editable. Admins might make mistakes, and the current interface is too rigid,
 - **Problem:** `generate_text` loads `TextGenerationModel.from_pretrained("text-bison@001")`. Google has retired the PaLM text models, so bullet rewriting and overview generation probably fail. It also `print`s every prompt and response.
 - **Fix idea:** move to a current model, ideally through the hlagents provider layer once it exists, so the provider can be switched in one place.
 - **Fix notes:** `generate_text` calls Gemini on Vertex through `google-genai` (it replaces `google-cloud-aiplatform`; `google-auth` went to 2.59.1). The model is `settings.GEMINI_MODEL`, default `gemini-3.8-flash`, on the `global` endpoint (`GEMINI_LOCATION`). `gemini-2.5-flash` and every model tried in `us-west1` returned 404 for our projects. A failed or empty reply raises `TextGenerationError`. Bullet and overview creation show it as a form error, and bullet regeneration returns 502. Prompts are no longer printed. `python manage.py vertex` is a smoke test for the configured model, and it worked against both stage and prod projects on 2026-10-23. Moving this onto the hlagents provider layer is still IDEA-007.
+
+## BUG-039 — `load_dev_data` sometimes crashes on a duplicate company name
+- **Severity:** Low · **Status:** Fixed (`fix/low-bugs-2`, 45b5c00) · **Found:** 2026-10-21, BUG-037 browser check · **Suspected:** seen once, not reproduced
+- **Where:** `cold_apply/management/commands/load_dev_data.py`, through the factories in `cold_apply/tests/factories.py`; `resume.Organization.name` is unique
+- **Problem:** `python manage.py load_dev_data` failed with `IntegrityError: duplicate key value violates unique constraint "resume_organization_name_key"` (`Smith Inc`). Faker repeats company names, so the command fails at random partway through, like BUG-033.
+- **Fix idea:** use `django_get_or_create = ("name",)` on the organization factory, or `factory.Sequence` / `fake.unique.company()`.
+- **Fix notes:** `OrganizationFactory` has `django_get_or_create = ("name",)`, so a repeated company name reuses the existing organization. Test: `cold_apply/tests/test_factories.py`.
 
 ## BUG-040 — Resume index view has no auth and always crashes
 - **Severity:** Medium · **Status:** Fixed (`fix/medium-bugs-2`, 9d2d6c2) · **Found:** 2026-10-22, IDEA-005 (volunteer logins) code survey
