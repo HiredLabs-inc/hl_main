@@ -103,7 +103,7 @@ def move_view(request, enrollment_pk):
 def _stale_text(enrollment):
     """Who moved them where, from their latest step change"""
     enrollment.refresh_from_db()
-    name = enrollment.person.first_name or enrollment.person.email
+    name = (enrollment.person.first_name or enrollment.person.email) if enrollment.person_id else enrollment.label
     change = enrollment.activities.filter(kind=Activity.Kind.STEP_CHANGE).select_related("actor").first()
     where = enrollment.current_step.title
     if change is None:
@@ -119,7 +119,7 @@ def _move_card(request, enrollment_pk):
     and a status the board script uses. 200 moved (toast with Undo); 409 moved
     by someone else since the board loaded; 403 the user may not move them off
     their step; 400 bad step or the enrollment has ended (the card goes)."""
-    enrollment = get_object_or_404(Enrollment.objects.select_related("person", "current_step"), pk=enrollment_pk)
+    enrollment = get_object_or_404(Enrollment.objects.select_related("person", "lead", "current_step"), pk=enrollment_pk)
     from_step = enrollment.current_step
     step = Step.objects.filter(pk=_int(request.POST.get("step")), phase__flow=enrollment.flow_id).first()
     shown_step = Step.objects.filter(pk=_int(request.POST.get("from_step"))).first()
@@ -148,6 +148,7 @@ def _card(request, enrollment, status, error, steps):
         steps.append(card.current_step)
     step_counts, phase_counts = dashboard.board_counts(request.user, flow, filters, set(steps))
     context = {
+        "flow": flow,
         "enrollment": card,
         "compact": card is not None and step_counts[card.current_step_id] > dashboard.BOARD_COMPACT_OVER,
         "moved": status == 200,
@@ -161,7 +162,7 @@ def _card(request, enrollment, status, error, steps):
     response["HX-Board-Card"] = "true"
     events = {"board-changed": True}
     if status == 200:
-        name = enrollment.person.get_full_name() or enrollment.person.email
+        name = enrollment.label
         events["toast"] = {
             "category": "success",
             "text": f"Moved {name} to {card.current_step.title}.",
@@ -243,6 +244,7 @@ def note_view(request, enrollment_pk):
             request.POST.get("text", ""),
             kind=request.POST.get("kind") or Activity.Kind.NOTE,
             enrollment=enrollment,
+            lead=enrollment.lead,
         )
         return "Note added."
 
@@ -250,8 +252,9 @@ def note_view(request, enrollment_pk):
 
 
 def _flows(request):
-    """The active flows ticked in a form"""
-    return list(Flow.objects.filter(pk__in=[pk for pk in map(_int, request.POST.getlist("flows")) if pk], active=True))
+    """The active people flows ticked in a form"""
+    pks = [pk for pk in map(_int, request.POST.getlist("flows")) if pk]
+    return list(Flow.objects.for_people().filter(pk__in=pks, active=True))
 
 
 def _enroll_all(person, flows, actor):
@@ -272,6 +275,8 @@ def enroll_view(request, enrollment_pk):
     """Enroll the row's person in more flows"""
 
     def action(enrollment):
+        if enrollment.person_id is None:
+            raise ValidationError("Leads join their flow when they're approved.")
         created = _enroll_all(enrollment.person, _flows(request), request.user)
         return "Enrolled in " + ", ".join(e.flow.name for e in created) + "." if created else "Already enrolled."
 

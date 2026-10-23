@@ -1,0 +1,6 @@
+{% extends 'staff_base.html' %}
+{% block page_title %}{{ run.config.name }} run {{ run.pk }}{% endblock %}
+{% block content %}
+<p class="mb-2 text-sm"><a href="{% url 'hlagents:index' %}">← Agents</a></p>
+{% include 'hlagents/partials/run_body.html' %}
+{% endblock %}

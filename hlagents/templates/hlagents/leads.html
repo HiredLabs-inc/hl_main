@@ -1,0 +1,33 @@
+{% extends 'staff_base.html' %}
+{% block page_title %}Leads{% endblock %}
+{% block content %}
+<div class="space-y-4">
+    <p class="text-sm"><a href="{% url 'hlagents:index' %}">← Agents</a></p>
+    <div class="flex flex-wrap items-end justify-between gap-4">
+        <div>
+            <h1 class="!mb-1">Leads</h1>
+            <p class="text-sm text-hl-muted">Funders and outreach contacts found by agents or imported from the community partners list.</p>
+        </div>
+        {% if perms.hlagents.add_lead %}<a href="{% url 'hlagents:import' %}" class="btn btn-outline-secondary !py-1.5 !text-sm">Import partners</a>{% endif %}
+    </div>
+    <form method="get" class="flex flex-wrap items-end gap-2" role="search">
+        <select name="kind" aria-label="Kind" class="staff-field">{% for value, label in filters.fields.kind.choices %}<option value="{{ value }}" {% if filters.data.kind == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+        <select name="review_status" aria-label="Review" class="staff-field">{% for value, label in filters.fields.review_status.choices %}<option value="{{ value }}" {% if filters.data.review_status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+        <select name="source" aria-label="Source" class="staff-field">{% for value, label in filters.fields.source.choices %}<option value="{{ value }}" {% if filters.data.source == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+        <input type="search" name="q" value="{{ filters.data.q|default:'' }}" placeholder="Name, org or email" aria-label="Search" class="staff-field">
+        <button type="submit" class="btn btn-outline-secondary !py-1.5 !text-sm">Filter</button>
+    </form>
+    {% if page.object_list %}
+        {% include 'hlagents/partials/lead_table.html' with leads=page.object_list show_run=True %}
+        <div class="flex items-center justify-between text-sm text-hl-muted">
+            <span>{{ page.paginator.count }} lead{{ page.paginator.count|pluralize }}</span>
+            <span class="flex gap-3">
+                {% if page.has_previous %}<a href="?{{ query }}{% if query %}&amp;{% endif %}page={{ page.previous_page_number }}">Previous</a>{% endif %}
+                {% if page.has_next %}<a href="?{{ query }}{% if query %}&amp;{% endif %}page={{ page.next_page_number }}">Next</a>{% endif %}
+            </span>
+        </div>
+    {% else %}
+        <div class="rounded-lg border border-dashed border-hl-line p-8 text-center text-sm text-hl-muted">No leads match.</div>
+    {% endif %}
+</div>
+{% endblock %}

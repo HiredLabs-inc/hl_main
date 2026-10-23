@@ -1,0 +1,78 @@
+{% extends 'staff_base.html' %}
+{% block page_title %}Agents{% endblock %}
+{% block content %}
+<div class="space-y-8">
+    <div class="flex flex-wrap items-end justify-between gap-4">
+        <div>
+            <h1 class="!mb-1">Agents</h1>
+            <p class="text-sm text-hl-muted">AI agents that search the web for funding and outreach leads. Start a run, then review what it finds.</p>
+        </div>
+        <div class="flex gap-2">
+            <a href="{% url 'hlagents:leads' %}" class="btn btn-outline-secondary !py-1.5 !text-sm">Leads</a>
+            {% if perms.hlagents.add_lead %}<a href="{% url 'hlagents:import' %}" class="btn btn-outline-secondary !py-1.5 !text-sm">Import partners</a>{% endif %}
+            {% if perms.hlagents.change_agentconfig %}<a href="{% url 'hlagents:settings' %}" class="btn btn-outline-secondary !py-1.5 !text-sm">Settings</a>{% endif %}
+        </div>
+    </div>
+
+    <section aria-labelledby="agents-heading" class="grid gap-4 md:grid-cols-2">
+        <h2 id="agents-heading" class="sr-only">Agents</h2>
+        {% for config in configs %}
+            <div class="space-y-3 rounded-lg border border-hl-line bg-white p-4">
+                <div>
+                    <h3 class="!mb-0.5 text-base">{{ config.name }}</h3>
+                    <p class="text-xs text-hl-muted">{{ config.get_agent_type_display }} · {{ config.provider }} · <code>{{ config.model }}</code></p>
+                    {% if config.last_run %}
+                        <p class="mt-1 text-xs text-hl-muted">Last run <a href="{% url 'hlagents:run' config.last_run.pk %}">{{ config.last_run.created_at|timesince }} ago</a> {% include 'hlagents/partials/run_status.html' with run=config.last_run %}</p>
+                    {% endif %}
+                </div>
+                {% if config.problem %}
+                    <p class="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900" role="status">{{ config.problem }}</p>
+                {% elif perms.hlagents.add_agentrun %}
+                    <form method="post" action="{% url 'hlagents:start_run' config.pk %}" class="space-y-2">
+                        {% csrf_token %}
+                        <label for="{{ config.form.request.id_for_label }}" class="text-xs font-medium text-hl-muted">Request</label>
+                        {{ config.form.request }}
+                        <button type="submit" class="btn btn-primary !py-1.5 !text-sm">Run</button>
+                    </form>
+                {% endif %}
+            </div>
+        {% empty %}
+            <p class="text-sm text-hl-muted">No active agents.</p>
+        {% endfor %}
+    </section>
+
+    <section aria-labelledby="runs-heading">
+        <h2 id="runs-heading" class="!mb-2 text-lg">Recent runs</h2>
+        {% if runs %}
+            <div class="overflow-x-auto rounded-lg border border-hl-line bg-white">
+                <table class="w-full min-w-[40rem] text-left text-sm">
+                    <thead class="bg-hl-mist text-xs uppercase tracking-wide text-hl-muted">
+                        <tr>
+                            <th scope="col" class="px-3 py-2 font-medium">Run</th>
+                            <th scope="col" class="px-3 py-2 font-medium">Agent</th>
+                            <th scope="col" class="px-3 py-2 font-medium">Started</th>
+                            <th scope="col" class="px-3 py-2 font-medium">Status</th>
+                            <th scope="col" class="px-3 py-2 text-right font-medium">Leads</th>
+                            <th scope="col" class="px-3 py-2 text-right font-medium">Est. cost</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-hl-line">
+                        {% for run in runs %}
+                            <tr>
+                                <td class="px-3 py-2"><a href="{% url 'hlagents:run' run.pk %}">#{{ run.pk }}</a></td>
+                                <td class="px-3 py-2">{{ run.config.name }}</td>
+                                <td class="px-3 py-2 text-hl-muted">{{ run.created_at|timesince }} ago{% if run.started_by %} · {{ run.started_by.get_full_name|default:run.started_by.email }}{% endif %}</td>
+                                <td class="px-3 py-2">{% include 'hlagents/partials/run_status.html' %}</td>
+                                <td class="px-3 py-2 text-right tabular-nums">{{ run.lead_count }}</td>
+                                <td class="px-3 py-2 text-right tabular-nums">${{ run.cost|floatformat:2 }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-sm text-hl-muted">No runs yet.</p>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

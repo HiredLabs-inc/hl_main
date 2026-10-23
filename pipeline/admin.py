@@ -51,13 +51,13 @@ class ReadOnlyAdmin(admin.ModelAdmin):
 
 @admin.register(Enrollment)
 class EnrollmentAdmin(ReadOnlyAdmin):
-    list_display = ("person", "flow", "current_step", "status", "assignee", "step_entered_at")
+    list_display = ("person", "lead", "flow", "current_step", "status", "assignee", "step_entered_at")
     list_filter = ("flow", "status")
-    search_fields = ("person__email", "person__first_name", "person__last_name")
+    search_fields = ("person__email", "person__first_name", "person__last_name", "lead__org_name", "lead__contact_email")
 
 
 @admin.register(Activity)
 class ActivityAdmin(ReadOnlyAdmin):
-    list_display = ("person", "kind", "from_value", "to_value", "actor", "created_at")
+    list_display = ("person", "lead", "kind", "from_value", "to_value", "actor", "created_at")
     list_filter = ("kind",)
-    search_fields = ("person__email", "person__first_name", "person__last_name")
+    search_fields = ("person__email", "person__first_name", "person__last_name", "lead__org_name", "lead__contact_email")

@@ -83,7 +83,9 @@ class TabsTest(DashboardTestCase):
     def test_tabs_list_active_flows_with_intake_first(self):
         Flow.objects.filter(slug="nurture").update(active=False)
         labels = [label for _, label in self.client.get(URL).context["tabs"]]
-        self.assertEqual(labels, ["Intake", "Resume & Job Search", "Boot Camp", "My people", "Everyone"])
+        self.assertEqual(
+            labels, ["Intake", "Resume & Job Search", "Boot Camp", "My people", "Everyone", "Funding", "Outreach"]
+        )
 
 
 class FiltersTest(DashboardTestCase):

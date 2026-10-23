@@ -4,5 +4,5 @@
     {% include 'pipeline/partials/board_count.html' with oob=True %}
 {% endfor %}
 {% for pk, count in phase_counts.items %}
-    <span id="board-phase-count-{{ pk }}" hx-swap-oob="true" class="text-xs text-hl-muted">{{ count }} {{ count|pluralize:"person,people" }}</span>
+    <span id="board-phase-count-{{ pk }}" hx-swap-oob="true" class="text-xs text-hl-muted">{{ count }} {% if flow.subject == "lead" %}lead{{ count|pluralize }}{% else %}{{ count|pluralize:"person,people" }}{% endif %}</span>
 {% endfor %}

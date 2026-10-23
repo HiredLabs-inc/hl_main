@@ -19,6 +19,9 @@ the toaster in base.html.
                 <a href="{% url 'stuck_signups' %}" class="staff-nav-link {% if current == 'stuck_signups' %}staff-nav-link-current{% endif %}" {% if current == 'stuck_signups' %}aria-current="page"{% endif %}>Stuck signups</a>
                 <a href="{% url 'staff_flows' %}" class="staff-nav-link {% if current == 'staff_flows' %}staff-nav-link-current{% endif %}" {% if current == 'staff_flows' %}aria-current="page"{% endif %}>Flows</a>
             {% endif %}
+            {% if perms.hlagents %}
+                <a href="{% url 'hlagents:index' %}" class="staff-nav-link {% if request.resolver_match.app_name == 'hlagents' %}staff-nav-link-current{% endif %}" {% if current == 'index' and request.resolver_match.app_name == 'hlagents' %}aria-current="page"{% endif %}>Agents</a>
+            {% endif %}
         </nav>
         <div x-data="{ open: false }" class="relative ms-auto shrink-0 sm:ms-0">
             <button type="button" x-on:click="open = !open" x-bind:aria-expanded="open" aria-haspopup="true"

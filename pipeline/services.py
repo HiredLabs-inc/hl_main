@@ -1,5 +1,6 @@
 """The only code that changes enrollments. Each function runs in a transaction,
-checks the rules, and records what happened on the person's Activity timeline.
+checks the rules, and records what happened on the Activity timeline of the
+person or lead enrolled.
 Views decide who may call them (staff only); step permissions are checked here.
 """
 from django.core.exceptions import PermissionDenied, ValidationError
@@ -36,6 +37,7 @@ def _check_open(enrollment):
 def _record(enrollment, actor, kind, text="", from_value="", to_value=""):
     return Activity.objects.create(
         person_id=enrollment.person_id,
+        lead_id=enrollment.lead_id,
         enrollment=enrollment,
         kind=kind,
         text=text,
@@ -50,9 +52,15 @@ def can_leave_step(user, step):
 
 
 @transaction.atomic
-def enroll(person, flow: Flow, actor, step: Step = None, assignee=None) -> Enrollment:
-    """Start person on step (default: the flow's first step). Raises
-    AlreadyEnrolled if they have an open enrollment in this flow."""
+def enroll(person, flow: Flow, actor, step: Step = None, assignee=None, lead=None) -> Enrollment:
+    """Start person (or, in a lead flow, lead with person=None) on step
+    (default: the flow's first step). Raises AlreadyEnrolled if they have an
+    open enrollment in this flow."""
+    if (person is None) == (lead is None):
+        raise ValidationError("Enroll a person or a lead.")
+    subject = Flow.Subject.LEAD if lead is not None else Flow.Subject.PERSON
+    if flow.subject != subject:
+        raise ValidationError(f"{flow} is for {flow.get_subject_display().lower()}.")
     step = step or flow.first_step()
     if step is None:
         raise ValidationError(f"{flow} has no steps.")
@@ -64,13 +72,14 @@ def enroll(person, flow: Flow, actor, step: Step = None, assignee=None) -> Enrol
         with transaction.atomic():
             enrollment = Enrollment.objects.create(
                 person=person,
+                lead=lead,
                 flow=flow,
                 current_step=step,
                 assignee=assignee,
                 step_entered_at=timezone.now(),
             )
     except IntegrityError:
-        raise AlreadyEnrolled(f"{_user_label(person)} is already enrolled in {flow}.")
+        raise AlreadyEnrolled(f"{_user_label(person) if person else lead} is already enrolled in {flow}.")
     _record(enrollment, actor, Activity.Kind.ENROLLED, to_value=step.title)
     if assignee is not None:
         _record(enrollment, actor, Activity.Kind.ASSIGNEE_CHANGE, to_value=_user_label(assignee))
@@ -208,7 +217,7 @@ def reopen(enrollment: Enrollment, actor, reason="") -> Enrollment:
             enrollment.save(update_fields=["status", "ended_at", "updated_at"])
     except IntegrityError:
         raise AlreadyEnrolled(
-            f"{_user_label(enrollment.person)} already has an open {enrollment.flow} enrollment, so this one can't be reopened."
+            f"{enrollment.label} already has an open {enrollment.flow} enrollment, so this one can't be reopened."
         )
     _record(
         enrollment,
@@ -221,16 +230,22 @@ def reopen(enrollment: Enrollment, actor, reason="") -> Enrollment:
     return enrollment
 
 
-def add_note(person, actor, text, kind=Activity.Kind.NOTE, enrollment: Enrollment = None) -> Activity:
-    """A note or a record of contact (email, phone, in person)"""
+def add_note(person, actor, text, kind=Activity.Kind.NOTE, enrollment: Enrollment = None, lead=None) -> Activity:
+    """A note or a record of contact (email, phone, in person) about a person,
+    or a lead (person=None)"""
     if kind not in Activity.CONTACT_KINDS:
         raise ValidationError(f"{kind} entries are recorded automatically.")
     text = text.strip()
     if not text:
         raise ValidationError("A note needs some text.")
-    if enrollment is not None and enrollment.person_id != person.pk:
+    if (person is None) == (lead is None):
+        raise ValidationError("A note is about a person or a lead.")
+    if enrollment is not None and (enrollment.person_id, enrollment.lead_id) != (
+        person.pk if person else None,
+        lead.pk if lead else None,
+    ):
         raise ValidationError("That enrollment belongs to someone else.")
-    return Activity.objects.create(person=person, enrollment=enrollment, kind=kind, text=text, actor=actor)
+    return Activity.objects.create(person=person, lead=lead, enrollment=enrollment, kind=kind, text=text, actor=actor)
 
 
 def record_document_opened(person, actor, document):

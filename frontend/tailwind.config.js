@@ -10,6 +10,8 @@ module.exports = {
     '../cold_apply/templates/**/*.html',
     '../pipeline/templates/**/*.html',
     '../pipeline/*.py',
+    '../hlagents/templates/**/*.html',
+    '../hlagents/*.py',
     '../resume/templates/**/*.html',
     "./src/**/*.{html,js}",
     "../core/templatetags/*.py",

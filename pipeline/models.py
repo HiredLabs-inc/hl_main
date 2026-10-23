@@ -1,6 +1,8 @@
 """Flows people move through (Intake, Resume & Job Search, Boot Camp, ...) and each
 person's place in them. Kept free of cold_apply imports so other programs can
-reuse it; a person is a User.
+reuse it; a person is a User. Lead flows (Funding, Outreach) hold hlagents
+Leads instead: funders and outreach contacts (docs/hlagents.md §3.6). An
+Enrollment or Activity belongs to a person or a lead, never both.
 
 Change enrollments only through pipeline.services, which also writes the
 Activity timeline.
@@ -15,12 +17,25 @@ from hl_main.models import TrackedModel
 User = settings.AUTH_USER_MODEL
 
 
+class FlowQuerySet(models.QuerySet):
+    def for_people(self):
+        return self.filter(subject=Flow.Subject.PERSON)
+
+
 class Flow(models.Model):
+    class Subject(models.TextChoices):
+        PERSON = "person", "People"
+        LEAD = "lead", "Leads"
+
     name = models.CharField(max_length=100)
     slug = models.SlugField(unique=True)
     description = models.TextField(blank=True)
     active = models.BooleanField(default=True)
     order = models.IntegerField(default=0)
+    # Who the flow's enrollments are: people, or hlagents leads
+    subject = models.CharField(max_length=20, choices=Subject.choices, default=Subject.PERSON)
+
+    objects = FlowQuerySet.as_manager()
 
     class Meta:
         ordering = ["order", "id"]
@@ -97,7 +112,11 @@ class Enrollment(TrackedModel):
     # Statuses that close the enrollment. pipeline.services.reopen undoes them.
     ENDED_STATUSES = {Status.COMPLETED, Status.WITHDRAWN, Status.DROPPED}
 
-    person = models.ForeignKey(User, on_delete=models.CASCADE, related_name="enrollments")
+    # Exactly one of person and lead is set, matching the flow's subject
+    person = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name="enrollments")
+    lead = models.ForeignKey(
+        "hlagents.Lead", on_delete=models.CASCADE, null=True, blank=True, related_name="enrollments"
+    )
     flow = models.ForeignKey(Flow, on_delete=models.PROTECT, related_name="enrollments")
     current_step = models.ForeignKey(Step, on_delete=models.PROTECT, related_name="enrollments")
     assignee = models.ForeignKey(
@@ -114,10 +133,31 @@ class Enrollment(TrackedModel):
                 condition=Q(ended_at__isnull=True),
                 name="one_open_enrollment_per_flow",
             ),
+            models.UniqueConstraint(
+                fields=["lead", "flow"],
+                condition=Q(ended_at__isnull=True),
+                name="one_open_lead_enrollment_per_flow",
+            ),
+            models.CheckConstraint(
+                check=Q(person__isnull=False, lead__isnull=True) | Q(person__isnull=True, lead__isnull=False),
+                name="enrollment_person_or_lead",
+            ),
         ]
 
     def __str__(self):
-        return f"{self.person}: {self.flow} ({self.get_status_display()})"
+        return f"{self.label}: {self.flow} ({self.get_status_display()})"
+
+    @property
+    def subject(self):
+        """The person or lead enrolled"""
+        return self.person if self.person_id else self.lead
+
+    @property
+    def label(self):
+        """The person's name or email, or the lead's name, org or email"""
+        if self.person_id:
+            return self.person.get_full_name() or self.person.email
+        return str(self.lead)
 
     @property
     def is_ended(self):
@@ -140,11 +180,21 @@ class Activity(models.Model):
         STATUS_CHANGE = "status_change", "Status change"
         DOCUMENT_OPENED = "document_opened", "Document opened"
         SESSION_CHANGE = "session_change", "Boot camp session"
+        # Leads (hlagents)
+        LEAD_FOUND = "lead_found", "Found by agent"
+        LEAD_IMPORTED = "lead_imported", "Imported"
+        LEAD_EDITED = "lead_edited", "Edited"
+        REVIEW = "review", "Review"
+        OPT_OUT = "opt_out", "Opt-out"
 
     # Kinds staff can write by hand; the rest are recorded by pipeline.services
     CONTACT_KINDS = {Kind.NOTE, Kind.EMAIL, Kind.PHONE, Kind.IN_PERSON}
 
-    person = models.ForeignKey(User, on_delete=models.CASCADE, related_name="activities")
+    # Exactly one of person and lead is set
+    person = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name="activities")
+    lead = models.ForeignKey(
+        "hlagents.Lead", on_delete=models.CASCADE, null=True, blank=True, related_name="activities"
+    )
     enrollment = models.ForeignKey(
         Enrollment, on_delete=models.CASCADE, null=True, blank=True, related_name="activities"
     )
@@ -160,10 +210,19 @@ class Activity(models.Model):
     class Meta:
         ordering = ["-created_at", "-id"]
         verbose_name_plural = "Activities"
-        indexes = [models.Index(fields=["person", "-created_at"])]
+        indexes = [
+            models.Index(fields=["person", "-created_at"]),
+            models.Index(fields=["lead", "-created_at"]),
+        ]
+        constraints = [
+            models.CheckConstraint(
+                check=Q(person__isnull=False, lead__isnull=True) | Q(person__isnull=True, lead__isnull=False),
+                name="activity_person_or_lead",
+            ),
+        ]
 
     def __str__(self):
-        return f"{self.person}: {self.get_kind_display()} ({self.created_at:%Y-%m-%d})"
+        return f"{self.person or self.lead}: {self.get_kind_display()} ({self.created_at:%Y-%m-%d})"
 
     @property
     def is_contact(self):
