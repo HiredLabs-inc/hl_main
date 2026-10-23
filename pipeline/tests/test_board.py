@@ -1,5 +1,7 @@
 import json
 from datetime import timedelta
+from types import SimpleNamespace
+from urllib.parse import quote
 
 from django.contrib.auth.models import User
 from django.db import connection
@@ -201,6 +203,8 @@ class BigColumnTest(TestCase):
         self.assertEqual(first.cards[0].person.email, "p00@example.com")
         self.assertContains(response, "Show 6 more")
         self.assertContains(response, "Open all 31 in the table")
+        last = Enrollment.objects.get(person__email="p24@example.com")
+        self.assertContains(response, f"&after={quote(last.step_entered_at.isoformat(), safe='/')}&after_pk={last.pk}")
 
     def test_not_compact_at_thirty(self):
         url = URL + f"?tab={JOB_SEARCH}&view=board&status=active"
@@ -216,6 +220,29 @@ class BigColumnTest(TestCase):
         self.assertEqual([c.person.email for c in page.cards][:1], ["p25@example.com"])
         self.assertEqual((len(page.cards), page.more), (6, 0))
         self.assertNotContains(response, "Show ")
+
+    def after(self, email):
+        enrollment = Enrollment.objects.get(person__email=email)
+        return {"after": enrollment.step_entered_at.isoformat(), "after_pk": enrollment.pk}
+
+    def test_show_more_pages_after_the_last_card_shown(self):
+        # BUG-035: p03 moving off the step after the board loaded doesn't make the page skip p25
+        add_steps(self.flow, 1)
+        services.move_to_step(Enrollment.objects.get(person__email="p03@example.com"), Step.objects.get(title="Step 2"), None)
+        page = self.client.get(self.column_url(), {"offset": 25, **self.after("p24@example.com")}).context["column"]
+        self.assertEqual([c.person.email for c in page.cards], [f"p{i}@example.com" for i in range(25, 31)])
+        self.assertEqual((page.count, page.more), (30, 0))
+
+    def test_show_more_counts_what_is_left_after_the_page(self):
+        page = self.client.get(self.column_url(), {"offset": 2, **self.after("p01@example.com")}).context["column"]
+        self.assertEqual(page.cards[0].person.email, "p02@example.com")
+        self.assertEqual((len(page.cards), page.more), (25, 4))
+
+    def test_bad_cursor_pages_by_offset(self):
+        for bad in ({"after": "nonsense", "after_pk": "1"}, {"after": "2026-01-01T00:00:00", "after_pk": "1"}, {"after_pk": "x"}):
+            with self.subTest(bad=bad):
+                page = self.client.get(self.column_url(), {"offset": 25, **bad}).context["column"]
+                self.assertEqual(page.cards[0].person.email, "p25@example.com")
 
     def test_show_more_keeps_filters(self):
         response = self.client.get(self.column_url(), {"offset": 0, "status": "paused", "tab": JOB_SEARCH})
@@ -265,6 +292,13 @@ class ColumnTest(TestCase):
         column = dashboard.Column(step, cards=list(range(25)), count=60, open=60, offset=25)
         self.assertEqual((column.next_offset, column.more, column.next_page), (50, 10, 10))
         self.assertTrue(column.compact)
+
+    def test_cursor_and_left(self):
+        entered = timezone.now()
+        cards = [SimpleNamespace(step_entered_at=entered, pk=7)]
+        column = dashboard.Column(Step(title="x"), cards=cards, count=60, open=60, offset=25, left=3)
+        self.assertEqual(column.cursor, (entered.isoformat(), 7))
+        self.assertEqual(column.more, 3)
 
 
 class MoveCardTest(BoardTestCase):
@@ -341,6 +375,27 @@ class MoveCardTest(BoardTestCase):
         self.assertNotContains(response, "data-board-card", status_code=400)
         self.assertEqual(json.loads(response["HX-Trigger"])["toast"]["text"], "This enrollment has ended.")
         self.assertEqual(self.step_changes(done), 0)
+
+    def test_card_the_filters_now_hide_leaves_the_board(self):
+        # BUG-034: with "Days in step over 14", a card's days reset when it moves
+        Enrollment.objects.filter(pk=self.mine.pk).update(step_entered_at=timezone.now() - timedelta(days=20))
+        response = self.move(self.mine, self.third, page="&days=14")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Enrollment.objects.get(pk=self.mine.pk).current_step, self.third)
+        self.assertIsNone(response.context["enrollment"])
+        self.assertNotContains(response, "data-board-card")
+        self.assertEqual(response.context["step_counts"][self.third.pk], 0)
+        toast = json.loads(response["HX-Trigger"])["toast"]
+        self.assertEqual(toast["text"], "Moved Mia Mine to Step 3. The filters hide them now.")
+        self.assertEqual(toast["undo"]["values"]["step"], self.first.pk)
+
+    def test_refused_card_the_filters_hide_shows_its_error(self):
+        services.move_to_step(self.mine, self.second, self.staff)
+        response = self.move(self.mine, self.third, from_step=self.first, page=f"&step={self.first.pk}")
+        self.assertEqual(response.status_code, 409)
+        self.assertNotContains(response, "data-board-card", status_code=409)
+        toast = json.loads(response["HX-Trigger"])["toast"]
+        self.assertEqual((toast["category"], toast["text"]), ("error", "Sam Staff moved Mia to Step 2 just now."))
 
     def test_step_from_another_flow_is_400(self):
         response = self.move(self.mine, self.verify)

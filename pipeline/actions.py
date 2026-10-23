@@ -149,13 +149,17 @@ def _card(request, enrollment, status, error, steps):
     card = dashboard.card(enrollment.pk, request.user)
     if card is not None:
         steps.append(card.current_step)
+    # A card the board's filters now hide leaves it, as the counts do
+    shown = card is not None and dashboard.filtered(
+        dashboard.open_enrollments(), request.user, flow.slug, filters
+    ).filter(pk=card.pk).exists()
     step_counts, phase_counts = dashboard.board_counts(request.user, flow, filters, set(steps))
     context = {
         "flow": flow,
-        "enrollment": card,
-        "compact": card is not None and step_counts[card.current_step_id] > dashboard.BOARD_COMPACT_OVER,
+        "enrollment": card if shown else None,
+        "compact": shown and step_counts[card.current_step_id] > dashboard.BOARD_COMPACT_OVER,
         "moved": status == 200,
-        "error": error if card is not None else "",
+        "error": error if shown else "",
         "step_counts": step_counts,
         "phase_counts": phase_counts,
         "stale_days": dashboard.DEFAULT_STALE_DAYS,
@@ -168,14 +172,14 @@ def _card(request, enrollment, status, error, steps):
         name = enrollment.label
         events["toast"] = {
             "category": "success",
-            "text": f"Moved {name} to {card.current_step.title}.",
+            "text": f"Moved {name} to {card.current_step.title}." + ("" if shown else " The filters hide them now."),
             "undo": {
                 "url": reverse("pipeline:move", args=[enrollment.pk]),
                 "card": f"card-{enrollment.pk}",
                 "values": {"step": steps[0].pk, "from_step": card.current_step_id, "render": "card"},
             },
         }
-    elif card is None:
+    elif not shown:
         events["toast"] = {"category": "error", "text": error}
     response["HX-Trigger"] = json.dumps(events)
     return response

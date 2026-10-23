@@ -2,6 +2,7 @@ from django.db.models import Count, Prefetch, Q
 from django.core.exceptions import PermissionDenied
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.dateparse import parse_datetime
 from django.views.decorators.http import require_GET
 
 from userprofile.guards import staff_required
@@ -16,7 +17,7 @@ VIEW_SESSION_KEY = "staff_dashboard_view"
 def _query(params):
     """The dashboard's GET params, without the view and paging, for links that add their own"""
     params = params.copy()
-    for key in ("view", "offset", "part"):
+    for key in ("view", "offset", "after", "after_pk", "part"):
         params.pop(key, None)
     return params.urlencode()
 
@@ -102,9 +103,10 @@ def board_column_view(request, slug, step_pk):
         offset = max(int(request.GET.get("offset", 0)), 0)
     except ValueError:
         offset = 0
+    after = _after(request.GET)
     if not filters.is_valid():
         return render(request, "pipeline/partials/filter_errors.html", {"filters": filters}, status=400)
-    column = dashboard.board_column(request.user, flow, step, filters, offset)
+    column = dashboard.board_column(request.user, flow, step, filters, offset, after)
     context = {
         "flow": flow,
         "column": column,
@@ -112,6 +114,16 @@ def board_column_view(request, slug, step_pk):
         "query": _query(request.GET),
     }
     return render(request, "pipeline/partials/board_cards.html", context)
+
+
+def _after(params):
+    """The last card a column shows, (step_entered_at, pk), from "Show more"; None if missing or bad"""
+    try:
+        entered = parse_datetime(params.get("after", ""))
+        pk = int(params.get("after_pk", ""))
+    except ValueError:
+        return None
+    return (entered, pk) if entered and entered.tzinfo else None
 
 
 @staff_required
