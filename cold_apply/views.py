@@ -119,16 +119,6 @@ class ConfirmCreateView(LoginRequiredMixin, TemplateView):
         return context
 
 
-class ConfirmApplicationView(TemplateView):
-    template_name = "confirm_application_submit.html"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["now"] = timezone.now()
-
-        return context
-
-
 # Read Participant details
 class ParticipantDetailView(OwnedObjectMixin, FormMixin, DetailView):
     model = Participant
