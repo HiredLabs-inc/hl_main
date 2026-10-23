@@ -28,6 +28,7 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 | BUG-039 | Low | Open | dev data | `load_dev_data` sometimes crashes on a duplicate Faker company name (`resume.Organization.name` is unique) |
 | BUG-040 | Medium | Open | resume | `/resume/resumes/<pk>` has no login check and always returns a 500 (undefined `overview`) |
 | BUG-041 | Low | Open | cold_apply | `ConfirmApplicationView` is dead code: no URL, no template, no auth |
+| BUG-043 | Low | Open | cold_apply | NLTK tokenizer/tagger code needs data the image doesn't include (only `stopwords` is baked in) |
 ---
 ## BUG-019 — A request can hit a closed database connection
 - **Severity:** Medium · **Status:** Open · **Found:** 2026-10-17, stage sign-up test after build 8f748ade (46858e2) · **Suspected:** seen once, not reproduced
@@ -102,6 +103,12 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 - **Where:** `cold_apply/views.py:122`
 - **Problem:** a `TemplateView` with no auth. No URL points to it, and its template `confirm_application_submit.html` doesn't exist. It's left over from the dropped `Application` model.
 - **Fix idea:** delete it.
+
+## BUG-043 — NLTK tokenizer/tagger code needs data the image doesn't include
+- **Severity:** Low · **Status:** Open · **Found:** 2026-10-23, hotfix-01 (NLTK cold-start hang)
+- **Where:** `cold_apply/static/scripts/resume_writer/bullet_weighter.py:40` (`tagger`, `pos_finder`), `cold_apply/static/scripts/keyword_analyzer/analyzer.py` (`pos_tagger`, `word_tokenize`), `keyword_analyzer/composer.py`
+- **Problem:** these call `word_tokenize`, `pos_tag(tagset='universal')`, `wordnet` and `treebank`. The Dockerfile only bakes `stopwords` into `$NLTK_DATA`, so they would raise `LookupError` (`punkt`, `averaged_perceptron_tagger`, `universal_tagset`, …). No view reaches them today: `weigh()` and `analyze()` don't call them, and `composer.py` imports a `lang_processors` package that doesn't exist.
+- **Fix idea:** delete the unused functions and `composer.py`, or add the corpora to the Dockerfile's `nltk.downloader` line. Never call `nltk.download()` at runtime (that caused hotfix-01).
 
 ## Fixed and Skipped
 
