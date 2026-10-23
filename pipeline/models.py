@@ -1,6 +1,7 @@
 """Flows people move through (Intake, Resume & Job Search, Boot Camp, ...) and each
 person's place in them. Kept free of cold_apply imports so other programs can
-reuse it; a person is a User.
+reuse it; a person is a User. Activity can also belong to an hlagents Lead (a
+funder or outreach contact, docs/hlagents.md §3.10).
 
 Change enrollments only through pipeline.services, which also writes the
 Activity timeline.
@@ -135,11 +136,21 @@ class Activity(models.Model):
         STATUS_CHANGE = "status_change", "Status change"
         DOCUMENT_OPENED = "document_opened", "Document opened"
         SESSION_CHANGE = "session_change", "Boot camp session"
+        # Leads (hlagents)
+        LEAD_FOUND = "lead_found", "Found by agent"
+        LEAD_IMPORTED = "lead_imported", "Imported"
+        LEAD_EDITED = "lead_edited", "Edited"
+        REVIEW = "review", "Review"
+        OPT_OUT = "opt_out", "Opt-out"
 
     # Kinds staff can write by hand; the rest are recorded by pipeline.services
     CONTACT_KINDS = {Kind.NOTE, Kind.EMAIL, Kind.PHONE, Kind.IN_PERSON}
 
-    person = models.ForeignKey(User, on_delete=models.CASCADE, related_name="activities")
+    # Exactly one of person and lead is set
+    person = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name="activities")
+    lead = models.ForeignKey(
+        "hlagents.Lead", on_delete=models.CASCADE, null=True, blank=True, related_name="activities"
+    )
     enrollment = models.ForeignKey(
         Enrollment, on_delete=models.CASCADE, null=True, blank=True, related_name="activities"
     )
@@ -155,10 +166,19 @@ class Activity(models.Model):
     class Meta:
         ordering = ["-created_at", "-id"]
         verbose_name_plural = "Activities"
-        indexes = [models.Index(fields=["person", "-created_at"])]
+        indexes = [
+            models.Index(fields=["person", "-created_at"]),
+            models.Index(fields=["lead", "-created_at"]),
+        ]
+        constraints = [
+            models.CheckConstraint(
+                check=Q(person__isnull=False, lead__isnull=True) | Q(person__isnull=True, lead__isnull=False),
+                name="activity_person_or_lead",
+            ),
+        ]
 
     def __str__(self):
-        return f"{self.person}: {self.get_kind_display()} ({self.created_at:%Y-%m-%d})"
+        return f"{self.person or self.lead}: {self.get_kind_display()} ({self.created_at:%Y-%m-%d})"
 
     @property
     def is_contact(self):

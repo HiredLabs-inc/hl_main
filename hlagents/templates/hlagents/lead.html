@@ -1,0 +1,69 @@
+{% extends 'staff_base.html' %}
+{% block page_title %}{{ lead|default:lead.contact_email }}{% endblock %}
+{% block content %}
+<div class="max-w-4xl space-y-6">
+    <p class="text-sm"><a href="{% url 'hlagents:leads' %}?kind={{ lead.kind }}">← Leads</a></p>
+    <div>
+        <h1 class="!mb-1">{{ lead|default:lead.contact_email }}</h1>
+        <p class="text-sm text-hl-muted">
+            {{ lead.get_kind_display }} lead ·
+            {% if lead.source_run %}found by <a href="{% url 'hlagents:run' lead.source_run.pk %}">{{ lead.source_run.config.name }} #{{ lead.source_run.pk }}</a>{% else %}{{ lead.get_source_display|lower }}{% endif %}
+            · {{ lead.get_review_status_display }}
+            {% if lead.bounces %}· bounced {{ lead.bounces }} time{{ lead.bounces|pluralize }}{% endif %}
+            {% if lead.opted_out_at %}· <span class="staff-badge staff-badge-bad">Opted out {{ lead.opted_out_at|date:"M j, Y" }}</span>{% endif %}
+        </p>
+    </div>
+
+    <div class="grid gap-6 md:grid-cols-2">
+        <section aria-labelledby="details-heading" class="space-y-3">
+            <h2 id="details-heading" class="!mb-0 text-lg">Details</h2>
+            {% if form %}
+                <form method="post" class="space-y-3">
+                    {% csrf_token %}
+                    {% for field in form %}
+                        <div>
+                            <label for="{{ field.id_for_label }}" class="text-xs font-medium text-hl-muted">{{ field.label }}</label>
+                            {{ field }}
+                            {% for error in field.errors %}<p class="text-xs text-red-700">{{ error }}</p>{% endfor %}
+                        </div>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-primary !py-1.5 !text-sm">Save</button>
+                </form>
+                <form method="post" action="{% url 'hlagents:opt_out' lead.pk %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="opted_out" value="{% if lead.opted_out_at %}0{% else %}1{% endif %}">
+                    <button type="submit" class="btn btn-outline-secondary !py-1 !text-xs">{% if lead.opted_out_at %}Remove opt-out{% else %}Mark as opted out{% endif %}</button>
+                </form>
+            {% else %}
+                <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
+                    {% if lead.first_name or lead.last_name %}<dt class="text-hl-muted">Name</dt><dd>{{ lead.first_name }} {{ lead.last_name }}</dd>{% endif %}
+                    {% if lead.org_name %}<dt class="text-hl-muted">Organization</dt><dd>{{ lead.org_name }}</dd>{% endif %}
+                    {% if lead.contact_email %}<dt class="text-hl-muted">Email</dt><dd>{{ lead.contact_email }}</dd>{% endif %}
+                    {% if lead.funding_amount %}<dt class="text-hl-muted">Amount</dt><dd>{{ lead.funding_amount }}</dd>{% endif %}
+                    {% if lead.application_deadline %}<dt class="text-hl-muted">Deadline</dt><dd>{{ lead.application_deadline }}</dd>{% endif %}
+                    {% if lead.url %}<dt class="text-hl-muted">URL</dt><dd class="break-all"><a href="{{ lead.url }}" target="_blank" rel="noopener noreferrer">{{ lead.url }}</a></dd>{% endif %}
+                    {% if lead.justification %}<dt class="text-hl-muted">Why</dt><dd>{{ lead.justification }}</dd>{% endif %}
+                </dl>
+            {% endif %}
+        </section>
+
+        <section aria-labelledby="timeline-heading">
+            <h2 id="timeline-heading" class="!mb-2 text-lg">Activity</h2>
+            <ol class="space-y-3 text-sm">
+                {% for entry in timeline %}
+                    <li class="border-l-2 border-hl-line pl-3">
+                        <p class="text-xs text-hl-muted">
+                            <time datetime="{{ entry.created_at|date:'c' }}">{{ entry.created_at|date:"M j, Y g:i a" }}</time>
+                            · {% if entry.actor %}{{ entry.actor.get_full_name|default:entry.actor.email }}{% else %}System{% endif %}
+                        </p>
+                        <p class="text-hl-ink"><span class="font-medium">{{ entry.get_kind_display }}</span>{% if entry.from_value or entry.to_value %}: {% if entry.from_value %}{{ entry.from_value }} → {% endif %}{{ entry.to_value }}{% endif %}</p>
+                        {% if entry.text %}<p class="whitespace-pre-line text-hl-ink">{{ entry.text }}</p>{% endif %}
+                    </li>
+                {% empty %}
+                    <li class="text-hl-muted">Nothing yet.</li>
+                {% endfor %}
+            </ol>
+        </section>
+    </div>
+</div>
+{% endblock %}

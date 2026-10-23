@@ -143,6 +143,8 @@ class Lead(TrackedModel):
     url = models.URLField(max_length=500, blank=True)
     justification = models.TextField(blank=True)
     review_status = models.CharField(max_length=20, choices=ReviewStatus.choices, default=ReviewStatus.NEW)
+    # From the community partners CSV's Status column ("Bounced #3" is 3)
+    bounces = models.PositiveSmallIntegerField(default=0)
     # Only a mark on the record; the opt-out itself is handled in the email
     opted_out_at = models.DateTimeField(null=True, blank=True)
     source_run = models.ForeignKey(

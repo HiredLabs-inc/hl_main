@@ -12,12 +12,12 @@ class OllamaProviderTest(TestCase):
     def test_defaults_to_ollama_cloud_with_bearer_key(self):
         with mock.patch("hlagents.providers.ollama.Client") as client:
             OllamaProvider(api_key="secret")
-        client.assert_called_once_with(host="https://ollama.com", headers={"Authorization": "Bearer secret"})
+        client.assert_called_once_with(host="https://ollama.com", headers={"Authorization": "Bearer secret"}, timeout=180)
 
     def test_local_server_without_key(self):
         with mock.patch("hlagents.providers.ollama.Client") as client:
             OllamaProvider(base_url="http://ollama:11434")
-        client.assert_called_once_with(host="http://ollama:11434", headers=None)
+        client.assert_called_once_with(host="http://ollama:11434", headers=None, timeout=180)
 
     def test_chat_maps_the_response(self):
         response = ChatResponse(

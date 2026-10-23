@@ -1,0 +1,51 @@
+{% comment %}A run's header, conversation and leads. Polls itself while the run is queued or running. Needs run, conversation and leads.{% endcomment %}
+<div id="run-body" class="space-y-6"
+     {% if run.in_progress %}hx-get="{% url 'hlagents:run_status' run.pk %}" hx-trigger="every 3s" hx-swap="outerHTML"{% endif %}>
+    <div>
+        <h1 class="!mb-1">{{ run.config.name }} <span class="text-hl-muted">#{{ run.pk }}</span> {% include 'hlagents/partials/run_status.html' %}</h1>
+        <p class="text-sm text-hl-muted">
+            {{ run.provider }} · <code>{{ run.model }}</code> · started {{ run.created_at|timesince }} ago{% if run.started_by %} by {{ run.started_by.get_full_name|default:run.started_by.email }}{% endif %}
+            · {{ run.iterations }} step{{ run.iterations|pluralize }}, {{ run.tool_calls }} search{{ run.tool_calls|pluralize:"es" }}, {{ run.input_tokens|add:run.output_tokens }} tokens, est. ${{ run.cost|floatformat:2 }}
+        </p>
+        {% if run.result %}<p class="mt-2 text-sm text-hl-ink">{{ run.result }}</p>{% endif %}
+        {% if run.error %}<p class="mt-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800" role="alert">{{ run.error }}</p>{% endif %}
+        {% if run.in_progress %}<p class="mt-2 text-sm text-hl-muted" role="status">The agent is working. This page updates by itself.</p>{% endif %}
+    </div>
+
+    <div class="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+        <section aria-labelledby="conversation-heading">
+            <h2 id="conversation-heading" class="!mb-2 text-lg">Conversation</h2>
+            <ol class="space-y-2 text-sm">
+                {% for entry in conversation %}
+                    <li class="rounded-md border border-hl-line bg-white px-3 py-2 {% if entry.kind == 'user' %}border-l-4 !border-l-hl-orange{% endif %}">
+                        {% if entry.kind == 'user' %}
+                            <p class="text-xs font-medium text-hl-muted">Request</p>
+                            <p class="whitespace-pre-line text-hl-ink">{{ entry.text }}</p>
+                        {% elif entry.kind == 'search' %}
+                            <p class="text-hl-ink"><span class="text-xs font-medium text-hl-muted">Searched</span> {{ entry.text }}</p>
+                        {% elif entry.kind == 'answer' %}
+                            <details>
+                                <summary class="cursor-pointer text-xs font-medium text-hl-muted">Answer</summary>
+                                <pre class="mt-1 max-h-96 overflow-auto whitespace-pre-wrap text-xs">{{ entry.text }}</pre>
+                            </details>
+                        {% else %}
+                            <details>
+                                <summary class="cursor-pointer text-xs font-medium text-hl-muted">{% if entry.kind == 'result' %}Search results{% if entry.text %}: {{ entry.text }}{% endif %}{% else %}{{ entry.text }}{% endif %}</summary>
+                                <pre class="mt-1 max-h-96 overflow-auto whitespace-pre-wrap text-xs">{{ entry.detail }}</pre>
+                            </details>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ol>
+        </section>
+
+        <section aria-labelledby="leads-heading">
+            <h2 id="leads-heading" class="!mb-2 text-lg">Leads from this run</h2>
+            {% if leads %}
+                {% include 'hlagents/partials/lead_table.html' %}
+            {% elif not run.in_progress %}
+                <p class="text-sm text-hl-muted">No new leads.</p>
+            {% endif %}
+        </section>
+    </div>
+</div>

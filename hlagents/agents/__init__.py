@@ -14,5 +14,9 @@ def get_agent_type(key) -> AgentType:
     return AGENT_TYPES[key]
 
 
+def agent_for_lead_kind(kind) -> AgentType:
+    return next(agent for agent in AGENT_TYPES.values() if agent.lead_kind == kind)
+
+
 def agent_type_choices():
     return [(agent.key, agent.label) for agent in AGENT_TYPES.values()]

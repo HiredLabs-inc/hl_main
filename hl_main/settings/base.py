@@ -220,3 +220,6 @@ COMMENT_NOTIFICATION_EMAILS = ["info@hiredlabs.org"]
 # Web search for hlagents (docs/hlagents.md §3.7). Provider keys are read from the
 # env var named by each ProviderConfig.secret_env.
 TAVILY_API_KEY = env("TAVILY_API_KEY", default="")
+# Seconds an agent run may take. Cloud Tasks waits 10 minutes before retrying a
+# task, and the worker only starts queued runs, so a retry can't run one twice.
+HLAGENTS_RUN_TIME_LIMIT = 480

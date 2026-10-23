@@ -5,6 +5,9 @@ so the run page shows progress and a crash keeps the history.
 """
 import json
 import logging
+import time
+
+from django.conf import settings
 
 from hlagents import services
 from hlagents.agents import ParseError
@@ -28,7 +31,8 @@ def run_agent(run: AgentRun, provider: ChatProvider = None) -> AgentRun:
     run.save()
     try:
         provider = provider or get_provider(run.provider)
-        message = _converse(run, provider, tools, tool_names, limits)
+        deadline = time.monotonic() + settings.HLAGENTS_RUN_TIME_LIMIT
+        message = _converse(run, provider, tools, tool_names, limits, deadline)
         if message is None:
             return run
         inserted, skipped = services.save_leads(run, agent.parse(message.get("content", "")))
@@ -45,15 +49,17 @@ def run_agent(run: AgentRun, provider: ChatProvider = None) -> AgentRun:
     return run
 
 
-def _converse(run, provider, tools, tool_names, limits):
+def _converse(run, provider, tools, tool_names, limits, deadline):
     """Chat until a reply has no tool calls, and return that reply. Returns None
-    if the run stopped first (cap or step limit), with its status set."""
+    if the run stopped first (cap, step or time limit), with its status set."""
     steps = 0
     while True:
         if run.cost >= limits.run_cost_cap or AgentRun.spent_today() >= limits.daily_cost_cap:
             return _stop(run, AgentRun.Status.CAPPED, "Stopped at the cost cap.")
         if steps >= run.config.max_iterations:
             return _stop(run, AgentRun.Status.FAILED, f"Stopped after {steps} steps without a final answer.")
+        if time.monotonic() > deadline:
+            return _stop(run, AgentRun.Status.FAILED, "Stopped at the time limit without a final answer.")
 
         result = provider.chat(model=run.model, messages=run.messages, tools=tools)
         steps += 1

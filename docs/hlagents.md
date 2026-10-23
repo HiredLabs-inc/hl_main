@@ -2,7 +2,7 @@
 
 Branch `feature/hlagents-01` (develop merged in 2026-10-21), worktree `.claude/worktrees/hlagents-01`.
 
-> **Status:** agreed 2026-10-22 (§6). Jeff answered the open questions in §7. H1 is done (§8). H2 is next.
+> **Status:** agreed 2026-10-22 (§6). Jeff answered the open questions in §7. H1 and H2 are done (§8). H3 is next.
 
 ## 1. Context
 We have two working prototype agents in `examples/utils/` that run outside the app:
@@ -179,4 +179,29 @@ Original questions and answers:
 - **Dependencies:** `ollama==0.6.3`, `tavily-python==0.8.5`.
 - **Dev keys:** `OLLAMA_API_KEY` and `TAVILY_API_KEY` go in `.env.local` in the repo root. It's gitignored, and compose loads it into `django` and `django-tasks` if it exists. `.env.dev` isn't loaded, because its `GOOGLE_APPLICATION_CREDENTIALS` would override the mounted gcloud credentials.
 - **Tests:** `hlagents/tests/` has 39 tests using `FakeProvider` and a mocked `TavilyClient`. The full suite (336 tests) passes.
-- `examples/` stays until H2 has run both agents against Ollama Cloud for real.
+- `examples/` stayed until H2 had run both agents for real. It was deleted in H2.
+
+### H2 — Runs and review UI (done 2026-10-22)
+- **Activity log:** `pipeline.Activity` now belongs to a person *or* a lead (nullable `person`, new `lead` FK, check constraint `activity_person_or_lead`), with new kinds: found by agent, imported, edited, review, opt-out. `hlagents/services.py` logs every lead change.
+- **Worker:** `services.start_run` queues `hlagents:task_run_agent`, and `hlagents/tasks.py` `run_agent_task` only starts runs that are still **queued**, so a Cloud Tasks retry can't run one twice. Runs stop after `HLAGENTS_RUN_TIME_LIMIT` (480 s), which is under the 10-minute Cloud Tasks deadline. Each Ollama call times out after 180 s.
+- **`background_tasks.queue.work_task`** no longer wraps the whole task in one transaction. That transaction hid a run's progress, and the cold_apply job search's "running" status, until the task finished. It also broke `task.fail()` after a database error. The row lock that marks a task as started is unchanged.
+- **Pages:**
+  - `/agents/`: an agent card with an editable request and a Run button, plus recent runs
+  - `/agents/runs/<id>/`: the conversation (searches, collapsed results, the answer) and the run's leads with Approve and Reject. It polls every 3 s while the run is queued or running.
+  - `/agents/leads/`: filters by kind, review status and source, plus search
+  - `/agents/leads/<id>/`: edit form, opt-out toggle and activity timeline
+  - `/agents/leads/import/`: partners CSV import
+  - An Agents link in the staff nav for anyone with hlagents permissions
+- **Permissions:** migration `0004_agents_group` creates the **Agents** group (view agents, runs and leads; start runs; change and add leads) and adds all active staff to it. Volunteers get access by joining the group. Settings permissions are left for H3.
+- **Partners import:** `Lead.bounces` is new. `read_partners_csv` rejects the whole file if any row is bad, and lists every bad row.
+- **Tailwind:** `frontend/tailwind.config.js` now scans `hlagents/templates` and `hlagents/*.py`.
+- **Real runs (2026-10-22, `gemma4:31b`):**
+  - Funding: 3 searches and 5 leads in about 10 s, at an estimated $0.02.
+  - Outreach: 3 searches and 10 leads.
+
+  Both `gemma4:31b` and `gemma4:31b-cloud` work against `https://ollama.com`.
+- **Lead quality is for H3** (prompt editing):
+  - The funding agent copies the "$25k–$100k" criteria in as every lead's amount.
+  - It returns agency homepages rather than specific opportunities.
+  - The outreach prompt says "exactly 10", which overrides a request for 5. It returned VA researchers, who may not be the outreach targets we want.
+- **Tests:** 79 in `hlagents`, and the full suite (376) passes.
