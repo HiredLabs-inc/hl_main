@@ -172,6 +172,11 @@ class ColdApplyAccessTest(TestCase):
         response = self.client.get(reverse("cold_apply:home"))
         self.assertRedirects(response, reverse("userprofile:user_home"), fetch_redirect_response=False)
 
+    def test_old_resume_index_is_gone(self):
+        # BUG-040: it listed every participant's resume data with no auth
+        self.client.force_login(self.staff)
+        self.assertEqual(self.client.get(f"/resume/resumes/{self.job.title.pk}").status_code, 404)
+
 
 class OverviewDeleteTest(TestCase):
     @classmethod
