@@ -21,8 +21,6 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 | BUG-034 | Low | Open | pipeline | Board: a moved card that no longer matches the filters stays until the board refreshes |
 | BUG-035 | Low | Open | pipeline | Suspected: board card moved into a column of more than 25 can appear twice after "Show more" |
 | BUG-036 | Low | Open | pipeline | Board: a one-line card's hover preview shows behind its open Move menu |
-| BUG-041 | Low | Open | cold_apply | `ConfirmApplicationView` is dead code: no URL, no template, no auth |
-| BUG-043 | Low | Open | cold_apply | NLTK tokenizer/tagger code needs data the image doesn't include (only `stopwords` is baked in) |
 ---
 ## BUG-030 — Any logged-in user can create shared reference data
 - **Severity:** Low · **Status:** Open · **Found:** 2026-10-19, cold_apply staff redesign review
@@ -52,18 +50,6 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 - **Where:** `pipeline/templates/pipeline/partials/board_card.html` (compact card: preview shown with `group-hover` / `group-focus-within`); `board_move_menu.html`
 - **Problem:** in a column of more than 30 cards, opening Move on a one-line card puts focus inside the card, so the full-card preview also appears and sits under the menu. Nothing is broken, but it looks cluttered.
 - **Fix idea:** hide the preview while that card's menu is open (e.g. a `data-menu-open` attribute on the card wrapper that the preview's classes check).
-
-## BUG-041 — `ConfirmApplicationView` is dead code
-- **Severity:** Low · **Status:** Open · **Found:** 2026-10-22, IDEA-005 code survey
-- **Where:** `cold_apply/views.py:122`
-- **Problem:** a `TemplateView` with no auth. No URL points to it, and its template `confirm_application_submit.html` doesn't exist. It's left over from the dropped `Application` model.
-- **Fix idea:** delete it.
-
-## BUG-043 — NLTK tokenizer/tagger code needs data the image doesn't include
-- **Severity:** Low · **Status:** Open · **Found:** 2026-10-23, hotfix-01 (NLTK cold-start hang)
-- **Where:** `cold_apply/static/scripts/resume_writer/bullet_weighter.py:40` (`tagger`, `pos_finder`), `cold_apply/static/scripts/keyword_analyzer/analyzer.py` (`pos_tagger`, `word_tokenize`), `keyword_analyzer/composer.py`
-- **Problem:** these call `word_tokenize`, `pos_tag(tagset='universal')`, `wordnet` and `treebank`. The Dockerfile only bakes `stopwords` into `$NLTK_DATA`, so they would raise `LookupError` (`punkt`, `averaged_perceptron_tagger`, `universal_tagset`, …). No view reaches them today: `weigh()` and `analyze()` don't call them, and `composer.py` imports a `lang_processors` package that doesn't exist.
-- **Fix idea:** delete the unused functions and `composer.py`, or add the corpora to the Dockerfile's `nltk.downloader` line. Never call `nltk.download()` at runtime (that caused hotfix-01).
 
 ## Fixed and Skipped
 
@@ -103,7 +89,9 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 | BUG-038 | Medium | Fixed | cold_apply | AI bullet and overview generation called the retired Vertex `text-bison@001` model |
 | BUG-039 | Low | Fixed | dev data | `load_dev_data` sometimes crashes on a duplicate Faker company name (`resume.Organization.name` is unique) |
 | BUG-040 | Medium | Fixed | resume | `/resume/resumes/<pk>` had no login check and always returned a 500 (undefined `overview`) |
+| BUG-041 | Low | Fixed | cold_apply | `ConfirmApplicationView` is dead code: no URL, no template, no auth |
 | BUG-042 | Low | Fixed | staff UI | Release-notes links show to all staff, but plain staff get a 403 |
+| BUG-043 | Low | Fixed | cold_apply | NLTK tokenizer/tagger code needs data the image doesn't include (only `stopwords` is baked in) |
 ---
 ## BUG-001 — Deletes and keyword refresh run on GET links (CSRF)
 - **Severity:** High · **Status:** Fixed (`fix/bug-001-csrf-get-deletes`, 1d04bee; merged into `feature/signup-login-redesign`) · **Found:** 2026-10-16, signup redesign Step 1
@@ -342,8 +330,22 @@ be editable. Admins might make mistakes, and the current interface is too rigid,
 - **Fix idea:** delete the view and URL if nothing uses them (cold_apply has the real resume tools). Otherwise add `staff_required` and filter by owner.
 - **Fix:** nothing linked to it, so the view, `resume/urls.py`, the `resume/` include and `resume/templates/resume/index.html` were deleted. Test: `cold_apply/tests/test_access.py` `test_old_resume_index_is_gone`.
 
+## BUG-041 — `ConfirmApplicationView` is dead code
+- **Severity:** Low · **Status:** Fixed (`fix/low-bugs-3`, 9be02a6) · **Found:** 2026-10-22, IDEA-005 code survey
+- **Where:** `cold_apply/views.py:122`
+- **Problem:** a `TemplateView` with no auth. No URL points to it, and its template `confirm_application_submit.html` doesn't exist. It's left over from the dropped `Application` model.
+- **Fix idea:** delete it.
+- **Fix:** deleted the view. Nothing referenced it.
+
 ## BUG-042 — Release-notes links show to staff who can't open them
 - **Severity:** Low · **Status:** Fixed (`feature/volunteer-logins`, fa7c027; merged into develop in 3f7c025; reaches stage and prod with the next deploys) · **Found:** 2026-10-22, IDEA-005 code survey
 - **Where:** `templates/staff_base.html:34-37`
 - **Problem:** the Tools menu shows "Release notes: …" links to every `is_staff` user. The release views need `releases` app permissions since BUG-002, so staff without them get a 403.
 - **Fix:** the links are under `{% if perms.releases %}`, like World Rates, as part of the permission-based staff nav (`docs/volunteer-logins.md` §3.7). Test: `userprofile/tests/test_volunteers.py` `test_release_notes_follow_the_permission`.
+
+## BUG-043 — NLTK tokenizer/tagger code needs data the image doesn't include
+- **Severity:** Low · **Status:** Fixed (`fix/low-bugs-3`, 9be02a6) · **Found:** 2026-10-23, hotfix-01 (NLTK cold-start hang)
+- **Where:** `cold_apply/static/scripts/resume_writer/bullet_weighter.py:40` (`tagger`, `pos_finder`), `cold_apply/static/scripts/keyword_analyzer/analyzer.py` (`pos_tagger`, `word_tokenize`), `keyword_analyzer/composer.py`
+- **Problem:** these call `word_tokenize`, `pos_tag(tagset='universal')`, `wordnet` and `treebank`. The Dockerfile only bakes `stopwords` into `$NLTK_DATA`, so they would raise `LookupError` (`punkt`, `averaged_perceptron_tagger`, `universal_tagset`, …). No view reaches them today: `weigh()` and `analyze()` don't call them, and `composer.py` imports a `lang_processors` package that doesn't exist.
+- **Fix idea:** delete the unused functions and `composer.py`, or add the corpora to the Dockerfile's `nltk.downloader` line. Never call `nltk.download()` at runtime (that caused hotfix-01).
+- **Fix:** deleted the dead code instead of adding corpora: `keyword_analyzer/analyzer.py`, `composer.py`, `resume_writer/main.py` (never run; it used undefined names) and `vars.py`, plus every `bullet_weighter.py` function except `weigh()` and `hook_after_weighting()`. What's left needs only `stopwords` and `PorterStemmer`. Test: `cold_apply/tests/test_bullet_weighter.py`.
