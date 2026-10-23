@@ -26,6 +26,9 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 | BUG-036 | Low | Open | pipeline | Board: a one-line card's hover preview shows behind its open Move menu |
 | BUG-038 | Medium | Open | cold_apply | Suspected: AI bullet and overview generation calls the retired Vertex `text-bison@001` model |
 | BUG-039 | Low | Open | dev data | `load_dev_data` sometimes crashes on a duplicate Faker company name (`resume.Organization.name` is unique) |
+| BUG-040 | Medium | Open | resume | `/resume/resumes/<pk>` has no login check and always returns a 500 (undefined `overview`) |
+| BUG-041 | Low | Open | cold_apply | `ConfirmApplicationView` is dead code: no URL, no template, no auth |
+| BUG-042 | Low | Open | staff UI | Release-notes links show to all staff, but plain staff get a 403 |
 ---
 ## BUG-019 — A request can hit a closed database connection
 - **Severity:** Medium · **Status:** Open · **Found:** 2026-10-17, stage sign-up test after build 8f748ade (46858e2) · **Suspected:** seen once, not reproduced
@@ -88,6 +91,24 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 - **Where:** `cold_apply/management/commands/load_dev_data.py`, through the factories in `cold_apply/tests/factories.py`; `resume.Organization.name` is unique
 - **Problem:** `python manage.py load_dev_data` failed with `IntegrityError: duplicate key value violates unique constraint "resume_organization_name_key"` (`Smith Inc`). Faker repeats company names, so the command fails at random partway through, like BUG-033.
 - **Fix idea:** use `django_get_or_create = ("name",)` on the organization factory, or `factory.Sequence` / `fake.unique.company()`.
+
+## BUG-040 — Resume index view has no auth and always crashes
+- **Severity:** Medium · **Status:** Open · **Found:** 2026-10-22, IDEA-005 (volunteer logins) code survey
+- **Where:** `resume/views.py:20` `index`, routed at `/resume/resumes/<pk>` (`resume/urls.py:7`)
+- **Problem:** the view has no login or permission check, and it loads every `Organization`, `Experience`, `Bullet`, `Education`, etc. with no owner filter. Today it raises `NameError` because `overview` is commented out (line 21) but still used in the context (line 38), so every request returns a 500. If someone fixes just the `NameError`, anyone, including anonymous visitors, could see every participant's resume data.
+- **Fix idea:** delete the view and URL if nothing uses them (cold_apply has the real resume tools). Otherwise add `staff_required` and filter by owner.
+
+## BUG-041 — `ConfirmApplicationView` is dead code
+- **Severity:** Low · **Status:** Open · **Found:** 2026-10-22, IDEA-005 code survey
+- **Where:** `cold_apply/views.py:122`
+- **Problem:** a `TemplateView` with no auth. No URL points to it, and its template `confirm_application_submit.html` doesn't exist. It's left over from the dropped `Application` model.
+- **Fix idea:** delete it.
+
+## BUG-042 — Release-notes links show to staff who can't open them
+- **Severity:** Low · **Status:** Open · **Found:** 2026-10-22, IDEA-005 code survey
+- **Where:** `templates/staff_base.html:34-37`
+- **Problem:** the Tools menu shows "Release notes: …" links to every `is_staff` user. The release views need `releases` app permissions since BUG-002, so staff without them get a 403.
+- **Fix idea:** wrap the links in `{% if perms.releases %}`, like the World Rates link above them. This fits the permission-based nav in `docs/volunteer-logins.md` §3.6.
 
 ## Fixed and Skipped
 
