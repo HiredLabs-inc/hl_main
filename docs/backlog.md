@@ -39,7 +39,7 @@ Design and development ideas that came up during other work and are **not bugs**
 ## IDEA-004 — Self-service participant portal
 - **Status:** Idea · **Area:** cold_apply · **Source:** `docs/cold-apply-staff-redesign.md` §7, BUG-030 (2026-10-19)
 - **What:** a portal where participants use some of the tools themselves (add experience, education and bullets, view jobs), with an access level separate from staff.
-- **Notes:** the portal and access level don't exist yet. Today only staff create companies, titles and locations, but any logged-in user technically can (BUG-030). Decide which reference data participants may create when this portal is designed.
+- **Notes:** the portal and access level don't exist yet. Participants can already create companies, titles, concentrations and locations from their forms, and edit or delete the ones they added while nobody else uses them (BUG-030, `cold_apply/reference.py`).
 
 ## IDEA-006 — Define the Nurture flow
 - **Status:** Idea · **Area:** pipeline · **Source:** `docs/cold-apply-staff-redesign.md` §7 (2026-10-19)
