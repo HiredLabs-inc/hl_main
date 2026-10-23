@@ -3,7 +3,7 @@ from django.conf import settings
 
 from .agents import get_agent_type
 from .models import AgentConfig, AgentLimits, Lead, ProviderConfig
-from .services import EDITABLE_FIELDS, field_label
+from .services import EDITABLE_FIELDS, field_label, stage_choices
 from .tools import TOOLS
 
 # Largest community partners CSV accepted
@@ -158,7 +158,12 @@ class LeadFilterForm(forms.Form):
     kind = forms.ChoiceField(choices=[("", "All kinds")] + Lead.Kind.choices, required=False)
     review_status = forms.ChoiceField(choices=[("", "Any review")] + Lead.ReviewStatus.choices, required=False)
     source = forms.ChoiceField(choices=[("", "Any source")] + Lead.Source.choices, required=False)
+    stage = forms.ChoiceField(required=False)
     q = forms.CharField(required=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["stage"].choices = [("", "Any stage")] + stage_choices()
 
 
 class LeadForm(forms.ModelForm):

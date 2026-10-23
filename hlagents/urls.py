@@ -15,6 +15,7 @@ urlpatterns = [
     path("leads/<int:pk>/", views.lead_view, name="lead"),
     path("leads/<int:pk>/review/", views.review_view, name="review"),
     path("leads/<int:pk>/opt-out/", views.opt_out_view, name="opt_out"),
+    path("leads/<int:pk>/stage/", views.stage_view, name="stage"),
     path("settings/", views.settings_view, name="settings"),
     path("settings/agents/new/", views.agent_settings_view, name="new_agent"),
     path("settings/agents/<int:pk>/", views.agent_settings_view, name="agent_settings"),

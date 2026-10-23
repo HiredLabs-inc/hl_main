@@ -1,14 +1,18 @@
 from unittest import mock
 
-from django.contrib.auth.models import Group, User
+from django.contrib.auth.models import Group, Permission, User
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.db import connection
 from django.test import TestCase
+from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 
 from background_tasks.models import Task
 from background_tasks.queue import TASK_ID_HEADER
+from hlagents import services
 from hlagents.models import AgentConfig, AgentRun, Lead
 from hlagents.tests.fakes import make_config, make_run
+from pipeline.models import Step
 
 
 class ViewTestCase(TestCase):
@@ -163,6 +167,73 @@ class LeadViewsTest(ViewTestCase):
         response = self.client.get(reverse("hlagents:leads"), {"q": "acme"})
         self.assertContains(response, "Acme Foundation")
         self.assertNotContains(response, "pat@dav.org")
+
+
+class StageViewTest(ViewTestCase):
+    def setUp(self):
+        super().setUp()
+        self.lead = Lead.objects.create(kind="funding", dedupe_key="acme foundation", org_name="Acme Foundation")
+        services.review(self.lead, Lead.ReviewStatus.APPROVED, self.agent_user)
+        self.found = Step.objects.get(phase__flow__slug="funding", title="Found")
+        self.applying = Step.objects.get(phase__flow__slug="funding", title="Applying")
+
+    def move(self, step, from_step=None, **headers):
+        data = {"step": step.pk, "from_step": (from_step or self.found).pk}
+        return self.client.post(reverse("hlagents:stage", args=[self.lead.pk]), data, **headers)
+
+    def test_htmx_move_returns_the_row(self):
+        response = self.move(self.applying, HTTP_HX_REQUEST="true")
+        self.assertContains(response, f'id="lead-{self.lead.pk}"')
+        self.assertContains(response, f'<option value="{self.applying.pk}" selected>')
+        self.assertEqual(services.open_enrollment(self.lead).current_step, self.applying)
+
+    def test_stale_move_shows_the_saved_stage(self):
+        self.move(self.applying)
+        submitted = Step.objects.get(phase__flow__slug="funding", title="Submitted")
+        response = self.move(submitted, HTTP_HX_REQUEST="true")
+        self.assertContains(response, "no longer on Found")
+        self.assertContains(response, f'<option value="{self.applying.pk}" selected>')
+
+    def test_form_move_redirects_to_the_lead(self):
+        response = self.move(self.applying)
+        self.assertRedirects(response, reverse("hlagents:lead", args=[self.lead.pk]))
+        response = self.client.get(reverse("hlagents:lead", args=[self.lead.pk]))
+        self.assertContains(response, "Found → Applying")
+        self.assertContains(response, "View on the Funding board")
+
+    def test_needs_change_lead(self):
+        viewer = User.objects.create_user("viewer@example.com", "viewer@example.com", "pw")
+        viewer.user_permissions.add(Permission.objects.get(codename="view_lead"))
+        self.client.force_login(viewer)
+        response = self.move(self.applying)
+        self.assertIn(response.status_code, (302, 403))
+        self.assertEqual(services.open_enrollment(self.lead).current_step, self.found)
+
+    def test_untracked_lead_explains(self):
+        lead = Lead.objects.create(kind="funding", dedupe_key="bolt", org_name="Bolt")
+        response = self.client.get(reverse("hlagents:lead", args=[lead.pk]))
+        self.assertContains(response, "Approve this lead to track its stage")
+
+    def test_leads_list_shows_and_filters_by_stage(self):
+        Lead.objects.create(kind="funding", dedupe_key="bolt", org_name="Bolt")
+        self.move(self.applying)
+        response = self.client.get(reverse("hlagents:leads"), {"stage": "Applying"})
+        self.assertContains(response, "Acme Foundation")
+        self.assertNotContains(response, "Bolt")
+        response = self.client.get(reverse("hlagents:leads"))
+        self.assertContains(response, "Not tracked")
+
+    def test_leads_list_queries_dont_grow_with_leads(self):
+        def count():
+            with CaptureQueriesContext(connection) as queries:
+                self.client.get(reverse("hlagents:leads"))
+            return len(queries)
+
+        before = count()
+        for i in range(5):
+            lead = Lead.objects.create(kind="funding", dedupe_key=f"fund {i}", org_name=f"Fund {i}")
+            services.review(lead, Lead.ReviewStatus.APPROVED, self.agent_user)
+        self.assertEqual(count(), before)
 
 
 class ImportViewTest(ViewTestCase):

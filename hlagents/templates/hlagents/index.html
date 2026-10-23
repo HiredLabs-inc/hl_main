@@ -9,6 +9,10 @@
         </div>
         <div class="flex gap-2">
             <a href="{% url 'hlagents:leads' %}" class="btn btn-outline-secondary !py-1.5 !text-sm">Leads</a>
+            {% if user.is_staff %}
+                <a href="{% url 'staff' %}?tab=funding" class="btn btn-outline-secondary !py-1.5 !text-sm">Funding board</a>
+                <a href="{% url 'staff' %}?tab=outreach" class="btn btn-outline-secondary !py-1.5 !text-sm">Outreach board</a>
+            {% endif %}
             {% if perms.hlagents.add_lead %}<a href="{% url 'hlagents:import' %}" class="btn btn-outline-secondary !py-1.5 !text-sm">Import partners</a>{% endif %}
             {% if perms.hlagents.change_agentconfig %}<a href="{% url 'hlagents:settings' %}" class="btn btn-outline-secondary !py-1.5 !text-sm">Settings</a>{% endif %}
         </div>

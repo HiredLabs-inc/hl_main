@@ -2,7 +2,7 @@
 
 Branch `feature/hlagents-01` (develop merged in 2026-10-21), worktree `.claude/worktrees/hlagents-01`.
 
-> **Status:** agreed 2026-10-22 (§6). Jeff answered the open questions in §7. H1–H4 are done (§8). H5 (stage) is a checklist for Jeff (§8).
+> **Status:** agreed 2026-10-22 (§6). Jeff answered the open questions in §7. H1–H4 are done (§8). H5 (stage) is a checklist for Jeff (§8). H6 (stages in `/agents/`) is on `feature/hlagents-02`.
 
 ## 1. Context
 We have two working prototype agents in `examples/utils/` that run outside the app:
@@ -264,3 +264,13 @@ Deploys run `migrate` automatically (`infra/cloudbuild/deploy.yaml`). Nothing he
    - Import the real partners CSV and check bounces and the Partner step.
    - Lower the run cap and confirm a run stops.
 5. **Prod:** the same secrets and Agent admins, at the next release. Look at the caps first: the defaults are $1 per run and $10 per day, and Ollama Cloud's rates are set to $0 because it's a subscription.
+
+### H6 — Stages in /agents/ (2026-10-22, `feature/hlagents-02`)
+On stage, the leads looked unusable: there was no way to mark how far an application had got. The Funding and Outreach flows already had the steps, but you could only move a lead on the `/staff/` board, and nothing in `/agents/` led there. Jeff chose to keep the H4 steps and add controls where people work with leads.
+- **Service:** `services.set_stage(lead, step, actor, from_step=None)` moves the lead's open enrollment with `pipeline.move_to_step`, so each move is logged on the lead's timeline. It refuses a lead with no open enrollment ("Approve this lead to track its stage."), a step from another flow, and a stale move (`StaleStep`, e.g. after someone moved it on the board). `services.attach_stages(leads)` sets `lead.enrollment` and `lead.stage_steps` for a list in a fixed number of queries.
+- **`POST /agents/leads/<id>/stage/`** (`change_lead`) takes `step` and `from_step`. An htmx request gets the lead row back, redrawn with the saved stage and any error. A form post redirects to the lead page with a message.
+- **Leads list and run page:** a Stage column. Approved leads have a select grouped by phase that moves on change; other leads say "Not tracked". The leads list filters by stage (step title, grouped by flow).
+- **Lead page:** a Stage box with the select and Move, how long the lead has been on the step, and for staff "View on the Funding board →". Untracked leads say why.
+- **`/agents/`:** staff get Funding board and Outreach board buttons.
+- **Not built:** completing an enrollment (Awarded, Declined, Partner are final steps) stays on the board. A lead can be moved onto those steps here, but not marked complete.
+- **Tests:** `StageTest` in `test_services.py` and `StageViewTest` in `test_views.py`, including a query-count check for the leads list. The full suite (448) passes.

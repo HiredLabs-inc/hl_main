@@ -9,6 +9,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from background_tasks.queue import is_authorized_task_request, work_task
+from pipeline.models import Step
 from userprofile.guards import app_permission_required
 
 from . import services
@@ -27,6 +28,13 @@ from .models import AgentConfig, AgentLimits, AgentRun, Lead, ProviderConfig
 from .tasks import run_agent_task
 
 agents_required = app_permission_required("hlagents")
+
+
+def _int(value):
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
 
 
 def _require(user, perm):
@@ -66,7 +74,7 @@ def _run_context(request, run):
     context = {
         "run": run,
         "conversation": conversation(run.messages),
-        "leads": run.leads.all(),
+        "leads": services.attach_stages(run.leads.all()),
     }
     if not run.in_progress() and request.user.has_perm("hlagents.add_agentrun"):
         context["follow_up_problem"] = services.follow_up_problem(run)
@@ -117,12 +125,15 @@ def leads_view(request):
             leads = leads.filter(review_status=data["review_status"])
         if data["source"]:
             leads = leads.filter(source=data["source"])
+        if data["stage"]:
+            leads = leads.filter(enrollments__ended_at__isnull=True, enrollments__current_step__title=data["stage"])
         if data["q"]:
             q = data["q"]
             leads = leads.filter(
                 Q(org_name__icontains=q) | Q(first_name__icontains=q) | Q(last_name__icontains=q) | Q(contact_email__icontains=q)
             )
     page = Paginator(leads, 50).get_page(request.GET.get("page"))
+    page.object_list = services.attach_stages(page.object_list)
     query = request.GET.copy()
     query.pop("page", None)
     return render(request, "hlagents/leads.html", {"filters": filters, "page": page, "query": query.urlencode()})
@@ -149,12 +160,15 @@ def lead_view(request, pk):
     elif request.method == "POST":
         raise PermissionDenied
     timeline = lead.activities.select_related("actor")
-    context = {"lead": lead, "form": form, "timeline": timeline, "enrollment": services.open_enrollment(lead)}
+    services.attach_stages([lead])
+    context = {"lead": lead, "form": form, "timeline": timeline, "enrollment": lead.enrollment}
     return render(request, "hlagents/lead.html", context)
 
 
-def _lead_row(request, lead):
-    return render(request, "hlagents/partials/lead_row.html", {"lead": lead, "show_run": request.POST.get("show_run")})
+def _lead_row(request, lead, stage_error=""):
+    services.attach_stages([lead])
+    context = {"lead": lead, "show_run": request.POST.get("show_run"), "stage_error": stage_error}
+    return render(request, "hlagents/partials/lead_row.html", context)
 
 
 @agents_required
@@ -167,6 +181,30 @@ def review_view(request, pk):
     except ValidationError as e:
         return HttpResponse(e.messages[0], status=400)
     return _lead_row(request, lead)
+
+
+@agents_required
+@require_POST
+def stage_view(request, pk):
+    _require(request.user, "hlagents.change_lead")
+    lead = get_object_or_404(Lead, pk=pk)
+    step = Step.objects.filter(pk=_int(request.POST.get("step"))).first()
+    from_step = Step.objects.filter(pk=_int(request.POST.get("from_step"))).first()
+    error = ""
+    try:
+        if step is None:
+            raise ValidationError("Choose a stage.")
+        services.set_stage(lead, step, request.user, from_step=from_step)
+    except (ValidationError, PermissionDenied) as e:
+        error = e.messages[0] if isinstance(e, ValidationError) else str(e)
+    if request.headers.get("HX-Request"):
+        # The row is redrawn either way, so it shows the stage that's saved
+        return _lead_row(request, lead, stage_error=error)
+    if error:
+        messages.error(request, error)
+    else:
+        messages.success(request, f"Moved to {step.title}.")
+    return redirect("hlagents:lead", lead.pk)
 
 
 @agents_required
