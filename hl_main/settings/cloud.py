@@ -63,6 +63,12 @@ DATABASES = {
         "USER": env("GCP_CLOUDSQL_USER"),
         "PASSWORD": env("GCP_CLOUDSQL_PASSWORD"),
         "PORT": 5432,
+        # BUG-019: reuse connections for a minute, and check one before each
+        # request reuses it, so a closed connection is replaced instead of
+        # failing the request. db-f1-micro allows ~25 connections, and each
+        # gunicorn thread (8 per instance) keeps at most one.
+        "CONN_MAX_AGE": 60,
+        "CONN_HEALTH_CHECKS": True,
     }
 }
 
