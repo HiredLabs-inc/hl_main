@@ -2,7 +2,8 @@ import json
 
 from django.test import SimpleTestCase
 
-from hlagents.agents import AGENT_TYPES, ParseError, agent_type_choices, get_agent_type
+from hlagents.agents import AGENT_TYPES, CORRECTABLE, ParseError, agent_type_choices, get_agent_type
+from hlagents.agents.funding import FundingAgent, is_listing_or_news
 from hlagents.tests.fakes import FUNDERS
 
 
@@ -82,3 +83,35 @@ class RegistryTest(SimpleTestCase):
 
         for agent in AGENT_TYPES.values():
             self.assertIn(agent.lead_kind, Lead.Kind.values)
+
+
+class ListingOrNewsTest(SimpleTestCase):
+    def test_blocked(self):
+        for url in [
+            "https://www.instrumentl.com/browse-grants/illinois/veterans",
+            "https://grantsmarts.com/top-grants-for-nonprofits-serving-veterans",
+            "https://fconline.foundationcenter.org/grants/123",
+            "https://www.prnewswire.com/news-releases/walmart-grants-500000.html",
+            "https://newsroom.thecignagroup.com/2026-06-02-grant-program",
+            "https://vystarfoundation.org/news/archive/awards-grants",
+            "https://example.org/blog/our-new-grant",
+        ]:
+            with self.subTest(url):
+                self.assertTrue(is_listing_or_news(url))
+
+    def test_allowed(self):
+        for url in [
+            "https://www.woundedwarriorproject.org/programs/community-partners",
+            "https://bobwoodrufffoundation.org/grants/",
+            "https://www.grants.gov/search-results-detail/123456",
+            "https://newsomefoundation.org/grants",
+            "https://example.org/programs/newsletter-grants",
+        ]:
+            with self.subTest(url):
+                self.assertFalse(is_listing_or_news(url))
+
+    def test_funding_candidates_on_listings_are_rejected_for_correction(self):
+        url = "https://www.instrumentl.com/grants/acme"
+        candidate = {"org_name": "Acme", "application_url": url}
+        self.assertEqual(FundingAgent().validate(candidate, url), "listing or news site")
+        self.assertIn("listing or news site", CORRECTABLE)

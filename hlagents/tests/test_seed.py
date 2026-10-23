@@ -16,16 +16,18 @@ class SeedTest(TestCase):
         agents = {a.agent_type: a for a in AgentConfig.objects.all()}
         self.assertEqual(set(agents), {"funding", "outreach"})
         for agent in agents.values():
-            self.assertEqual((agent.provider, agent.model, agent.tools), (provider, "gemma4:31b", ["web_search"]))
+            self.assertEqual((agent.provider, agent.model, agent.tools), (provider, "gemma4:31b", ["web_search", "read_page"]))
             self.assertTrue(set(agent.tools) <= set(TOOLS))
-        # 0005 replaced the prototype prompts
+        # 0005 replaced the prototype prompts, and 0007 replaced those
         self.assertIn("Never fill it in from the range in these criteria", agents["funding"].system_prompt)
+        self.assertIn("use read_page", agents["funding"].system_prompt)
+        self.assertIn("Use read_page", agents["outreach"].system_prompt)
         self.assertIn("Never construct or guess one", agents["outreach"].system_prompt)
         self.assertNotIn("exactly 10", agents["outreach"].system_prompt)
 
         limits = AgentLimits.get()
         self.assertEqual(str(limits.run_cost_cap), "1.00")
-        self.assertEqual(limits.tool_costs, {"web_search": "0.008"})
+        self.assertEqual(limits.tool_costs, {"web_search": "0.016", "read_page": "0.002"})
 
     def test_agent_admins_group(self):
         perms = set(Group.objects.get(name="Agent admins").permissions.values_list("codename", flat=True))
@@ -34,15 +36,17 @@ class SeedTest(TestCase):
 
 
 class PromptUpdateTest(TestCase):
-    """0005 only replaces prompts that are still the seeded ones."""
+    """0005 and 0007 only replace prompts, tools and rates that are still the seeded ones."""
 
     migration = import_module("hlagents.migrations.0005_agent_admins_and_prompts")
+    migration_0007 = import_module("hlagents.migrations.0007_lead_quality")
 
     def test_edited_prompts_are_kept(self):
         funding = AgentConfig.objects.get(agent_type="funding")
         outreach = AgentConfig.objects.get(agent_type="outreach")
         AgentConfig.objects.filter(pk=funding.pk).update(system_prompt="Edited in settings.")
 
+        self.migration_0007.restore(django_apps, None)
         self.migration.restore_prompts(django_apps, None)
 
         funding.refresh_from_db()
@@ -50,3 +54,17 @@ class PromptUpdateTest(TestCase):
         self.assertEqual(funding.system_prompt, "Edited in settings.")
         self.assertIn("exactly 10", outreach.system_prompt)
         self.assertEqual(outreach.default_request, "Find 10 veteran-serving organizations for outreach partnerships.")
+
+    def test_0007_keeps_edited_tools_and_rates(self):
+        outreach = AgentConfig.objects.get(agent_type="outreach")
+        AgentConfig.objects.filter(pk=outreach.pk).update(tools=["read_page"])
+        limits = AgentLimits.get()
+        limits.tool_costs = {"web_search": "0.05", "read_page": "0.002"}
+        limits.save()
+
+        self.migration_0007.restore(django_apps, None)
+
+        outreach.refresh_from_db()
+        self.assertEqual(outreach.tools, ["read_page"])
+        self.assertEqual(AgentConfig.objects.get(agent_type="funding").tools, ["web_search"])
+        self.assertEqual(AgentLimits.get().tool_costs, {"web_search": "0.05", "read_page": "0.002"})

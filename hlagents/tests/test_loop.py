@@ -7,9 +7,22 @@ from django.test import TestCase, override_settings
 from hlagents import services
 from hlagents.loop import run_agent
 from hlagents.models import AgentLimits, AgentRun, Lead
-from hlagents.tests.fakes import FUNDERS, FakeProvider, answer, make_config, make_provider, make_run, tool_call
+from hlagents.tests.fakes import FUNDERS, FakeProvider, answer, cite, make_config, make_provider, make_run, tool_call
 
-SEARCH_RESULTS = {"results": [{"title": "Acme grants", "url": "https://acme.example.org"}]}
+SEARCH_RESULTS = {
+    "query": "veteran grants",
+    "images": [],
+    "results": [
+        {"title": "Acme grants", "url": "https://acme.example.org/grants", "content": "Workforce grants.", "score": 0.9},
+        {"title": "Bolt giving", "url": "https://www.bolt.example.org/giving/", "content": "Tech education.", "score": 0.8},
+    ],
+}
+TRIMMED_RESULTS = {
+    "results": [
+        {"title": "Acme grants", "url": "https://acme.example.org/grants", "content": "Workforce grants."},
+        {"title": "Bolt giving", "url": "https://www.bolt.example.org/giving/", "content": "Tech education."},
+    ]
+}
 
 
 @override_settings(TAVILY_API_KEY="tavily-key")
@@ -24,13 +37,13 @@ class RunAgentTest(TestCase):
 
         run.refresh_from_db()
         self.assertEqual(run.status, AgentRun.Status.DONE)
-        self.assertEqual(run.result, "Inserted 2, skipped 0 (duplicate or incomplete).")
+        self.assertEqual(run.result, "Inserted 2.")
         tavily.assert_called_once_with(api_key="tavily-key")
-        tavily.return_value.search.assert_called_once_with(query="veteran grants", max_results=5)
+        tavily.return_value.search.assert_called_once_with(query="veteran grants", search_depth="advanced", max_results=8)
         self.assertEqual(
             [m["role"] for m in run.messages], ["system", "user", "assistant", "tool", "assistant"]
         )
-        self.assertEqual(run.messages[3], {"role": "tool", "tool_name": "web_search", "content": json.dumps(SEARCH_RESULTS)})
+        self.assertEqual(run.messages[3], {"role": "tool", "tool_name": "web_search", "content": json.dumps(TRIMMED_RESULTS)})
         self.assertEqual((run.iterations, run.tool_calls, run.input_tokens, run.output_tokens), (2, 1, 300, 70))
 
         leads = Lead.objects.order_by("dedupe_key")
@@ -48,6 +61,7 @@ class RunAgentTest(TestCase):
         call = provider.calls[0]
         self.assertEqual(call["model"], "test-model")
         self.assertEqual([t["function"]["name"] for t in call["tools"]], ["web_search"])
+        self.assertTrue(call["messages"][0]["content"].startswith("You find things.\n\nToday is "))
         self.assertEqual(call["tools"][0]["function"]["description"], "Search for grants.")
         self.assertEqual(call["messages"][1], {"role": "user", "content": "Find 2 things."})
 
@@ -78,7 +92,7 @@ class RunAgentTest(TestCase):
         call = tool_call()
         call.message["tool_calls"][0]["function"]["arguments"] = '{"query": "grants"}'
         run_agent(make_run(), FakeProvider(call, answer([])))
-        tavily.return_value.search.assert_called_once_with(query="grants", max_results=5)
+        tavily.return_value.search.assert_called_once_with(query="grants", search_depth="advanced", max_results=8)
 
     @override_settings(TAVILY_API_KEY="")
     def test_missing_tavily_key_returns_an_error_to_the_model(self, tavily):
@@ -86,17 +100,56 @@ class RunAgentTest(TestCase):
         run_agent(run, FakeProvider(tool_call(), answer([])))
         self.assertEqual(json.loads(run.messages[3]["content"]), {"error": "TAVILY_API_KEY isn't set."})
 
-    def test_unparseable_answer_fails_and_keeps_the_reply(self, tavily):
+    def test_unparseable_answer_is_sent_back_once(self, tavily):
         run = make_run()
-        run_agent(run, FakeProvider(answer("Sorry, nothing found.")))
+        provider = FakeProvider(answer("Sorry, nothing found."), answer([]))
+
+        run_agent(run, provider)
+
+        self.assertEqual(run.status, AgentRun.Status.DONE)
+        self.assertEqual(run.messages[-2]["note"], "Fix the JSON")
+        self.assertIn("isn't valid JSON", run.messages[-2]["content"])
+        self.assertEqual(provider.calls[1]["messages"][-1], run.messages[-2])
+
+    def test_unparseable_answer_twice_fails_and_keeps_the_reply(self, tavily):
+        run = make_run()
+        run_agent(run, FakeProvider(answer("Sorry, nothing found."), answer("Still nothing.")))
 
         run.refresh_from_db()
         self.assertEqual(run.status, AgentRun.Status.FAILED)
         self.assertIn("isn't valid JSON", run.error)
-        self.assertEqual(run.messages[-1]["content"], "Sorry, nothing found.")
+        self.assertEqual(run.messages[-1]["content"], "Still nothing.")
+
+    def test_last_step_offers_no_tools_so_the_agent_answers(self, tavily):
+        tavily.return_value.search.return_value = SEARCH_RESULTS
+        run = make_run(make_config(max_iterations=2))
+        provider = FakeProvider(tool_call(), answer(FUNDERS[:1]))
+
+        run_agent(run, provider)
+
+        self.assertEqual(run.status, AgentRun.Status.DONE)
+        self.assertEqual(len(provider.calls[0]["tools"]), 1)
+        self.assertEqual(provider.calls[1]["tools"], [])
+        self.assertEqual(provider.calls[1]["messages"][-1]["note"], "Step limit")
+        self.assertEqual(Lead.objects.count(), 1)
+
+    def test_tool_calls_on_the_last_step_are_ignored(self, tavily):
+        tavily.return_value.search.return_value = SEARCH_RESULTS
+        run = make_run(make_config(max_iterations=2))
+        last = answer(FUNDERS[:1])
+        last.message["tool_calls"] = tool_call().message["tool_calls"]
+        provider = FakeProvider(tool_call(), last)
+
+        run_agent(run, provider)
+
+        self.assertEqual(len(provider.calls), 2)
+        self.assertEqual((run.status, run.tool_calls), (AgentRun.Status.DONE, 1))
+        self.assertNotIn("tool_calls", run.messages[-1])
+        self.assertEqual(Lead.objects.count(), 1)
 
     def test_stops_at_max_iterations(self, tavily):
-        run = make_run(make_config(max_iterations=2))
+        # A config without tools has none to withhold on the last step
+        run = make_run(make_config(max_iterations=2, tools=[]))
         provider = FakeProvider(tool_call(), tool_call(), answer([]))
 
         run_agent(run, provider)
@@ -104,6 +157,37 @@ class RunAgentTest(TestCase):
         self.assertEqual(len(provider.calls), 2)
         self.assertEqual(run.status, AgentRun.Status.FAILED)
         self.assertEqual(run.error, "Stopped after 2 steps without a final answer.")
+
+    def test_rejected_candidates_are_sent_back_once(self, tavily):
+        tavily.return_value.search.return_value = SEARCH_RESULTS
+        run = make_run()
+        made_up = {**FUNDERS[0], "org_name": "Made Up Fund", "application_url": "https://made.up/grants"}
+        home_page = {**FUNDERS[0], "org_name": "Cora Fund", "application_url": "https://cora.example.org/"}
+        fixed = {**FUNDERS[1]}
+        provider = FakeProvider(
+            tool_call(), answer([FUNDERS[0], made_up, home_page]), answer([fixed, made_up]),
+        )
+
+        run_agent(run, provider)
+
+        self.assertEqual(run.status, AgentRun.Status.DONE)
+        self.assertEqual(len(provider.calls), 3)
+        correction = provider.calls[2]["messages"][-1]
+        self.assertEqual(correction["note"], "Fix rejected candidates")
+        self.assertIn("Made Up Fund", correction["content"])
+        self.assertIn("home page", correction["content"])
+        self.assertEqual(sorted(Lead.objects.values_list("dedupe_key", flat=True)), ["acme foundation", "bolt giving"])
+        self.assertEqual(run.result, "Inserted 2. Skipped: 2 not in sources, 1 home page.")
+
+    def test_no_correction_without_steps_to_spare(self, tavily):
+        tavily.return_value.search.return_value = SEARCH_RESULTS
+        run = make_run(make_config(max_iterations=3))
+        made_up = {**FUNDERS[0], "org_name": "Made Up Fund", "application_url": "https://made.up/grants"}
+
+        run_agent(run, FakeProvider(tool_call(), answer([made_up])))
+
+        self.assertEqual(run.status, AgentRun.Status.DONE)
+        self.assertEqual(run.result, "Inserted 0. Skipped: 1 not in sources.")
 
     def test_provider_error_fails_the_run_and_keeps_history(self, tavily):
         run = make_run()
@@ -181,36 +265,62 @@ class CostCapTest(TestCase):
 class SaveLeadsTest(TestCase):
     def test_dedupes_within_and_across_runs(self):
         first = make_run()
-        self.assertEqual(services.save_leads(first, FUNDERS + [{"org_name": "ACME foundation"}]), (2, 1))
+        result = services.save_leads(first, cite(first, FUNDERS + [{"org_name": "ACME foundation"}]))
+        self.assertEqual((result.inserted, result.skipped), (2, {"already known": 1}))
 
         second = make_run()
-        self.assertEqual(services.save_leads(second, [{"org_name": "Bolt Giving"}, {"org_name": "Cora Fund"}]), (1, 1))
+        more = cite(second, [{**FUNDERS[1], "org_name": "Bolt Giving"}, {**FUNDERS[0], "org_name": "Cora Fund"}])
+        result = services.save_leads(second, more)
+        self.assertEqual((result.inserted, result.skipped), (1, {"already known": 1}))
         self.assertEqual(Lead.objects.get(dedupe_key="cora fund").source_run, second)
 
     def test_rejected_leads_still_block_duplicates(self):
         run = make_run()
-        services.save_leads(run, FUNDERS[:1])
+        services.save_leads(run, cite(run, FUNDERS[:1]))
         Lead.objects.update(review_status=Lead.ReviewStatus.REJECTED)
-        self.assertEqual(services.save_leads(make_run(), FUNDERS[:1]), (0, 1))
+        run = make_run()
+        self.assertEqual(services.save_leads(run, cite(run, FUNDERS[:1])).skipped, {"already known": 1})
 
     def test_same_key_in_another_kind_is_not_a_duplicate(self):
         Lead.objects.create(kind=Lead.Kind.OUTREACH, dedupe_key="acme foundation")
-        self.assertEqual(services.save_leads(make_run(), FUNDERS[:1]), (1, 0))
+        run = make_run()
+        self.assertEqual(services.save_leads(run, cite(run, FUNDERS[:1])).inserted, 1)
 
-    def test_outreach_skips_missing_and_invalid_emails(self):
+    def test_funding_urls_must_be_in_sources_and_not_home_pages(self):
+        run = make_run()
+        cite(run, [{"url": "https://WWW.Acme.example.org/grants/?ref=x"}])
+        candidates = [
+            FUNDERS[0],
+            {**FUNDERS[0], "org_name": "Home", "application_url": "https://acme.example.org/"},
+            {**FUNDERS[0], "org_name": "None", "application_url": ""},
+            {**FUNDERS[0], "org_name": "Elsewhere", "application_url": "https://acme.example.org/other"},
+        ]
+        result = services.save_leads(run, candidates)
+        self.assertEqual((result.inserted, result.skipped), (1, {"home page": 2, "not in sources": 1}))
+        self.assertEqual([reason for _, reason in result.rejected], ["home page", "home page", "not in sources"])
+
+    def test_outreach_skips_missing_invalid_unsourced_and_shared_emails(self):
         run = make_run(make_config("outreach"))
+        cite(run, [{"content": "Contact Pat at PAT@dav.org or info@dav.org"}])
         candidates = [
             {"first_name": "Pat", "org_name": "DAV", "contact_email": "Pat@DAV.org"},
             {"first_name": "Sam", "org_name": "VFW", "contact_email": ""},
             {"first_name": "Lee", "org_name": "VVA", "contact_email": "not an email"},
             {"first_name": "Pat", "org_name": "DAV", "contact_email": "pat@dav.org"},
+            {"first_name": "Kim", "org_name": "DAV", "contact_email": "kim@dav.org"},
+            {"first_name": "", "org_name": "DAV", "contact_email": "info@dav.org"},
         ]
-        self.assertEqual(services.save_leads(run, candidates), (1, 3))
+        result = services.save_leads(run, candidates)
+        self.assertEqual(
+            (result.inserted, result.skipped),
+            (1, {"incomplete": 2, "already known": 1, "not in sources": 1, "shared mailbox": 1}),
+        )
         lead = Lead.objects.get()
         self.assertEqual((lead.kind, lead.contact_email, lead.first_name), ("outreach", "pat@dav.org", "Pat"))
 
     def test_long_values_are_truncated(self):
-        services.save_leads(make_run(), [{"org_name": "x" * 300, "funding_amount": "9" * 200}])
+        run = make_run()
+        services.save_leads(run, cite(run, [{**FUNDERS[0], "org_name": "x" * 300, "funding_amount": "9" * 200}]))
         lead = Lead.objects.get()
         self.assertEqual((len(lead.org_name), len(lead.funding_amount)), (255, 100))
 
@@ -224,7 +334,29 @@ class CreateRunTest(TestCase):
 
         run.refresh_from_db()
         self.assertEqual((run.provider, run.model, run.status), (config.provider, "test-model", AgentRun.Status.QUEUED))
+        self.assertEqual(run.messages[0]["role"], "system")
+        self.assertRegex(run.messages[0]["content"], r"^You find things.\n\nToday is \w+ \d+, \d{4}\.$")
+        self.assertEqual(run.messages[1:], [{"role": "user", "content": "Only foundations in Texas."}])
+
+    def test_tells_the_agent_which_leads_are_known(self):
+        Lead.objects.create(kind=Lead.Kind.FUNDING, org_name="Acme Foundation", dedupe_key="acme foundation")
+        Lead.objects.create(kind=Lead.Kind.FUNDING, org_name="Bolt Giving", dedupe_key="bolt giving",
+                            review_status=Lead.ReviewStatus.REJECTED)
+        Lead.objects.create(kind=Lead.Kind.OUTREACH, org_name="DAV", contact_email="pat@dav.org", dedupe_key="pat@dav.org")
+
+        note = make_run().messages[2]
+
+        self.assertEqual(note["note"], "Already known")
+        self.assertEqual(note["content"], "We already know these funders. Don't return them again:\n- Bolt Giving\n- Acme Foundation")
+
+    def test_outreach_known_leads_list_emails(self):
+        Lead.objects.create(kind=Lead.Kind.OUTREACH, contact_email="x@vso.org", dedupe_key="x@vso.org")
+        Lead.objects.create(kind=Lead.Kind.OUTREACH, first_name="Pat", last_name="Rivera", org_name="DAV",
+                            contact_email="pat@dav.org", dedupe_key="pat@dav.org")
         self.assertEqual(
-            run.messages,
-            [{"role": "system", "content": "You find things."}, {"role": "user", "content": "Only foundations in Texas."}],
+            services.known_leads_hint(Lead.Kind.OUTREACH),
+            "We already know these people. Don't return them again:\n- pat@dav.org (Pat Rivera, DAV)\n- x@vso.org",
         )
+
+    def test_no_known_leads_no_note(self):
+        self.assertEqual(len(make_run().messages), 2)

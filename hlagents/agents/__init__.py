@@ -3,7 +3,7 @@
 Prompts, models and providers live in AgentConfig rows; only parsing and
 mapping are code.
 """
-from .base import AgentType, ParseError
+from .base import CORRECTABLE, DUPLICATE, INCOMPLETE, AgentType, ParseError
 from .funding import FundingAgent
 from .outreach import OutreachAgent
 

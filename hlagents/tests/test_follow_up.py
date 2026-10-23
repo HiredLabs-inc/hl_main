@@ -10,13 +10,14 @@ from background_tasks.models import Task
 from hlagents import services
 from hlagents.loop import run_agent
 from hlagents.models import AgentLimits, AgentRun, Lead
-from hlagents.tests.fakes import FUNDERS, FakeProvider, answer, make_config, make_provider, make_run
+from hlagents.tests.fakes import FUNDERS, FakeProvider, answer, cite, make_config, make_provider, make_run
 
 MORE_FUNDERS = [{**FUNDERS[0], "org_name": "Texas Fund"}]
 
 
 def finished_run(**kwargs):
     run = make_run(**kwargs)
+    cite(run, FUNDERS)
     run_agent(run, FakeProvider(answer(FUNDERS)))
     return run
 
@@ -30,7 +31,10 @@ class FollowUpTest(TestCase):
 
         run.refresh_from_db()
         self.assertEqual((run.status, run.result, run.error), (AgentRun.Status.QUEUED, "", ""))
-        self.assertEqual(run.messages[-1], {"role": "user", "content": "Only Texas."})
+        self.assertEqual(run.messages[-2], {"role": "user", "content": "Only Texas."})
+        # The agent is told about the leads the first turn found
+        self.assertEqual(run.messages[-1]["note"], "Already known")
+        self.assertIn("- Acme Foundation", run.messages[-1]["content"])
         queue_task.assert_called_once_with(reverse("hlagents:task_run_agent"), {"run_id": run.pk})
         self.assertEqual(run.task, Task.objects.get())
 
@@ -43,16 +47,16 @@ class FollowUpTest(TestCase):
 
         run.refresh_from_db()
         self.assertEqual(run.status, AgentRun.Status.DONE)
-        self.assertEqual(run.result, "Inserted 1, skipped 2 (duplicate or incomplete).")
+        self.assertEqual(run.result, "Inserted 1. Skipped: 2 already known.")
         self.assertEqual(run.leads.count(), 3)
         # The model saw the whole conversation, ending with the follow-up
         sent = provider.calls[0]["messages"]
-        self.assertEqual([m["role"] for m in sent], ["system", "user", "assistant", "user"])
+        self.assertEqual([m["role"] for m in sent], ["system", "user", "tool", "assistant", "user", "user"])
         self.assertEqual(run.iterations, 2)
 
     def test_a_failed_run_can_be_followed_up(self, queue_task):
         run = make_run()
-        run_agent(run, FakeProvider(answer("Here you go: nothing")))
+        run_agent(run, FakeProvider(answer("Here you go: nothing"), answer("Still nothing")))
         self.assertEqual(run.status, AgentRun.Status.FAILED)
         services.follow_up(run, "Return only the JSON.")
         run.refresh_from_db()

@@ -2,7 +2,7 @@
 
 Branch `feature/hlagents-01` (develop merged in 2026-10-21), worktree `.claude/worktrees/hlagents-01`.
 
-> **Status:** agreed 2026-10-22 (§6). Jeff answered the open questions in §7. H1–H4 are done (§8). H5 (stage) is a checklist for Jeff (§8). H6 (stages in `/agents/`) is on `feature/hlagents-02`.
+> **Status:** agreed 2026-10-22 (§6). Jeff answered the open questions in §7. H1–H4 are done (§8). H5 (stage) is a checklist for Jeff (§8). H6 (stages in `/agents/`) is on `feature/hlagents-02`. H7 (lead quality) is on `feature/hlagents-03`.
 
 ## 1. Context
 We have two working prototype agents in `examples/utils/` that run outside the app:
@@ -274,3 +274,27 @@ On stage, the leads looked unusable: there was no way to mark how far an applica
 - **`/agents/`:** staff get Funding board and Outreach board buttons.
 - **Not built:** completing an enrollment (Awarded, Declined, Partner are final steps) stays on the board. A lead can be moved onto those steps here, but not marked complete.
 - **Tests:** `StageTest` in `test_services.py` and `StageViewTest` in `test_views.py`, including a query-count check for the leads list. The full suite (448) passes.
+
+### H7 — Lead quality (2026-10-23, `feature/hlagents-03`)
+On stage, both agents' leads were poor. Funding leads were home pages with no amount or deadline, or closed programs. Outreach leads had the wrong roles, shared mailboxes and emails that looked made up. Agents found leads we already had, and runs failed on bad JSON or the step limit. The causes: the agents could only see search snippets, didn't know the date or the existing leads, and nothing checked their answers.
+- **Tools:**
+  - `web_search` uses Tavily advanced search with 8 results, and returns only each result's title, URL and snippet (up to 1,000 characters). It takes an optional `max_results`.
+  - New `read_page(url)` (Tavily extract, markdown) returns up to 12,000 characters of a page.
+- **Context:** a run's system prompt ends with today's date. The first request, and each follow-up, is followed by a note listing the leads we already have (`services.known_leads_hint`): funder names, or outreach emails with name and org. It lists the 300 most recent, including rejected leads.
+- **Checks** (`AgentType.validate`): a candidate's `application_url` or `contact_email` has to appear in what the run's tools returned (`conversation.tool_text`). URLs are compared without scheme, `www.`, query or trailing slash. Funding URLs can't be a home page. Outreach emails can't be shared mailboxes (`info@`, `office@`, `veterans@`, …). `save_leads` returns a `SaveResult` with counts by reason, and the run's result reads like "Inserted 4. Skipped: 3 already known, 2 not in sources, 1 home page."
+- **Loop:**
+  - A reply that isn't valid JSON is sent back once to be fixed.
+  - The last allowed step offers no tools, so the agent answers with what it has.
+  - Candidates that fail a check (not in sources, home page or shared mailbox) are sent back once to be fixed or replaced, if at least two steps are left.
+  - These messages are notes (`conversation.note`). The run page shows them as "Note to the agent", and doesn't count them as staff's messages. The run page also shows pages read, and counts tool calls instead of searches.
+- **Listing and news sites** (2026-10-23, after the comparison): a funding lead's URL can't be on a grant listing or news site. `agents/funding.py` has `BLOCKED_DOMAINS` (Instrumentl, GrantWatch, Candid, PR Newswire, …), and also blocks `news.`/`newsroom.`/`press.`/`blog.` hosts and paths with a `news`, `press`, `blog` or `stories` segment. These leads are sent back to be fixed, like home pages. In two real gemma runs, the first had 4 such URLs rejected and replaced. Some still get through: listing sites that aren't on the list, and press releases at plain paths. The list is in code, so adding a site takes a deploy.
+- **Migration `0007_lead_quality`:** gives the seeded agents `read_page` and new prompts that use it (search, read the program's or directory's page, and only include what the page shows). It sets the rates to $0.016 per search (advanced is 2 credits) and $0.002 per page read. Prompts, tools and rates that were edited in settings are kept.
+- **Comparing models:** `python manage.py hlagents_compare --agent "Funding opportunities" --models gemma4:31b,gpt-oss:120b --request "…" [--repeat N] [--keep]` runs the agent once per model and prints its leads and a summary table. Each run is rolled back, so every model starts from the same leads, unless `--keep` is given. `--steps N` overrides the step limit for the comparison.
+- **The last step:** gpt-oss and nemotron sometimes call tools even when none are offered. On the last step those calls are dropped, and the reply is taken as the answer.
+- **Comparison (2026-10-23, dev keys, 5 per request, with no known leads):**
+  - The dev Ollama key is on the **free plan**. Only `gemma4:31b`, `gpt-oss:20b`/`120b` and `nemotron-3-super`/`ultra` work. kimi, deepseek, glm and minimax return 402, and mistral-large-4 returns 403. Check stage's key before choosing a model there.
+  - **Outreach, Ohio:** `gemma4:31b` (17 s, 2 steps) and `nemotron-3-ultra` (45 s) each returned 5 county service officers and outreach staff, each with a personal work address, all found in sources. `nemotron-3-super` returned 3 (it used all 15 steps). `gpt-oss:120b` used all 15 steps and gave an empty answer.
+  - **Funding, 15 steps:** only `gemma4:31b` finished (43 s, 6 leads, 1 home page skipped). Some leads were still aggregator pages (instrumentl, grantsmarts) or out of range. The others used all 15 steps, one tool call per step, and gave an empty answer.
+  - **Funding, 30 steps:** `nemotron-3-ultra` returned the best leads: real program pages for Wounded Warrior Project, Bob Woodruff and Infinite Hero. But it took 493 s, which is over the 480 s run limit. `gpt-oss:120b` (119 s) mostly returned press releases and a program whose deadline had passed.
+  - **Next:** keep `gemma4:31b` for outreach. For funding, choose between gemma (fast, weaker) and nemotron-3-ultra with about 20 steps (better, slow). Check stage's Ollama plan.
+- **Tests:** `test_tools.py` and `test_compare.py` are new. `test_loop.py`, `test_conversation.py` and `test_seed.py` cover the rest.
