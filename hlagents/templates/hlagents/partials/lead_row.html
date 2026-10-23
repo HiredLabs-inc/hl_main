@@ -1,4 +1,4 @@
-{% comment %}One lead's row; swapped by hlagents:review. Needs lead; show_run adds the run column.{% endcomment %}
+{% comment %}One lead's row; swapped by hlagents:review and hlagents:stage. Needs lead with attach_stages; show_run adds the run column.{% endcomment %}
 <tr id="lead-{{ lead.pk }}" class="align-top">
     <td class="px-3 py-2">
         <a href="{% url 'hlagents:lead' lead.pk %}" class="font-medium">{{ lead }}</a>
@@ -14,6 +14,20 @@
     {% if show_run %}
         <td class="px-3 py-2 text-xs text-hl-muted">{% if lead.source_run %}<a href="{% url 'hlagents:run' lead.source_run.pk %}">{{ lead.source_run.config.name }} #{{ lead.source_run.pk }}</a>{% else %}{{ lead.get_source_display }}{% endif %}</td>
     {% endif %}
+    <td class="whitespace-nowrap px-3 py-2">
+        {% if lead.enrollment %}
+            {% if perms.hlagents.change_lead %}
+                <select name="step" aria-label="Stage of {{ lead }}" class="staff-field !py-0.5 !text-xs" hx-post="{% url 'hlagents:stage' lead.pk %}" hx-trigger="change" hx-target="#lead-{{ lead.pk }}" hx-swap="outerHTML" hx-vals='{"from_step": "{{ lead.enrollment.current_step_id }}"{% if show_run %}, "show_run": "1"{% endif %}}'>
+                    {% include 'hlagents/partials/stage_options.html' %}
+                </select>
+            {% else %}
+                {{ lead.enrollment.current_step.title }}
+            {% endif %}
+            {% if stage_error %}<p class="mt-1 whitespace-normal text-xs text-red-700" role="alert">{{ stage_error }}</p>{% endif %}
+        {% else %}
+            <span class="text-xs text-hl-muted" title="Approve a lead to track its stage">Not tracked</span>
+        {% endif %}
+    </td>
     <td class="whitespace-nowrap px-3 py-2">
         <span class="staff-badge {% if lead.review_status == 'approved' %}staff-badge-ok{% elif lead.review_status == 'rejected' %}staff-badge-bad{% else %}staff-badge-plain{% endif %}">{{ lead.get_review_status_display }}</span>
         {% if perms.hlagents.change_lead %}

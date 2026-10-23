@@ -1,0 +1,3 @@
+{% comment %}Options for a lead's stage, grouped by phase. Needs lead with attach_stages.{% endcomment %}
+{% regroup lead.stage_steps by phase as phases %}
+{% for group in phases %}<optgroup label="{{ group.grouper.title }}">{% for step in group.list %}<option value="{{ step.pk }}" {% if step.pk == lead.enrollment.current_step_id %}selected{% endif %}>{{ step.title }}</option>{% endfor %}</optgroup>{% endfor %}

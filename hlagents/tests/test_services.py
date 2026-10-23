@@ -8,6 +8,7 @@ from django.test import TestCase
 from hlagents import services
 from hlagents.models import Lead
 from hlagents.tests.fakes import FUNDERS, make_config, make_run
+from pipeline import services as pipeline
 from pipeline.models import Activity, Enrollment, Flow, Step
 
 
@@ -251,3 +252,44 @@ class LeadFlowTest(LeadTestCase):
         self.assertEqual(set(Flow.objects.filter(subject="lead").values_list("slug", flat=True)), {"funding", "outreach"})
         final = Step.objects.filter(phase__flow__subject="lead", completes_flow=True).values_list("title", flat=True)
         self.assertEqual(sorted(final), ["Awarded", "Declined", "Partner"])
+
+
+class StageTest(LeadTestCase):
+    """Leads move through their flow from /agents/ (docs/hlagents.md §8 H6)"""
+
+    def setUp(self):
+        self.lead = self.funding_lead()
+        services.review(self.lead, Lead.ReviewStatus.APPROVED, self.staff)
+        self.found = Step.objects.get(phase__flow__slug="funding", title="Found")
+        self.applying = Step.objects.get(phase__flow__slug="funding", title="Applying")
+
+    def test_moves_and_logs(self):
+        services.set_stage(self.lead, self.applying, self.staff, from_step=self.found)
+
+        self.assertEqual(services.open_enrollment(self.lead).current_step, self.applying)
+        change = self.lead.activities.get(kind=Activity.Kind.STEP_CHANGE)
+        self.assertEqual((change.from_value, change.to_value), ("Found", "Applying"))
+
+    def test_refuses_a_lead_that_isnt_tracked(self):
+        services.review(self.lead, Lead.ReviewStatus.REJECTED, self.staff)
+        with self.assertRaisesMessage(ValidationError, "Approve this lead"):
+            services.set_stage(self.lead, self.applying, self.staff)
+
+    def test_refuses_a_step_from_the_other_flow(self):
+        contacted = Step.objects.get(phase__flow__slug="outreach", title="Contacted")
+        with self.assertRaises(ValidationError):
+            services.set_stage(self.lead, contacted, self.staff)
+
+    def test_refuses_a_stale_move(self):
+        services.set_stage(self.lead, self.applying, self.staff)
+        submitted = Step.objects.get(phase__flow__slug="funding", title="Submitted")
+        with self.assertRaises(pipeline.StaleStep):
+            services.set_stage(self.lead, submitted, self.staff, from_step=self.found)
+
+    def test_attach_stages(self):
+        other = self.outreach_lead()
+        leads = services.attach_stages([self.lead, other])
+
+        self.assertEqual(leads[0].enrollment.current_step, self.found)
+        self.assertEqual([s.title for s in leads[0].stage_steps][:2], ["Found", "Researching"])
+        self.assertEqual((leads[1].enrollment, leads[1].stage_steps), (None, []))

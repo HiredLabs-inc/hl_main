@@ -153,6 +153,42 @@ def open_enrollment(lead: Lead):
     return Enrollment.objects.filter(lead=lead, ended_at__isnull=True).select_related("flow", "current_step").first()
 
 
+def attach_stages(leads) -> list:
+    """Set lead.enrollment (open, or None) and lead.stage_steps (its flow's
+    steps, in board order) on each lead, in two queries plus one per flow"""
+    leads = list(leads)
+    enrollments = Enrollment.objects.filter(lead__in=leads, ended_at__isnull=True).select_related("flow", "current_step")
+    by_lead = {e.lead_id: e for e in enrollments}
+    steps = {}
+    for lead in leads:
+        lead.enrollment = by_lead.get(lead.pk)
+        lead.stage_steps = []
+        if lead.enrollment:
+            flow_id = lead.enrollment.flow_id
+            if flow_id not in steps:
+                steps[flow_id] = list(Step.objects.filter(phase__flow_id=flow_id).select_related("phase"))
+            lead.stage_steps = steps[flow_id]
+    return leads
+
+
+def stage_choices():
+    """Step titles of the lead flows, grouped by flow, for filtering leads by stage"""
+    choices = {}
+    steps = Step.objects.filter(phase__flow__slug__in=FLOW_SLUGS.values()).select_related("phase__flow")
+    for step in steps:
+        choices.setdefault(step.phase.flow.name, []).append((step.title, step.title))
+    return list(choices.items())
+
+
+def set_stage(lead: Lead, step: Step, actor, from_step: Step = None) -> Enrollment:
+    """Move the lead's open enrollment to step. With from_step, refuse
+    (StaleStep) unless it's still there, e.g. after a move on the board."""
+    enrollment = open_enrollment(lead)
+    if enrollment is None:
+        raise ValidationError("Approve this lead to track its stage.")
+    return pipeline.move_to_step(enrollment, step, actor, from_step=from_step)
+
+
 def _place(lead: Lead, actor, step_title=None) -> bool:
     """Enroll the lead in its kind's flow if it isn't already, at step_title
     (default: the first step). An enrollment on another step is moved there

@@ -9,13 +9,34 @@
             {{ lead.get_kind_display }} lead ·
             {% if lead.source_run %}found by <a href="{% url 'hlagents:run' lead.source_run.pk %}">{{ lead.source_run.config.name }} #{{ lead.source_run.pk }}</a>{% else %}{{ lead.get_source_display|lower }}{% endif %}
             · {{ lead.get_review_status_display }}
-            {% if enrollment %}
-                · {% if user.is_staff %}<a href="{% url 'staff' %}?tab={{ enrollment.flow.slug }}">{{ enrollment.flow.name }}</a>{% else %}{{ enrollment.flow.name }}{% endif %}: {{ enrollment.current_step.title }}{% if enrollment.status != 'active' %} ({{ enrollment.get_status_display|lower }}){% endif %}
-            {% endif %}
             {% if lead.bounces %}· bounced {{ lead.bounces }} time{{ lead.bounces|pluralize }}{% endif %}
             {% if lead.opted_out_at %}· <span class="staff-badge staff-badge-bad">Opted out {{ lead.opted_out_at|date:"M j, Y" }}</span>{% endif %}
         </p>
     </div>
+
+    <section aria-labelledby="stage-heading" class="space-y-2 rounded-lg border border-hl-line bg-white p-4">
+        <h2 id="stage-heading" class="!mb-0 text-lg">Stage</h2>
+        {% if enrollment %}
+            {% if perms.hlagents.change_lead %}
+                <form method="post" action="{% url 'hlagents:stage' lead.pk %}" class="flex flex-wrap items-center gap-2">
+                    {% csrf_token %}
+                    <input type="hidden" name="from_step" value="{{ enrollment.current_step_id }}">
+                    <label for="stage-step" class="text-sm text-hl-muted">{{ enrollment.flow.name }}</label>
+                    <select id="stage-step" name="step" class="staff-field">{% include 'hlagents/partials/stage_options.html' %}</select>
+                    <button type="submit" class="btn btn-primary !py-1.5 !text-sm">Move</button>
+                    {% if enrollment.status != 'active' %}<span class="staff-badge staff-badge-plain">{{ enrollment.get_status_display }}</span>{% endif %}
+                </form>
+            {% else %}
+                <p class="text-sm">{{ enrollment.flow.name }}: {{ enrollment.current_step.title }}{% if enrollment.status != 'active' %} ({{ enrollment.get_status_display|lower }}){% endif %}</p>
+            {% endif %}
+            <p class="text-xs text-hl-muted">
+                In {{ enrollment.current_step.title }} since {{ enrollment.step_entered_at|date:"M j, Y" }}.
+                {% if user.is_staff %}<a href="{% url 'staff' %}?tab={{ enrollment.flow.slug }}">View on the {{ enrollment.flow.name }} board →</a>{% endif %}
+            </p>
+        {% else %}
+            <p class="text-sm text-hl-muted">{% if lead.review_status == 'rejected' %}Rejected leads aren't tracked.{% else %}Approve this lead to track its stage in the {{ lead.get_kind_display }} flow.{% endif %}</p>
+        {% endif %}
+    </section>
 
     <div class="grid gap-6 md:grid-cols-2">
         <section aria-labelledby="details-heading" class="space-y-3">

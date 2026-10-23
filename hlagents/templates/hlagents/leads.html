@@ -14,6 +14,7 @@
         <select name="kind" aria-label="Kind" class="staff-field">{% for value, label in filters.fields.kind.choices %}<option value="{{ value }}" {% if filters.data.kind == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
         <select name="review_status" aria-label="Review" class="staff-field">{% for value, label in filters.fields.review_status.choices %}<option value="{{ value }}" {% if filters.data.review_status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
         <select name="source" aria-label="Source" class="staff-field">{% for value, label in filters.fields.source.choices %}<option value="{{ value }}" {% if filters.data.source == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+        <select name="stage" aria-label="Stage" class="staff-field"><option value="">{{ filters.fields.stage.choices.0.1 }}</option>{% for group, options in filters.fields.stage.choices|slice:"1:" %}<optgroup label="{{ group }}">{% for value, label in options %}<option value="{{ value }}" {% if filters.data.stage == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</optgroup>{% endfor %}</select>
         <input type="search" name="q" value="{{ filters.data.q|default:'' }}" placeholder="Name, org or email" aria-label="Search" class="staff-field">
         <button type="submit" class="btn btn-outline-secondary !py-1.5 !text-sm">Filter</button>
     </form>
