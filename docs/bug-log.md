@@ -17,18 +17,11 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 | ID | Severity | Status | Area | Summary |
 |---|---|---|---|---|
 | BUG-030 | Low | Open | cold_apply | Any logged-in user can create companies, titles, positions, concentrations and locations, and list locations |
-| BUG-032 | Low | Open | cold_apply | Participant page says "Not a Veteran Veteran (None)" for a veteran with no service branch |
 ---
 ## BUG-030 — Any logged-in user can create shared reference data
 - **Severity:** Low · **Status:** Open · **Found:** 2026-10-19, cold_apply staff redesign review
 - **Where:** `cold_apply/views.py` `OrganizationCreateView`, `TitleCreateView`, `PositionCreateView`, `ConcentrationCreateView`, `LocationCreateView`, `LocationDetailView`, `LocationListView` (all `LoginRequiredMixin`)
 - **Problem:** any participant can add companies, titles, positions, concentrations and locations, and list all locations. This may be intended, because participants pick these values on their own forms. Confirm before restricting.
-
-## BUG-032 — Participant page says "Not a Veteran Veteran" for a veteran with no branch
-- **Severity:** Low · **Status:** Open · **Found:** 2026-10-19, cold_apply staff redesign (Step 7 browser check)
-- **Where:** `cold_apply/templates/cold_apply/participant_detail.html` (`{{object.user.profile.service_branch}} Veteran ({{ object.user.profile.rank_at_separation}})`); `Profile.service_branch` defaults to `"Not a Veteran"`, which isn't one of its choices
-- **Problem:** when `is_veteran` is true but no branch was chosen, the page prints the raw default and the missing rank: "Not a Veteran Veteran (None)". The participant sees this about themselves.
-- **Fix idea:** use `get_service_branch_display`, and skip the branch and rank when they're unset. Better, make the default `None`, since "Not a Veteran" duplicates `is_veteran`.
 
 ## Fixed and Skipped
 
@@ -63,6 +56,7 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 | BUG-028 | Low | Fixed | userprofile | Suspected: Profile admin search raises FieldError (`user`, `nickname`) |
 | BUG-029 | Low | Fixed | cold_apply | Dead or misleading code in the staff pages (`staff.html` navbar, `index.html`, Bootstrap script, URL typo) |
 | BUG-031 | Medium | Fixed | userprofile | Suspected: new signups can land in Nurture, because phases and steps share order values |
+| BUG-032 | Low | Fixed | cold_apply | Participant page said "Not a Veteran Veteran (None)" for a veteran with no service branch |
 | BUG-033 | Low | Fixed | cold_apply | `load_dev_data` sometimes crashes: a Faker country name is longer than `rates.Country.name` (50) |
 | BUG-034 | Low | Fixed | pipeline | Board: a moved card that no longer matches the filters stays until the board refreshes |
 | BUG-035 | Low | Fixed | pipeline | Board card moved into a column of more than 25 could appear twice after "Show more" |
@@ -267,6 +261,13 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 - **Where:** `userprofile/models.py` `Profile.handle_onboard_complete` (`Step.objects.order_by("phase__order", "order").first()`)
 - **Problem:** on prod, Applicants, Phase 1 and Nurture all have phase order 0, and their first steps all have step order 0 (Verify Veteran Status, Send Initial Email, Boot Camp Alumni / Monthly Newsletter). Postgres may return any of these ties first, so a new participant can start in Nurture instead of Applicants.
 - **Fix idea:** the cold_apply staff redesign (Step 4) replaces this with an explicit Intake enrollment. Until then, give Applicants a unique lowest order in admin.
+
+## BUG-032 — Participant page says "Not a Veteran Veteran" for a veteran with no branch
+- **Severity:** Low · **Status:** Fixed (`fix/veteran-label`, f50f4dc) · **Found:** 2026-10-19, cold_apply staff redesign (Step 7 browser check)
+- **Where:** `cold_apply/templates/cold_apply/participant_detail.html` (`{{object.user.profile.service_branch}} Veteran ({{ object.user.profile.rank_at_separation}})`); `Profile.service_branch` defaults to `"Not a Veteran"`, which isn't one of its choices
+- **Problem:** when `is_veteran` is true but no branch was chosen, the page prints the raw default and the missing rank: "Not a Veteran Veteran (None)". The participant sees this about themselves.
+- **Fix idea:** use `get_service_branch_display`, and skip the branch and rank when they're unset. Better, make the default `None`, since "Not a Veteran" duplicates `is_veteran`.
+- **Fix:** both parts of the fix idea. `Profile.veteran_label` ("US Army Veteran (Sergeant)") leaves out an unset branch or rank; `participant_detail.html` and `userprofile/profile_view.html` (which printed the raw branch the same way) use it. `service_branch` defaults to `None` on `Profile` and `VeteranProfile`, and migration `userprofile/0025` sets rows holding "Not a Veteran" to `None`, so `person_panel.html` and `people/person.html` no longer check for that string. Tests: `userprofile/tests/test_veteran_label.py`.
 
 ## BUG-033 — `load_dev_data` sometimes crashes on a long country name
 - **Severity:** Low · **Status:** Fixed (`fix/low-bugs-2`, 45b5c00) · **Found:** 2026-10-20, kanban board B1 browser check
