@@ -20,7 +20,7 @@ from django.urls import include, path
 from django.views.generic import RedirectView
 
 from pipeline import views as pipeline_views
-from userprofile import people, signup, stuck_signups, views as userprofile_views
+from userprofile import people, signup, stuck_signups, views as userprofile_views, volunteers
 
 urlpatterns = [
     path("admin/", admin.site.urls, name="admin"),
@@ -30,6 +30,7 @@ urlpatterns = [
     path("accounts/sign-up/sent/", signup.signup_sent_view, name="signup_sent"),
     path("accounts/sign-up/change-email/", signup.signup_change_email_view, name="signup_change_email"),
     path("accounts/sign-up/complete/<str:token>/", signup.signup_complete_view, name="signup_complete"),
+    path("accounts/volunteer-invite/<str:token>/", volunteers.accept_view, name="volunteer_invite_accept"),
     path("accounts/", include("allauth.urls")),
     path(
         "accounts/verified_email_required",
@@ -45,6 +46,7 @@ urlpatterns = [
     path("donate/", userprofile_views.contact, name="donate"),
     path("impact/", userprofile_views.impact, name="impact"),
     path("volunteer/", userprofile_views.contact, name="volunteer"),
+    path("volunteer/home/", volunteers.home_view, name="volunteer_home"),
     path("thank-you/", userprofile_views.thanks, name="thanks"),
     path("welcome/", userprofile_views.welcome, name="welcome"),
     path("staff/", pipeline_views.dashboard_view, name="staff"),
@@ -53,6 +55,12 @@ urlpatterns = [
     path("staff/people/", people.people_view, name="staff_people"),
     path("staff/people/<int:user_pk>/", people.person_view, name="staff_person"),
     path("staff/stuck-signups/", stuck_signups.stuck_signups_view, name="stuck_signups"),
+    path("staff/volunteers/", volunteers.invites_view, name="staff_volunteers"),
+    path(
+        "staff/volunteers/invites/<int:pk>/<str:action>/",
+        volunteers.invite_action_view,
+        name="volunteer_invite_action",
+    ),
     path("staff/people/<int:user_pk>/service-doc/", userprofile_views.service_doc_view, name="service_doc"),
     path(
         "staff/stuck-signups/<str:kind>/<int:pk>/<str:action>/",

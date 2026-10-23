@@ -1,0 +1,1 @@
+{% load i18n %}{% autoescape off %}{% trans "You're invited to volunteer with Hired Labs" %}{% endautoescape %}

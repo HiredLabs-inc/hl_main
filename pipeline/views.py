@@ -1,11 +1,13 @@
 from django.db.models import Count, Prefetch, Q
+from django.core.exceptions import PermissionDenied
 from django.http import Http404
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_GET
 
 from userprofile.guards import staff_required
 
 from . import dashboard
+from .guards import can_work_flow, lead_flows_required
 from .models import Flow, Phase, Step
 
 VIEW_SESSION_KEY = "staff_dashboard_view"
@@ -30,13 +32,26 @@ def _view(request, flow):
     return view if dashboard.has_board(flow) else dashboard.TABLE
 
 
-@staff_required
+@lead_flows_required
 def dashboard_view(request):
-    tabs = dashboard.tabs()
-    tab = request.GET.get("tab") or dashboard.INTAKE
+    """Staff see every tab. Volunteers with work_lead_flows see only the lead
+    flow tabs, without the header counts (they're about people)."""
+    staff = request.user.is_staff
+    tabs = dashboard.tabs(request.user)
+    tab = request.GET.get("tab")
+    if not tab:
+        if not tabs:
+            raise Http404
+        tab = dashboard.INTAKE if staff else tabs[0][0]
+        if not staff:
+            return redirect(f"{request.path}?tab={tab}")
     if tab not in dict(tabs):
+        if not staff and tab in dict(dashboard.tabs()):
+            raise PermissionDenied
         raise Http404
     if request.GET.get("part") == "counts":
+        if not staff:
+            raise PermissionDenied
         return render(request, "pipeline/partials/count_strip.html", {"counts": dashboard.header_counts()})
     flow = Flow.objects.filter(slug=tab).first()
     view = _view(request, flow)
@@ -63,9 +78,9 @@ def dashboard_view(request):
         "phases": phases,
         "board_start": dashboard.board_start(phases),
         "results_template": f"pipeline/partials/{'board' if view == dashboard.BOARD else 'enrollment_table'}.html",
-        "counts": dashboard.header_counts(),
+        "counts": dashboard.header_counts() if staff else None,
         "stale_days": dashboard.DEFAULT_STALE_DAYS,
-        "staff_users": dashboard.staff_users(),
+        "staff_users": dashboard.staff_users(flow),
     }
     if request.headers.get("HX-Request"):
         return render(request, context["results_template"], context)
@@ -73,10 +88,12 @@ def dashboard_view(request):
 
 
 @require_GET
-@staff_required
+@lead_flows_required
 def board_column_view(request, slug, step_pk):
     """The next cards of one board column ("Show more"), with the dashboard's filters"""
     flow = get_object_or_404(Flow, slug=slug, active=True)
+    if not can_work_flow(request.user, flow):
+        raise PermissionDenied
     if not dashboard.has_board(flow):
         raise Http404
     step = get_object_or_404(Step, pk=step_pk, phase__flow=flow)

@@ -1,4 +1,5 @@
 {% comment %}The full card. With picture, it's only a picture: no links or menu (see board_card.html).{% endcomment %}
+{% load volunteers %}
 {% with person=enrollment.person profile=enrollment.person.profile assignee=enrollment.assignee %}
 {% with name=enrollment.label %}
 <article class="flex flex-col gap-2 rounded-md border border-hl-line p-2.5 shadow-sm {% if enrollment.status == 'active' %}bg-white{% else %}bg-hl-mist{% endif %}">
@@ -12,8 +13,8 @@
                class="text-sm font-semibold">{{ name }}</a>
         {% endif %}
         {% if assignee %}
-            <span class="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-hl-navy-2 text-[11px] font-semibold text-white" title="{{ assignee.get_full_name|default:assignee.email }}">
-                <span aria-hidden="true">{{ enrollment.assignee_initials }}</span><span class="sr-only">Assigned to {{ assignee.get_full_name|default:assignee.email }}</span>
+            <span class="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-hl-navy-2 text-[11px] font-semibold text-white" title="{{ assignee.get_full_name|default:assignee.email }}{% if assignee|is_volunteer %} (volunteer){% endif %}">
+                <span aria-hidden="true">{{ enrollment.assignee_initials }}</span><span class="sr-only">Assigned to {{ assignee.get_full_name|default:assignee.email }}{% if assignee|is_volunteer %} (volunteer){% endif %}</span>
             </span>
         {% else %}
             <span class="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-[1.5px] border-dashed border-hl-muted bg-white text-[11px] text-hl-muted" title="Unassigned">

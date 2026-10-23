@@ -14,6 +14,7 @@ from django.utils import timezone
 
 from userprofile import bootcamp
 
+from .guards import can_work_lead_flows, lead_workers_q
 from .models import Activity, Enrollment, Flow, Phase, Step
 from .services import can_leave_step, ending_choices
 
@@ -69,13 +70,17 @@ class DashboardFilters(forms.Form):
         self.fields["days"].widget.attrs["class"] = "staff-field w-24"
 
 
-def tabs():
+def tabs(user=None):
     """(slug, label) for Intake, then each other active people flow, My people
-    and Everyone, then the active lead flows (Funding, Outreach)"""
+    and Everyone, then the active lead flows (Funding, Outreach). With user,
+    only the tabs they may see: everything for staff, the lead flows for
+    volunteers with work_lead_flows."""
     active = Flow.objects.filter(active=True)
+    leads = [(flow.slug, flow.name) for flow in active.filter(subject=Flow.Subject.LEAD)]
+    if user is not None and not user.is_staff:
+        return leads if can_work_lead_flows(user) else []
     people = [(flow.slug, flow.name) for flow in active.for_people()]
     people.sort(key=lambda tab: tab[0] != INTAKE)
-    leads = [(flow.slug, flow.name) for flow in active.filter(subject=Flow.Subject.LEAD)]
     return people + [(MINE, "My people"), (ALL, "Everyone")] + leads
 
 
@@ -105,10 +110,12 @@ def _last_activity(field):
 
 
 def row_queryset():
-    """Enrollments with what a dashboard row shows"""
-    return Enrollment.objects.select_related(
-        "person__profile", "lead", "flow", "current_step__phase", "assignee"
-    ).annotate(last_activity=_last_activity("created_at"))
+    """Enrollments with what a dashboard row shows (assignee groups for the Volunteer badge)"""
+    return (
+        Enrollment.objects.select_related("person__profile", "lead", "flow", "current_step__phase", "assignee")
+        .prefetch_related("assignee__groups")
+        .annotate(last_activity=_last_activity("created_at"))
+    )
 
 
 def decorate(rows, user):
@@ -142,9 +149,18 @@ def decorate(rows, user):
     return rows
 
 
-def staff_users():
-    """Who can be assigned"""
-    return User.objects.filter(is_staff=True, is_active=True).order_by("first_name", "last_name", "email")
+def staff_users(flow=None):
+    """Who can be assigned: active staff, and in a lead flow also active users
+    with work_lead_flows (services.assign checks the same)"""
+    who = Q(is_staff=True)
+    if flow is not None and flow.subject == Flow.Subject.LEAD:
+        who |= lead_workers_q()
+    return (
+        User.objects.filter(who, is_active=True)
+        .distinct()
+        .prefetch_related("groups")
+        .order_by("first_name", "last_name", "email")
+    )
 
 
 def row(enrollment_pk, user):

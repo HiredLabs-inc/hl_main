@@ -4,6 +4,7 @@ with "⋯". Every control posts to a pipeline action, which answers with this
 partial and refreshes the table. Needs enrollment (from dashboard.decorate),
 staff_users and stale_days.
 {% endcomment %}
+{% load volunteers %}
 {% with person=enrollment.person profile=enrollment.person.profile step=enrollment.current_step %}
 {% with name=enrollment.label %}
 <tbody id="enrollment-{{ enrollment.pk }}" x-data="{ open: false }" class="border-t border-hl-line">
@@ -55,7 +56,7 @@ staff_users and stale_days.
                 {% if enrollment.is_ended %}disabled{% endif %}>
             <option value="">Unassigned</option>
             {% for staff in staff_users %}
-                <option value="{{ staff.pk }}" {% if staff.pk == enrollment.assignee_id %}selected{% endif %}>{{ staff.get_full_name|default:staff.email }}</option>
+                <option value="{{ staff.pk }}" {% if staff.pk == enrollment.assignee_id %}selected{% endif %}>{{ staff.get_full_name|default:staff.email }}{% if staff|is_volunteer %} (volunteer){% endif %}</option>
             {% endfor %}
         </select>
     </td>

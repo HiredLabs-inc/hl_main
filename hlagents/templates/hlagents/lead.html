@@ -31,7 +31,7 @@
             {% endif %}
             <p class="text-xs text-hl-muted">
                 In {{ enrollment.current_step.title }} since {{ enrollment.step_entered_at|date:"M j, Y" }}.
-                {% if user.is_staff %}<a href="{% url 'staff' %}?tab={{ enrollment.flow.slug }}">View on the {{ enrollment.flow.name }} board →</a>{% endif %}
+                {% if user.is_staff or perms.pipeline.work_lead_flows %}<a href="{% url 'staff' %}?tab={{ enrollment.flow.slug }}">View on the {{ enrollment.flow.name }} board →</a>{% endif %}
             </p>
         {% else %}
             <p class="text-sm text-hl-muted">{% if lead.review_status == 'rejected' %}Rejected leads aren't tracked.{% else %}Approve this lead to track its stage in the {{ lead.get_kind_display }} flow.{% endif %}</p>
@@ -78,7 +78,7 @@
                     <li class="border-l-2 border-hl-line pl-3">
                         <p class="text-xs text-hl-muted">
                             <time datetime="{{ entry.created_at|date:'c' }}">{{ entry.created_at|date:"M j, Y g:i a" }}</time>
-                            · {% if entry.actor %}{{ entry.actor.get_full_name|default:entry.actor.email }}{% else %}System{% endif %}
+                            · {% if entry.actor %}{{ entry.actor.get_full_name|default:entry.actor.email }}{% include 'userprofile/partials/volunteer_badge.html' with person=entry.actor badge_class="ms-1" %}{% else %}System{% endif %}
                         </p>
                         <p class="text-hl-ink"><span class="font-medium">{{ entry.get_kind_display }}</span>{% if entry.from_value or entry.to_value %}: {% if entry.from_value %}{{ entry.from_value }} → {% endif %}{{ entry.to_value }}{% endif %}</p>
                         {% if entry.text %}<p class="whitespace-pre-line text-hl-ink">{{ entry.text }}</p>{% endif %}

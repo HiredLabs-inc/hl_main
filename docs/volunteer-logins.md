@@ -2,7 +2,7 @@
 
 Branch `feature/volunteer-logins` (from `develop` at 20bc6a0), worktree `.claude/worktrees/volunteer-logins`.
 
-> **Status:** draft, 2026-10-22. Jeff answered two rounds of questions (§6), and §3 matches them. No questions are open (§7). Nothing is built yet.
+> **Status:** V1 built 2026-10-22 (§5, "V1 — built"). V2 isn't started. Jeff answered two rounds of questions (§6), and §3 matches them. No questions are open (§7).
 
 ## 1. Context
 IDEA-005 in `docs/backlog.md`: let volunteers log in with a limited role. It comes from the signup/login redesign ("no volunteer login yet") and from `docs/cold-apply-staff-redesign.md` §5.5 and §7.
@@ -53,7 +53,7 @@ IDEA-005 in `docs/backlog.md`: let volunteers log in with a limited role. It com
 - **Volunteer to participant** (§6): the volunteer home has a "Get job search help" card that starts the normal onboarding. Until onboarding is finished, the card reads "Continue onboarding". Finishing it creates the `Participant` and starts Intake, the same as for anyone else (`userprofile/models.py:61-68`). From then on they're a participant-volunteer (§3.6), and their own Intake enrollment shows up for staff like any other. Volunteers who are partway through onboarding still don't get reminders, since the volunteer home already shows them where they left off.
 
 ### 3.3 Phase V1: hlagents volunteers
-- **Landing:** `user_home` (`userprofile/views.py:57`) checks `is_staff`, then `is_volunteer`, then onboarding. A volunteer lands on a **small volunteer home** (§6), `/volunteer/`: a heading, a card for each tool they have permissions for (Agents; the Funding and Outreach boards), and "My profile" if they're also a participant.
+- **Landing:** `user_home` (`userprofile/views.py:57`) checks `is_staff`, then `is_volunteer`, then onboarding. A volunteer lands on a **small volunteer home** (§6), `/volunteer/home/` (`/volunteer/` is the public volunteer page): a heading, a card for each tool they have permissions for (Agents; the Funding and Outreach boards), and "My profile" if they're also a participant.
 - **Agents:** a volunteer the inviter puts in **Agents** (§3.4) can use `/agents/` with no code change, including moving a lead's stage (hlagents H6).
 - **Lead boards:** volunteers see **every** Funding and Outreach enrollment and who it's assigned to, other volunteers included. They can do **everything staff can** there (§6): move cards, assign to anyone, and complete or end enrollments. The People tabs (My people, Everyone, triage, the person panel) stay staff-only.
   - New permission `pipeline.work_lead_flows`, added to Agents. Until V2, staff pass through `is_staff`.
@@ -137,6 +137,24 @@ Run the tests in docker compose (`-p hl-volunteer`).
 ## 5. Plan
 - **V1, hlagents volunteers:** the Volunteers group, `is_volunteer` / `is_participant`, the invite flow with group choice, `user_home` and the volunteer home (with onboarding), lead boards with full staff actions, People/reminders/purge filters, the permission-based nav, the badge, and the DD214 guard test. hlagents (through H6) is merged into the branch. When V1 is built and the suite passes, merge into develop.
 - **V2, Staff group and enrollment work:** the Staff group migration, permission gates in place of `is_staff`, assigned-only visibility for people, assignee choices, and self-exclusion. Only when volunteers need it.
+
+### V1 — built (2026-10-22, `feature/volunteer-logins`)
+- **Who's who:** `userprofile/guards.py` has `is_volunteer`, `is_participant` and `volunteers_only()`. Migration `userprofile/0024_volunteers` creates the Volunteers group (no permissions) and `VolunteerInvite`.
+- **Lead boards:** `pipeline/guards.py` has `can_work_flow`, `can_be_assigned`, `lead_flows_required` and `enrollment_worker_required`. Migration `pipeline/0007_work_lead_flows` adds `pipeline.work_lead_flows` and gives it to Agents.
+  - `/staff/` takes staff or `work_lead_flows`. Volunteers see only the Funding and Outreach tabs, with no header counts. `/staff/` with no tab redirects them to the first lead tab. People tabs and `?part=counts` give a 403.
+  - Move, assign, status, reopen and note take any enrollment for staff, and lead enrollments for volunteers. Sessions, enroll, triage, the person panel and person notes stay `staff_required`. A volunteer gets a 403 for a missing enrollment too, so they can't probe ids.
+  - `dashboard.staff_users(flow)` adds `work_lead_flows` holders for lead flows. `services.enroll()` and `assign()` check `can_be_assigned`, so `enroll()` now refuses inactive staff too.
+  - hlagents shows its board links to `work_lead_flows` holders as well as staff.
+- **Invite:** `userprofile/volunteers.py`. `/staff/volunteers/` (staff) lists volunteers and pending invites (Resend, Revoke), and sends invites. Inviting a pending email again replaces its invite. Staff and existing volunteers are refused. The link is `/accounts/volunteer-invite/<token>/`, using `signup.read_token` with salt `userprofile.volunteer_invite`.
+  - New email: set a password, then get a verified account in Volunteers plus the chosen groups, logged in at `/volunteer/home/`.
+  - Existing account: log in (with `next` back to the link), then Accept. Logged in as someone else: told to log out.
+- **Home and routing:** `user_home` sends volunteers to `/volunteer/home/`, after staff. Cards for Agents, each lead board, and "Get job search help" / "Continue onboarding" / "Your job search".
+- **Lists:** People leaves out volunteers who aren't onboarded. Onboarding reminders (and so Stuck signups) and the legacy purge leave out all volunteers.
+- **Nav:** `staff_base.html` shows volunteers Home, Leads and Agents from their permissions, and staff a Volunteers link. Release notes follow `perms.releases`, which fixes BUG-042. "My profile" is in the menu for participant-volunteers, and `base_app.html` links back to the volunteer home.
+- **Badge:** "Volunteer" on timeline actors (person and lead pages), "(volunteer)" in assignee choices and board-card assignees, and on People rows and the person page.
+- **Tests:** `userprofile/tests/test_volunteers.py` and `pipeline/tests/test_volunteers.py`. The hlagents Agents-group test now expects `work_lead_flows`. The full suite (496) passes.
+- **Prod:** nothing manual. Deploys run the migrations; existing staff are already in Agents (`hlagents/0004`). Invite the first volunteers from `/staff/volunteers/`.
+
 
 ## 6. Decisions
 | Date | Decision | Why |

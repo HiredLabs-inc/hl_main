@@ -1,0 +1,111 @@
+{% extends 'staff_base.html' %}
+{% block page_title %}Volunteers{% endblock %}
+{% block content %}
+<div class="space-y-8">
+    <div>
+        <h1 class="!mb-1">Volunteers</h1>
+        <p class="text-sm text-hl-muted">Invite volunteers by email. The groups you choose decide what they can use. Change them later in Django admin, and deactivate a volunteer there when they leave.</p>
+    </div>
+
+    <section aria-labelledby="invite-heading" class="max-w-xl space-y-3 rounded-lg border border-hl-line bg-white p-4">
+        <h2 id="invite-heading" class="!mb-0 text-lg">Invite a volunteer</h2>
+        <form method="post" action="{% url 'staff_volunteers' %}" class="space-y-3">
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+            <div class="grid gap-3 sm:grid-cols-2">
+                {% for field in form %}{% if field.name != "groups" %}
+                    <label class="flex flex-col gap-1 text-xs font-medium text-hl-muted {% if field.name == 'email' %}sm:col-span-2{% endif %}">
+                        {{ field.label }}{% if field.field.required %} <span class="sr-only">(required)</span>{% endif %}
+                        {{ field }}
+                        {% for error in field.errors %}<span class="text-sm font-normal text-red-700">{{ error }}</span>{% endfor %}
+                    </label>
+                {% endif %}{% endfor %}
+            </div>
+            <fieldset class="space-y-1">
+                <legend class="text-xs font-medium text-hl-muted">Groups</legend>
+                {% for choice in form.groups %}
+                    <label class="flex items-center gap-2 text-sm text-hl-ink">{{ choice.tag }} {{ choice.choice_label }}</label>
+                {% empty %}
+                    <p class="text-sm text-hl-muted">There are no groups to offer yet. Create one in Django admin.</p>
+                {% endfor %}
+                {% for error in form.groups.errors %}<p class="text-sm text-red-700">{{ error }}</p>{% endfor %}
+            </fieldset>
+            <button type="submit" class="btn btn-primary !py-1.5 !text-sm">Send invite</button>
+        </form>
+    </section>
+
+    <section aria-labelledby="pending-heading" class="space-y-2">
+        <h2 id="pending-heading" class="!mb-0 text-lg">Pending invites</h2>
+        {% if invites %}
+        <div class="overflow-x-auto rounded-lg border border-hl-line bg-white">
+            <table class="w-full min-w-[40rem] text-left text-sm">
+                <thead class="bg-hl-mist text-xs uppercase tracking-wide text-hl-muted">
+                    <tr>
+                        <th scope="col" class="px-3 py-2 font-medium">Email</th>
+                        <th scope="col" class="px-3 py-2 font-medium">Groups</th>
+                        <th scope="col" class="px-3 py-2 font-medium">Invited by</th>
+                        <th scope="col" class="px-3 py-2 font-medium">Last sent</th>
+                        <th scope="col" class="px-3 py-2"><span class="sr-only">Actions</span></th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-hl-line">
+                    {% for invite in invites %}
+                        <tr class="align-top">
+                            <td class="px-3 py-2">
+                                <span class="font-medium text-hl-ink">{{ invite.email }}</span>
+                                {% if invite.first_name or invite.last_name %}<span class="block text-xs text-hl-muted">{{ invite.first_name }} {{ invite.last_name }}</span>{% endif %}
+                            </td>
+                            <td class="px-3 py-2 text-hl-ink">{% for group in invite.groups.all %}{{ group.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+                            <td class="px-3 py-2 text-hl-muted">{{ invite.invited_by.get_full_name|default:invite.invited_by.email|default:"—" }}</td>
+                            <td class="px-3 py-2 text-hl-muted">
+                                {{ invite.last_sent_at|date:"M j, Y"|default:"Not sent" }}
+                                {% if invite.expired %}<span class="staff-badge staff-badge-warn ms-1">Expired</span>{% endif %}
+                            </td>
+                            <td class="whitespace-nowrap px-3 py-2 text-right">
+                                <form method="post" action="{% url 'volunteer_invite_action' invite.pk 'resend' %}" class="inline">{% csrf_token %}<button type="submit" class="btn btn-outline-secondary !px-3 !py-1 !text-sm">Resend</button></form>
+                                <form method="post" action="{% url 'volunteer_invite_action' invite.pk 'revoke' %}" class="inline" onsubmit="return confirm('Revoke the invite for {{ invite.email|escapejs }}? Its link stops working.')">{% csrf_token %}<button type="submit" class="btn btn-outline-secondary !px-3 !py-1 !text-sm">Revoke</button></form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+            <p class="text-sm text-hl-muted">No invites are waiting to be accepted.</p>
+        {% endif %}
+    </section>
+
+    <section aria-labelledby="volunteers-heading" class="space-y-2">
+        <h2 id="volunteers-heading" class="!mb-0 text-lg">Volunteers</h2>
+        {% if volunteers %}
+        <div class="overflow-x-auto rounded-lg border border-hl-line bg-white">
+            <table class="w-full min-w-[40rem] text-left text-sm">
+                <thead class="bg-hl-mist text-xs uppercase tracking-wide text-hl-muted">
+                    <tr>
+                        <th scope="col" class="px-3 py-2 font-medium">Name</th>
+                        <th scope="col" class="px-3 py-2 font-medium">Groups</th>
+                        <th scope="col" class="px-3 py-2 font-medium">Last login</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-hl-line">
+                    {% for volunteer in volunteers %}
+                        <tr class="align-top {% if not volunteer.is_active %}text-hl-muted{% endif %}">
+                            <td class="px-3 py-2">
+                                <span class="font-medium {% if volunteer.is_active %}text-hl-ink{% endif %}">{{ volunteer.get_full_name|default:volunteer.email }}</span>
+                                <span class="block text-xs text-hl-muted">{{ volunteer.email }}</span>
+                                {% if not volunteer.is_active %}<span class="staff-badge staff-badge-plain mt-1">Deactivated</span>{% endif %}
+                                {% if volunteer.profile.is_onboarded %}<a href="{% url 'staff_person' volunteer.pk %}" class="mt-1 block text-xs">Also a participant</a>{% endif %}
+                            </td>
+                            <td class="px-3 py-2">{% for group in volunteer.groups.all %}{% if group.name != volunteers_group %}<span class="block">{{ group.name }}</span>{% endif %}{% endfor %}</td>
+                            <td class="px-3 py-2 text-hl-muted">{{ volunteer.last_login|date:"M j, Y"|default:"Never" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+            <p class="text-sm text-hl-muted">No volunteers yet.</p>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

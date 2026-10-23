@@ -1,7 +1,9 @@
 """htmx endpoints behind the dashboard's row controls and side panel. Each one
 calls a pipeline.services function and answers with the updated row (or
 panel). Success triggers "enrollment-changed" so the dashboard refreshes its
-table and counts; refusals leave the page as it is and show a toast."""
+table and counts; refusals leave the page as it is and show a toast.
+Staff may use them all; volunteers with work_lead_flows may move, assign,
+change the status of, reopen and add notes to lead enrollments (pipeline.guards)."""
 import json
 from datetime import timedelta
 
@@ -17,6 +19,7 @@ from userprofile import bootcamp
 from userprofile.guards import staff_required
 
 from . import dashboard, services
+from .guards import enrollment_worker_required
 from .models import Activity, Enrollment, Flow, Step
 
 User = get_user_model()
@@ -54,7 +57,7 @@ def _row(request, enrollment, text):
         {
             "enrollment": dashboard.row(enrollment.pk, request.user),
             "stale_days": dashboard.DEFAULT_STALE_DAYS,
-            "staff_users": dashboard.staff_users(),
+            "staff_users": dashboard.staff_users(enrollment.flow),
         },
     )
     return _toast(response, text, changed=True)
@@ -77,7 +80,7 @@ def _leave_refusal(step):
 
 
 @require_POST
-@staff_required
+@enrollment_worker_required
 def move_view(request, enrollment_pk):
     """Move to POST step. from_step (the step the page showed) refuses the move
     if someone else has moved them since. render=card answers for the board."""
@@ -179,7 +182,7 @@ def _card(request, enrollment, status, error, steps):
 
 
 @require_POST
-@staff_required
+@enrollment_worker_required
 def assign_view(request, enrollment_pk):
     def action(enrollment):
         pk = request.POST.get("assignee")
@@ -193,7 +196,7 @@ def assign_view(request, enrollment_pk):
 
 
 @require_POST
-@staff_required
+@enrollment_worker_required
 def status_view(request, enrollment_pk):
     def action(enrollment):
         if request.POST.get("status") not in Enrollment.Status.values:
@@ -207,7 +210,7 @@ def status_view(request, enrollment_pk):
 
 
 @require_POST
-@staff_required
+@enrollment_worker_required
 def reopen_view(request, enrollment_pk):
     def action(enrollment):
         services.reopen(enrollment, request.user)
@@ -235,7 +238,7 @@ def session_view(request, enrollment_pk):
 
 
 @require_POST
-@staff_required
+@enrollment_worker_required
 def note_view(request, enrollment_pk):
     def action(enrollment):
         services.add_note(
@@ -305,7 +308,9 @@ def timeline_context(person):
     """What pipeline/partials/timeline.html needs"""
     return {
         "person": person,
-        "timeline": person.activities.select_related("actor", "enrollment__flow")[:TIMELINE_LENGTH],
+        "timeline": person.activities.select_related("actor", "enrollment__flow").prefetch_related("actor__groups")[
+            :TIMELINE_LENGTH
+        ],
         "note_kinds": [(kind, Activity.Kind(kind).label) for kind in Activity.Kind if kind in Activity.CONTACT_KINDS],
     }
 

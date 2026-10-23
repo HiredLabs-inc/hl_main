@@ -9,6 +9,7 @@
             <h1 class="!mb-0">{{ name }}</h1>
             {% if profile.dnc %}<span class="staff-badge staff-badge-bad">Do not contact</span>{% endif %}
             {% include 'userprofile/people/veteran_badge.html' %}
+            {% include 'userprofile/partials/volunteer_badge.html' %}
         </div>
         <dl class="flex flex-wrap gap-x-6 gap-y-1 text-sm text-hl-ink">
             <div class="flex gap-1.5"><dt class="text-hl-muted">Email</dt><dd><a href="mailto:{{ person.email }}">{{ person.email }}</a></dd></div>

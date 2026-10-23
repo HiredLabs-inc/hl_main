@@ -9,7 +9,7 @@
         </div>
         <div class="flex gap-2">
             <a href="{% url 'hlagents:leads' %}" class="btn btn-outline-secondary !py-1.5 !text-sm">Leads</a>
-            {% if user.is_staff %}
+            {% if user.is_staff or perms.pipeline.work_lead_flows %}
                 <a href="{% url 'staff' %}?tab=funding" class="btn btn-outline-secondary !py-1.5 !text-sm">Funding board</a>
                 <a href="{% url 'staff' %}?tab=outreach" class="btn btn-outline-secondary !py-1.5 !text-sm">Outreach board</a>
             {% endif %}

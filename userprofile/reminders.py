@@ -16,6 +16,7 @@ from django.db.models import Q
 from django.urls import reverse
 from django.utils import timezone
 
+from .guards import VOLUNTEERS_GROUP
 from .models import OnboardingReminder, PendingSignup
 from .signup import absolute_url, signup_link
 
@@ -36,9 +37,11 @@ def expired_pending(now=None):
 
 
 def unfinished_users():
-    """Non-staff users with a verified email who haven't finished onboarding."""
+    """Non-staff users with a verified email who haven't finished onboarding.
+    Volunteers are left out: their volunteer home shows where they left off."""
     return (
         User.objects.filter(is_staff=False, is_active=True, emailaddress__verified=True)
+        .exclude(groups__name=VOLUNTEERS_GROUP)
         .filter(Q(profile__isnull=True) | Q(profile__is_onboarded=False))
         .distinct()
     )
