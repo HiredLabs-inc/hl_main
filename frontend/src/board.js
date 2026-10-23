@@ -132,6 +132,12 @@ htmx.onLoad((element) => {
   const lists = [element, ...element.querySelectorAll('[data-board-cards], [data-board-strip]')]
   lists.filter((el) => el.matches('[data-board-cards], [data-board-strip]')).forEach(makeSortable)
   if (!element.matches('[data-board-card]')) return
+  // "Show more" can return a card that moved into the column after the board
+  // loaded: it's the newest in step, so it's also on the column's last page
+  if ([...document.querySelectorAll(`[id="${element.id}"]`)].some((other) => other !== element)) {
+    element.remove()
+    return
+  }
   const step = element.dataset.step
   const column = document.querySelector(`[data-board-cards="${step}"]`)
   if (!column) {

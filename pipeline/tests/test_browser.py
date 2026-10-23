@@ -209,3 +209,47 @@ class DashboardBrowserTest(StaticLiveServerTestCase):
         expect(picker.locator(f'option[value="{second.pk}"]')).to_have_text("Resume & Job Search · Write bullets (1)")
         enrollment.refresh_from_db()
         self.assertEqual(enrollment.current_step, second)
+
+    def big_column(self):
+        """The job search flow's first step with 31 people (a compact column, 25 shown), and a second step"""
+        flow = Flow.objects.get(slug="resume-job-search")
+        first = flow.first_step()
+        second = Step.objects.create(phase=first.phase, title="Write bullets", order=1)
+        now = timezone.now()
+        for i in range(31):
+            enrollment = services.enroll(person(f"p{i:02}@example.com", "P", f"{i:02}"), flow, None)
+            Enrollment.objects.filter(pk=enrollment.pk).update(step_entered_at=now - timedelta(days=100 - i))
+        return flow, first, second
+
+    def test_board_show_more_after_a_card_moves_in(self):
+        # BUG-035: the card is the newest in step, so the last page returns it again
+        page = self.page
+        flow, first, second = self.big_column()
+        enrollment = services.enroll(self.person, flow, None, step=second)
+        page.goto(f"{self.live_server_url}{reverse('staff')}?tab=resume-job-search&view=board")
+
+        page.get_by_role("button", name="Move Nia New").click()
+        page.get_by_role("menuitem", name="Resume & Job Search").click()
+        expect(page.get_by_text("Moved Nia New to Resume & Job Search.")).to_be_visible()
+        cards = page.locator(f'[data-board-cards="{first.pk}"] [data-board-card]')
+        expect(cards).to_have_count(26)
+        page.get_by_role("button", name="Show 6 more").click()
+        expect(cards).to_have_count(32)
+        expect(page.locator(f'[id="card-{enrollment.pk}"]')).to_have_count(1)
+
+    def test_board_compact_card_preview_hides_while_its_menu_is_open(self):
+        # BUG-036
+        page = self.page
+        self.big_column()
+        page.goto(f"{self.live_server_url}{reverse('staff')}?tab=resume-job-search&view=board")
+
+        card = page.locator(f"#card-{Enrollment.objects.get(person__email='p00@example.com').pk}")
+        preview = card.locator(':scope > [aria-hidden="true"]')
+        card.hover()
+        expect(preview).to_be_visible()
+        card.get_by_role("button", name="Move P 00").click()
+        expect(card.get_by_role("menu")).to_be_visible()
+        expect(preview).to_be_hidden()
+        page.keyboard.press("Escape")
+        expect(card.get_by_role("menu")).to_be_hidden()
+        expect(preview).to_be_visible()
