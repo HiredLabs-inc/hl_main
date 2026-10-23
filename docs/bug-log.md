@@ -18,9 +18,6 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 |---|---|---|---|---|
 | BUG-030 | Low | Open | cold_apply | Any logged-in user can create companies, titles, positions, concentrations and locations, and list locations |
 | BUG-032 | Low | Open | cold_apply | Participant page says "Not a Veteran Veteran (None)" for a veteran with no service branch |
-| BUG-034 | Low | Open | pipeline | Board: a moved card that no longer matches the filters stays until the board refreshes |
-| BUG-035 | Low | Open | pipeline | Suspected: board card moved into a column of more than 25 can appear twice after "Show more" |
-| BUG-036 | Low | Open | pipeline | Board: a one-line card's hover preview shows behind its open Move menu |
 ---
 ## BUG-030 — Any logged-in user can create shared reference data
 - **Severity:** Low · **Status:** Open · **Found:** 2026-10-19, cold_apply staff redesign review
@@ -32,24 +29,6 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 - **Where:** `cold_apply/templates/cold_apply/participant_detail.html` (`{{object.user.profile.service_branch}} Veteran ({{ object.user.profile.rank_at_separation}})`); `Profile.service_branch` defaults to `"Not a Veteran"`, which isn't one of its choices
 - **Problem:** when `is_veteran` is true but no branch was chosen, the page prints the raw default and the missing rank: "Not a Veteran Veteran (None)". The participant sees this about themselves.
 - **Fix idea:** use `get_service_branch_display`, and skip the branch and rank when they're unset. Better, make the default `None`, since "Not a Veteran" duplicates `is_veteran`.
-
-## BUG-034 — Board keeps a moved card that no longer matches the filters
-- **Severity:** Low · **Status:** Open · **Found:** 2026-10-20, kanban board B2 (known when built)
-- **Where:** `pipeline/actions.py` `_move_card` / `_card`; `frontend/src/board.js` (`htmx.onLoad` files the card under its new column)
-- **Problem:** a board move answers with the card and recounted columns, but doesn't redraw the board. If the moved card no longer matches the filters, it stays visible until the board refreshes. For example, with "Days in step over 14" set, a moved card's days reset to 0. The column count, recounted with the filters, then disagrees with the cards shown.
-- **Fix idea:** in `_card`, check the card against `dashboard.page_filters(...)`, and leave it out of the response when it doesn't match (`board.js` then drops it), or fade it with a "Hidden by filters" note.
-
-## BUG-035 — Board card can appear twice after "Show more"
-- **Severity:** Low · **Status:** Open · **Found:** 2026-10-20, kanban board B2 · **Suspected:** read from code, not reproduced
-- **Where:** `pipeline/dashboard.py` `board_column` (offset paging); `pipeline/views.py` `board_column_view`; `frontend/src/board.js`
-- **Problem:** "Show more" pages a column by offset, oldest in step first. A card moved into a column whose later pages aren't loaded yet is added at the end of the loaded cards. It's also the newest in step, so the last "Show more" page returns it again, and the page then has two elements with the same id.
-- **Fix idea:** send the ids of the cards already shown (or the last `step_entered_at` shown) with "Show more" and exclude them, or have `board.js` drop a loaded card whose id is already on the page.
-
-## BUG-036 — One-line card's preview shows behind its open Move menu
-- **Severity:** Low · **Status:** Open · **Found:** 2026-10-20, kanban board B2 browser check
-- **Where:** `pipeline/templates/pipeline/partials/board_card.html` (compact card: preview shown with `group-hover` / `group-focus-within`); `board_move_menu.html`
-- **Problem:** in a column of more than 30 cards, opening Move on a one-line card puts focus inside the card, so the full-card preview also appears and sits under the menu. Nothing is broken, but it looks cluttered.
-- **Fix idea:** hide the preview while that card's menu is open (e.g. a `data-menu-open` attribute on the card wrapper that the preview's classes check).
 
 ## Fixed and Skipped
 
@@ -85,6 +64,9 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 | BUG-029 | Low | Fixed | cold_apply | Dead or misleading code in the staff pages (`staff.html` navbar, `index.html`, Bootstrap script, URL typo) |
 | BUG-031 | Medium | Fixed | userprofile | Suspected: new signups can land in Nurture, because phases and steps share order values |
 | BUG-033 | Low | Fixed | cold_apply | `load_dev_data` sometimes crashes: a Faker country name is longer than `rates.Country.name` (50) |
+| BUG-034 | Low | Fixed | pipeline | Board: a moved card that no longer matches the filters stays until the board refreshes |
+| BUG-035 | Low | Fixed | pipeline | Board card moved into a column of more than 25 could appear twice after "Show more" |
+| BUG-036 | Low | Fixed | pipeline | Board: a one-line card's hover preview shows behind its open Move menu |
 | BUG-037 | Medium | Fixed | pipeline | "Completed" and "Withdrawn" did the same thing, and ended enrollments couldn't be changed |
 | BUG-038 | Medium | Fixed | cold_apply | AI bullet and overview generation called the retired Vertex `text-bison@001` model |
 | BUG-039 | Low | Fixed | dev data | `load_dev_data` sometimes crashes on a duplicate Faker company name (`resume.Organization.name` is unique) |
@@ -292,6 +274,27 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 - **Problem:** `python manage.py load_dev_data` failed with `DataError: value too long for type character varying(50)` while creating participants. Faker has country names over 50 characters ("British Indian Ocean Territory (Chagos Archipelago)" is 51), so the command fails at random. The error was seen once; which field overflowed is inferred, not traced.
 - **Fix idea:** truncate in the factory (`factory.LazyFunction(lambda: fake.country()[:50])`) or pick from a short fixed list.
 - **Fix notes:** confirmed: of Faker's 245 en_US countries only "British Indian Ocean Territory (Chagos Archipelago)" (51) is too long, so each country failed about 1 time in 245, and `load_dev_data` (about 55 countries) about 1 run in 5. `CountryFactory` now truncates to `Country.name`'s `max_length`. Test: `cold_apply/tests/test_factories.py`.
+
+## BUG-034 — Board keeps a moved card that no longer matches the filters
+- **Severity:** Low · **Status:** Fixed (`fix/board-bugs`, b75ec38) · **Found:** 2026-10-20, kanban board B2 (known when built)
+- **Where:** `pipeline/actions.py` `_move_card` / `_card`; `frontend/src/board.js` (`htmx.onLoad` files the card under its new column)
+- **Problem:** a board move answers with the card and recounted columns, but doesn't redraw the board. If the moved card no longer matches the filters, it stays visible until the board refreshes. For example, with "Days in step over 14" set, a moved card's days reset to 0. The column count, recounted with the filters, then disagrees with the cards shown.
+- **Fix idea:** in `_card`, check the card against `dashboard.page_filters(...)`, and leave it out of the response when it doesn't match (`board.js` then drops it), or fade it with a "Hidden by filters" note.
+- **Fix:** `_card` checks the moved card against the same page filters the counts use. A card they now hide is left out of the answer, so it leaves the board, and the toast adds "The filters hide them now." (Undo still works; `boardUndo` redraws the board). A refusal for such a card shows its error as a toast. Tests: `pipeline/tests/test_board.py` `test_card_the_filters_now_hide_leaves_the_board`, `test_refused_card_the_filters_hide_shows_its_error`.
+
+## BUG-035 — Board card can appear twice after "Show more"
+- **Severity:** Low · **Status:** Fixed (`fix/board-bugs`, b75ec38) · **Found:** 2026-10-20, kanban board B2 · **Suspected** when logged (read from code)
+- **Where:** `pipeline/dashboard.py` `board_column` (offset paging); `pipeline/views.py` `board_column_view`; `frontend/src/board.js`
+- **Problem:** "Show more" pages a column by offset, oldest in step first. A card moved into a column whose later pages aren't loaded yet is added at the end of the loaded cards. It's also the newest in step, so the last "Show more" page returns it again, and the page then has two elements with the same id.
+- **Fix idea:** send the ids of the cards already shown (or the last `step_entered_at` shown) with "Show more" and exclude them, or have `board.js` drop a loaded card whose id is already on the page.
+- **Fix:** confirmed in a browser. "Show more" now pages after the last card shown (`after`/`after_pk`: its `step_entered_at` and pk; `pk` is the new final tiebreaker in `dashboard.filtered`) instead of by offset. That also fixes a skip found alongside: a loaded card moving off the step shifted the offset, so the next page missed a card. `board.js` drops a loaded card whose id is already on the page, since a card moved in is the newest in step and comes back on the last page. Tests: `test_board.py` `BigColumnTest` (`test_show_more_pages_after_the_last_card_shown` and others), `test_browser.py` `test_board_show_more_after_a_card_moves_in`.
+
+## BUG-036 — One-line card's preview shows behind its open Move menu
+- **Severity:** Low · **Status:** Fixed (`fix/board-bugs`, b75ec38) · **Found:** 2026-10-20, kanban board B2 browser check
+- **Where:** `pipeline/templates/pipeline/partials/board_card.html` (compact card: preview shown with `group-hover` / `group-focus-within`); `board_move_menu.html`
+- **Problem:** in a column of more than 30 cards, opening Move on a one-line card puts focus inside the card, so the full-card preview also appears and sits under the menu. Nothing is broken, but it looks cluttered.
+- **Fix idea:** hide the preview while that card's menu is open (e.g. a `data-menu-open` attribute on the card wrapper that the preview's classes check).
+- **Fix:** CSS only. The preview has `[.group:has([aria-expanded=true])_&]:!hidden` (Tailwind 3.3 has no `has-*` variant), so it hides while the card's Move button is expanded. Test: `test_browser.py` `test_board_compact_card_preview_hides_while_its_menu_is_open`.
 
 ## BUG-037 — "Completed" and "Withdrawn" basically do the same thing
 - **Severity:** Medium · **Status:** Fixed (`fix/bug-037-enrollment-endings`, 6048766; merged into develop in 2fe518d and deployed to stage; reaches prod with the next release) · **Found:** 2026-10-21, manual interaction in prod
