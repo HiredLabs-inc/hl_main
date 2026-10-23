@@ -153,7 +153,7 @@ Run the tests in docker compose (`-p hl-volunteer`).
 | 2026-10-22 | No volunteer agreement for now | Jeff |
 
 ## 7. Open questions
-1. **Lead boards:** what can a volunteer do on the Funding and Outreach boards? View only; move cards and add notes; also assign leads to themselves; or everything staff can (assign to anyone, end enrollments)?
+1. **Lead boards:** hlagents H6 (`hlagents.md` §8) already lets anyone with `change_lead`, the Agents group included, move a lead's stage from `/agents/`. Completing an enrollment (Awarded, Declined, Partner) and assigning stay on the staff board. What else should volunteers do on the boards? View only (stages are moved in `/agents/`); also assign leads to themselves; or everything staff can (assign to anyone, complete and end enrollments)?
 2. **Invite groups:** does the invite always add Volunteers + Agents, or should the inviter tick groups on the invite form?
 3. **Volunteer to participant:** can a volunteer start onboarding from their volunteer home (for example, a volunteer who wants job search help), or does staff decide that?
 4. **Lead board URL:** volunteers see a trimmed `/staff/` dashboard, or a separate `/volunteer/leads/`? Leaning `/staff/` with tabs filtered by permission, because it's less code and V2 needs the same filtering anyway.
