@@ -27,7 +27,7 @@
                     <dl class="grid grid-cols-[7rem_1fr] gap-x-3 gap-y-1 text-hl-ink">
                         {% if profile.phone and profile.phone != "None Entered" %}<dt class="text-hl-muted">Phone</dt><dd>{{ profile.phone }}</dd>{% endif %}
                         {% if profile.city or profile.state %}<dt class="text-hl-muted">Location</dt><dd>{{ profile.city }}{% if profile.city and profile.state %}, {% endif %}{{ profile.state }}</dd>{% endif %}
-                        {% if profile.is_veteran and profile.service_branch and profile.service_branch != "Not a Veteran" %}<dt class="text-hl-muted">Service</dt><dd>{{ profile.get_service_branch_display }}{% if profile.rank_at_separation %}, {{ profile.rank_at_separation }}{% endif %}</dd>{% endif %}
+                        {% if profile.is_veteran and profile.service_branch %}<dt class="text-hl-muted">Service</dt><dd>{{ profile.get_service_branch_display }}{% if profile.rank_at_separation %}, {{ profile.rank_at_separation }}{% endif %}</dd>{% endif %}
                         <dt class="text-hl-muted">Joined</dt><dd>{{ person.date_joined|date:"M j, Y" }}</dd>
                     </dl>
                 {% endif %}

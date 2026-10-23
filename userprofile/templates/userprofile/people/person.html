@@ -48,7 +48,7 @@
                 {% else %}
                     <dl class="grid grid-cols-[8rem_1fr] gap-x-3 gap-y-1 text-hl-ink">
                         <dt class="text-hl-muted">Verified</dt><dd>{{ profile.veteran_verified|yesno:"Yes,No" }}</dd>
-                        {% if profile.service_branch and profile.service_branch != "Not a Veteran" %}<dt class="text-hl-muted">Branch</dt><dd>{{ profile.get_service_branch_display }}</dd>{% endif %}
+                        {% if profile.service_branch %}<dt class="text-hl-muted">Branch</dt><dd>{{ profile.get_service_branch_display }}</dd>{% endif %}
                         {% if profile.rank_at_separation %}<dt class="text-hl-muted">Rank</dt><dd>{{ profile.rank_at_separation }}</dd>{% endif %}
                         {% if profile.military_specialiaty %}<dt class="text-hl-muted">Specialty</dt><dd>{{ profile.military_specialiaty }}</dd>{% endif %}
                         {% if profile.years_of_service is not None %}<dt class="text-hl-muted">Years served</dt><dd>{{ profile.years_of_service }}</dd>{% endif %}

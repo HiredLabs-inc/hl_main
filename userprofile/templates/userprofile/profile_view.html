@@ -11,7 +11,7 @@
             <p>Nickname: {{ user.profile.nickname }}</p>
             <p>Veteran Status:</p>
             {% if user.profile.is_veteran %}
-                {{ user.profile.service_branch }} Veteran
+                {{ user.profile.veteran_label }}
                 {% if user.profile.veteran_verified %}
                     <span class="rounded-md bg-green-100 text-green-700  p-1">Verified</span>
                 {% else %}

@@ -25,8 +25,7 @@
     </div>
     <div class="font-bold">
         {% if object.user.profile.is_veteran %}
-        {{object.user.profile.service_branch}} Veteran
-             ({{ object.user.profile.rank_at_separation}})
+        {{ object.user.profile.veteran_label }}
             {% if object.user.profile.veteran_verified %}
             <span class="rounded-md bg-green-100 text-green-700  p-1">Verified</span>
             {% else %}

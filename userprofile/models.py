@@ -44,7 +44,7 @@ class Profile(TrackedModel):
         max_length=200,
         choices=SERVICE_BRANCHES,
         null=True,
-        default="Not a Veteran",
+        default=None,
     )
     military_specialiaty = models.CharField(max_length=200, null=True)
     years_of_service = models.IntegerField(null=True)
@@ -57,6 +57,13 @@ class Profile(TrackedModel):
         permissions = [
             ("review_veteran_status", "Can review veteran status and open service documents"),
         ]
+
+    @property
+    def veteran_label(self):
+        """"US Army Veteran (Sergeant)", leaving out a branch or rank that isn't set"""
+        branch = f"{self.get_service_branch_display()} " if self.service_branch else ""
+        rank = f" ({self.rank_at_separation})" if self.rank_at_separation else ""
+        return f"{branch}Veteran{rank}"
 
     def handle_onboard_complete(self):
         from .intake import start_intake  # imports allauth via guards; not safe while models load
@@ -81,7 +88,7 @@ class VeteranProfile(TrackedModel):
         max_length=200,
         choices=ServiceBranches.choices,
         null=True,
-        default="Not a Veteran",
+        default=None,
     )
     military_specialiaty = models.CharField(max_length=200, null=True)
     years_of_service = models.IntegerField(null=True)
