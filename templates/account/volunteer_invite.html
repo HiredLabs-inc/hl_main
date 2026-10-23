@@ -1,0 +1,34 @@
+{% extends "account/base.html" %}
+
+{% load i18n %}
+
+{% block head_title %}{% trans "Volunteer Invite" %}{% endblock %}
+
+{% block content %}
+<h1 class="text-center">{% trans "Volunteer with Hired Labs" %}</h1>
+{% if mode == "new" %}
+<p class="mt-3">{% blocktrans with email=invite.email %}You've been invited to volunteer. Choose a password for <strong>{{ email }}</strong> to create your account.{% endblocktrans %}</p>
+<form method="post" class="space-y-6 mt-6">
+  {% csrf_token %}
+  <input type="email" name="username" value="{{ invite.email }}" autocomplete="username" hidden>
+  {% for field in form %}
+    {% include 'components/form_input.html' %}
+  {% endfor %}
+  {% include 'components/form_errors.html' with title='Password not set' %}
+  <button type="submit" class="auth-primary-button">{% trans "Create my account" %}</button>
+</form>
+{% elif mode == "log_in" %}
+<p class="mt-3">{% blocktrans with email=invite.email %}<strong>{{ email }}</strong> already has an account. Log in to accept the invite.{% endblocktrans %}</p>
+<a href="{{ login_url }}" class="auth-primary-button mt-6">{% trans "Log in" %}</a>
+<p class="mt-3 text-center text-sm"><a href="{% url 'account_reset_password' %}" class="font-semibold text-hl-navy hover:text-hl-orange-text">{% trans "Forgot your password?" %}</a></p>
+{% elif mode == "wrong_account" %}
+<p class="mt-3">{% blocktrans with email=invite.email current=user.email %}This invite is for <strong>{{ email }}</strong>, but you're logged in as {{ current }}. Log out, then open the link again and log in as {{ email }}.{% endblocktrans %}</p>
+{% include 'components/logout_button.html' with button_class="auth-primary-button mt-6" label="Log out" %}
+{% else %}
+<p class="mt-3">{% blocktrans with email=invite.email %}Accept the invite to volunteer as <strong>{{ email }}</strong>. Anything else on your account stays as it is.{% endblocktrans %}</p>
+<form method="post" class="mt-6">
+  {% csrf_token %}
+  <button type="submit" class="auth-primary-button">{% trans "Accept invite" %}</button>
+</form>
+{% endif %}
+{% endblock %}

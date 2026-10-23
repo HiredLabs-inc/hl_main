@@ -1,0 +1,17 @@
+{% comment %}A table of leads. Needs leads with attach_stages; show_run adds the run column.{% endcomment %}
+<div class="overflow-x-auto rounded-lg border border-hl-line bg-white">
+    <table class="w-full min-w-[40rem] text-left text-sm">
+        <thead class="bg-hl-mist text-xs uppercase tracking-wide text-hl-muted">
+            <tr>
+                <th scope="col" class="px-3 py-2 font-medium">Lead</th>
+                <th scope="col" class="px-3 py-2 font-medium">Details</th>
+                {% if show_run %}<th scope="col" class="px-3 py-2 font-medium">Source</th>{% endif %}
+                <th scope="col" class="px-3 py-2 font-medium">Stage</th>
+                <th scope="col" class="px-3 py-2 font-medium">Review</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-hl-line">
+            {% for lead in leads %}{% include 'hlagents/partials/lead_row.html' %}{% endfor %}
+        </tbody>
+    </table>
+</div>

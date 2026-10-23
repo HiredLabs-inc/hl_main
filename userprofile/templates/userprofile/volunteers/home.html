@@ -1,0 +1,38 @@
+{% extends 'staff_base.html' %}
+{% block page_title %}Home{% endblock %}
+{% block content %}
+<div class="space-y-6">
+    <div>
+        <h1 class="!mb-1">Welcome{% if user.first_name %}, {{ user.first_name }}{% endif %}</h1>
+        <p class="text-sm text-hl-muted">Thanks for volunteering with Hired Labs. Here's what you can work on.</p>
+    </div>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {% if perms.hlagents %}
+            <a href="{% url 'hlagents:index' %}" class="admin_panel block space-y-1 rounded-lg border border-hl-line bg-white p-4 hover:border-hl-blue">
+                <h2 class="!mb-0 text-base text-hl-navy">Agents</h2>
+                <p class="text-sm text-hl-muted">Search the web for funders and partner organizations, and review the leads.</p>
+            </a>
+        {% endif %}
+        {% for flow in lead_flows %}
+            <a href="{% url 'staff' %}?tab={{ flow.slug }}" class="admin_panel block space-y-1 rounded-lg border border-hl-line bg-white p-4 hover:border-hl-blue">
+                <h2 class="!mb-0 text-base text-hl-navy">{{ flow.name }} board</h2>
+                <p class="text-sm text-hl-muted">{{ flow.description|default:"Move leads along, assign them and record what happened." }}</p>
+            </a>
+        {% endfor %}
+        {% if participant %}
+            <a href="{% url 'welcome' %}" class="admin_panel block space-y-1 rounded-lg border border-hl-line bg-white p-4 hover:border-hl-blue">
+                <h2 class="!mb-0 text-base text-hl-navy">Your job search</h2>
+                <p class="text-sm text-hl-muted">Your own Hired Labs services, profile and resume.</p>
+            </a>
+        {% else %}
+            <a href="{% url 'userprofile:onboarding_view' %}" class="admin_panel block space-y-1 rounded-lg border border-dashed border-hl-line bg-white p-4 hover:border-hl-blue">
+                <h2 class="!mb-0 text-base text-hl-navy">{% if onboarding_started %}Continue onboarding{% else %}Get job search help{% endif %}</h2>
+                <p class="text-sm text-hl-muted">{% if onboarding_started %}Finish your profile to start getting help with your own job search.{% else %}You can get help with your own job search too. This starts the same signup participants go through.{% endif %}</p>
+            </a>
+        {% endif %}
+    </div>
+    {% if not perms.hlagents and not lead_flows %}
+        <p class="text-sm text-hl-muted">You don't have access to any tools yet. Ask the person who invited you.</p>
+    {% endif %}
+</div>
+{% endblock %}

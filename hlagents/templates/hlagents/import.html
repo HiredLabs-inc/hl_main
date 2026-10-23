@@ -1,0 +1,23 @@
+{% extends 'staff_base.html' %}
+{% block page_title %}Import partners{% endblock %}
+{% block content %}
+<div class="max-w-2xl space-y-4">
+    <p class="text-sm"><a href="{% url 'hlagents:leads' %}">← Leads</a></p>
+    <div>
+        <h1 class="!mb-1">Import community partners</h1>
+        <p class="text-sm text-hl-muted">Each email becomes an approved outreach lead, so agents won't find it again. Importing again updates bounce counts. A file with any bad row isn't imported at all.</p>
+    </div>
+    <form method="post" enctype="multipart/form-data" class="space-y-3 rounded-lg border border-hl-line bg-white p-4">
+        {% csrf_token %}
+        <div>
+            <label for="{{ form.file.id_for_label }}" class="text-sm font-medium">{{ form.file.label }}</label>
+            <input type="file" name="file" id="{{ form.file.id_for_label }}" accept=".csv,text/csv" required class="mt-1 block text-sm">
+            <p class="mt-1 text-xs text-hl-muted">{{ form.file.help_text }}</p>
+            {% if form.file.errors %}
+                <ul class="mt-2 list-disc ps-5 text-sm text-red-700" role="alert">{% for error in form.file.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+        </div>
+        <button type="submit" class="btn btn-primary !py-1.5 !text-sm">Import</button>
+    </form>
+</div>
+{% endblock %}

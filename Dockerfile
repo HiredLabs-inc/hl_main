@@ -90,7 +90,9 @@ ENV DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE:-hl_main.settings.cloud}
 
 # https://github.com/canonical/base-2204-python38/blob/main/Dockerfile
 
-RUN python -m nltk.downloader stopwords -d /usr/local/nltk_data
+# System Python (ubuntu) does not search /usr/local/nltk_data by default.
+ENV NLTK_DATA=/usr/local/nltk_data
+RUN python -m nltk.downloader stopwords -d $NLTK_DATA
 
 # collectstatic needs no secrets or database, so use the build-only settings.
 RUN DJANGO_SETTINGS_MODULE=hl_main.settings.build python manage.py collectstatic --no-input

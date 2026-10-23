@@ -123,3 +123,28 @@ class AppPermissionRequiredMixin(UserPassesTestMixin):
 
     def test_func(self):
         return self.request.user.has_module_perms(self.app_label)
+
+
+VOLUNTEERS_GROUP = "Volunteers"
+
+
+def is_volunteer(user):
+    """In the Volunteers group (docs/volunteer-logins.md §3.1). For routing,
+    filters and the badge only: what a volunteer may do comes from permissions.
+    Uses prefetched groups when the caller has them."""
+    if not user.is_authenticated:
+        return False
+    return any(group.name == VOLUNTEERS_GROUP for group in user.groups.all())
+
+
+def is_participant(user):
+    """Finished onboarding (docs/volunteer-logins.md §3.2)"""
+    profile = getattr(user, "profile", None) if user.is_authenticated else None
+    return bool(profile and profile.is_onboarded)
+
+
+def volunteers_only():
+    """Volunteers who aren't also participants, for leaving them out of lists of participants"""
+    from django.contrib.auth.models import User
+
+    return User.objects.filter(groups__name=VOLUNTEERS_GROUP).exclude(profile__is_onboarded=True)

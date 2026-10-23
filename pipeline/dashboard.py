@@ -8,13 +8,15 @@ from datetime import timedelta
 from django import forms
 from django.contrib.auth import get_user_model
 from django.db.models import Count, OuterRef, Q, Subquery
+from django.db.models.functions import Coalesce
 from django.http import QueryDict
 from django.utils import timezone
 
 from userprofile import bootcamp
 
+from .guards import can_work_lead_flows, lead_workers_q
 from .models import Activity, Enrollment, Flow, Phase, Step
-from .services import can_leave_step
+from .services import can_leave_step, ending_choices
 
 User = get_user_model()
 
@@ -34,7 +36,7 @@ class DashboardFilters(forms.Form):
     """GET params, so filtered views can be bookmarked. Blank means "any"."""
 
     ASSIGNEE_CHOICES = [("", "Anyone"), ("me", "Me"), ("unassigned", "Unassigned")]
-    # Blank status means every open enrollment (not completed or withdrawn)
+    # Blank status means every open enrollment (not completed, withdrawn or dropped)
     STATUS_CHOICES = [("", "Open")] + list(Enrollment.Status.choices)
 
     tab = forms.CharField(required=False, widget=forms.HiddenInput)
@@ -68,11 +70,18 @@ class DashboardFilters(forms.Form):
         self.fields["days"].widget.attrs["class"] = "staff-field w-24"
 
 
-def tabs():
-    """(slug, label) for Intake, then each other active flow, then My people and Everyone"""
-    flows = [(flow.slug, flow.name) for flow in Flow.objects.filter(active=True)]
-    flows.sort(key=lambda tab: tab[0] != INTAKE)
-    return flows + [(MINE, "My people"), (ALL, "Everyone")]
+def tabs(user=None):
+    """(slug, label) for Intake, then each other active people flow, My people
+    and Everyone, then the active lead flows (Funding, Outreach). With user,
+    only the tabs they may see: everything for staff, the lead flows for
+    volunteers with work_lead_flows."""
+    active = Flow.objects.filter(active=True)
+    leads = [(flow.slug, flow.name) for flow in active.filter(subject=Flow.Subject.LEAD)]
+    if user is not None and not user.is_staff:
+        return leads if can_work_lead_flows(user) else []
+    people = [(flow.slug, flow.name) for flow in active.for_people()]
+    people.sort(key=lambda tab: tab[0] != INTAKE)
+    return people + [(MINE, "My people"), (ALL, "Everyone")] + leads
 
 
 def has_board(flow):
@@ -89,19 +98,34 @@ def open_enrollments():
     return Enrollment.objects.filter(ended_at__isnull=True)
 
 
+def _last_activity(field):
+    """The latest Activity's field for the enrollment's person or lead"""
+
+    def latest(subject):
+        return Subquery(
+            Activity.objects.filter(**{subject: OuterRef(subject)}).order_by("-created_at").values(field)[:1]
+        )
+
+    return Coalesce(latest("person"), latest("lead"))
+
+
 def row_queryset():
-    """Enrollments with what a dashboard row shows"""
-    last_activity = Activity.objects.filter(person=OuterRef("person")).order_by("-created_at").values("created_at")[:1]
-    return Enrollment.objects.select_related(
-        "person__profile", "flow", "current_step__phase", "assignee"
-    ).annotate(last_activity=Subquery(last_activity))
+    """Enrollments with what a dashboard row shows (assignee groups for the Volunteer badge)"""
+    return (
+        Enrollment.objects.select_related("person__profile", "lead", "flow", "current_step__phase", "assignee")
+        .prefetch_related("assignee__groups")
+        .annotate(last_activity=_last_activity("created_at"))
+    )
 
 
 def decorate(rows, user):
     """Add what each row's controls need, in a fixed number of queries:
     step_choices (the flow's steps), can_leave (the user may move them off
-    their current step) and enroll_choices (active flows they could join).
-    Boot Camp rows also get session (None means waitlist) and session_choices."""
+    their current step), enroll_choices (active flows they could join; none
+    for a lead) and ending_choices (the statuses it can end with, or switch to
+    once ended).
+    Boot Camp rows also get session (None means waitlist), session_choices and
+    past_sessions."""
     rows = list(rows)
     steps_by_flow = defaultdict(list)
     for step in Step.objects.filter(phase__flow__in={row.flow_id for row in rows}).select_related("phase"):
@@ -111,19 +135,32 @@ def decorate(rows, user):
         person__in={row.person_id for row in rows}
     ).values_list("person_id", "flow_id", "flow__name"):
         open_flows[person_id][flow_id] = flow_name
-    joinable = [flow for flow in Flow.objects.filter(active=True) if flow.slug != INTAKE]
+    joinable = [flow for flow in Flow.objects.filter(active=True).for_people() if flow.slug != INTAKE]
     bootcamp.add_sessions(rows)
     for row in rows:
         row.step_choices = steps_by_flow[row.flow_id]
         row.can_leave = can_leave_step(user, row.current_step)
+        row.ending_choices = ending_choices(row, steps=row.step_choices)
+        if row.person_id is None:
+            row.enroll_choices = row.also_in = []
+            continue
         row.enroll_choices = [flow for flow in joinable if flow.pk not in open_flows[row.person_id]]
         row.also_in = [name for flow_id, name in open_flows[row.person_id].items() if flow_id != row.flow_id]
     return rows
 
 
-def staff_users():
-    """Who can be assigned"""
-    return User.objects.filter(is_staff=True, is_active=True).order_by("first_name", "last_name", "email")
+def staff_users(flow=None):
+    """Who can be assigned: active staff, and in a lead flow also active users
+    with work_lead_flows (services.assign checks the same)"""
+    who = Q(is_staff=True)
+    if flow is not None and flow.subject == Flow.Subject.LEAD:
+        who |= lead_workers_q()
+    return (
+        User.objects.filter(who, is_active=True)
+        .distinct()
+        .prefetch_related("groups")
+        .order_by("first_name", "last_name", "email")
+    )
 
 
 def row(enrollment_pk, user):
@@ -138,8 +175,10 @@ def enrollments(user, tab, filters):
 def filtered(qs, user, tab, filters):
     """qs narrowed to a tab and a valid DashboardFilters, in table order (by step, oldest in step first)"""
     if tab == MINE:
-        qs = qs.filter(assignee=user)
-    elif tab != ALL:
+        qs = qs.filter(assignee=user, flow__subject=Flow.Subject.PERSON)
+    elif tab == ALL:
+        qs = qs.filter(flow__subject=Flow.Subject.PERSON)
+    else:
         qs = qs.filter(flow__slug=tab)
 
     data = filters.cleaned_data
@@ -165,6 +204,10 @@ def filtered(qs, user, tab, filters):
                 Q(person__first_name__icontains=word)
                 | Q(person__last_name__icontains=word)
                 | Q(person__email__icontains=word)
+                | Q(lead__first_name__icontains=word)
+                | Q(lead__last_name__icontains=word)
+                | Q(lead__org_name__icontains=word)
+                | Q(lead__contact_email__icontains=word)
             )
     return qs.order_by(
         "flow__order", "current_step__phase__order", "current_step__phase_id",
@@ -222,14 +265,13 @@ class BoardPhase:
 def card_queryset():
     """Open enrollments with what a board card shows: row_queryset, plus the
     last activity's kind and the enrollment's latest status change reason"""
-    last_kind = Activity.objects.filter(person=OuterRef("person")).order_by("-created_at").values("kind")[:1]
     reason = (
         Activity.objects.filter(enrollment=OuterRef("pk"), kind=Activity.Kind.STATUS_CHANGE)
         .order_by("-created_at")
         .values("text")[:1]
     )
     return row_queryset().filter(ended_at__isnull=True).annotate(
-        last_activity_kind=Subquery(last_kind), status_reason=Subquery(reason)
+        last_activity_kind=_last_activity("kind"), status_reason=Subquery(reason)
     )
 
 
@@ -327,7 +369,8 @@ def header_counts():
         for step in intake_steps
     ]
     stale_before = timezone.now() - timedelta(days=DEFAULT_STALE_DAYS)
-    totals = open_enrollments().aggregate(
+    # People only, like the Everyone tab these link to
+    totals = open_enrollments().filter(flow__subject=Flow.Subject.PERSON).aggregate(
         unassigned=Count("pk", filter=Q(assignee__isnull=True)),
         stale=Count("pk", filter=Q(step_entered_at__lt=stale_before)),
     )

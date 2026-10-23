@@ -9,8 +9,108 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 - **Status values:** `Open` · `In progress` · `Fixed` · `Won't fix`
 - **Severity:** **High** means a security or data risk, or a crash on a normal path. **Medium** means a crash on an edge path, or something broken that people use. **Low** means cleanup, dead code or tooling.
 - Mark anything you suspect but haven't reproduced as **Suspected**.
+- Move completed and skipped bugs to the bottom upon fixing or skipping.
+  - Maintain numerical order
 
 ## Index
+
+| ID | Severity | Status | Area | Summary |
+|---|---|---|---|---|
+| BUG-019 | Medium | Open | settings | Suspected: a request can hit a closed database connection (one 500 on stage sign-up) |
+| BUG-020 | Low | Open | tests | Suspected: `ColdApplyAccessTest` setup sometimes fails with a value too long for a 50-character column |
+| BUG-030 | Low | Open | cold_apply | Any logged-in user can create companies, titles, positions, concentrations and locations, and list locations |
+| BUG-032 | Low | Open | cold_apply | Participant page says "Not a Veteran Veteran (None)" for a veteran with no service branch |
+| BUG-033 | Low | Open | cold_apply | `load_dev_data` sometimes crashes: a Faker country name is longer than `rates.Country.name` (50) |
+| BUG-034 | Low | Open | pipeline | Board: a moved card that no longer matches the filters stays until the board refreshes |
+| BUG-035 | Low | Open | pipeline | Suspected: board card moved into a column of more than 25 can appear twice after "Show more" |
+| BUG-036 | Low | Open | pipeline | Board: a one-line card's hover preview shows behind its open Move menu |
+| BUG-038 | Medium | Open | cold_apply | Suspected: AI bullet and overview generation calls the retired Vertex `text-bison@001` model |
+| BUG-039 | Low | Open | dev data | `load_dev_data` sometimes crashes on a duplicate Faker company name (`resume.Organization.name` is unique) |
+| BUG-040 | Medium | Open | resume | `/resume/resumes/<pk>` has no login check and always returns a 500 (undefined `overview`) |
+| BUG-041 | Low | Open | cold_apply | `ConfirmApplicationView` is dead code: no URL, no template, no auth |
+| BUG-043 | Low | Open | cold_apply | NLTK tokenizer/tagger code needs data the image doesn't include (only `stopwords` is baked in) |
+---
+## BUG-019 — A request can hit a closed database connection
+- **Severity:** Medium · **Status:** Open · **Found:** 2026-10-17, stage sign-up test after build 8f748ade (46858e2) · **Suspected:** seen once, not reproduced
+- **Where:** `hl-stage-web`, `POST /accounts/sign-up/` at 2026-10-18 01:52:18 UTC (instance ending `f9fb8e`)
+- **Problem:** the request returned 500 with `django.db.utils.OperationalError: the connection is closed`, raised by psycopg on allauth's unique-email check (the first query in form validation). The same form posted 8 s later succeeded. Earlier requests on the same instance (login, home page, sign-up GET) were fine.
+- **Checked:** Cloud SQL `hl-stage-sql` was `RUNNABLE` (activation policy `ALWAYS`) with no operations after 01:07 UTC, and its logs show only autovacuum around 01:52, with no terminated connections. `DATABASES` in `cloud.py` sets no `CONN_MAX_AGE`, so Django should open a new connection per request. The cause is not known. psycopg raising "is closed" (rather than "server closed the connection unexpectedly") means the client already had the connection marked closed before the query ran.
+- **Fix idea:** if it happens again, compare instance and thread timing. Options: set `CONN_MAX_AGE` with `CONN_HEALTH_CHECKS = True` so dead connections are replaced, or check what in the request could close the connection (gunicorn `gthread`, 8 threads).
+
+## BUG-020 — Flaky cold_apply test data: value too long for a 50-character column
+- **Severity:** Low · **Status:** Open · **Found:** 2026-10-18, full test run during signup redesign Step 7 · **Suspected:** seen once; the rerun passed (95 tests)
+- **Where:** `cold_apply/tests/test_access.py:32` (`JobFactory(participant=cls.owner)` in `setUpTestData`), factories in `cold_apply/tests/factories.py`
+- **Problem:** `psycopg.errors.StringDataRightTruncation: value too long for type character varying(50)`. A Faker-generated value sometimes exceeds a `max_length=50` column, so the whole test class errors.
+- **Checked:** the only 50-character column in `cold_apply/models.py` is `Job.remote`, which the factory fills from a fixed list. The value probably comes from a SubFactory (Organization, Position or Location), or from a column whose database length differs from the model. Not tracked down.
+- **Fix idea:** find the column with `\d` on the test tables after a failure, then cap that factory field, e.g. `factory.LazyFunction(lambda: fake.company()[:50])`.
+
+## BUG-030 — Any logged-in user can create shared reference data
+- **Severity:** Low · **Status:** Open · **Found:** 2026-10-19, cold_apply staff redesign review
+- **Where:** `cold_apply/views.py` `OrganizationCreateView`, `TitleCreateView`, `PositionCreateView`, `ConcentrationCreateView`, `LocationCreateView`, `LocationDetailView`, `LocationListView` (all `LoginRequiredMixin`)
+- **Problem:** any participant can add companies, titles, positions, concentrations and locations, and list all locations. This may be intended, because participants pick these values on their own forms. Confirm before restricting.
+
+## BUG-032 — Participant page says "Not a Veteran Veteran" for a veteran with no branch
+- **Severity:** Low · **Status:** Open · **Found:** 2026-10-19, cold_apply staff redesign (Step 7 browser check)
+- **Where:** `cold_apply/templates/cold_apply/participant_detail.html` (`{{object.user.profile.service_branch}} Veteran ({{ object.user.profile.rank_at_separation}})`); `Profile.service_branch` defaults to `"Not a Veteran"`, which isn't one of its choices
+- **Problem:** when `is_veteran` is true but no branch was chosen, the page prints the raw default and the missing rank: "Not a Veteran Veteran (None)". The participant sees this about themselves.
+- **Fix idea:** use `get_service_branch_display`, and skip the branch and rank when they're unset. Better, make the default `None`, since "Not a Veteran" duplicates `is_veteran`.
+
+## BUG-033 — `load_dev_data` sometimes crashes on a long country name
+- **Severity:** Low · **Status:** Open · **Found:** 2026-10-20, kanban board B1 browser check
+- **Where:** `cold_apply/tests/factories.py` `CountryFactory` (`name = factory.Faker("country")`), used through `JobFactory` → `LocationFactory` by `cold_apply/management/commands/load_dev_data.py`; `rates/models.py` `Country.name` is `max_length=50`
+- **Problem:** `python manage.py load_dev_data` failed with `DataError: value too long for type character varying(50)` while creating participants. Faker has country names over 50 characters ("British Indian Ocean Territory (Chagos Archipelago)" is 51), so the command fails at random. The error was seen once; which field overflowed is inferred, not traced.
+- **Fix idea:** truncate in the factory (`factory.LazyFunction(lambda: fake.country()[:50])`) or pick from a short fixed list.
+
+## BUG-034 — Board keeps a moved card that no longer matches the filters
+- **Severity:** Low · **Status:** Open · **Found:** 2026-10-20, kanban board B2 (known when built)
+- **Where:** `pipeline/actions.py` `_move_card` / `_card`; `frontend/src/board.js` (`htmx.onLoad` files the card under its new column)
+- **Problem:** a board move answers with the card and recounted columns, but doesn't redraw the board. If the moved card no longer matches the filters, it stays visible until the board refreshes. For example, with "Days in step over 14" set, a moved card's days reset to 0. The column count, recounted with the filters, then disagrees with the cards shown.
+- **Fix idea:** in `_card`, check the card against `dashboard.page_filters(...)`, and leave it out of the response when it doesn't match (`board.js` then drops it), or fade it with a "Hidden by filters" note.
+
+## BUG-035 — Board card can appear twice after "Show more"
+- **Severity:** Low · **Status:** Open · **Found:** 2026-10-20, kanban board B2 · **Suspected:** read from code, not reproduced
+- **Where:** `pipeline/dashboard.py` `board_column` (offset paging); `pipeline/views.py` `board_column_view`; `frontend/src/board.js`
+- **Problem:** "Show more" pages a column by offset, oldest in step first. A card moved into a column whose later pages aren't loaded yet is added at the end of the loaded cards. It's also the newest in step, so the last "Show more" page returns it again, and the page then has two elements with the same id.
+- **Fix idea:** send the ids of the cards already shown (or the last `step_entered_at` shown) with "Show more" and exclude them, or have `board.js` drop a loaded card whose id is already on the page.
+
+## BUG-036 — One-line card's preview shows behind its open Move menu
+- **Severity:** Low · **Status:** Open · **Found:** 2026-10-20, kanban board B2 browser check
+- **Where:** `pipeline/templates/pipeline/partials/board_card.html` (compact card: preview shown with `group-hover` / `group-focus-within`); `board_move_menu.html`
+- **Problem:** in a column of more than 30 cards, opening Move on a one-line card puts focus inside the card, so the full-card preview also appears and sits under the menu. Nothing is broken, but it looks cluttered.
+- **Fix idea:** hide the preview while that card's menu is open (e.g. a `data-menu-open` attribute on the card wrapper that the preview's classes check).
+
+
+## BUG-038 — AI text generation uses a retired Vertex model
+- **Severity:** Medium · **Status:** Open · **Found:** 2026-10-21, reading code for the hlagents design (`docs/hlagents.md` on `feature/hlagents-01`) · **Suspected:** read from code, not reproduced
+- **Where:** `cold_apply/text_generation.py` `generate_text()` (used by `cold_apply/views.py` and `cold_apply/forms.py`), and `cold_apply/management/commands/vertex.py`
+- **Problem:** `generate_text` loads `TextGenerationModel.from_pretrained("text-bison@001")`. Google has retired the PaLM text models, so bullet rewriting and overview generation probably fail. It also `print`s every prompt and response.
+- **Fix idea:** move to a current model, ideally through the hlagents provider layer once it exists, so the provider can be switched in one place.
+
+## BUG-039 — `load_dev_data` sometimes crashes on a duplicate company name
+- **Severity:** Low · **Status:** Open · **Found:** 2026-10-21, BUG-037 browser check · **Suspected:** seen once, not reproduced
+- **Where:** `cold_apply/management/commands/load_dev_data.py`, through the factories in `cold_apply/tests/factories.py`; `resume.Organization.name` is unique
+- **Problem:** `python manage.py load_dev_data` failed with `IntegrityError: duplicate key value violates unique constraint "resume_organization_name_key"` (`Smith Inc`). Faker repeats company names, so the command fails at random partway through, like BUG-033.
+- **Fix idea:** use `django_get_or_create = ("name",)` on the organization factory, or `factory.Sequence` / `fake.unique.company()`.
+
+## BUG-040 — Resume index view has no auth and always crashes
+- **Severity:** Medium · **Status:** Open · **Found:** 2026-10-22, IDEA-005 (volunteer logins) code survey
+- **Where:** `resume/views.py:20` `index`, routed at `/resume/resumes/<pk>` (`resume/urls.py:7`)
+- **Problem:** the view has no login or permission check, and it loads every `Organization`, `Experience`, `Bullet`, `Education`, etc. with no owner filter. Today it raises `NameError` because `overview` is commented out (line 21) but still used in the context (line 38), so every request returns a 500. If someone fixes just the `NameError`, anyone, including anonymous visitors, could see every participant's resume data.
+- **Fix idea:** delete the view and URL if nothing uses them (cold_apply has the real resume tools). Otherwise add `staff_required` and filter by owner.
+
+## BUG-041 — `ConfirmApplicationView` is dead code
+- **Severity:** Low · **Status:** Open · **Found:** 2026-10-22, IDEA-005 code survey
+- **Where:** `cold_apply/views.py:122`
+- **Problem:** a `TemplateView` with no auth. No URL points to it, and its template `confirm_application_submit.html` doesn't exist. It's left over from the dropped `Application` model.
+- **Fix idea:** delete it.
+
+## BUG-043 — NLTK tokenizer/tagger code needs data the image doesn't include
+- **Severity:** Low · **Status:** Open · **Found:** 2026-10-23, hotfix-01 (NLTK cold-start hang)
+- **Where:** `cold_apply/static/scripts/resume_writer/bullet_weighter.py:40` (`tagger`, `pos_finder`), `cold_apply/static/scripts/keyword_analyzer/analyzer.py` (`pos_tagger`, `word_tokenize`), `keyword_analyzer/composer.py`
+- **Problem:** these call `word_tokenize`, `pos_tag(tagset='universal')`, `wordnet` and `treebank`. The Dockerfile only bakes `stopwords` into `$NLTK_DATA`, so they would raise `LookupError` (`punkt`, `averaged_perceptron_tagger`, `universal_tagset`, …). No view reaches them today: `weigh()` and `analyze()` don't call them, and `composer.py` imports a `lang_processors` package that doesn't exist.
+- **Fix idea:** delete the unused functions and `composer.py`, or add the corpora to the Dockerfile's `nltk.downloader` line. Never call `nltk.download()` at runtime (that caused hotfix-01).
+
+## Fixed and Skipped
 
 | ID | Severity | Status | Area | Summary |
 |---|---|---|---|---|
@@ -31,8 +131,6 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 | BUG-016 | Low | Fixed | infra | Every push to `develop` deploys to stage; needs a `staging` branch |
 | BUG-017 | Low | Fixed | settings | `asgi.py` defaults to `hl_main.settings`, which isn't a valid settings module |
 | BUG-018 | Medium | Fixed | infra | Stage deploy fails at `start-sql` when the stopped database takes too long to start |
-| BUG-019 | Medium | Open | settings | Suspected: a request can hit a closed database connection (one 500 on stage sign-up) |
-| BUG-020 | Low | Open | tests | Suspected: `ColdApplyAccessTest` setup sometimes fails with a value too long for a 50-character column |
 | BUG-021 | High | Fixed | userprofile | Every staff user can open DD214s (veteran status page and Django admin) |
 | BUG-022 | Medium | Fixed | cold_apply | Do Not Contact badge is never shown to staff |
 | BUG-023 | Medium | Fixed | cold_apply | Participant page shows blank phone and email |
@@ -42,16 +140,10 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 | BUG-027 | Low | Fixed | cold_apply | Veteran status button is superuser-only but the view allows any staff |
 | BUG-028 | Low | Fixed | userprofile | Suspected: Profile admin search raises FieldError (`user`, `nickname`) |
 | BUG-029 | Low | Fixed | cold_apply | Dead or misleading code in the staff pages (`staff.html` navbar, `index.html`, Bootstrap script, URL typo) |
-| BUG-030 | Low | Open | cold_apply | Any logged-in user can create companies, titles, positions, concentrations and locations, and list locations |
 | BUG-031 | Medium | Fixed | userprofile | Suspected: new signups can land in Nurture, because phases and steps share order values |
-| BUG-032 | Low | Open | cold_apply | Participant page says "Not a Veteran Veteran (None)" for a veteran with no service branch |
-| BUG-033 | Low | Open | cold_apply | `load_dev_data` sometimes crashes: a Faker country name is longer than `rates.Country.name` (50) |
-| BUG-034 | Low | Open | pipeline | Board: a moved card that no longer matches the filters stays until the board refreshes |
-| BUG-035 | Low | Open | pipeline | Suspected: board card moved into a column of more than 25 can appear twice after "Show more" |
-| BUG-036 | Low | Open | pipeline | Board: a one-line card's hover preview shows behind its open Move menu |
-
+| BUG-037 | Medium | Fixed | pipeline | "Completed" and "Withdrawn" did the same thing, and ended enrollments couldn't be changed |
+| BUG-042 | Low | Fixed | staff UI | Release-notes links show to all staff, but plain staff get a 403 |
 ---
-
 ## BUG-001 — Deletes and keyword refresh run on GET links (CSRF)
 - **Severity:** High · **Status:** Fixed (`fix/bug-001-csrf-get-deletes`, 1d04bee; merged into `feature/signup-login-redesign`) · **Found:** 2026-10-16, signup redesign Step 1
 - **Where:**
@@ -165,20 +257,6 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 - **Fix notes (2):** 40dc3c5 wasn't enough. In stage build 1c701310 (staging bb05ea1, 2026-10-17 21:38 UTC), the database reported `RUNNABLE` straight after the async patch, while its start operation (298d46f8) was still running. It reported `MAINTENANCE` soon after. `start-sql` passed in 35 s, and `migrate` failed with `OperationalError: connection failed: server closed the connection unexpectedly`. d1e72cc also waits until `gcloud sql operations list --filter='status!=DONE'` returns nothing. That filter was checked against the running operation, and the stub test now covers an early `RUNNABLE` report.
 - **Verified:** stage build d4ecb19b (staging 6ecb3a4, 2026-10-17 22:14 UTC) succeeded. `start-sql` saw `RUNNABLE` with operation 7f409908 still pending and waited until it finished. Then `migrate`, `deploy-web` and `deploy-worker` all passed. `hl-stage-web` runs image `6ecb3a4` and returns 200. The database was already running for that build. Cold start verified on 2026-10-18 by the stage deploy of b899a8e. The database had been stopped overnight, and `start-sql` saw `RUNNABLE` early with operation c1a8e6c5 pending. It kept waiting through `MAINTENANCE` until the operation finished, and the deploy then succeeded.
 
-## BUG-019 — A request can hit a closed database connection
-- **Severity:** Medium · **Status:** Open · **Found:** 2026-10-17, stage sign-up test after build 8f748ade (46858e2) · **Suspected:** seen once, not reproduced
-- **Where:** `hl-stage-web`, `POST /accounts/sign-up/` at 2026-10-18 01:52:18 UTC (instance ending `f9fb8e`)
-- **Problem:** the request returned 500 with `django.db.utils.OperationalError: the connection is closed`, raised by psycopg on allauth's unique-email check (the first query in form validation). The same form posted 8 s later succeeded. Earlier requests on the same instance (login, home page, sign-up GET) were fine.
-- **Checked:** Cloud SQL `hl-stage-sql` was `RUNNABLE` (activation policy `ALWAYS`) with no operations after 01:07 UTC, and its logs show only autovacuum around 01:52, with no terminated connections. `DATABASES` in `cloud.py` sets no `CONN_MAX_AGE`, so Django should open a new connection per request. The cause is not known. psycopg raising "is closed" (rather than "server closed the connection unexpectedly") means the client already had the connection marked closed before the query ran.
-- **Fix idea:** if it happens again, compare instance and thread timing. Options: set `CONN_MAX_AGE` with `CONN_HEALTH_CHECKS = True` so dead connections are replaced, or check what in the request could close the connection (gunicorn `gthread`, 8 threads).
-
-## BUG-020 — Flaky cold_apply test data: value too long for a 50-character column
-- **Severity:** Low · **Status:** Open · **Found:** 2026-10-18, full test run during signup redesign Step 7 · **Suspected:** seen once; the rerun passed (95 tests)
-- **Where:** `cold_apply/tests/test_access.py:32` (`JobFactory(participant=cls.owner)` in `setUpTestData`), factories in `cold_apply/tests/factories.py`
-- **Problem:** `psycopg.errors.StringDataRightTruncation: value too long for type character varying(50)`. A Faker-generated value sometimes exceeds a `max_length=50` column, so the whole test class errors.
-- **Checked:** the only 50-character column in `cold_apply/models.py` is `Job.remote`, which the factory fills from a fixed list. The value probably comes from a SubFactory (Organization, Position or Location), or from a column whose database length differs from the model. Not tracked down.
-- **Fix idea:** find the column with `\d` on the test tables after a failure, then cap that factory field, e.g. `factory.LazyFunction(lambda: fake.company()[:50])`.
-
 ## BUG-021 — Every staff user can open DD214s
 - **Severity:** High · **Status:** Fixed (`feature/cold-apply-staff-redesign`, 8adb309; merged into develop; deployed with the next release) · **Found:** 2026-10-19, cold_apply staff redesign review
 - **Where:** `userprofile/views.py` `update_veteran_status_view` (`@staff_required`, makes a signed URL for `profile.service_doc`); `userprofile/admin.py` `ProfileAdmin` and `VeteranProfileAdmin` (the default change form shows `service_doc` as a link, and GCS storage signs it for 24 h by default)
@@ -237,43 +315,30 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
   - The URL `companiies/<pk>/update/` is misspelled.
 - **Fix idea:** remove these as part of the staff redesign.
 
-## BUG-030 — Any logged-in user can create shared reference data
-- **Severity:** Low · **Status:** Open · **Found:** 2026-10-19, cold_apply staff redesign review
-- **Where:** `cold_apply/views.py` `OrganizationCreateView`, `TitleCreateView`, `PositionCreateView`, `ConcentrationCreateView`, `LocationCreateView`, `LocationDetailView`, `LocationListView` (all `LoginRequiredMixin`)
-- **Problem:** any participant can add companies, titles, positions, concentrations and locations, and list all locations. This may be intended, because participants pick these values on their own forms. Confirm before restricting.
-
 ## BUG-031 — New signups can land in the wrong phase
 - **Severity:** Medium · **Status:** Fixed (`feature/cold-apply-staff-redesign`, 1cc7b0c, Step 4: signups get an explicit Intake enrollment; the old step is chosen by title, not "the first step"; merged into develop in 88e3475 and deployed to stage; reaches prod with the next release) · **Found:** 2026-10-19, read-only prod query for the cold_apply staff redesign · **Suspected:** read from code and prod data, not reproduced
 - **Where:** `userprofile/models.py` `Profile.handle_onboard_complete` (`Step.objects.order_by("phase__order", "order").first()`)
 - **Problem:** on prod, Applicants, Phase 1 and Nurture all have phase order 0, and their first steps all have step order 0 (Verify Veteran Status, Send Initial Email, Boot Camp Alumni / Monthly Newsletter). Postgres may return any of these ties first, so a new participant can start in Nurture instead of Applicants.
 - **Fix idea:** the cold_apply staff redesign (Step 4) replaces this with an explicit Intake enrollment. Until then, give Applicants a unique lowest order in admin.
 
-## BUG-032 — Participant page says "Not a Veteran Veteran" for a veteran with no branch
-- **Severity:** Low · **Status:** Open · **Found:** 2026-10-19, cold_apply staff redesign (Step 7 browser check)
-- **Where:** `cold_apply/templates/cold_apply/participant_detail.html` (`{{object.user.profile.service_branch}} Veteran ({{ object.user.profile.rank_at_separation}})`); `Profile.service_branch` defaults to `"Not a Veteran"`, which isn't one of its choices
-- **Problem:** when `is_veteran` is true but no branch was chosen, the page prints the raw default and the missing rank: "Not a Veteran Veteran (None)". The participant sees this about themselves.
-- **Fix idea:** use `get_service_branch_display`, and skip the branch and rank when they're unset. Better, make the default `None`, since "Not a Veteran" duplicates `is_veteran`.
+## BUG-037 — "Completed" and "Withdrawn" basically do the same thing
+- **Severity:** Medium · **Status:** Fixed (`fix/bug-037-enrollment-endings`, 6048766; merged into develop in 2fe518d and deployed to stage; reaches prod with the next release) · **Found:** 2026-10-21, manual interaction in prod
+- **Where:** Anywhere a participant can be marked as "withdrawn" or "completed" in respect to a flow, in which they are enrolled
+- **Problem:** When attempting to mark a recent graduate of the boot camp as "completed" expecting that to mark 
+the participant as having completed the boot camp, the record marked that the participant had completed the flow, and 
+they disappeared from the dashboard. The participant was found in under "people", but the "completed" record was never
+tied to a boot camp cohort, and the record can no longer be changed.
+- **Fix idea:** Add a way to mark a participant as having completed a service, which can be thought of as the last step 
+in the boot camp or resume service flows - "graduation" for boot camp, something else for the other service. Enforce
+a particular session to move someone into "completed". If they never complete boot camp, they should either be withdrawn
+or added to the waitlist. Boot camp should only be "completed" if they did the course. There should also be a "dropped" 
+phase for anyone who was an active student, but did not complete the course (to our knowledge). Also, the records must
+be editable. Admins might make mistakes, and the current interface is too rigid, which will create very dirty data.
+- **Fix:** Completed is only allowed from a flow's final step (`Step.completes_flow`; migration `pipeline/0004` adds Graduated for Boot Camp and a placeholder Service Complete for Resume & Job Search). New Dropped status. For Boot Camp, once their session has started they can be dropped or completed, not withdrawn; before that, only withdrawn (`userprofile/bootcamp.py` `status_rule`). Ended enrollments can be reopened, switch how they ended, and be given a session, including a past one. The dashboard only shows the endings that apply.
+- **After the prod release:** on the Boot Camp tab, set Status to Completed and fix the graduate: Reopen → pick their cohort under "Past sessions" → move to Graduated → Complete. Find other Boot Camp enrollments completed without a cohort with `Enrollment.objects.filter(flow__slug="boot-camp", status="completed", bootcamp_seat__isnull=True)`. Check where the new Graduation phase sits on the prod board (it's added after the last Boot Camp phase) and reorder if needed.
 
-## BUG-033 — `load_dev_data` sometimes crashes on a long country name
-- **Severity:** Low · **Status:** Open · **Found:** 2026-10-20, kanban board B1 browser check
-- **Where:** `cold_apply/tests/factories.py` `CountryFactory` (`name = factory.Faker("country")`), used through `JobFactory` → `LocationFactory` by `cold_apply/management/commands/load_dev_data.py`; `rates/models.py` `Country.name` is `max_length=50`
-- **Problem:** `python manage.py load_dev_data` failed with `DataError: value too long for type character varying(50)` while creating participants. Faker has country names over 50 characters ("British Indian Ocean Territory (Chagos Archipelago)" is 51), so the command fails at random. The error was seen once; which field overflowed is inferred, not traced.
-- **Fix idea:** truncate in the factory (`factory.LazyFunction(lambda: fake.country()[:50])`) or pick from a short fixed list.
-
-## BUG-034 — Board keeps a moved card that no longer matches the filters
-- **Severity:** Low · **Status:** Open · **Found:** 2026-10-20, kanban board B2 (known when built)
-- **Where:** `pipeline/actions.py` `_move_card` / `_card`; `frontend/src/board.js` (`htmx.onLoad` files the card under its new column)
-- **Problem:** a board move answers with the card and recounted columns, but doesn't redraw the board. If the moved card no longer matches the filters, it stays visible until the board refreshes. For example, with "Days in step over 14" set, a moved card's days reset to 0. The column count, recounted with the filters, then disagrees with the cards shown.
-- **Fix idea:** in `_card`, check the card against `dashboard.page_filters(...)`, and leave it out of the response when it doesn't match (`board.js` then drops it), or fade it with a "Hidden by filters" note.
-
-## BUG-035 — Board card can appear twice after "Show more"
-- **Severity:** Low · **Status:** Open · **Found:** 2026-10-20, kanban board B2 · **Suspected:** read from code, not reproduced
-- **Where:** `pipeline/dashboard.py` `board_column` (offset paging); `pipeline/views.py` `board_column_view`; `frontend/src/board.js`
-- **Problem:** "Show more" pages a column by offset, oldest in step first. A card moved into a column whose later pages aren't loaded yet is added at the end of the loaded cards. It's also the newest in step, so the last "Show more" page returns it again, and the page then has two elements with the same id.
-- **Fix idea:** send the ids of the cards already shown (or the last `step_entered_at` shown) with "Show more" and exclude them, or have `board.js` drop a loaded card whose id is already on the page.
-
-## BUG-036 — One-line card's preview shows behind its open Move menu
-- **Severity:** Low · **Status:** Open · **Found:** 2026-10-20, kanban board B2 browser check
-- **Where:** `pipeline/templates/pipeline/partials/board_card.html` (compact card: preview shown with `group-hover` / `group-focus-within`); `board_move_menu.html`
-- **Problem:** in a column of more than 30 cards, opening Move on a one-line card puts focus inside the card, so the full-card preview also appears and sits under the menu. Nothing is broken, but it looks cluttered.
-- **Fix idea:** hide the preview while that card's menu is open (e.g. a `data-menu-open` attribute on the card wrapper that the preview's classes check).
+## BUG-042 — Release-notes links show to staff who can't open them
+- **Severity:** Low · **Status:** Fixed (`feature/volunteer-logins`, fa7c027; merged into develop in 3f7c025; reaches stage and prod with the next deploys) · **Found:** 2026-10-22, IDEA-005 code survey
+- **Where:** `templates/staff_base.html:34-37`
+- **Problem:** the Tools menu shows "Release notes: …" links to every `is_staff` user. The release views need `releases` app permissions since BUG-002, so staff without them get a 403.
+- **Fix:** the links are under `{% if perms.releases %}`, like World Rates, as part of the permission-based staff nav (`docs/volunteer-logins.md` §3.7). Test: `userprofile/tests/test_volunteers.py` `test_release_notes_follow_the_permission`.

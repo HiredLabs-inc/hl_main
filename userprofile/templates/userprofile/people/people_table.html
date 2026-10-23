@@ -20,6 +20,7 @@
                             <a href="{% url 'staff_person' person.pk %}" class="font-medium">{{ person.get_full_name|default:person.email }}</a>
                             <span class="block text-xs text-hl-muted">{{ person.email }}</span>
                             {% if person.profile.dnc %}<span class="staff-badge staff-badge-bad mt-1">Do not contact</span>{% endif %}
+                            {% include 'userprofile/partials/volunteer_badge.html' with badge_class="mt-1" %}
                         </td>
                         <td class="px-3 py-2 text-hl-ink">
                             {% for enrollment in person.open_enrollments %}

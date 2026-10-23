@@ -4,7 +4,7 @@ choice posts to pipeline:move with render=card and swaps the card; the board
 script files it under its new column. Escape closes the menu. At phone width
 the menu is a bottom sheet over a backdrop.
 {% endcomment %}
-{% with step=enrollment.current_step name=enrollment.person.get_full_name|default:enrollment.person.email %}
+{% with step=enrollment.current_step name=enrollment.label %}
 {% if not enrollment.can_leave %}
     <button type="button" disabled data-move-button title="{{ step.required_permission|yesno:'Only reviewers can move people off this step,' }}"
             class="shrink-0 rounded-md border border-hl-line bg-hl-mist px-2 py-0.5 text-xs text-hl-muted">Reviewer only</button>

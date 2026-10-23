@@ -47,7 +47,7 @@ phases (from dashboard.board), board_start, flow, filters, query and stale_days.
                 <section class="flex shrink-0 flex-col max-md:block" aria-labelledby="board-phase-{{ group.phase.pk }}">
                     <div class="mb-2 flex items-baseline gap-2 border-b-2 border-hl-line px-1 pb-2 max-md:hidden">
                         <h3 id="board-phase-{{ group.phase.pk }}" class="!mb-0 text-xs font-semibold uppercase tracking-wide text-hl-navy">{{ group.phase.title }}</h3>
-                        <span id="board-phase-count-{{ group.phase.pk }}" class="text-xs text-hl-muted">{{ group.count }} {{ group.count|pluralize:"person,people" }}</span>
+                        <span id="board-phase-count-{{ group.phase.pk }}" class="text-xs text-hl-muted">{{ group.count }} {% if flow.subject == "lead" %}lead{{ group.count|pluralize }}{% else %}{{ group.count|pluralize:"person,people" }}{% endif %}</span>
                     </div>
                     <div class="flex items-start gap-2 max-md:block">
                         {% for column in group.columns %}

@@ -272,7 +272,8 @@ class MoveCardTest(BoardTestCase):
 
     def setUp(self):
         super().setUp()
-        self.first, self.second, self.third, self.fourth = Step.objects.filter(phase__flow=self.job_search)
+        steps = Step.objects.filter(phase__flow=self.job_search, completes_flow=False)
+        self.first, self.second, self.third, self.fourth = steps
 
     def move(self, enrollment, step, from_step=None, page="", **headers):
         return self.client.post(

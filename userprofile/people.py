@@ -15,7 +15,7 @@ from pipeline.actions import timeline_context
 from pipeline.models import Enrollment, Flow
 from resume.models import Education, Experience
 
-from .guards import can_review_veteran_status, staff_required
+from .guards import can_review_veteran_status, staff_required, volunteers_only
 
 User = get_user_model()
 PAGE_SIZE = 50
@@ -37,9 +37,10 @@ def people_view(request):
     people = (
         User.objects.filter(is_staff=False)
         .filter(Q(profile__isnull=False) | Q(enrollments__isnull=False))
+        .exclude(pk__in=volunteers_only())
         .distinct()
         .select_related("profile")
-        .prefetch_related(Prefetch("enrollments", queryset=open_enrollments, to_attr="open_enrollments"))
+        .prefetch_related("groups", Prefetch("enrollments", queryset=open_enrollments, to_attr="open_enrollments"))
         .order_by("-date_joined", "-pk")
     )
     query = request.GET.get("q", "").strip()
@@ -77,7 +78,7 @@ def _flows_context(request, person):
         # Someone in Intake joins other flows through triage, after veteran review
         "joinable_flows": []
         if in_intake
-        else [flow for flow in Flow.objects.filter(active=True) if flow.pk not in open_flow_ids],
+        else [flow for flow in Flow.objects.filter(active=True).for_people() if flow.pk not in open_flow_ids],
     }
 
 

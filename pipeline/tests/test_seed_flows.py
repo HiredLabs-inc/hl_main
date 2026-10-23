@@ -39,7 +39,8 @@ class FreshDatabaseTest(TestCase):
 
     def test_four_flows_each_with_a_step(self):
         self.assertEqual(
-            list(Flow.objects.values_list("slug", flat=True)), ["intake", "resume-job-search", "boot-camp", "nurture"]
+            list(Flow.objects.for_people().values_list("slug", flat=True)),
+            ["intake", "resume-job-search", "boot-camp", "nurture"],
         )
         for flow in Flow.objects.all():
             self.assertIsNotNone(flow.first_step(), flow.slug)

@@ -1,0 +1,40 @@
+{% comment %}One lead's row; swapped by hlagents:review and hlagents:stage. Needs lead with attach_stages; show_run adds the run column.{% endcomment %}
+<tr id="lead-{{ lead.pk }}" class="align-top">
+    <td class="px-3 py-2">
+        <a href="{% url 'hlagents:lead' lead.pk %}" class="font-medium">{{ lead }}</a>
+        {% if lead.kind == 'outreach' and lead.contact_email %}<p class="text-xs text-hl-muted">{{ lead.contact_email }}</p>{% endif %}
+        {% if lead.kind == 'funding' and lead.url %}<p class="max-w-[16rem] truncate text-xs"><a href="{{ lead.url }}" target="_blank" rel="noopener noreferrer">{{ lead.url }}</a></p>{% endif %}
+        {% if lead.opted_out_at %}<span class="staff-badge staff-badge-bad">Opted out</span>{% endif %}
+        {% if lead.bounces %}<span class="staff-badge staff-badge-warn">Bounced{% if lead.bounces > 1 %} ×{{ lead.bounces }}{% endif %}</span>{% endif %}
+    </td>
+    <td class="px-3 py-2 text-hl-muted">
+        {% if lead.kind == 'funding' %}<p class="text-hl-ink">{{ lead.funding_amount|default:"Amount unknown" }} · {{ lead.application_deadline|default:"No deadline" }}</p>{% endif %}
+        {% if lead.justification %}<p class="line-clamp-2">{{ lead.justification }}</p>{% endif %}
+    </td>
+    {% if show_run %}
+        <td class="px-3 py-2 text-xs text-hl-muted">{% if lead.source_run %}<a href="{% url 'hlagents:run' lead.source_run.pk %}">{{ lead.source_run.config.name }} #{{ lead.source_run.pk }}</a>{% else %}{{ lead.get_source_display }}{% endif %}</td>
+    {% endif %}
+    <td class="whitespace-nowrap px-3 py-2">
+        {% if lead.enrollment %}
+            {% if perms.hlagents.change_lead %}
+                <select name="step" aria-label="Stage of {{ lead }}" class="staff-field !py-0.5 !text-xs" hx-post="{% url 'hlagents:stage' lead.pk %}" hx-trigger="change" hx-target="#lead-{{ lead.pk }}" hx-swap="outerHTML" hx-vals='{"from_step": "{{ lead.enrollment.current_step_id }}"{% if show_run %}, "show_run": "1"{% endif %}}'>
+                    {% include 'hlagents/partials/stage_options.html' %}
+                </select>
+            {% else %}
+                {{ lead.enrollment.current_step.title }}
+            {% endif %}
+            {% if stage_error %}<p class="mt-1 whitespace-normal text-xs text-red-700" role="alert">{{ stage_error }}</p>{% endif %}
+        {% else %}
+            <span class="text-xs text-hl-muted" title="Approve a lead to track its stage">Not tracked</span>
+        {% endif %}
+    </td>
+    <td class="whitespace-nowrap px-3 py-2">
+        <span class="staff-badge {% if lead.review_status == 'approved' %}staff-badge-ok{% elif lead.review_status == 'rejected' %}staff-badge-bad{% else %}staff-badge-plain{% endif %}">{{ lead.get_review_status_display }}</span>
+        {% if perms.hlagents.change_lead %}
+            <div class="mt-1 flex gap-1" hx-target="#lead-{{ lead.pk }}" hx-swap="outerHTML">
+                {% if lead.review_status != 'approved' %}<button type="button" class="btn btn-outline-success !px-2 !py-0.5 !text-xs" hx-post="{% url 'hlagents:review' lead.pk %}" hx-vals='{"status": "approved"{% if show_run %}, "show_run": "1"{% endif %}}'>Approve</button>{% endif %}
+                {% if lead.review_status != 'rejected' %}<button type="button" class="btn btn-outline-danger !px-2 !py-0.5 !text-xs" hx-post="{% url 'hlagents:review' lead.pk %}" hx-vals='{"status": "rejected"{% if show_run %}, "show_run": "1"{% endif %}}'>Reject</button>{% endif %}
+            </div>
+        {% endif %}
+    </td>
+</tr>

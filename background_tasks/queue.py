@@ -59,9 +59,10 @@ def is_authorized_task_request(request):
     return claims.get("email") == settings.GCP_SERVICE_ACCOUNT and claims.get("email_verified", False)
 
 
-@transaction.atomic
 def work_task(request, task_func):
     """Run the Task named by the X-Task-Id header and return it with its outcome.
+    task_func runs outside a transaction, so its progress is visible while it
+    runs (hlagents run pages poll for it).
 
     Raises Http404 for a missing or unknown task. An error from task_func is
     recorded on the task and logged rather than raised; the caller answers a

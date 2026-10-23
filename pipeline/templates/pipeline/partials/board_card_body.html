@@ -1,17 +1,20 @@
 {% comment %}The full card. With picture, it's only a picture: no links or menu (see board_card.html).{% endcomment %}
+{% load volunteers %}
 {% with person=enrollment.person profile=enrollment.person.profile assignee=enrollment.assignee %}
-{% with name=person.get_full_name|default:person.email %}
+{% with name=enrollment.label %}
 <article class="flex flex-col gap-2 rounded-md border border-hl-line p-2.5 shadow-sm {% if enrollment.status == 'active' %}bg-white{% else %}bg-hl-mist{% endif %}">
     <div class="flex items-start justify-between gap-2">
         {% if picture %}
             <span class="text-sm font-semibold text-hl-navy">{{ name }}</span>
+        {% elif enrollment.lead_id %}
+            <a href="{{ enrollment.lead.get_absolute_url }}" class="text-sm font-semibold">{{ name }}</a>
         {% else %}
             <a href="{% url 'staff_person' person.pk %}" hx-get="{% url 'pipeline:panel' person.pk %}" hx-target="#person-panel"
                class="text-sm font-semibold">{{ name }}</a>
         {% endif %}
         {% if assignee %}
-            <span class="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-hl-navy-2 text-[11px] font-semibold text-white" title="{{ assignee.get_full_name|default:assignee.email }}">
-                <span aria-hidden="true">{{ enrollment.assignee_initials }}</span><span class="sr-only">Assigned to {{ assignee.get_full_name|default:assignee.email }}</span>
+            <span class="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-hl-navy-2 text-[11px] font-semibold text-white" title="{{ assignee.get_full_name|default:assignee.email }}{% if assignee|is_volunteer %} (volunteer){% endif %}">
+                <span aria-hidden="true">{{ enrollment.assignee_initials }}</span><span class="sr-only">Assigned to {{ assignee.get_full_name|default:assignee.email }}{% if assignee|is_volunteer %} (volunteer){% endif %}</span>
             </span>
         {% else %}
             <span class="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-[1.5px] border-dashed border-hl-muted bg-white text-[11px] text-hl-muted" title="Unassigned">
@@ -24,6 +27,8 @@
             <span class="staff-badge {% if enrollment.status == 'rejected' or enrollment.status == 'no_show' %}staff-badge-warn{% else %}staff-badge-plain{% endif %} font-semibold">{{ enrollment.get_status_display }}</span>
         {% endif %}
         {% if profile.dnc %}<span class="staff-badge staff-badge-bad" title="Do not contact">DNC</span>{% endif %}
+        {% if enrollment.lead.opted_out_at %}<span class="staff-badge staff-badge-bad">Opted out</span>{% endif %}
+        {% if enrollment.lead.bounces %}<span class="staff-badge staff-badge-warn">Bounced {{ enrollment.lead.bounces }}×</span>{% endif %}
         <span class="staff-badge {% if enrollment.days_in_step > stale_days %}staff-badge-warn font-semibold{% else %}staff-badge-plain{% endif %}">{{ enrollment.days_in_step }}d in step</span>
         {% if profile.is_veteran is False %}
             <span class="staff-badge staff-badge-plain">Not a veteran</span>

@@ -12,7 +12,7 @@ from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
-from userprofile.guards import verified_required, veteran_reviewer_required
+from userprofile.guards import is_volunteer, verified_required, veteran_reviewer_required
 from userprofile.intake import awaiting_veteran_review, verify_and_advance
 from userprofile.va_api import confirm_veteran_status
 
@@ -60,6 +60,9 @@ def user_home(request):
 
     if user.is_staff:
         return redirect("staff")
+
+    if is_volunteer(user):
+        return redirect("volunteer_home")
 
     if hasattr(user, "profile") and user.profile.is_onboarded:
         return redirect("welcome")

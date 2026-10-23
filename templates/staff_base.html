@@ -1,8 +1,9 @@
 {% extends 'base.html' %}
-{% load releases_tags %}
+{% load releases_tags volunteers %}
 {% comment %}
 Layout for staff pages: staff nav, then the page. Django messages are shown by
-the toaster in base.html.
+the toaster in base.html. Volunteers use it too; their links come from their
+permissions (docs/volunteer-logins.md §3.7).
 {% endcomment %}
 {% block title %}{% block page_title %}Staff{% endblock page_title %} · Hired Labs{% endblock title %}
 {% block body %}
@@ -10,7 +11,11 @@ the toaster in base.html.
 {% with current=request.resolver_match.url_name %}
 <header class="staff-chrome sticky top-0 z-20 bg-hl-navy text-white shadow-sm">
     <div class="container mx-auto flex flex-wrap items-center gap-x-4 px-4">
-        <a href="{% url 'staff' %}" class="shrink-0 py-3 font-semibold tracking-tight">Hired Labs <span class="font-normal text-hl-steel">Staff</span></a>
+        {% if user.is_staff %}
+            <a href="{% url 'staff' %}" class="shrink-0 py-3 font-semibold tracking-tight">Hired Labs <span class="font-normal text-hl-steel">Staff</span></a>
+        {% else %}
+            <a href="{% url 'userprofile:user_home' %}" class="shrink-0 py-3 font-semibold tracking-tight">Hired Labs <span class="font-normal text-hl-steel">{% if user|is_volunteer %}Volunteers{% else %}Staff{% endif %}</span></a>
+        {% endif %}
         {# On phones the links get their own row under the brand and menu #}
         <nav class="order-last -mx-1 flex w-full items-center gap-1 overflow-x-auto pb-2 text-sm sm:order-none sm:mx-0 sm:w-auto sm:flex-1 sm:pb-0" aria-label="Staff">
             {% if user.is_staff %}
@@ -18,6 +23,17 @@ the toaster in base.html.
                 <a href="{% url 'staff_people' %}" class="staff-nav-link {% if current == 'staff_people' or current == 'staff_person' %}staff-nav-link-current{% endif %}" {% if current == 'staff_people' %}aria-current="page"{% endif %}>People</a>
                 <a href="{% url 'stuck_signups' %}" class="staff-nav-link {% if current == 'stuck_signups' %}staff-nav-link-current{% endif %}" {% if current == 'stuck_signups' %}aria-current="page"{% endif %}>Stuck signups</a>
                 <a href="{% url 'staff_flows' %}" class="staff-nav-link {% if current == 'staff_flows' %}staff-nav-link-current{% endif %}" {% if current == 'staff_flows' %}aria-current="page"{% endif %}>Flows</a>
+                <a href="{% url 'staff_volunteers' %}" class="staff-nav-link {% if current == 'staff_volunteers' %}staff-nav-link-current{% endif %}" {% if current == 'staff_volunteers' %}aria-current="page"{% endif %}>Volunteers</a>
+            {% else %}
+                {% if user|is_volunteer %}
+                    <a href="{% url 'volunteer_home' %}" class="staff-nav-link {% if current == 'volunteer_home' %}staff-nav-link-current{% endif %}" {% if current == 'volunteer_home' %}aria-current="page"{% endif %}>Home</a>
+                {% endif %}
+                {% if perms.pipeline.work_lead_flows %}
+                    <a href="{% url 'staff' %}" class="staff-nav-link {% if current == 'staff' %}staff-nav-link-current{% endif %}" {% if current == 'staff' %}aria-current="page"{% endif %}>Leads</a>
+                {% endif %}
+            {% endif %}
+            {% if perms.hlagents %}
+                <a href="{% url 'hlagents:index' %}" class="staff-nav-link {% if request.resolver_match.app_name == 'hlagents' %}staff-nav-link-current{% endif %}" {% if current == 'index' and request.resolver_match.app_name == 'hlagents' %}aria-current="page"{% endif %}>Agents</a>
             {% endif %}
         </nav>
         <div x-data="{ open: false }" class="relative ms-auto shrink-0 sm:ms-0">
@@ -31,12 +47,13 @@ the toaster in base.html.
                 <p class="px-3 pb-1 pt-2 text-xs font-medium uppercase text-hl-muted">Tools</p>
                 {% if perms.rates %}<a class="staff-menu-item" href="{% url 'rates:index' %}">World Rates</a>{% endif %}
                 <a class="staff-menu-item" href="{% url 'home' %}">Public site</a>
-                {% if user.is_staff %}
+                {% if perms.releases %}
                     {% release_apps as apps %}
                     {% for app in apps %}<a class="staff-menu-item" href="{% url 'releases:index' app.pk %}">Release notes: {{ app.name }}</a>{% endfor %}
                 {% endif %}
                 {% if user.is_superuser %}<a class="staff-menu-item" href="{% url 'admin:index' %}">Admin</a>{% endif %}
                 <p class="px-3 pb-1 pt-3 text-xs font-medium uppercase text-hl-muted">Account</p>
+                {% if not user.is_staff and user|is_participant %}<a class="staff-menu-item" href="{% url 'userprofile:profile_view' %}">My profile</a>{% endif %}
                 <a class="staff-menu-item" href="{% url 'account_change_password' %}">Change password</a>
                 {% include 'components/logout_button.html' with button_class="staff-menu-item w-full text-left" label="Log out" %}
             </div>

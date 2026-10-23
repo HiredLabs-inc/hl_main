@@ -44,8 +44,14 @@
                             <span class="block text-xs">
                                 {{ enrollment.current_step.title }}{% if not enrollment.is_ended %} · {{ enrollment.days_in_step }} day{{ enrollment.days_in_step|pluralize }} in step · {% if enrollment.assignee %}{{ enrollment.assignee.get_full_name|default:enrollment.assignee.email }}{% else %}unassigned{% endif %}{% else %} · ended {{ enrollment.ended_at|date:"M j, Y" }}{% endif %}
                             </span>
-                            {% if enrollment.flow.slug == "boot-camp" and not enrollment.is_ended %}
+                            {% if enrollment.flow.slug == "boot-camp" %}
                                 {% include 'pipeline/partials/session_select.html' %}
+                            {% endif %}
+                            {% if enrollment.is_ended %}
+                                <form hx-post="{% url 'pipeline:reopen' enrollment.pk %}" hx-swap="none"
+                                      hx-on::after-request="htmx.ajax('GET', '{% url 'pipeline:panel' person.pk %}', '#person-panel')" hx-confirm="Reopen this enrollment? It goes back on the dashboard as active." class="mt-1">
+                                    <button type="submit" class="btn btn-outline-secondary !px-3 !py-1 !text-sm">Reopen</button>
+                                </form>
                             {% endif %}
                         </li>
                     {% empty %}

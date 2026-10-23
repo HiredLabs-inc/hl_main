@@ -13,8 +13,12 @@ also be dragged to another column (board.js); data-locked ones can't.
 {% if compact %}
 {% with person=enrollment.person %}
     <div class="flex items-center gap-2 rounded-md border border-hl-line bg-white px-2.5 py-1.5">
-        <a href="{% url 'staff_person' person.pk %}" hx-get="{% url 'pipeline:panel' person.pk %}" hx-target="#person-panel"
-           class="min-w-0 flex-1 truncate text-sm font-semibold">{{ person.get_full_name|default:person.email }}</a>
+        {% if enrollment.lead_id %}
+            <a href="{{ enrollment.lead.get_absolute_url }}" class="min-w-0 flex-1 truncate text-sm font-semibold">{{ enrollment.label }}</a>
+        {% else %}
+            <a href="{% url 'staff_person' person.pk %}" hx-get="{% url 'pipeline:panel' person.pk %}" hx-target="#person-panel"
+               class="min-w-0 flex-1 truncate text-sm font-semibold">{{ enrollment.label }}</a>
+        {% endif %}
         <span class="staff-badge {% if enrollment.days_in_step > stale_days %}staff-badge-warn{% else %}staff-badge-plain{% endif %}">{{ enrollment.days_in_step }}d</span>
         {% include 'pipeline/partials/board_move_menu.html' %}
     </div>

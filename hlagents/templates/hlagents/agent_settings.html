@@ -1,0 +1,27 @@
+{% extends 'staff_base.html' %}
+{% block page_title %}{% if agent.pk %}{{ agent.name }}{% else %}New agent{% endif %} · Agent settings{% endblock %}
+{% block content %}
+<div class="max-w-3xl space-y-4">
+    <p class="text-sm"><a href="{% url 'hlagents:settings' %}">← Agent settings</a></p>
+    <h1 class="!mb-0">{% if agent.pk %}{{ agent.name }}{% else %}New agent{% endif %}</h1>
+    <form method="post" class="space-y-4 rounded-lg border border-hl-line bg-white p-4">
+        {% csrf_token %}
+        {% for error in form.non_field_errors %}<p class="text-sm text-red-700" role="alert">{{ error }}</p>{% endfor %}
+        <div class="grid gap-4 sm:grid-cols-2">
+            {% include 'hlagents/partials/form_field.html' with field=form.name %}
+            {% include 'hlagents/partials/form_field.html' with field=form.agent_type %}
+            {% include 'hlagents/partials/form_field.html' with field=form.provider %}
+            {% include 'hlagents/partials/form_field.html' with field=form.model %}
+        </div>
+        {% for field in form %}
+            {% if field.name != 'name' and field.name != 'agent_type' and field.name != 'provider' and field.name != 'model' %}
+                {% include 'hlagents/partials/form_field.html' %}
+            {% endif %}
+        {% endfor %}
+        <div class="flex gap-2">
+            <button type="submit" class="btn btn-primary !py-1.5 !text-sm">Save</button>
+            <a href="{% url 'hlagents:settings' %}" class="btn btn-outline-secondary !py-1.5 !text-sm">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -41,7 +41,8 @@ class DashboardTestCase(TestCase):
         cls.theirs = services.enroll(person("theirs@example.com"), cls.job_search, None, assignee=cls.other_staff)
         cls.loose = services.enroll(person("loose@example.com", "Lou", "Loose"), cls.job_search, None)
         services.set_status(cls.loose, Enrollment.Status.PAUSED, None)
-        done = services.enroll(person("done@example.com"), cls.job_search, None)
+        final = Step.objects.get(phase__flow=cls.job_search, completes_flow=True)
+        done = services.enroll(person("done@example.com"), cls.job_search, None, step=final)
         services.set_status(done, Enrollment.Status.COMPLETED, None)
         Enrollment.objects.filter(pk=cls.theirs.pk).update(step_entered_at=timezone.now() - timedelta(days=30))
 
@@ -82,7 +83,9 @@ class TabsTest(DashboardTestCase):
     def test_tabs_list_active_flows_with_intake_first(self):
         Flow.objects.filter(slug="nurture").update(active=False)
         labels = [label for _, label in self.client.get(URL).context["tabs"]]
-        self.assertEqual(labels, ["Intake", "Resume & Job Search", "Boot Camp", "My people", "Everyone"])
+        self.assertEqual(
+            labels, ["Intake", "Resume & Job Search", "Boot Camp", "My people", "Everyone", "Funding", "Outreach"]
+        )
 
 
 class FiltersTest(DashboardTestCase):

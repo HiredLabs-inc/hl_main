@@ -1,0 +1,2 @@
+{% comment %}A run's status as a badge. Needs run.{% endcomment %}
+<span class="staff-badge {% if run.status == 'done' %}staff-badge-ok{% elif run.status == 'failed' or run.status == 'capped' %}staff-badge-bad{% elif run.in_progress %}staff-badge-warn{% else %}staff-badge-plain{% endif %}">{{ run.get_status_display }}</span>
