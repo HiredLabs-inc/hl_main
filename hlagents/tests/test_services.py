@@ -8,7 +8,7 @@ from django.test import TestCase
 from hlagents import services
 from hlagents.models import Lead
 from hlagents.tests.fakes import FUNDERS, make_config, make_run
-from pipeline.models import Activity
+from pipeline.models import Activity, Enrollment, Flow, Step
 
 
 def csv_file(text):
@@ -49,7 +49,7 @@ class ReviewTest(LeadTestCase):
 
         lead.refresh_from_db()
         self.assertEqual(lead.review_status, "approved")
-        entry = lead.activities.get()
+        entry = lead.activities.get(kind=Activity.Kind.REVIEW)
         self.assertEqual((entry.kind, entry.from_value, entry.to_value, entry.actor), ("review", "New", "Approved", self.staff))
 
     def test_same_status_is_not_logged(self):
@@ -161,7 +161,10 @@ class ImportPartnersTest(LeadTestCase):
             (lee.kind, lee.source, lee.review_status, lee.bounces, lee.contact_email),
             ("outreach", "import", "approved", 2, "lee@vfw.org"),
         )
-        self.assertEqual(lee.activities.get().kind, "lead_imported")
+        self.assertEqual(
+            list(lee.activities.order_by("id").values_list("kind", "to_value")),
+            [("lead_imported", ""), ("enrolled", "Partner")],
+        )
 
     def test_reimport_updates_bounces_and_approves_agent_leads(self):
         found = self.outreach_lead(review_status=Lead.ReviewStatus.REJECTED)
@@ -190,3 +193,59 @@ class ActivityConstraintTest(LeadTestCase):
         for kwargs in ({}, {"person": self.staff, "lead": lead}):
             with self.subTest(kwargs=list(kwargs)), self.assertRaises(IntegrityError), transaction.atomic():
                 Activity.objects.create(kind=Activity.Kind.NOTE, **kwargs)
+
+
+class LeadFlowTest(LeadTestCase):
+    """Approved leads join the flow for their kind (docs/hlagents.md §3.6)"""
+
+    def test_approving_enrolls_at_the_first_step(self):
+        lead = self.funding_lead()
+        services.review(lead, Lead.ReviewStatus.APPROVED, self.staff)
+
+        enrollment = services.open_enrollment(lead)
+        self.assertEqual((enrollment.flow.slug, enrollment.current_step.title), ("funding", "Found"))
+        self.assertEqual((enrollment.person, enrollment.lead, enrollment.label), (None, lead, "Acme Foundation"))
+        self.assertEqual(lead.activities.get(kind=Activity.Kind.ENROLLED).enrollment, enrollment)
+
+    def test_rejecting_withdraws_and_approving_again_starts_over(self):
+        lead = self.outreach_lead()
+        services.review(lead, Lead.ReviewStatus.APPROVED, self.staff)
+        first = services.open_enrollment(lead)
+
+        services.review(lead, Lead.ReviewStatus.REJECTED, self.staff)
+        first.refresh_from_db()
+        self.assertEqual(first.status, Enrollment.Status.WITHDRAWN)
+        self.assertIsNone(services.open_enrollment(lead))
+
+        services.review(lead, Lead.ReviewStatus.APPROVED, self.staff)
+        self.assertNotEqual(services.open_enrollment(lead), first)
+
+    def test_back_to_new_leaves_the_enrollment(self):
+        lead = self.funding_lead()
+        services.review(lead, Lead.ReviewStatus.APPROVED, self.staff)
+        services.review(lead, Lead.ReviewStatus.NEW, self.staff)
+        self.assertIsNotNone(services.open_enrollment(lead))
+
+    def test_inactive_flow_skips_enrollment(self):
+        Flow.objects.filter(slug="funding").update(active=False)
+        lead = self.funding_lead()
+        services.review(lead, Lead.ReviewStatus.APPROVED, self.staff)
+        self.assertIsNone(services.open_enrollment(lead))
+
+    def test_partner_import_moves_an_enrolled_agent_lead_to_partner(self):
+        lead = self.outreach_lead()
+        services.review(lead, Lead.ReviewStatus.APPROVED, self.staff)
+        self.assertEqual(services.open_enrollment(lead).current_step.title, "Found")
+
+        counts = services.import_partners({"pat@dav.org": 0}, self.staff)
+
+        self.assertEqual(counts, {"created": 0, "updated": 1, "unchanged": 0})
+        self.assertEqual(services.open_enrollment(lead).current_step.title, "Partner")
+        self.assertEqual(Enrollment.objects.filter(lead=lead).count(), 1)
+
+    def test_lead_flows_are_seeded(self):
+        steps = Step.objects.filter(phase__flow__slug="funding").values_list("title", flat=True)
+        self.assertEqual(list(steps), ["Found", "Researching", "Applying", "Submitted", "Awarded", "Declined"])
+        steps = Step.objects.filter(phase__flow__slug="outreach").values_list("title", flat=True)
+        self.assertEqual(list(steps), ["Found", "Contacted", "Replied", "Partner"])
+        self.assertEqual(set(Flow.objects.filter(subject="lead").values_list("slug", flat=True)), {"funding", "outreach"})

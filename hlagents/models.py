@@ -10,6 +10,7 @@ from decimal import Decimal
 from django.conf import settings
 from django.db import models
 from django.db.models import Sum
+from django.urls import reverse
 from django.utils import timezone
 
 from hl_main.models import TrackedModel
@@ -171,7 +172,12 @@ class Lead(TrackedModel):
 
     def __str__(self):
         name = " ".join(n for n in (self.first_name, self.last_name) if n)
-        return f"{name} ({self.org_name})" if name else self.org_name
+        if name:
+            return f"{name} ({self.org_name})" if self.org_name else name
+        return self.org_name or self.contact_email
+
+    def get_absolute_url(self):
+        return reverse("hlagents:lead", args=[self.pk])
 
 
 class AgentLimits(models.Model):

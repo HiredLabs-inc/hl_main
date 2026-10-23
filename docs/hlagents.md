@@ -2,7 +2,7 @@
 
 Branch `feature/hlagents-01` (develop merged in 2026-10-21), worktree `.claude/worktrees/hlagents-01`.
 
-> **Status:** agreed 2026-10-22 (§6). Jeff answered the open questions in §7. H1, H2 and H3 are done (§8). H4 is next.
+> **Status:** agreed 2026-10-22 (§6). Jeff answered the open questions in §7. H1–H4 are done (§8). H5 (stage) is next.
 
 ## 1. Context
 We have two working prototype agents in `examples/utils/` that run outside the app:
@@ -227,3 +227,23 @@ Original questions and answers:
   - Funding URLs are often home pages (grants.gov, legalzoom.com), and amounts are blank. The model only sees search snippets and can't open a funder's page to check it. Adding a page-reading tool (Tavily extract) would let it verify.
   - The outreach agent could drop shared mailboxes in code, not only by prompt.
 - **Tests:** 109 in `hlagents`, and the full suite (406) passes.
+
+### H4 — Pipeline (done 2026-10-22)
+- **Lead flows:** `Flow.subject` is person or lead. `Enrollment.person` is nullable, and there's a new `Enrollment.lead`. A check constraint (`enrollment_person_or_lead`) requires exactly one of the two, and a lead has one open enrollment per flow. `pipeline.services.enroll(None, flow, actor, lead=lead)` enrolls a lead, and refuses a lead in a people flow or a person in a lead flow. Moves, status changes and notes on a lead's enrollment go on the lead's timeline.
+- **Flows:** migration `hlagents/0006` seeds them and enrolls leads that were already approved.
+  - **Funding:** Prospect (Found, Researching) → Application (Applying, Submitted) → Decision (Awarded, Declined)
+  - **Outreach:** Prospect (Found) → Outreach (Contacted, Replied) → Partner (Partner)
+- **Review:**
+  - Approving a lead enrolls it at Found. Imported partners go to Partner.
+  - Rejecting it withdraws its open enrollment (reason "Lead rejected"). Approving it again starts a new enrollment.
+  - Setting it back to New leaves the enrollment alone.
+  - A missing or inactive flow means no enrollment.
+- **Partners import:** puts every partner on Partner, including an agent lead already enrolled at an earlier step.
+- **Staff dashboard (`/staff/`):**
+  - Funding and Outreach get tabs, with the table and board, after My people and Everyone.
+  - Cards and rows link to the lead's page, and show Opted out and bounce badges. Search covers org, name and email.
+  - **People only:** My people, Everyone, the Unassigned and stale counts, "Enroll in" choices, triage and the person panel. A lead can't be enrolled in other flows by hand.
+- **Lead page:** shows the lead's flow and step. For staff, the flow name links to its tab.
+- **Migration note:** `pipeline/0005` gives `pipeline_flow.subject` a database default of `person`. Older data migrations (`0002_seed_flows`, which tests run again) create flows through historical models that don't know the field. Django 4.2 has no `db_default`.
+- **Access:** the boards are under `/staff/`, so only staff see them. Volunteers in the Agents group review and edit leads in `/agents/`, but don't see boards until volunteer logins (IDEA-005) decide what they get.
+- **Tests:** 425 in the full suite, including `pipeline/tests/test_leads.py` and the lead flow tests in `hlagents/tests/test_services.py`.

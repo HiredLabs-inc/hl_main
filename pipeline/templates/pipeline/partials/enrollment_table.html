@@ -32,5 +32,5 @@
             {% endif %}
         </table>
     </div>
-    <p class="mt-2 text-xs text-hl-muted">{{ rows|length }} {{ rows|length|pluralize:"person,people" }}</p>
+    <p class="mt-2 text-xs text-hl-muted">{{ rows|length }} {% if flow.subject == "lead" %}lead{{ rows|length|pluralize }}{% else %}{{ rows|length|pluralize:"person,people" }}{% endif %}</p>
 {% endif %}

@@ -1,14 +1,17 @@
 {% extends 'staff_base.html' %}
-{% block page_title %}{{ lead|default:lead.contact_email }}{% endblock %}
+{% block page_title %}{{ lead }}{% endblock %}
 {% block content %}
 <div class="max-w-4xl space-y-6">
     <p class="text-sm"><a href="{% url 'hlagents:leads' %}?kind={{ lead.kind }}">← Leads</a></p>
     <div>
-        <h1 class="!mb-1">{{ lead|default:lead.contact_email }}</h1>
+        <h1 class="!mb-1">{{ lead }}</h1>
         <p class="text-sm text-hl-muted">
             {{ lead.get_kind_display }} lead ·
             {% if lead.source_run %}found by <a href="{% url 'hlagents:run' lead.source_run.pk %}">{{ lead.source_run.config.name }} #{{ lead.source_run.pk }}</a>{% else %}{{ lead.get_source_display|lower }}{% endif %}
             · {{ lead.get_review_status_display }}
+            {% if enrollment %}
+                · {% if user.is_staff %}<a href="{% url 'staff' %}?tab={{ enrollment.flow.slug }}">{{ enrollment.flow.name }}</a>{% else %}{{ enrollment.flow.name }}{% endif %}: {{ enrollment.current_step.title }}{% if enrollment.status != 'active' %} ({{ enrollment.get_status_display|lower }}){% endif %}
+            {% endif %}
             {% if lead.bounces %}· bounced {{ lead.bounces }} time{{ lead.bounces|pluralize }}{% endif %}
             {% if lead.opted_out_at %}· <span class="staff-badge staff-badge-bad">Opted out {{ lead.opted_out_at|date:"M j, Y" }}</span>{% endif %}
         </p>

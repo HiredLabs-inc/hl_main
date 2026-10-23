@@ -5,13 +5,20 @@ partial and refreshes the table. Needs enrollment (from dashboard.decorate),
 staff_users and stale_days.
 {% endcomment %}
 {% with person=enrollment.person profile=enrollment.person.profile step=enrollment.current_step %}
-{% with name=person.get_full_name|default:person.email %}
+{% with name=enrollment.label %}
 <tbody id="enrollment-{{ enrollment.pk }}" x-data="{ open: false }" class="border-t border-hl-line">
 <tr class="align-top hover:bg-hl-mist/60">
     <td class="px-3 py-2">
         {% if hide_person %}
             <span class="font-medium text-hl-ink">{{ enrollment.flow.name }}</span>
             <span class="block text-xs text-hl-muted">Since {{ enrollment.created_at|date:"M j, Y" }}{% if enrollment.is_ended %} · ended {{ enrollment.ended_at|date:"M j, Y" }}{% endif %}</span>
+        {% elif enrollment.lead_id %}
+            {% with lead=enrollment.lead %}
+            <a href="{{ lead.get_absolute_url }}" class="font-medium">{{ name }}</a>
+            {% if lead.contact_email and lead.contact_email != name %}<span class="block text-xs text-hl-muted">{{ lead.contact_email }}</span>{% endif %}
+            {% if lead.opted_out_at %}<span class="staff-badge staff-badge-bad mt-1">Opted out</span>{% endif %}
+            {% if lead.bounces %}<span class="staff-badge staff-badge-warn mt-1">Bounced {{ lead.bounces }}×</span>{% endif %}
+            {% endwith %}
         {% else %}
             <a href="{% url 'staff_person' person.pk %}" hx-get="{% url 'pipeline:panel' person.pk %}" hx-target="#person-panel" class="font-medium">{{ name }}</a>
             <span class="block text-xs text-hl-muted">{{ person.email }}</span>

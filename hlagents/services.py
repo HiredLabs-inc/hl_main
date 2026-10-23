@@ -12,7 +12,13 @@ from django.utils import timezone
 from background_tasks.queue import queue_task
 from hlagents.agents import agent_for_lead_kind
 from hlagents.models import AgentConfig, AgentLimits, AgentRun, Lead
-from pipeline.models import Activity
+from pipeline import services as pipeline
+from pipeline.models import Activity, Enrollment, Flow, Step
+
+# The pipeline flow each kind of lead joins when approved (docs/hlagents.md §3.6)
+FLOW_SLUGS = {Lead.Kind.FUNDING: "funding", Lead.Kind.OUTREACH: "outreach"}
+# Where community partners go in the Outreach flow
+PARTNER_STEP = "Partner"
 
 # Fields staff can edit, per lead kind
 EDITABLE_FIELDS = {
@@ -143,16 +149,45 @@ def save_leads(run: AgentRun, candidates) -> tuple[int, int]:
     return inserted, skipped
 
 
+def open_enrollment(lead: Lead):
+    return Enrollment.objects.filter(lead=lead, ended_at__isnull=True).select_related("flow", "current_step").first()
+
+
+def _place(lead: Lead, actor, step_title=None) -> bool:
+    """Enroll the lead in its kind's flow if it isn't already, at step_title
+    (default: the first step). An enrollment on another step is moved there
+    only when step_title is given. Returns whether anything changed; nothing
+    does if the flow is missing or inactive."""
+    flow = Flow.objects.filter(slug=FLOW_SLUGS[lead.kind], active=True).first()
+    if flow is None:
+        return False
+    step = Step.objects.filter(phase__flow=flow, title=step_title).first() if step_title else None
+    enrollment = open_enrollment(lead)
+    if enrollment is None:
+        pipeline.enroll(None, flow, actor, step=step, lead=lead)
+        return True
+    if step is not None and enrollment.current_step_id != step.pk:
+        pipeline.move_to_step(enrollment, step, actor)
+        return True
+    return False
+
+
 @transaction.atomic
 def review(lead: Lead, status, actor) -> Lead:
-    """Approve or reject a lead, or set it back to new."""
+    """Approve or reject a lead, or set it back to new. Approving enrolls it in
+    its flow (imported partners at Partner); rejecting withdraws it."""
     if status not in Lead.ReviewStatus.values:
         raise ValidationError(f"{status} isn't a review status.")
-    if status != lead.review_status:
-        old = lead.get_review_status_display()
-        lead.review_status = status
-        lead.save(update_fields=["review_status", "updated_at"])
-        _record(lead, actor, Activity.Kind.REVIEW, from_value=old, to_value=lead.get_review_status_display())
+    if status == lead.review_status:
+        return lead
+    old = lead.get_review_status_display()
+    lead.review_status = status
+    lead.save(update_fields=["review_status", "updated_at"])
+    _record(lead, actor, Activity.Kind.REVIEW, from_value=old, to_value=lead.get_review_status_display())
+    if status == Lead.ReviewStatus.APPROVED:
+        _place(lead, actor, PARTNER_STEP if lead.source == Lead.Source.IMPORT else None)
+    elif status == Lead.ReviewStatus.REJECTED and (enrollment := open_enrollment(lead)):
+        pipeline.set_status(enrollment, Enrollment.Status.WITHDRAWN, actor, reason="Lead rejected")
     return lead
 
 
@@ -245,8 +280,9 @@ def read_partners_csv(file) -> dict[str, int]:
 
 @transaction.atomic
 def import_partners(partners: dict[str, int], actor) -> dict[str, int]:
-    """Create or update an approved Outreach lead per partner email. Returns
-    counts of created, updated and unchanged leads."""
+    """Create or update an approved Outreach lead per partner email, on the
+    Outreach flow's Partner step. Returns counts of created, updated and
+    unchanged leads."""
     counts = {"created": 0, "updated": 0, "unchanged": 0}
     existing = {lead.dedupe_key: lead for lead in Lead.objects.filter(kind=Lead.Kind.OUTREACH, dedupe_key__in=partners)}
     for email, bounces in partners.items():
@@ -261,6 +297,7 @@ def import_partners(partners: dict[str, int], actor) -> dict[str, int]:
                 bounces=bounces,
             )
             _record(lead, actor, Activity.Kind.LEAD_IMPORTED, text="Community partners CSV")
+            _place(lead, actor, PARTNER_STEP)
             counts["created"] += 1
             continue
 
@@ -273,5 +310,6 @@ def import_partners(partners: dict[str, int], actor) -> dict[str, int]:
         if lead.review_status != Lead.ReviewStatus.APPROVED:
             review(lead, Lead.ReviewStatus.APPROVED, actor)
             changed = True
+        changed = _place(lead, actor, PARTNER_STEP) or changed
         counts["updated" if changed else "unchanged"] += 1
     return counts

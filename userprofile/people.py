@@ -77,7 +77,7 @@ def _flows_context(request, person):
         # Someone in Intake joins other flows through triage, after veteran review
         "joinable_flows": []
         if in_intake
-        else [flow for flow in Flow.objects.filter(active=True) if flow.pk not in open_flow_ids],
+        else [flow for flow in Flow.objects.filter(active=True).for_people() if flow.pk not in open_flow_ids],
     }
 
 

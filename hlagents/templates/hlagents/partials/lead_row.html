@@ -1,7 +1,7 @@
 {% comment %}One lead's row; swapped by hlagents:review. Needs lead; show_run adds the run column.{% endcomment %}
 <tr id="lead-{{ lead.pk }}" class="align-top">
     <td class="px-3 py-2">
-        <a href="{% url 'hlagents:lead' lead.pk %}" class="font-medium">{{ lead|default:lead.contact_email }}</a>
+        <a href="{% url 'hlagents:lead' lead.pk %}" class="font-medium">{{ lead }}</a>
         {% if lead.kind == 'outreach' and lead.contact_email %}<p class="text-xs text-hl-muted">{{ lead.contact_email }}</p>{% endif %}
         {% if lead.kind == 'funding' and lead.url %}<p class="max-w-[16rem] truncate text-xs"><a href="{{ lead.url }}" target="_blank" rel="noopener noreferrer">{{ lead.url }}</a></p>{% endif %}
         {% if lead.opted_out_at %}<span class="staff-badge staff-badge-bad">Opted out</span>{% endif %}
