@@ -169,7 +169,7 @@ class ProviderSettingsTest(SettingsTestCase):
 class LimitsTest(SettingsTestCase):
     def test_lowering_the_cap_stops_a_run(self):
         response = self.client.post(
-            reverse("hlagents:settings"), {"run_cost_cap": "0.01", "daily_cost_cap": "10", "tool_cost_web_search": "0.02"}
+            reverse("hlagents:settings"), {"run_cost_cap": "0.01", "daily_cost_cap": "10", "tool_cost_web_search": "0.02", "tool_cost_read_page": "0"}
         )
         self.assertRedirects(response, reverse("hlagents:settings"))
         limits = AgentLimits.get()
@@ -183,6 +183,6 @@ class LimitsTest(SettingsTestCase):
 
     def test_negative_cap_is_refused(self):
         response = self.client.post(
-            reverse("hlagents:settings"), {"run_cost_cap": "-1", "daily_cost_cap": "10", "tool_cost_web_search": "0"}
+            reverse("hlagents:settings"), {"run_cost_cap": "-1", "daily_cost_cap": "10", "tool_cost_web_search": "0", "tool_cost_read_page": "0"}
         )
         self.assertContains(response, "greater than or equal to 0")

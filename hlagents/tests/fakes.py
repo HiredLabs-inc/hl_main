@@ -64,6 +64,14 @@ def make_config(agent_type="funding", provider=None, **kwargs):
     )
 
 
+def cite(run, candidates):
+    """Add a tool result that mentions the candidates, as if the agent had found
+    them, so they pass the check against sources."""
+    run.messages.append({"role": "tool", "tool_name": "web_search", "content": json.dumps({"results": candidates})})
+    run.save()
+    return candidates
+
+
 def make_run(config=None, **kwargs):
     user = User.objects.get_or_create(username="staff@example.com", defaults={"is_staff": True})[0]
     return services.create_run(config or make_config(), user, **kwargs)
@@ -81,7 +89,7 @@ FUNDERS = [
         "org_name": "  Bolt  Giving ",
         "funding_amount": "$25,000 - $40,000",
         "application_deadline": "Rolling",
-        "application_url": "https://bolt.example.org",
+        "application_url": "https://bolt.example.org/giving",
         "justification": "Corporate giving for tech education.",
     },
 ]

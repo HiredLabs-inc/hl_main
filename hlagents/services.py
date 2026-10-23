@@ -3,6 +3,8 @@ on its pipeline Activity timeline (docs/hlagents.md §3.10)."""
 import csv
 import io
 import re
+from collections import Counter
+from dataclasses import dataclass, field
 
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
@@ -10,7 +12,8 @@ from django.urls import reverse
 from django.utils import timezone
 
 from background_tasks.queue import queue_task
-from hlagents.agents import agent_for_lead_kind
+from hlagents.agents import CORRECTABLE, DUPLICATE, INCOMPLETE, agent_for_lead_kind
+from hlagents.conversation import note, tool_text
 from hlagents.models import AgentConfig, AgentLimits, AgentRun, Lead
 from pipeline import services as pipeline
 from pipeline.models import Activity, Enrollment, Flow, Step
@@ -45,17 +48,51 @@ def _record(lead, actor, kind, text="", from_value="", to_value=""):
     )
 
 
+# How many known leads an agent is told about, most recent first
+KNOWN_LEADS_LIMIT = 300
+
+
+def known_leads_hint(kind) -> str:
+    """A note listing the leads of this kind we already have, so the agent
+    doesn't spend its searches finding them again; or "" if there are none."""
+    leads = Lead.objects.filter(kind=kind).order_by("-created_at")[:KNOWN_LEADS_LIMIT]
+    if kind == Lead.Kind.OUTREACH:
+        lines = []
+        for lead in leads:
+            name = " ".join(part for part in (lead.first_name, lead.last_name) if part)
+            about = ", ".join(part for part in (name, lead.org_name) if part)
+            lines.append(f"- {lead.contact_email}" + (f" ({about})" if about else ""))
+        what = "people"
+    else:
+        lines = [f"- {name}" for name in dict.fromkeys(lead.org_name for lead in leads if lead.org_name)]
+        what = "funders"
+    if not lines:
+        return ""
+    return f"We already know these {what}. Don't return them again:\n" + "\n".join(lines)
+
+
+def _with_known_leads(messages, kind):
+    if hint := known_leads_hint(kind):
+        messages.append(note(hint, "Already known"))
+    return messages
+
+
 def create_run(config: AgentConfig, started_by, request: str = "") -> AgentRun:
-    """A queued run of the config, starting from its prompt and default request."""
+    """A queued run of the config, starting from its prompt and default request,
+    with today's date and the leads we already have."""
+    today = timezone.localdate().strftime("%B %-d, %Y")
     return AgentRun.objects.create(
         config=config,
         provider=config.provider,
         model=config.model,
         started_by=started_by,
-        messages=[
-            {"role": "system", "content": config.system_prompt},
-            {"role": "user", "content": request or config.default_request},
-        ],
+        messages=_with_known_leads(
+            [
+                {"role": "system", "content": f"{config.system_prompt}\n\nToday is {today}."},
+                {"role": "user", "content": request or config.default_request},
+            ],
+            config.agent().lead_kind,
+        ),
     )
 
 
@@ -114,6 +151,7 @@ def follow_up(run: AgentRun, text: str) -> AgentRun:
         if problem := follow_up_problem(run):
             raise ValidationError(problem)
         run.messages.append({"role": "user", "content": text})
+        _with_known_leads(run.messages, run.config.agent().lead_kind)
         run.status = AgentRun.Status.QUEUED
         run.result = run.error = ""
         run.save()
@@ -126,27 +164,57 @@ def _fit(field_name, value):
     return value[:max_length] if max_length else value
 
 
-def save_leads(run: AgentRun, candidates) -> tuple[int, int]:
-    """Create a lead per new candidate. Returns (inserted, skipped): candidates
-    without a dedupe key, or already a lead of this kind, are skipped."""
+@dataclass
+class SaveResult:
+    inserted: int = 0
+    # {reason: count} of candidates that weren't saved
+    skipped: Counter = field(default_factory=Counter)
+    # [(candidate, reason)] the agent could fix (agents.CORRECTABLE)
+    rejected: list = field(default_factory=list)
+
+    def add(self, other: "SaveResult"):
+        self.inserted += other.inserted
+        self.skipped += other.skipped
+        self.rejected += other.rejected
+
+    def summary(self) -> str:
+        text = f"Inserted {self.inserted}."
+        if self.skipped:
+            text += " Skipped: " + ", ".join(f"{count} {reason}" for reason, count in self.skipped.most_common()) + "."
+        return text
+
+
+def save_leads(run: AgentRun, candidates) -> SaveResult:
+    """Create a lead per new, valid candidate. Candidates without a dedupe key,
+    already a lead of this kind, or failing the agent's checks against what its
+    tools returned (AgentType.validate) are skipped, and counted by reason."""
     agent = run.config.agent()
-    inserted = skipped = 0
+    sources = tool_text(run.messages)
+    result = SaveResult()
     for candidate in candidates:
         key = _fit("dedupe_key", agent.dedupe_key(candidate))
-        if not key or Lead.objects.filter(kind=agent.lead_kind, dedupe_key=key).exists():
-            skipped += 1
-            continue
-        values = {field: _fit(field, value) for field, value in agent.to_lead(candidate).items()}
-        try:
-            with transaction.atomic():
-                lead = Lead.objects.create(kind=agent.lead_kind, dedupe_key=key, source_run=run, **values)
-                _record(lead, run.started_by, Activity.Kind.LEAD_FOUND, text=f"{run.config.name}, run {run.pk}")
-        except IntegrityError:
-            # Another run saved it first
-            skipped += 1
-            continue
-        inserted += 1
-    return inserted, skipped
+        if not key:
+            reason = INCOMPLETE
+        elif Lead.objects.filter(kind=agent.lead_kind, dedupe_key=key).exists():
+            reason = DUPLICATE
+        else:
+            reason = agent.validate(candidate, sources)
+        if not reason:
+            values = {field: _fit(field, value) for field, value in agent.to_lead(candidate).items()}
+            try:
+                with transaction.atomic():
+                    lead = Lead.objects.create(kind=agent.lead_kind, dedupe_key=key, source_run=run, **values)
+                    _record(lead, run.started_by, Activity.Kind.LEAD_FOUND, text=f"{run.config.name}, run {run.pk}")
+            except IntegrityError:
+                # Another run saved it first
+                reason = DUPLICATE
+        if reason:
+            result.skipped[reason] += 1
+            if reason in CORRECTABLE:
+                result.rejected.append((candidate, reason))
+        else:
+            result.inserted += 1
+    return result
 
 
 def open_enrollment(lead: Lead):

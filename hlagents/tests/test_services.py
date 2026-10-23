@@ -7,7 +7,7 @@ from django.test import TestCase
 
 from hlagents import services
 from hlagents.models import Lead
-from hlagents.tests.fakes import FUNDERS, make_config, make_run
+from hlagents.tests.fakes import FUNDERS, cite, make_config, make_run
 from pipeline import services as pipeline
 from pipeline.models import Activity, Enrollment, Flow, Step
 
@@ -35,7 +35,7 @@ class LeadTestCase(TestCase):
 class FoundLeadsTest(LeadTestCase):
     def test_each_new_lead_is_logged_as_found(self):
         run = make_run()
-        services.save_leads(run, FUNDERS)
+        services.save_leads(run, cite(run, FUNDERS))
         activities = Activity.objects.filter(kind=Activity.Kind.LEAD_FOUND)
         self.assertEqual(activities.count(), 2)
         self.assertEqual({a.lead.org_name for a in activities}, {"Acme Foundation", "Bolt  Giving"})
@@ -185,7 +185,7 @@ class ImportPartnersTest(LeadTestCase):
     def test_agents_skip_imported_partners(self):
         services.import_partners({"pat@dav.org": 0}, self.staff)
         run = make_run(make_config("outreach"))
-        self.assertEqual(services.save_leads(run, [{"contact_email": "PAT@dav.org"}]), (0, 1))
+        self.assertEqual(services.save_leads(run, [{"contact_email": "PAT@dav.org"}]).skipped, {"already known": 1})
 
 
 class ActivityConstraintTest(LeadTestCase):
