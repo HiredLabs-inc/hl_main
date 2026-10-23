@@ -159,7 +159,7 @@ def lead_view(request, pk):
             lead.refresh_from_db()
     elif request.method == "POST":
         raise PermissionDenied
-    timeline = lead.activities.select_related("actor")
+    timeline = lead.activities.select_related("actor").prefetch_related("actor__groups")
     services.attach_stages([lead])
     context = {"lead": lead, "form": form, "timeline": timeline, "enrollment": lead.enrollment}
     return render(request, "hlagents/lead.html", context)

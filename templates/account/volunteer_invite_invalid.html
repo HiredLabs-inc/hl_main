@@ -1,0 +1,17 @@
+{% extends "account/base.html" %}
+
+{% load i18n %}
+
+{% block head_title %}{% trans "Volunteer Invite" %}{% endblock %}
+
+{% block content %}
+{% if used %}
+<h1 class="text-center">{% trans "This Invite Was Already Accepted" %}</h1>
+<p class="mt-4">{% trans "Your volunteer account is set up. Log in with your email and password, or reset your password if you've forgotten it." %}</p>
+<a href="{% url 'account_login' %}" class="auth-primary-button mt-6">{% trans "Log in" %}</a>
+<p class="mt-3 text-center text-sm"><a href="{% url 'account_reset_password' %}" class="font-semibold text-hl-navy hover:text-hl-orange-text">{% trans "Forgot your password?" %}</a></p>
+{% else %}
+<h1 class="text-center">{% if expired %}{% trans "This Invite Has Expired" %}{% else %}{% trans "This Invite Doesn't Work" %}{% endif %}</h1>
+<p class="mt-4">{% if expired %}{% trans "Invite links work for 7 days." %}{% else %}{% trans "The link may be incomplete, or the invite was withdrawn." %}{% endif %} {% trans "Ask the person who invited you to send a new one." %}</p>
+{% endif %}
+{% endblock %}

@@ -127,6 +127,11 @@ class Enrollment(TrackedModel):
     ended_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
+        permissions = [
+            # Lead flows (Funding, Outreach) on the dashboard, for non-staff such as
+            # volunteers in the Agents group (docs/volunteer-logins.md §3.3)
+            ("work_lead_flows", "Can view and work Funding and Outreach enrollments"),
+        ]
         constraints = [
             models.UniqueConstraint(
                 fields=["person", "flow"],

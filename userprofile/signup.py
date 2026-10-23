@@ -44,12 +44,13 @@ def make_token(pending):
     return signing.dumps({"id": pending.pk, "email": pending.email}, salt=TOKEN_SALT)
 
 
-def read_token(token):
-    """(payload, expired) for a validly signed token, or (None, False)."""
+def read_token(token, salt=TOKEN_SALT):
+    """(payload, expired) for a validly signed token, or (None, False). Volunteer
+    invites use the same links with their own salt."""
     try:
-        payload, expired = signing.loads(token, salt=TOKEN_SALT, max_age=LINK_MAX_AGE), False
+        payload, expired = signing.loads(token, salt=salt, max_age=LINK_MAX_AGE), False
     except signing.SignatureExpired:
-        payload, expired = signing.loads(token, salt=TOKEN_SALT), True
+        payload, expired = signing.loads(token, salt=salt), True
     except signing.BadSignature:
         return None, False
     if not isinstance(payload, dict):

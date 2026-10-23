@@ -165,3 +165,25 @@ class BootCampSeat(models.Model):
 
     def __str__(self) -> str:
         return f"{self.enrollment.person} in {self.session}"
+
+
+class VolunteerInvite(models.Model):
+    """A staff invite to volunteer (docs/volunteer-logins.md §3.4). The emailed
+    link sets a password for a new account, or adds the groups to an existing
+    one. Revoking deletes the invite, which stops its links working."""
+
+    email = models.EmailField(max_length=150)
+    first_name = models.CharField(max_length=150, blank=True)
+    last_name = models.CharField(max_length=150, blank=True)
+    # Added on accepting, with the Volunteers group
+    groups = models.ManyToManyField("auth.Group", related_name="volunteer_invites")
+    invited_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="volunteer_invites_sent")
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_sent_at = models.DateTimeField(null=True, blank=True)
+    accepted_at = models.DateTimeField(null=True, blank=True)
+    user = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True, related_name="volunteer_invites_accepted"
+    )
+
+    def __str__(self) -> str:
+        return self.email

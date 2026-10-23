@@ -59,7 +59,11 @@ class PermissionTest(ViewTestCase):
 
     def test_agents_group_permissions(self):
         perms = set(Group.objects.get(name="Agents").permissions.values_list("codename", flat=True))
-        self.assertEqual(perms, {"view_agentconfig", "view_agentrun", "add_agentrun", "view_lead", "change_lead", "add_lead"})
+        # work_lead_flows (pipeline/0007) opens the Funding and Outreach boards to volunteers
+        self.assertEqual(
+            perms,
+            {"view_agentconfig", "view_agentrun", "add_agentrun", "view_lead", "change_lead", "add_lead", "work_lead_flows"},
+        )
 
 
 class StartRunTest(ViewTestCase):

@@ -6,15 +6,17 @@ from django.contrib.auth.models import User
 from django.contrib.sites.shortcuts import get_current_site
 from django.db.models import Q
 
+from .guards import VOLUNTEERS_GROUP
 from .models import PendingSignup
 from .signup import signup_link
 
 
 def legacy_unverified_users(before):
     """Non-staff users joined before `before` with no password, no verified email,
-    no finished onboarding and no cold_apply Participant."""
+    no finished onboarding and no cold_apply Participant. Volunteers are never purged."""
     return (
         User.objects.filter(is_staff=False, is_superuser=False, date_joined__lt=before)
+        .exclude(groups__name=VOLUNTEERS_GROUP)
         .filter(Q(password="") | Q(password__startswith=UNUSABLE_PASSWORD_PREFIX))
         .exclude(emailaddress__verified=True)
         .exclude(profile__is_onboarded=True)

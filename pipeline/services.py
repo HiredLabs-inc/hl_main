@@ -1,12 +1,14 @@
 """The only code that changes enrollments. Each function runs in a transaction,
 checks the rules, and records what happened on the Activity timeline of the
 person or lead enrolled.
-Views decide who may call them (staff only); step permissions are checked here.
+Views decide who may call them (pipeline.guards); step permissions and who
+can be assigned are checked here.
 """
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import IntegrityError, transaction
 from django.utils import timezone
 
+from .guards import can_be_assigned
 from .models import Activity, Enrollment, Flow, Step
 
 
@@ -47,6 +49,12 @@ def _record(enrollment, actor, kind, text="", from_value="", to_value=""):
     )
 
 
+def _assignee_refusal(flow):
+    if flow.subject == Flow.Subject.LEAD:
+        return "Only active staff and volunteers who work leads can be assigned."
+    return "Only active staff can be assigned."
+
+
 def can_leave_step(user, step):
     return not step.required_permission or user.has_perm(step.required_permission)
 
@@ -66,8 +74,8 @@ def enroll(person, flow: Flow, actor, step: Step = None, assignee=None, lead=Non
         raise ValidationError(f"{flow} has no steps.")
     if step.phase.flow_id != flow.pk:
         raise ValidationError(f"{step} isn't part of {flow}.")
-    if assignee is not None and not assignee.is_staff:
-        raise ValidationError("Only staff can be assigned.")
+    if assignee is not None and not can_be_assigned(assignee, flow):
+        raise ValidationError(_assignee_refusal(flow))
     try:
         with transaction.atomic():
             enrollment = Enrollment.objects.create(
@@ -112,8 +120,8 @@ def assign(enrollment: Enrollment, assignee, actor) -> Enrollment:
     """Set or clear (assignee=None) who is responsible for this enrollment"""
     enrollment = _locked(enrollment)
     _check_open(enrollment)
-    if assignee is not None and not (assignee.is_staff and assignee.is_active):
-        raise ValidationError("Only active staff can be assigned.")
+    if assignee is not None and not can_be_assigned(assignee, enrollment.flow):
+        raise ValidationError(_assignee_refusal(enrollment.flow))
     if enrollment.assignee_id == (assignee.pk if assignee else None):
         return enrollment
     previous = enrollment.assignee

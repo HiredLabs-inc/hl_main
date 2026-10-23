@@ -1,0 +1,12 @@
+{% extends "account/email/base_message.txt" %}
+{% load i18n %}
+
+{% block content %}{% autoescape off %}{% if existing %}{% blocktrans %}{{ inviter }} invited you to volunteer with Hired Labs.
+
+You already have an account with this email address. Open this link and log in to accept:
+{{ invite_url }}{% endblocktrans %}{% else %}{% blocktrans %}{{ inviter }} invited you to volunteer with Hired Labs.
+
+To accept, open this link and choose a password:
+{{ invite_url }}{% endblocktrans %}{% endif %}
+
+{% blocktrans %}The link works for 7 days. If you weren't expecting this, you can ignore this email.{% endblocktrans %}{% endautoescape %}{% endblock content %}
