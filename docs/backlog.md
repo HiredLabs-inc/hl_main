@@ -48,7 +48,7 @@ Design and development ideas that came up during other work and are **not bugs**
 ## IDEA-007 — Resume generation and keyword extraction through hlagents
 - **Status:** Idea · **Area:** cold_apply · **Source:** `docs/hlagents.md` §7 on `feature/hlagents-01`, Jeff's answer to Q6 (2026-10-22)
 - **What:** run resume generation (`cold_apply/text_generation.py`) and job keyword extraction (today an in-house algorithm) through the hlagents provider layer, so their model and provider can be switched in settings like the agents'.
-- **Notes:** needs hlagents H1 (providers) merged first. Resume generation is probably broken today (BUG-038, retired `text-bison@001`). Do these as two separate efforts, not part of the hlagents build.
+- **Notes:** needs hlagents H1 (providers) merged first. Resume generation now calls Gemini on Vertex directly (`settings.GEMINI_MODEL`, BUG-038), so this is about switching provider in settings, not a fix. Do these as two separate efforts, not part of the hlagents build.
 
 ## IDEA-008 — All agents through GCP AI APIs
 - **Status:** Idea · **Area:** hlagents · **Source:** None [**TODO:claude** create a design doc to work from] 

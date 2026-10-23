@@ -16,7 +16,6 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 
 | ID | Severity | Status | Area | Summary |
 |---|---|---|---|---|
-| BUG-019 | Medium | Open | settings | Suspected: a request can hit a closed database connection (one 500 on stage sign-up) |
 | BUG-020 | Low | Open | tests | Suspected: `ColdApplyAccessTest` setup sometimes fails with a value too long for a 50-character column |
 | BUG-030 | Low | Open | cold_apply | Any logged-in user can create companies, titles, positions, concentrations and locations, and list locations |
 | BUG-032 | Low | Open | cold_apply | Participant page says "Not a Veteran Veteran (None)" for a veteran with no service branch |
@@ -24,19 +23,10 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 | BUG-034 | Low | Open | pipeline | Board: a moved card that no longer matches the filters stays until the board refreshes |
 | BUG-035 | Low | Open | pipeline | Suspected: board card moved into a column of more than 25 can appear twice after "Show more" |
 | BUG-036 | Low | Open | pipeline | Board: a one-line card's hover preview shows behind its open Move menu |
-| BUG-038 | Medium | Open | cold_apply | Suspected: AI bullet and overview generation calls the retired Vertex `text-bison@001` model |
 | BUG-039 | Low | Open | dev data | `load_dev_data` sometimes crashes on a duplicate Faker company name (`resume.Organization.name` is unique) |
-| BUG-040 | Medium | Open | resume | `/resume/resumes/<pk>` has no login check and always returns a 500 (undefined `overview`) |
 | BUG-041 | Low | Open | cold_apply | `ConfirmApplicationView` is dead code: no URL, no template, no auth |
 | BUG-043 | Low | Open | cold_apply | NLTK tokenizer/tagger code needs data the image doesn't include (only `stopwords` is baked in) |
 ---
-## BUG-019 — A request can hit a closed database connection
-- **Severity:** Medium · **Status:** Open · **Found:** 2026-10-17, stage sign-up test after build 8f748ade (46858e2) · **Suspected:** seen once, not reproduced
-- **Where:** `hl-stage-web`, `POST /accounts/sign-up/` at 2026-10-18 01:52:18 UTC (instance ending `f9fb8e`)
-- **Problem:** the request returned 500 with `django.db.utils.OperationalError: the connection is closed`, raised by psycopg on allauth's unique-email check (the first query in form validation). The same form posted 8 s later succeeded. Earlier requests on the same instance (login, home page, sign-up GET) were fine.
-- **Checked:** Cloud SQL `hl-stage-sql` was `RUNNABLE` (activation policy `ALWAYS`) with no operations after 01:07 UTC, and its logs show only autovacuum around 01:52, with no terminated connections. `DATABASES` in `cloud.py` sets no `CONN_MAX_AGE`, so Django should open a new connection per request. The cause is not known. psycopg raising "is closed" (rather than "server closed the connection unexpectedly") means the client already had the connection marked closed before the query ran.
-- **Fix idea:** if it happens again, compare instance and thread timing. Options: set `CONN_MAX_AGE` with `CONN_HEALTH_CHECKS = True` so dead connections are replaced, or check what in the request could close the connection (gunicorn `gthread`, 8 threads).
-
 ## BUG-020 — Flaky cold_apply test data: value too long for a 50-character column
 - **Severity:** Low · **Status:** Open · **Found:** 2026-10-18, full test run during signup redesign Step 7 · **Suspected:** seen once; the rerun passed (95 tests)
 - **Where:** `cold_apply/tests/test_access.py:32` (`JobFactory(participant=cls.owner)` in `setUpTestData`), factories in `cold_apply/tests/factories.py`
@@ -79,24 +69,11 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 - **Problem:** in a column of more than 30 cards, opening Move on a one-line card puts focus inside the card, so the full-card preview also appears and sits under the menu. Nothing is broken, but it looks cluttered.
 - **Fix idea:** hide the preview while that card's menu is open (e.g. a `data-menu-open` attribute on the card wrapper that the preview's classes check).
 
-
-## BUG-038 — AI text generation uses a retired Vertex model
-- **Severity:** Medium · **Status:** Open · **Found:** 2026-10-21, reading code for the hlagents design (`docs/hlagents.md` on `feature/hlagents-01`) · **Suspected:** read from code, not reproduced
-- **Where:** `cold_apply/text_generation.py` `generate_text()` (used by `cold_apply/views.py` and `cold_apply/forms.py`), and `cold_apply/management/commands/vertex.py`
-- **Problem:** `generate_text` loads `TextGenerationModel.from_pretrained("text-bison@001")`. Google has retired the PaLM text models, so bullet rewriting and overview generation probably fail. It also `print`s every prompt and response.
-- **Fix idea:** move to a current model, ideally through the hlagents provider layer once it exists, so the provider can be switched in one place.
-
 ## BUG-039 — `load_dev_data` sometimes crashes on a duplicate company name
 - **Severity:** Low · **Status:** Open · **Found:** 2026-10-21, BUG-037 browser check · **Suspected:** seen once, not reproduced
 - **Where:** `cold_apply/management/commands/load_dev_data.py`, through the factories in `cold_apply/tests/factories.py`; `resume.Organization.name` is unique
 - **Problem:** `python manage.py load_dev_data` failed with `IntegrityError: duplicate key value violates unique constraint "resume_organization_name_key"` (`Smith Inc`). Faker repeats company names, so the command fails at random partway through, like BUG-033.
 - **Fix idea:** use `django_get_or_create = ("name",)` on the organization factory, or `factory.Sequence` / `fake.unique.company()`.
-
-## BUG-040 — Resume index view has no auth and always crashes
-- **Severity:** Medium · **Status:** Open · **Found:** 2026-10-22, IDEA-005 (volunteer logins) code survey
-- **Where:** `resume/views.py:20` `index`, routed at `/resume/resumes/<pk>` (`resume/urls.py:7`)
-- **Problem:** the view has no login or permission check, and it loads every `Organization`, `Experience`, `Bullet`, `Education`, etc. with no owner filter. Today it raises `NameError` because `overview` is commented out (line 21) but still used in the context (line 38), so every request returns a 500. If someone fixes just the `NameError`, anyone, including anonymous visitors, could see every participant's resume data.
-- **Fix idea:** delete the view and URL if nothing uses them (cold_apply has the real resume tools). Otherwise add `staff_required` and filter by owner.
 
 ## BUG-041 — `ConfirmApplicationView` is dead code
 - **Severity:** Low · **Status:** Open · **Found:** 2026-10-22, IDEA-005 code survey
@@ -131,6 +108,7 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 | BUG-016 | Low | Fixed | infra | Every push to `develop` deploys to stage; needs a `staging` branch |
 | BUG-017 | Low | Fixed | settings | `asgi.py` defaults to `hl_main.settings`, which isn't a valid settings module |
 | BUG-018 | Medium | Fixed | infra | Stage deploy fails at `start-sql` when the stopped database takes too long to start |
+| BUG-019 | Medium | Fixed | settings | Suspected: a request can hit a closed database connection (one 500 on stage sign-up) |
 | BUG-021 | High | Fixed | userprofile | Every staff user can open DD214s (veteran status page and Django admin) |
 | BUG-022 | Medium | Fixed | cold_apply | Do Not Contact badge is never shown to staff |
 | BUG-023 | Medium | Fixed | cold_apply | Participant page shows blank phone and email |
@@ -142,6 +120,8 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 | BUG-029 | Low | Fixed | cold_apply | Dead or misleading code in the staff pages (`staff.html` navbar, `index.html`, Bootstrap script, URL typo) |
 | BUG-031 | Medium | Fixed | userprofile | Suspected: new signups can land in Nurture, because phases and steps share order values |
 | BUG-037 | Medium | Fixed | pipeline | "Completed" and "Withdrawn" did the same thing, and ended enrollments couldn't be changed |
+| BUG-038 | Medium | Fixed | cold_apply | AI bullet and overview generation called the retired Vertex `text-bison@001` model |
+| BUG-040 | Medium | Fixed | resume | `/resume/resumes/<pk>` had no login check and always returned a 500 (undefined `overview`) |
 | BUG-042 | Low | Fixed | staff UI | Release-notes links show to all staff, but plain staff get a 403 |
 ---
 ## BUG-001 — Deletes and keyword refresh run on GET links (CSRF)
@@ -257,6 +237,14 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 - **Fix notes (2):** 40dc3c5 wasn't enough. In stage build 1c701310 (staging bb05ea1, 2026-10-17 21:38 UTC), the database reported `RUNNABLE` straight after the async patch, while its start operation (298d46f8) was still running. It reported `MAINTENANCE` soon after. `start-sql` passed in 35 s, and `migrate` failed with `OperationalError: connection failed: server closed the connection unexpectedly`. d1e72cc also waits until `gcloud sql operations list --filter='status!=DONE'` returns nothing. That filter was checked against the running operation, and the stub test now covers an early `RUNNABLE` report.
 - **Verified:** stage build d4ecb19b (staging 6ecb3a4, 2026-10-17 22:14 UTC) succeeded. `start-sql` saw `RUNNABLE` with operation 7f409908 still pending and waited until it finished. Then `migrate`, `deploy-web` and `deploy-worker` all passed. `hl-stage-web` runs image `6ecb3a4` and returns 200. The database was already running for that build. Cold start verified on 2026-10-18 by the stage deploy of b899a8e. The database had been stopped overnight, and `start-sql` saw `RUNNABLE` early with operation c1a8e6c5 pending. It kept waiting through `MAINTENANCE` until the operation finished, and the deploy then succeeded.
 
+## BUG-019 — A request can hit a closed database connection
+- **Severity:** Medium · **Status:** Fixed (mitigated; `fix/medium-bugs-2`, 6c855b9) · **Found:** 2026-10-17, stage sign-up test after build 8f748ade (46858e2) · **Suspected:** seen once, not reproduced
+- **Where:** `hl-stage-web`, `POST /accounts/sign-up/` at 2026-10-18 01:52:18 UTC (instance ending `f9fb8e`)
+- **Problem:** the request returned 500 with `django.db.utils.OperationalError: the connection is closed`, raised by psycopg on allauth's unique-email check (the first query in form validation). The same form posted 8 s later succeeded. Earlier requests on the same instance (login, home page, sign-up GET) were fine.
+- **Checked:** Cloud SQL `hl-stage-sql` was `RUNNABLE` (activation policy `ALWAYS`) with no operations after 01:07 UTC, and its logs show only autovacuum around 01:52, with no terminated connections. `DATABASES` in `cloud.py` sets no `CONN_MAX_AGE`, so Django should open a new connection per request. The cause is not known. psycopg raising "is closed" (rather than "server closed the connection unexpectedly") means the client already had the connection marked closed before the query ran.
+- **Fix idea:** if it happens again, compare instance and thread timing. Options: set `CONN_MAX_AGE` with `CONN_HEALTH_CHECKS = True` so dead connections are replaced, or check what in the request could close the connection (gunicorn `gthread`, 8 threads).
+- **Fix notes:** the cause is still unknown, so this is a mitigation. `cloud.py` sets `CONN_MAX_AGE = 60` and `CONN_HEALTH_CHECKS = True`. A reused connection is checked before a request uses it, and a closed one is replaced. It hadn't recurred by 2026-10-23: the logs show only the 2026-10-18 error on stage, and none on prod. Peak Cloud SQL connections over that week were 3 on each, against about 25 allowed on `db-f1-micro`. Reopen if `the connection is closed` appears in the logs again, or if connections near the limit.
+
 ## BUG-021 — Every staff user can open DD214s
 - **Severity:** High · **Status:** Fixed (`feature/cold-apply-staff-redesign`, 8adb309; merged into develop; deployed with the next release) · **Found:** 2026-10-19, cold_apply staff redesign review
 - **Where:** `userprofile/views.py` `update_veteran_status_view` (`@staff_required`, makes a signed URL for `profile.service_doc`); `userprofile/admin.py` `ProfileAdmin` and `VeteranProfileAdmin` (the default change form shows `service_doc` as a link, and GCS storage signs it for 24 h by default)
@@ -336,6 +324,20 @@ phase for anyone who was an active student, but did not complete the course (to 
 be editable. Admins might make mistakes, and the current interface is too rigid, which will create very dirty data.
 - **Fix:** Completed is only allowed from a flow's final step (`Step.completes_flow`; migration `pipeline/0004` adds Graduated for Boot Camp and a placeholder Service Complete for Resume & Job Search). New Dropped status. For Boot Camp, once their session has started they can be dropped or completed, not withdrawn; before that, only withdrawn (`userprofile/bootcamp.py` `status_rule`). Ended enrollments can be reopened, switch how they ended, and be given a session, including a past one. The dashboard only shows the endings that apply.
 - **After the prod release:** on the Boot Camp tab, set Status to Completed and fix the graduate: Reopen → pick their cohort under "Past sessions" → move to Graduated → Complete. Find other Boot Camp enrollments completed without a cohort with `Enrollment.objects.filter(flow__slug="boot-camp", status="completed", bootcamp_seat__isnull=True)`. Check where the new Graduation phase sits on the prod board (it's added after the last Boot Camp phase) and reorder if needed.
+
+## BUG-038 — AI text generation uses a retired Vertex model
+- **Severity:** Medium · **Status:** Fixed (`fix/medium-bugs-2`, e61356f) · **Found:** 2026-10-21, reading code for the hlagents design (`docs/hlagents.md` on `feature/hlagents-01`) · **Suspected:** read from code, not reproduced
+- **Where:** `cold_apply/text_generation.py` `generate_text()` (used by `cold_apply/views.py` and `cold_apply/forms.py`), and `cold_apply/management/commands/vertex.py`
+- **Problem:** `generate_text` loads `TextGenerationModel.from_pretrained("text-bison@001")`. Google has retired the PaLM text models, so bullet rewriting and overview generation probably fail. It also `print`s every prompt and response.
+- **Fix idea:** move to a current model, ideally through the hlagents provider layer once it exists, so the provider can be switched in one place.
+- **Fix notes:** `generate_text` calls Gemini on Vertex through `google-genai` (it replaces `google-cloud-aiplatform`; `google-auth` went to 2.59.1). The model is `settings.GEMINI_MODEL`, default `gemini-3.8-flash`, on the `global` endpoint (`GEMINI_LOCATION`). `gemini-2.5-flash` and every model tried in `us-west1` returned 404 for our projects. A failed or empty reply raises `TextGenerationError`. Bullet and overview creation show it as a form error, and bullet regeneration returns 502. Prompts are no longer printed. `python manage.py vertex` is a smoke test for the configured model, and it worked against both stage and prod projects on 2026-10-23. Moving this onto the hlagents provider layer is still IDEA-007.
+
+## BUG-040 — Resume index view has no auth and always crashes
+- **Severity:** Medium · **Status:** Fixed (`fix/medium-bugs-2`, 9d2d6c2) · **Found:** 2026-10-22, IDEA-005 (volunteer logins) code survey
+- **Where:** `resume/views.py:20` `index`, routed at `/resume/resumes/<pk>` (`resume/urls.py:7`)
+- **Problem:** the view has no login or permission check, and it loads every `Organization`, `Experience`, `Bullet`, `Education`, etc. with no owner filter. Today it raises `NameError` because `overview` is commented out (line 21) but still used in the context (line 38), so every request returns a 500. If someone fixes just the `NameError`, anyone, including anonymous visitors, could see every participant's resume data.
+- **Fix idea:** delete the view and URL if nothing uses them (cold_apply has the real resume tools). Otherwise add `staff_required` and filter by owner.
+- **Fix:** nothing linked to it, so the view, `resume/urls.py`, the `resume/` include and `resume/templates/resume/index.html` were deleted. Test: `cold_apply/tests/test_access.py` `test_old_resume_index_is_gone`.
 
 ## BUG-042 — Release-notes links show to staff who can't open them
 - **Severity:** Low · **Status:** Fixed (`feature/volunteer-logins`, fa7c027; merged into develop in 3f7c025; reaches stage and prod with the next deploys) · **Found:** 2026-10-22, IDEA-005 code survey
