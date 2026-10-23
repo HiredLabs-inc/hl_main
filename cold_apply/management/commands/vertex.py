@@ -1,24 +1,12 @@
-import vertexai
+from django.conf import settings
 from django.core.management import BaseCommand
-from google.cloud import aiplatform, secretmanager
-from vertexai.language_models import TextGenerationModel
+
+from cold_apply.text_generation import generate_text
 
 
 class Command(BaseCommand):
-    def handle(self, *args, **options):
-        vertexai.init(
-            project="redmond-test-project",
-        )
-        parameters = {
-            "temperature": 0,  # Temperature controls the degree of randomness in token selection.
-            "max_output_tokens": 256,  # Token limit determines the maximum amount of text output.
-            "top_p": 0.8,  # Tokens are selected from most probable to least until the sum of their probabilities equals the top_p value.
-            "top_k": 40,  # A top_k of 1 means the selected token is the most probable among all tokens.
-        }
-        model = TextGenerationModel.from_pretrained("text-bison@001")
-        response = model.predict(
-            "Write a bullet point for a CV tailored for this job description: Looking for a software engineer with 5+ years of experience in Python, Java, and C++.",
-            **parameters,
-        )
+    help = "Smoke test for resume text generation: one call to settings.GEMINI_MODEL."
 
-        print(f"Response from Model: {response.text}")
+    def handle(self, *args, **options):
+        self.stdout.write(f"{settings.GEMINI_MODEL} in {settings.GCP_PROJECT_ID}/{settings.GEMINI_LOCATION}")
+        self.stdout.write(generate_text("Write one resume bullet point for a software engineer."))

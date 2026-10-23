@@ -1,11 +1,18 @@
+import logging
 from typing import List
 
-import vertexai
 from django.conf import settings
-from vertexai.language_models import TextGenerationModel
+from google import genai
+from google.genai import types
 
 from cold_apply.models import Job, Participant, Skill
 from resume.models import Bullet, Experience, Position
+
+logger = logging.getLogger(__name__)
+
+
+class TextGenerationError(Exception):
+    """The model call failed or returned no text."""
 
 # def generate_overview(participant: Participant):
 
@@ -115,24 +122,32 @@ def generate_bullet(
     return generate_text(prompt)
 
 
-def generate_text(prompt: str, language_model="text-bison@001"):
-    """Calls vertexai.language_models.TextGenerationModel to generate text."""
-    vertexai.init(
+def generate_text(prompt: str) -> str:
+    """Generates text with Gemini on Vertex AI (settings.GEMINI_MODEL)."""
+    client = genai.Client(
+        vertexai=True,
         project=settings.GCP_PROJECT_ID,
+        location=settings.GEMINI_LOCATION,
     )
-    parameters = {
-        "temperature": 0.5,  # Temperature controls the degree of randomness in token selection.
-        "max_output_tokens": 256,  # Token limit determines the maximum amount of text output.
-        "top_p": 0.8,  # Tokens are selected from most probable to least until the sum of their probabilities equals the top_p value.
-        "top_k": 40,  # A top_k of 1 means the selected token is the most probable among all tokens.
-    }
-    model = TextGenerationModel.from_pretrained(language_model)
-    print(f"Prompt: {prompt}")
-    response = model.predict(
-        prompt,
-        **parameters,
+    config = types.GenerateContentConfig(
+        temperature=0.5,
+        top_p=0.8,
+        top_k=40,
+        max_output_tokens=1024,
+        # Short resume text doesn't need thinking, and thinking tokens count
+        # against max_output_tokens
+        thinking_config=types.ThinkingConfig(thinking_budget=0),
     )
-    print("----------------------")
-    print("Response:", response.text)
+    try:
+        response = client.models.generate_content(
+            model=settings.GEMINI_MODEL, contents=prompt, config=config
+        )
+    except Exception as e:
+        logger.exception("Text generation failed (%s)", settings.GEMINI_MODEL)
+        raise TextGenerationError("Text generation failed. Try again later.") from e
 
+    # Prompts and replies hold participant data, so only sizes are logged
+    logger.debug("Generated %d chars from a %d char prompt", len(response.text or ""), len(prompt))
+    if not response.text:
+        raise TextGenerationError("Text generation returned nothing. Try again.")
     return response.text
