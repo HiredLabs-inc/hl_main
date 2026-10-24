@@ -2,7 +2,7 @@
 
 Branches `feature/idea-007-resume` (effort R), then `feature/idea-007-keywords` (effort K), both from `develop`.
 
-> **Status:** design agreed with Jeff on 2026-10-23 (decisions in §7). Not started.
+> **Status:** design agreed with Jeff on 2026-10-23 (decisions in §7). R done on `feature/idea-007-resume` (§8). K not started.
 
 ## 1. Context
 IDEA-007 in `docs/backlog.md`, from `docs/hlagents.md` §6.14: run resume generation and job keyword extraction through the hlagents provider layer, so their provider and model can be switched in settings like the agents'.
@@ -163,4 +163,21 @@ hlagents H1–H7 are merged into develop. The provider layer is `hlagents/provid
 5. **Text generation failure:** show "The LLM failed you. `<model>` feels shame, but you can try again later.", naming the configured model.
 
 ## 8. Status
+### R — Resume generation (done 2026-10-23, `feature/idea-007-resume`)
+Built as §3.1–3.5 and §4 R describe, with these differences:
+- **No Gemini timeout.** `GeminiProvider` ignores `timeout`. `HttpOptions(timeout=…)` is also sent to Vertex as a deadline, and with it set, a call that took 2.7 s without it ran for the full 45 s and failed with 504 DEADLINE_EXCEEDED. A client-side httpx timeout isn't a limit either, because the SDK retries after it (one call took 57 s with a 45 s timeout). Ollama tasks do use the 45 s timeout.
+- **Thinking (BUG-049).** `gemini-3.8-flash` ignores `thinking_budget: 0` in about half of calls and thinks for 650–950 tokens, which counted against the old 1024-token limit and cut replies off. The tasks are seeded with `max_output_tokens: 8192`. `GeminiProvider` raises `ProviderError` when the finish reason isn't STOP, and adds thinking tokens to the output tokens, since they're billed as output.
+- **Migrations:** `hlagents/0008_ai_tasks` (schema) and `0009_seed_ai_tasks` (seed). They're separate because Postgres won't drop a table in the same transaction that deleted its seed rows, so a single migration couldn't be reversed.
+- **`generate_bullet`** (singular) was dead code, imported but never called, so it was deleted instead of getting a task.
+- **Bullets:** the bullets task asks for a JSON list. `parse_bullets` accepts a JSON list, a code fence, or one bullet per line (dropping bullet characters, numbers and stray brackets), and keeps at most the quantity asked for.
+- **Names:** the task key registry is `hlagents/task_types.py`. `services._cap_problem` and `_provider_problem` became public (`cap_problem`, `provider_problem`) so tasks share the agents' checks and messages. The daily-cap message now says "agent runs and tasks".
+- **Checked against `hl-main-stage`** (2026-10-23, `gemini-3.8-flash`): `python manage.py vertex`; through the views on dev data, an overview, 3 bullets and 3 rewrites. Switching the overview task to Ollama Cloud with no key showed "The LLM failed you. gemma4:31b feels shame…" and saved nothing. Latency varies: most calls took a few seconds, but one took 77 s.
+- **Tests:** `hlagents/tests/test_completion.py`, `test_gemini.py`, and additions to `test_providers.py`, `test_settings.py` and `test_seed.py`. `cold_apply/tests/test_text_generation.py` was rewritten to go through the tasks with `FakeProvider`. The full suite (607) passes.
+
+**Stage checklist (R):**
+1. Deploy. Migrations `hlagents` 0008 and 0009 run, and seed the Gemini provider and the three tasks on `GEMINI_MODEL`.
+2. In `/agents/settings/`, check the tasks and enter Gemini's token rates on **Gemini on Vertex** (seeded at $0, so task spend doesn't count toward the cap until then).
+3. Run `python manage.py vertex`, then generate an overview, bullets and a rewrite on a test participant, and check that each appears under its task's recent calls.
+
+### K — Keyword extraction
 Not started.

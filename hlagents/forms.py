@@ -2,7 +2,7 @@ from django import forms
 from django.conf import settings
 
 from .agents import get_agent_type
-from .models import AgentConfig, AgentLimits, Lead, ProviderConfig
+from .models import AgentConfig, AgentLimits, Lead, ProviderConfig, TaskConfig
 from .services import EDITABLE_FIELDS, field_label, stage_choices
 from .tools import TOOLS
 
@@ -84,6 +84,9 @@ class AgentConfigForm(forms.ModelForm):
             allowed = get_agent_type(agent_type).allowed_tools
             if not_allowed := [name for name in cleaned.get("tools", []) if name not in allowed]:
                 self.add_error("tools", f"This type can't use {', '.join(not_allowed)}.")
+        provider = cleaned.get("provider")
+        if provider and provider.kind == ProviderConfig.Kind.GEMINI:
+            self.add_error("provider", "Gemini can't run agents yet, because agents need tools (IDEA-008).")
         return cleaned
 
     def save(self, commit=True):
@@ -107,10 +110,12 @@ class ProviderConfigForm(forms.ModelForm):
 
     class Meta:
         model = ProviderConfig
-        fields = ["name", "kind", "base_url", "secret_env", "input_cost_per_mtok", "output_cost_per_mtok", "active"]
+        fields = ["name", "kind", "base_url", "location", "secret_env", "input_cost_per_mtok", "output_cost_per_mtok", "active"]
         labels = {"base_url": "Base URL"}
         help_texts = {
-            "base_url": "Leave blank for Ollama Cloud. The API key is sent here.",
+            "base_url": "Ollama only. Leave blank for Ollama Cloud. The API key is sent here.",
+            "location": f"Gemini only: the Vertex AI location. Leave blank for {settings.GEMINI_LOCATION}. "
+            "Gemini uses the server's Google credentials, so it needs no API key.",
             "active": "Agents can't start runs on an inactive provider.",
         }
 
@@ -119,6 +124,39 @@ class ProviderConfigForm(forms.ModelForm):
         self.fields["secret_env"].choices = [("", "No key")] + [(name, name) for name in settings.HLAGENTS_PROVIDER_SECRETS]
         self.fields["input_cost_per_mtok"].help_text = "Estimates for the cost cap. 0 for a subscription."
         _style(self)
+
+
+class TaskConfigForm(forms.ModelForm):
+    """A task's settings. The key is fixed: the app that runs the task looks it up."""
+
+    class Meta:
+        model = TaskConfig
+        fields = ["provider", "model", "instructions", "options", "active"]
+        help_texts = {
+            "model": "As the provider names it, e.g. gemini-3.8-flash or gemma4:31b. Takes effect on the next call.",
+            "instructions": "The system prompt. The app adds what to write about (a job title, skills, keywords).",
+            "options": 'JSON. Any of temperature, top_p, top_k, max_output_tokens and thinking_budget (Gemini), '
+            'e.g. {"temperature": 0.5, "max_output_tokens": 1024}.',
+            "active": "An inactive task fails every call with a message, instead of calling the provider.",
+        }
+        widgets = {
+            "instructions": forms.Textarea(attrs={"rows": 16, "class": "staff-field w-full font-mono text-xs"}),
+            "options": forms.Textarea(attrs={"rows": 3, "class": "staff-field w-full font-mono text-xs"}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        providers = ProviderConfig.objects.filter(active=True)
+        if self.instance.provider_id:
+            providers = providers | ProviderConfig.objects.filter(pk=self.instance.provider_id)
+        self.fields["provider"].queryset = providers.distinct()
+        _style(self)
+
+    def clean_options(self):
+        options = self.cleaned_data["options"]
+        if not isinstance(options, dict):
+            raise forms.ValidationError('Options must be a JSON object, e.g. {"temperature": 0.5}.')
+        return options
 
 
 def _tool_cost_field(name):
@@ -136,7 +174,9 @@ class LimitsForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["run_cost_cap"].help_text = "A run, with its follow-ups, stops when its estimated cost gets here."
-        self.fields["daily_cost_cap"].help_text = "No run starts or continues once today's runs add up to this."
+        self.fields["daily_cost_cap"].help_text = (
+            "No run starts or continues, and no task runs, once today's runs and tasks add up to this."
+        )
         for name in TOOLS:
             self.fields[_tool_cost_field(name)] = forms.DecimalField(
                 label=f"{name} $ per call",

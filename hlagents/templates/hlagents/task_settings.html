@@ -1,0 +1,50 @@
+{% extends 'staff_base.html' %}
+{% block page_title %}{{ task }} · Agent settings{% endblock %}
+{% block content %}
+<div class="max-w-2xl space-y-6">
+    <div class="space-y-1">
+        <p class="text-sm"><a href="{% url 'hlagents:settings' %}">← Agent settings</a></p>
+        <h1 class="!mb-0">{{ task }}</h1>
+        <p class="text-sm text-hl-muted">Task key <code>{{ task.key }}</code></p>
+    </div>
+    <form method="post" class="space-y-4 rounded-lg border border-hl-line bg-white p-4">
+        {% csrf_token %}
+        {% for error in form.non_field_errors %}<p class="text-sm text-red-700" role="alert">{{ error }}</p>{% endfor %}
+        {% for field in form %}{% include 'hlagents/partials/form_field.html' %}{% endfor %}
+        <div class="flex gap-2">
+            <button type="submit" class="btn btn-primary !py-1.5 !text-sm">Save</button>
+            <a href="{% url 'hlagents:settings' %}" class="btn btn-outline-secondary !py-1.5 !text-sm">Cancel</a>
+        </div>
+    </form>
+
+    <section aria-labelledby="calls-heading" class="space-y-2">
+        <h2 id="calls-heading" class="!mb-0 text-lg">Recent calls</h2>
+        <div class="overflow-x-auto rounded-lg border border-hl-line bg-white">
+            <table class="w-full min-w-[32rem] text-left text-sm">
+                <thead class="bg-hl-mist text-xs uppercase tracking-wide text-hl-muted">
+                    <tr>
+                        <th scope="col" class="px-3 py-2 font-medium">When</th>
+                        <th scope="col" class="px-3 py-2 font-medium">Model</th>
+                        <th scope="col" class="px-3 py-2 font-medium">By</th>
+                        <th scope="col" class="px-3 py-2 text-right font-medium">Tokens in, out</th>
+                        <th scope="col" class="px-3 py-2 text-right font-medium">Cost</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-hl-line">
+                    {% for call in calls %}
+                        <tr>
+                            <td class="px-3 py-2 whitespace-nowrap">{{ call.created_at|date:"M j, g:i a" }}</td>
+                            <td class="px-3 py-2"><code>{{ call.model }}</code>{% if not call.ok %} <span class="staff-badge staff-badge-bad" title="{{ call.error }}">Failed</span>{% endif %}</td>
+                            <td class="px-3 py-2 text-hl-muted">{{ call.user|default:"—" }}</td>
+                            <td class="px-3 py-2 text-right tabular-nums">{{ call.input_tokens }}, {{ call.output_tokens }}</td>
+                            <td class="px-3 py-2 text-right tabular-nums">${{ call.cost|floatformat:4 }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="5" class="px-3 py-2 text-hl-muted">No calls yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+{% endblock %}

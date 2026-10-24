@@ -5,7 +5,6 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 
 from cold_apply.models import DatePostedFilter
 from cold_apply.text_generation import (
-    generate_bullet,
     generate_bullets,
     generate_overview,
 )
@@ -40,12 +39,14 @@ class OverviewForm(forms.ModelForm):
     position: Position
     job: Job
 
-    def __init__(self, position, job, *args, **kwargs) -> None:
+    def __init__(self, position, job, *args, user=None, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         if self.fields["auto_generate"]:
             self.fields["text"].required = False
         self.position = position
         self.job = job
+        # Who asked, for the task's usage log
+        self.user = user
 
     auto_generate = forms.BooleanField(
         widget=forms.RadioSelect(
@@ -63,7 +64,7 @@ class OverviewForm(forms.ModelForm):
 
         if self.cleaned_data["auto_generate"]:
             self.instance.auto_generated = True
-            overview_text = generate_overview(self.instance.title, self.job)
+            overview_text = generate_overview(self.instance.title, self.job, user=self.user)
             self.instance.text = overview_text
         else:
             self.instance.auto_generated = False
@@ -121,8 +122,10 @@ class BulletCreateForm(forms.ModelForm):
     )
     remaning_bullet_count = 0
 
-    def __init__(self, participant, *args, **kwargs) -> None:
+    def __init__(self, participant, *args, user=None, **kwargs) -> None:
         super().__init__(*args, **kwargs)
+        # Who asked, for the task's usage log
+        self.user = user
 
         self.fields["experience"].queryset = Experience.objects.filter(
             participant=participant
@@ -168,6 +171,7 @@ class BulletCreateForm(forms.ModelForm):
                 self.cleaned_data["experience"],
                 self.cleaned_data["skills"],
                 self.cleaned_data["quantity"],
+                user=self.user,
             )
             for bullet_text in bullets:
                 self.instance.id = None

@@ -14,7 +14,7 @@ from django.utils import timezone
 from background_tasks.queue import queue_task
 from hlagents.agents import CORRECTABLE, DUPLICATE, INCOMPLETE, agent_for_lead_kind
 from hlagents.conversation import note, tool_text
-from hlagents.models import AgentConfig, AgentLimits, AgentRun, Lead
+from hlagents.models import AgentConfig, AgentLimits, AgentRun, Lead, spent_today
 from pipeline import services as pipeline
 from pipeline.models import Activity, Enrollment, Flow, Step
 
@@ -96,17 +96,17 @@ def create_run(config: AgentConfig, started_by, request: str = "") -> AgentRun:
     )
 
 
-def _cap_problem(run=None):
+def cap_problem(run=None):
     """Why no run can start, or this run can't continue, under the cost caps; or ""."""
     limits = AgentLimits.get()
-    if AgentRun.spent_today() >= limits.daily_cost_cap:
-        return f"Today's runs have reached the ${limits.daily_cost_cap} daily cap."
+    if spent_today() >= limits.daily_cost_cap:
+        return f"Today's agent runs and tasks have reached the ${limits.daily_cost_cap} daily cap."
     if run is not None and run.cost >= limits.run_cost_cap:
         return f"This run has reached the ${limits.run_cost_cap} run cap."
     return ""
 
 
-def _provider_problem(provider):
+def provider_problem(provider):
     if not provider.active:
         return f"{provider} is turned off in settings."
     return provider.key_problem()
@@ -114,14 +114,14 @@ def _provider_problem(provider):
 
 def start_problem(config: AgentConfig) -> str:
     """Why the config can't start a run right now, or ""."""
-    return _provider_problem(config.provider) or _cap_problem()
+    return provider_problem(config.provider) or cap_problem()
 
 
 def follow_up_problem(run: AgentRun) -> str:
     """Why the run can't take a follow-up right now, or ""."""
     if run.in_progress():
         return "The agent is still working on this run."
-    return _provider_problem(run.provider) or _cap_problem(run)
+    return provider_problem(run.provider) or cap_problem(run)
 
 
 def _queue(run):

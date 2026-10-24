@@ -1,10 +1,11 @@
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.paginator import Paginator
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Sum
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
@@ -23,8 +24,9 @@ from .forms import (
     PartnersImportForm,
     ProviderConfigForm,
     RunForm,
+    TaskConfigForm,
 )
-from .models import AgentConfig, AgentLimits, AgentRun, Lead, ProviderConfig
+from .models import AgentConfig, AgentLimits, AgentRun, Lead, ProviderConfig, TaskConfig, spent_today
 from .tasks import run_agent_task
 
 agents_required = app_permission_required("hlagents")
@@ -254,15 +256,20 @@ def settings_view(request):
     providers = ProviderConfig.objects.all()
     for provider in providers:
         provider.problem = provider.key_problem()
+    today = Q(calls__created_at__date=timezone.localdate())
+    tasks = TaskConfig.objects.select_related("provider").annotate(
+        calls_today=Count("calls", filter=today), cost_today=Sum("calls__cost", filter=today)
+    )
     return render(
         request,
         "hlagents/settings.html",
         {
             "agents": AgentConfig.objects.select_related("provider"),
+            "tasks": tasks,
             "providers": providers,
             "limits": limits,
             "limits_form": limits_form if can_change_limits else None,
-            "spent_today": AgentRun.spent_today(),
+            "spent_today": spent_today(),
         },
     )
 
@@ -303,6 +310,19 @@ def provider_settings_view(request, pk=None):
         messages.success(request, f"Saved {provider}.")
         return redirect("hlagents:settings")
     return render(request, "hlagents/provider_settings.html", {"form": form, "provider": provider})
+
+
+@agents_required
+def task_settings_view(request, pk):
+    _require(request.user, "hlagents.change_agentconfig")
+    task = get_object_or_404(TaskConfig, pk=pk)
+    form = TaskConfigForm(request.POST or None, instance=task)
+    if request.method == "POST" and form.is_valid():
+        task = form.save()
+        messages.success(request, f"Saved {task}. The next call uses these settings.")
+        return redirect("hlagents:settings")
+    calls = task.calls.select_related("user")[:20]
+    return render(request, "hlagents/task_settings.html", {"form": form, "task": task, "calls": calls})
 
 
 @csrf_exempt

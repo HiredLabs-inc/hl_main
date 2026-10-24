@@ -1,20 +1,22 @@
-import logging
+"""Resume text written by an LLM, through the hlagents tasks (docs/ai-tasks.md).
+
+Each function builds the user message from the participant's data; the task's
+instructions, provider and model are edited in /agents/settings/.
+"""
+import json
+import re
 from typing import List
 
-from django.conf import settings
-from google import genai
-from google.genai import types
-
-from cold_apply.models import Job, Participant, Skill
+from cold_apply.models import Job, Skill
+from hlagents.completion import CompletionFailed, complete
 from resume.models import Bullet, Experience, Position
 
-logger = logging.getLogger(__name__)
+# How much of a job description goes into a prompt
+DESCRIPTION_CHARS = 1000
 
 
 class TextGenerationError(Exception):
     """The model call failed or returned no text."""
-
-# def generate_overview(participant: Participant):
 
 
 def get_keywords(job: Job):
@@ -27,129 +29,70 @@ def get_keywords(job: Job):
     return unigrams, bigrams, trigrams
 
 
-def rewrite_bullet_for_job(bullet, job):
+def _keyword_text(job: Job) -> str:
     unigrams, bigrams, trigrams = get_keywords(job)
-
-    unigrams_list = "\n".join(unigrams)
-    bigrams_list = "\n".join(bigrams)
-    trigrams_list = "\n".join(trigrams)
-
-    prompt = (
-        f"Rewrite the following bullet point into a single bullet point only: '{bullet.text}' "
-        f"to focus on these keywords: {unigrams_list}"
-    )
-
-    return generate_text(prompt)
+    return ", ".join(unigrams + bigrams + trigrams)
 
 
-def generate_overview(position: Position, job: Job = None):
-    prompt = (
-        "Write a resume overview between 150 and 200 words long with no personal pronouns and no text decoration."
-        "The overview should be tailored to this job title: "
-        f"{position.title}."
-    )
+def rewrite_bullet_for_job(bullet: Bullet, job: Job, user=None) -> str:
+    message = f"Bullet point:\n{bullet.text}"
+    if keywords := _keyword_text(job):
+        message += f"\n\nKeywords from the job:\n{keywords}"
+    return generate_text("bullet_rewrite", message, user)
+
+
+def generate_overview(position: Position, job: Job = None, user=None) -> str:
+    message = f"Job title: {position.title}"
     if job:
-        unigrams, bigrams, trigrams = get_keywords(job)
-
-        unigrams_list = "\n".join(unigrams)
-        bigrams_list = "\n".join(bigrams)
-        trigrams_list = "\n".join(trigrams)
-
-        prompt += f"\n\nThe overview should focus on these keywords: {unigrams_list}, {bigrams_list}, {trigrams_list}"
-        prompt += f"\n\nThe overview should be tailored to this job description: \n{job.description[:1000]}"
+        if keywords := _keyword_text(job):
+            message += f"\n\nKeywords from the job:\n{keywords}"
+        if job.description:
+            message += f"\n\nJob description:\n{job.description[:DESCRIPTION_CHARS]}"
+    return generate_text("resume_overview", message, user)
 
 
-
-
-    return generate_text(prompt)
-
-
-def generate_bullets(experience: Experience, skills: List[Skill] = None, quantity=1):
-    prompt = f"Write {quantity} bullet points, using 25-40 words per bullet point, with no text decoration, seperated by a | character, for a CV under this heading: '{experience.position.title}'."
+def generate_bullets(experience: Experience, skills: List[Skill] = None, quantity=1, user=None) -> List[str]:
+    message = f"Write {quantity} bullet point{'s' if quantity != 1 else ''} for this work experience heading:\n{experience.position.title}"
     if skills:
-        skills_list = "\n".join([skill.title for skill in skills])
-        prompt += f"\n\nThe bullet point should focus on these skills:\n{skills_list}"
+        skills_list = "\n".join(skill.title for skill in skills)
+        message += f"\n\nFocus on these skills:\n{skills_list}"
+    existing = [bullet.text for bullet in experience.bullet_set.all()]
+    if existing:
+        existing_list = "\n".join(existing)
+        message += f"\n\nBullet points already written for this experience (don't repeat them):\n{existing_list}"
 
-    if experience.bullet_set.count():
-        existing_bullets = "\n".join(
-            [bullet.text for bullet in experience.bullet_set.all()]
-        )
-        prompt += (
-            f"\n\nHere are the bullet points you have already "
-            f"written, try not to repeat them:\n{existing_bullets}"
-        )
-
-    response = generate_text(prompt)
-    return [t.strip() for t in response.split("|") if t]
+    bullets = parse_bullets(generate_text("resume_bullets", message, user))
+    if not bullets:
+        raise TextGenerationError(failure_message(""))
+    return bullets[:quantity]
 
 
-def generate_bullet(
-    experience: Experience, skills: List[Skill] = None, job: Job = None
-):
-    """Generate a bullet point for a job description."""
-    prompt = (
-        f"Using between 25 and 40 words, no personal pronouns, and no text decoration."
-        " Write five bullet points for a CV under this "
-        f"work experience heading:\n{experience.position.title}."
-    )
-
-    # tailored for this job description: {job_description}}"
-    if skills:
-        skills_list = "\n".join([skill.title for skill in skills])
-        prompt += f"\n\nThe bullet point should focus on these skills:\n{skills_list}"
-
-    if job:
-        # this seems to cause the response to be empty, need a way to summarise the job description
-        # before sending it
-        pass
-        # prompt += f"\n\nThe bullet point should be tailored to this job description: \n{job.description[:1000]}"
-
-    if experience.bullet_set.count():
-        existing_bullets = "\n".join(
-            [bullet.text for bullet in experience.bullet_set.all()]
-        )
-        prompt += (
-            f"\n\nHere are the bullet points you have already "
-            f"written, try not to repeat them:\n{existing_bullets}"
-        )
-
-    # bullet_text =
-
-    # bullet = experience.bullet_set.create(text=bullet_text, type="Work")
-    # if skills:
-    #     bullet.skills.set(skills)
-
-    return generate_text(prompt)
-
-
-def generate_text(prompt: str) -> str:
-    """Generates text with Gemini on Vertex AI (settings.GEMINI_MODEL)."""
-    client = genai.Client(
-        vertexai=True,
-        project=settings.GCP_PROJECT_ID,
-        location=settings.GEMINI_LOCATION,
-    )
-    config = types.GenerateContentConfig(
-        temperature=0.5,
-        top_p=0.8,
-        top_k=40,
-        max_output_tokens=1024,
-        # Short resume text doesn't need thinking, and thinking tokens count
-        # against max_output_tokens
-        thinking_config=types.ThinkingConfig(thinking_budget=0),
-        # No tools are passed, so automatic function calling only logs a warning
-        automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
-    )
+def parse_bullets(text: str) -> List[str]:
+    """Bullet points from a reply: a JSON list of strings (possibly in a code
+    fence), or failing that one per line, without bullet characters or numbers."""
+    match = re.search(r"```(?:json)?\s*(.*?)```", text, re.DOTALL)
+    cleaned = (match.group(1) if match else text).strip()
     try:
-        response = client.models.generate_content(
-            model=settings.GEMINI_MODEL, contents=prompt, config=config
-        )
-    except Exception as e:
-        logger.exception("Text generation failed (%s)", settings.GEMINI_MODEL)
-        raise TextGenerationError("Text generation failed. Try again later.") from e
+        data = json.loads(cleaned)
+    except json.JSONDecodeError:
+        data = None
+    if isinstance(data, list) and all(isinstance(item, str) for item in data):
+        lines = data
+    else:
+        lines = cleaned.split("|") if "|" in cleaned and "\n" not in cleaned else cleaned.splitlines()
+    bullets = [re.sub(r"^\s*(?:[-*•]|\d+[.)])\s*", "", line).strip().rstrip(",").strip('"') for line in lines]
+    # Brackets on their own lines are left from a JSON list that didn't parse
+    return [bullet for bullet in bullets if bullet and bullet not in ("[", "]")]
 
-    # Prompts and replies hold participant data, so only sizes are logged
-    logger.debug("Generated %d chars from a %d char prompt", len(response.text or ""), len(prompt))
-    if not response.text:
-        raise TextGenerationError("Text generation returned nothing. Try again.")
-    return response.text
+
+def failure_message(model: str) -> str:
+    return f"The LLM failed you. {model or 'It'} feels shame, but you can try again later."
+
+
+def generate_text(key: str, message: str, user=None) -> str:
+    """Runs the hlagents task `key` on `message`. A failure, whatever the
+    cause, raises TextGenerationError with a message for the user."""
+    try:
+        return complete(key, message, user=user)
+    except CompletionFailed as e:
+        raise TextGenerationError(failure_message(e.model)) from e
