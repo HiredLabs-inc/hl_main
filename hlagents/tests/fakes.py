@@ -9,16 +9,20 @@ from hlagents.providers import ChatProvider, ChatResult
 
 
 class FakeProvider(ChatProvider):
-    """Returns scripted replies in order and records what it was sent."""
+    """Returns scripted replies in order and records what it was sent. A reply
+    that is an exception is raised instead."""
 
     def __init__(self, *replies):
         super().__init__()
         self.replies = list(replies)
         self.calls = []
 
-    def chat(self, model, messages, tools):
-        self.calls.append({"model": model, "messages": [dict(m) for m in messages], "tools": tools})
-        return self.replies.pop(0)
+    def chat(self, model, messages, tools, options=None):
+        self.calls.append({"model": model, "messages": [dict(m) for m in messages], "tools": tools, "options": options})
+        reply = self.replies.pop(0)
+        if isinstance(reply, Exception):
+            raise reply
+        return reply
 
 
 def tool_call(name="web_search", tokens=(100, 20), **arguments):

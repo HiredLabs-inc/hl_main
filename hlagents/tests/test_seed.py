@@ -2,9 +2,10 @@ from importlib import import_module
 
 from django.apps import apps as django_apps
 from django.contrib.auth.models import Group
+from django.conf import settings
 from django.test import TestCase
 
-from hlagents.models import AgentConfig, AgentLimits, ProviderConfig
+from hlagents.models import AgentConfig, AgentLimits, ProviderConfig, TaskConfig
 from hlagents.tools import TOOLS
 
 
@@ -28,6 +29,21 @@ class SeedTest(TestCase):
         limits = AgentLimits.get()
         self.assertEqual(str(limits.run_cost_cap), "1.00")
         self.assertEqual(limits.tool_costs, {"web_search": "0.016", "read_page": "0.002"})
+
+    def test_gemini_provider_and_tasks_are_seeded(self):
+        gemini = ProviderConfig.objects.get(name="Gemini on Vertex")
+        self.assertEqual((gemini.kind, gemini.location, gemini.secret_env), ("gemini", "", ""))
+        tasks = {t.key: t for t in TaskConfig.objects.all()}
+        self.assertEqual(set(tasks), {"resume_overview", "resume_bullets", "bullet_rewrite", "job_keywords"})
+        for task in tasks.values():
+            self.assertEqual((task.provider, task.model, task.active), (gemini, settings.GEMINI_MODEL, True))
+            self.assertEqual(task.options["thinking_budget"], 0)
+            # Room for the thinking Gemini does anyway (BUG-049)
+            self.assertEqual(task.options["max_output_tokens"], 8192)
+        self.assertIn("JSON list of strings", tasks["resume_bullets"].instructions)
+        # 0010: keywords run cooler, so refreshing mostly gives the same ones
+        self.assertEqual(tasks["job_keywords"].options["temperature"], 0.2)
+        self.assertIn("word for word", tasks["job_keywords"].instructions)
 
     def test_agent_admins_group(self):
         perms = set(Group.objects.get(name="Agent admins").permissions.values_list("codename", flat=True))

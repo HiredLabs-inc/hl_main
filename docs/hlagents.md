@@ -298,3 +298,16 @@ On stage, both agents' leads were poor. Funding leads were home pages with no am
   - **Funding, 30 steps:** `nemotron-3-ultra` returned the best leads: real program pages for Wounded Warrior Project, Bob Woodruff and Infinite Hero. But it took 493 s, which is over the 480 s run limit. `gpt-oss:120b` (119 s) mostly returned press releases and a program whose deadline had passed.
   - **Next:** keep `gemma4:31b` for outreach. For funding, choose between gemma (fast, weaker) and nemotron-3-ultra with about 20 steps (better, slow). Check stage's Ollama plan.
 - **Tests:** `test_tools.py` and `test_compare.py` are new. `test_loop.py`, `test_conversation.py` and `test_seed.py` cover the rest.
+
+## 9. Tasks and the Gemini provider (IDEA-007, `docs/ai-tasks.md`)
+Besides agents, hlagents runs **tasks**: single provider calls with no tools, used by other apps.
+- **Models:**
+  - `TaskConfig`: one row per key in `hlagents/task_types.py`, with provider, model, instructions (the system prompt) and options.
+  - `TaskCall`: one row per call, failed or not, with tokens and cost.
+  - `models.spent_today()` replaces `AgentRun.spent_today()` and adds task calls, so tasks count toward the daily cap.
+- **Service:** `hlagents.completion.complete(key, message, user=None)` returns the reply or raises `CompletionFailed(model, reason)`. It refuses an inactive task or provider, a missing key, or the daily cap, using the same checks as runs (`services.provider_problem`, `cap_problem`).
+- **Gemini provider** (`providers/gemini.py`, kind `gemini`): Gemini on Vertex AI with the server's Google credentials, at `ProviderConfig.location` or `GEMINI_LOCATION`. It's text only until IDEA-008 adds tool calls, so the agent settings form refuses a Gemini provider.
+- **Provider changes:** `ChatProvider.chat` takes `options` (temperature, top_p, top_k, max_output_tokens, thinking_budget). Providers are built with `from_config(config, timeout)`.
+- **Settings:** `/agents/settings/` lists the tasks with today's calls and cost. `/agents/settings/tasks/<id>/` edits a task and shows its recent calls (Agent admins).
+- **Tasks so far:** `resume_overview`, `resume_bullets` and `bullet_rewrite`, used by `cold_apply/text_generation.py`, and `job_keywords`, used by `cold_apply/keywords.py` (with the in-house analyzer as its fallback).
+

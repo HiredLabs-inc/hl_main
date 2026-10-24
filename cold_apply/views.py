@@ -37,6 +37,7 @@ from background_tasks.queue import is_authorized_task_request, queue_task, work_
 from cold_apply import reference
 from cold_apply.guards import OwnedObjectMixin, ParticipantAccessMixin, ParticipantOrStaffMixin, owned_by
 from cold_apply.jobs import get_jobs_for_participant
+from cold_apply.keywords import extract_keywords
 from cold_apply.resume_formatting import (
     group_bullets_by_experience,
     group_bullets_by_skill,
@@ -75,10 +76,6 @@ from .models import (
     Participant,
     Skill,
     WeightedBullet,
-)
-from .static.scripts.keyword_analyzer.keyword_analyzer import (
-    analyze,
-    hook_after_jd_analysis,
 )
 from .static.scripts.resume_writer.bullet_weighter import hook_after_weighting, weigh
 from hl_main.gcs import SIGNED_URL_EXPIRATION, generate_signed_url
@@ -273,12 +270,8 @@ class JobDetailView(OwnedObjectMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        if KeywordAnalysis.objects.filter(job=self.object).exists():
-            context["keywords"] = KeywordAnalysis.objects.filter(job=self.object)
-        else:
-            analysis = analyze(self.object.description)
-            hook_after_jd_analysis(analysis, self.object.id)
-            context["keywords"] = KeywordAnalysis.objects.filter(job=self.object)
+        # Empty until job_keywords_view finds them, which the page asks for once it loads
+        context["keywords"] = KeywordAnalysis.objects.filter(job=self.object)
 
         context["now"] = timezone.now()
 
@@ -338,6 +331,21 @@ class JobUpdateView(HtmxViewMixin, OwnedObjectMixin, UpdateView):
         context["now"] = timezone.now()
 
         return context
+
+
+@login_required
+@require_POST
+def job_keywords_view(request, pk):
+    """The job's keywords, found first if it has none. The job page loads this
+    with htmx, because the LLM can take a minute."""
+    job = get_object_or_404(owned_by(Job.objects, request.user, "participant__user"), pk=pk)
+    if not KeywordAnalysis.objects.filter(job=job).exists():
+        extract_keywords(job, request.user)
+    return render(
+        request,
+        "cold_apply/partials/job_keywords.html",
+        {"object": job, "keywords": KeywordAnalysis.objects.filter(job=job)},
+    )
 
 
 @login_required
@@ -712,6 +720,7 @@ class OverviewCreateView(HtmxViewMixin, ParticipantAccessMixin, CreateView):
             **super().get_form_kwargs(),
             "position": self.position,
             "job": self.job,
+            "user": self.request.user,
         }
 
     def get_form(self, form_class=None):
@@ -823,6 +832,7 @@ class BulletCreateView(HtmxViewMixin, ParticipantAccessMixin, CreateView):
         return {
             **super().get_form_kwargs(),
             "participant": Participant.objects.get(id=self.kwargs["pk"]),
+            "user": self.request.user,
         }
 
     def get_initial(self) -> Dict[str, Any]:
@@ -860,7 +870,7 @@ def regenerate_bullet_view(request, bullet_id, job_id):
     job = get_object_or_404(owned_by(Job.objects, request.user, "participant__user"), pk=job_id)
 
     try:
-        rewritten_text = rewrite_bullet_for_job(bullet, job)
+        rewritten_text = rewrite_bullet_for_job(bullet, job, user=request.user)
     except TextGenerationError as e:
         return HttpResponse(str(e), status=502)
     bullet.text = rewritten_text

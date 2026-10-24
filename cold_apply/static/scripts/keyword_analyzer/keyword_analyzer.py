@@ -1,11 +1,9 @@
 #!/usr/bin/python3
 
-import json
 import string
 
 import nltk
 import pandas as pd
-from django.core import serializers
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 
@@ -129,36 +127,3 @@ def analyze(job_description: str):
     main_df = pd.DataFrame.from_dict(data)
     print('Keyword analysis completed successfully')
     return main_df.to_json(orient='index')
-
-
-# Writes results to database
-def hook_after_jd_analysis(task, job_id: int):
-    data = json.loads(task)
-    serialized = list()
-    for line in data:
-        data[line]['job'] = job_id
-        formatted = dict(
-            model='cold_apply.keywordanalysis',
-            fields=data[line]
-        )
-        serialized.append(formatted)
-    result = json.dumps(serialized)
-    for obj in serializers.deserialize('json', result):
-        obj.save()
-    print('JD analysis hook completed successfully')
-
-
-def hook_after_bullet_analysis(task, bullet_id: int):
-    data = json.loads(task)
-    serialized = list()
-    for line in data:
-        data[line]['bullet'] = bullet_id
-        formatted = dict(
-            model='cold_apply.bulletkeyword',
-            fields=data[line]
-        )
-        serialized.append(formatted)
-    result = json.dumps(serialized)
-    for obj in serializers.deserialize('json', result):
-        obj.save()
-    print('JD analysis hook completed successfully')

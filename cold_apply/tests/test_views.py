@@ -22,6 +22,7 @@ from cold_apply.tests.factories import (
     PositionFactory,
     UserFactory,
 )
+from hlagents.completion import CompletionFailed
 from pipeline import services
 from pipeline.models import Flow
 from pipeline.tests.old_pipeline import seed_fresh_flows
@@ -95,6 +96,10 @@ class ColdApplyBrowserTest(StaticLiveServerTestCase):
             seed_fresh_flows()
         User.objects.create_superuser(username="admin@example.com", email="admin@example.com", password="admin")
         self.participant = make_resume_participant()
+        # The job page loads its keywords, which would call the real LLM; use the fallback
+        patcher = mock.patch("cold_apply.keywords.complete", side_effect=CompletionFailed("test-model", "No LLM in tests"))
+        patcher.start()
+        self.addCleanup(patcher.stop)
 
     def test_click_through_to_config_page(self):
         """

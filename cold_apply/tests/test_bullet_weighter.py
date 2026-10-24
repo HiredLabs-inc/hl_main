@@ -18,3 +18,15 @@ class WeighTest(SimpleTestCase):
         result = json.loads(weigh(jd_keywords=keywords, bullet=bullet))
         # manag, data, team
         self.assertEqual(result["0"]["weight"], 3)
+
+    def test_llm_phrases_in_natural_order_and_blank_cells(self):
+        # LLM keywords keep their word order, and short lists leave blank cells
+        keywords = [
+            SimpleNamespace(unigram="Python", bigram="code reviews", trigram="senior software engineer"),
+            SimpleNamespace(unigram="SQL", bigram="", trigram=""),
+        ]
+        bullet = SimpleNamespace(text="Led code reviews as a senior engineer using Python and SQL")
+        result = json.loads(weigh(jd_keywords=keywords, bullet=bullet))
+        # python, sql, code, review, senior, engin
+        self.assertEqual(result["0"]["weight"], 6)
+

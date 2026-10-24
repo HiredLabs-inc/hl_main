@@ -1,0 +1,17 @@
+<div id="job-keywords">
+    <h2 class="text-xl font-bold mt-5 mb-3">Keywords</h2>
+    {% if keywords %}
+    <div class="grid grid-cols-3 text-sm  max-w-3xl border">
+        {% for keyword in keywords %}
+            <div class="py-0.5 px-2 {% if forloop.counter0|divisibleby:2 %}bg-gray-100{% endif %}">{{ keyword.unigram }}</div>
+            <div class="py-0.5  px-2 {% if forloop.counter0|divisibleby:2 %}bg-gray-100{% endif %}">{{ keyword.bigram }}</div>
+            <div class="py-0.5  px-2 {% if forloop.counter0|divisibleby:2 %}bg-gray-100{% endif %}">{{ keyword.trigram }}</div>
+        {% endfor %}
+    </div>
+    {% else %}
+    {# Finding keywords can take a minute, so the page doesn't wait for it #}
+    <p class="text-sm text-gray-600" hx-post="{% url 'cold_apply:job_keywords' object.pk %}" hx-trigger="load" hx-target="#job-keywords" hx-swap="outerHTML">
+        Finding keywords…
+    </p>
+    {% endif %}
+</div>

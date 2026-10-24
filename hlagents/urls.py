@@ -19,6 +19,7 @@ urlpatterns = [
     path("settings/", views.settings_view, name="settings"),
     path("settings/agents/new/", views.agent_settings_view, name="new_agent"),
     path("settings/agents/<int:pk>/", views.agent_settings_view, name="agent_settings"),
+    path("settings/tasks/<int:pk>/", views.task_settings_view, name="task_settings"),
     path("settings/providers/new/", views.provider_settings_view, name="new_provider"),
     path("settings/providers/<int:pk>/", views.provider_settings_view, name="provider_settings"),
     path("tasks/run/", views.task_run_agent, name="task_run_agent"),
