@@ -309,5 +309,5 @@ Besides agents, hlagents runs **tasks**: single provider calls with no tools, us
 - **Gemini provider** (`providers/gemini.py`, kind `gemini`): Gemini on Vertex AI with the server's Google credentials, at `ProviderConfig.location` or `GEMINI_LOCATION`. It's text only until IDEA-008 adds tool calls, so the agent settings form refuses a Gemini provider.
 - **Provider changes:** `ChatProvider.chat` takes `options` (temperature, top_p, top_k, max_output_tokens, thinking_budget). Providers are built with `from_config(config, timeout)`.
 - **Settings:** `/agents/settings/` lists the tasks with today's calls and cost. `/agents/settings/tasks/<id>/` edits a task and shows its recent calls (Agent admins).
-- **Tasks so far:** `resume_overview`, `resume_bullets` and `bullet_rewrite`, used by `cold_apply/text_generation.py`. Job keywords come next (IDEA-007 K).
+- **Tasks so far:** `resume_overview`, `resume_bullets` and `bullet_rewrite`, used by `cold_apply/text_generation.py`, and `job_keywords`, used by `cold_apply/keywords.py` (with the in-house analyzer as its fallback).
 

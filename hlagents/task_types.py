@@ -7,6 +7,7 @@ TASKS = {
     "resume_overview": "Resume overview",
     "resume_bullets": "Resume bullet points",
     "bullet_rewrite": "Bullet rewrite for a job",
+    "job_keywords": "Job description keywords",
 }
 
 

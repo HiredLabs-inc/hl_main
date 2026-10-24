@@ -44,17 +44,7 @@
             {{ object.updated_by }}
         </div>
     </div>
-    {% if keywords %}
-    <h2 class="text-xl font-bold mt-5 mb-3">Keywords</h2>
-    <div class="grid grid-cols-3 text-sm  max-w-3xl border">
-        {% for keyword in keywords %}
-            <div class="py-0.5 px-2 {% if forloop.counter0|divisibleby:2 %}bg-gray-100{% endif %}">{{ keyword.unigram }}</div>
-            <div class="py-0.5  px-2 {% if forloop.counter0|divisibleby:2 %}bg-gray-100{% endif %}">{{ keyword.bigram }}</div>
-            <div class="py-0.5  px-2 {% if forloop.counter0|divisibleby:2 %}bg-gray-100{% endif %}">{{ keyword.trigram }}</div>
-        {% endfor %}
-        
-    </div>
-    {% endif %}
+    {% include 'cold_apply/partials/job_keywords.html' %}
     <div class="row py-3">
         <div class="col">
             <h3 class="text-xl font-bold mb-3">Actions</h3>

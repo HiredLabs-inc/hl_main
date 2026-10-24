@@ -2,7 +2,7 @@
 
 Branches `feature/idea-007-resume` (effort R), then `feature/idea-007-keywords` (effort K), both from `develop`.
 
-> **Status:** design agreed with Jeff on 2026-10-23 (decisions in §7). R done on `feature/idea-007-resume` (§8). K not started.
+> **Status:** design agreed with Jeff on 2026-10-23 (decisions in §7). R merged into develop (c847d4c). K done on `feature/idea-007-keywords` (§8).
 
 ## 1. Context
 IDEA-007 in `docs/backlog.md`, from `docs/hlagents.md` §6.14: run resume generation and job keyword extraction through the hlagents provider layer, so their provider and model can be switched in settings like the agents'.
@@ -161,6 +161,7 @@ hlagents H1–H7 are merged into develop. The provider layer is `hlagents/provid
 3. **Keyword storage:** keep the `KeywordAnalysis` unigram/bigram/trigram table.
 4. **Keyword failure:** fall back to the existing algorithm for now.
 5. **Text generation failure:** show "The LLM failed you. `<model>` feels shame, but you can try again later.", naming the configured model.
+6. **Keyword rows** (during K): rows run to the longest list, and shorter lists leave blank cells. Cutting all three to the shortest, as §3.6 first said, kept only 4–10 of about 30 usable phrases, because three-word phrases are scarce.
 
 ## 8. Status
 ### R — Resume generation (done 2026-10-23, `feature/idea-007-resume`)
@@ -179,5 +180,20 @@ Built as §3.1–3.5 and §4 R describe, with these differences:
 2. In `/agents/settings/`, check the tasks and enter Gemini's token rates on **Gemini on Vertex** (seeded at $0, so task spend doesn't count toward the cap until then).
 3. Run `python manage.py vertex`, then generate an overview, bullets and a rewrite on a test participant, and check that each appears under its task's recent calls.
 
-### K — Keyword extraction
-Not started.
+### K — Keyword extraction (done 2026-10-23, `feature/idea-007-keywords`)
+- **Comparison first** (`python manage.py keywords_compare`, on 6 dev-data jobs against `hl-main-stage`):
+  - The LLM's keywords are real skills and duties in their natural order ("Python, Java, C++", "Conduct code reviews", "data visualization tools").
+  - The old analyzer's are boilerplate and scrambled phrases ("opportunity perfect requirements", "make performance product").
+  - The checks dropped only 1–2 of about 30 phrases per job.
+  - Three-word phrases are the short list (4–10 per job), which led to decision 6.
+- **Built as §3.6, except:**
+  - **Blank cells:** rows run to the longest list (decision 6). `weigh()` now adds each cell's words, skipping blanks, instead of assuming exactly 2 and 3 words. `_keyword_text` in `text_generation.py` skips blanks.
+  - **The job page doesn't wait.** Only the `global` endpoint serves `gemini-3.8-flash` (`us-central1` and `us-east4` return 404), and it's spiky: 156 s and 74 s in 5 calls, with the rest at 2–5 s. The page now renders its keywords from `partials/job_keywords.html`. With none yet, it shows "Finding keywords…", and htmx posts to the new `cold_apply:job_keywords` (`job_keywords_view`), which finds them and swaps the list in. `refresh_keywords` is unchanged: it deletes them, and the page finds new ones.
+  - **Phrase checks:** commas, semicolons, colons, brackets and quotes count as word separators, so "Python, Java and" is three words. Phrases must match whole words, ignoring case. The model's casing is kept ("C++", "SQL").
+  - **One writer:** both sources go through `save_keywords`. The analyzer's `hook_after_jd_analysis` and `hook_after_bullet_analysis` were deleted (now unused).
+  - **No description:** a job without a description goes straight to the fallback, with no call.
+- **Migration:** `hlagents/0010_job_keywords_task` adds the key and seeds the task on the Gemini provider, with the resume options at temperature 0.2.
+- **Checked against `hl-main-stage`** on dev data: the job page loads in 0.1–1.8 s, and the keywords follow in 3.5–5.3 s with 12–18 rows. A real browser (Playwright) showed htmx loading the list. Browser tests stub the task, so they use the fallback and make no LLM call.
+- **Tests:** `cold_apply/tests/test_keywords.py`, a blank-cell case in `test_bullet_weighter.py`, the endpoint in `test_access.py`, and the seed in `test_seed.py`. The full suite (621) passes.
+
+**Stage checklist (K):** deploy (migration `hlagents` 0010). Open a job page and check that the keywords appear after "Finding keywords…". Click Refresh Keywords and check that they come back. Each fill appears under **Job description keywords** in `/agents/settings/`.
