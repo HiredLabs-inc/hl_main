@@ -20,7 +20,6 @@ Design and development ideas that came up during other work and are **not bugs**
 | IDEA-003 | Idea | cold_apply | Staff pages to list, merge and delete companies, titles and locations |
 | IDEA-004 | Idea | cold_apply | Self-service participant portal with its own access level |
 | IDEA-006 | Idea | pipeline | Define the Nurture flow (today it's a placeholder) |
-| IDEA-007 | In progress | cold_apply | Move resume generation and keyword extraction onto the hlagents provider layer |
 | IDEA-008 | Idea | hlagents | Move agents to Google AI APIs where possible |
 | IDEA-009 | Idea | cold_apply | Parse an uploaded resume into experience, education, companies, titles and locations |
 
@@ -46,12 +45,6 @@ Design and development ideas that came up during other work and are **not bugs**
 - **What:** decide what Nurture means for people who have finished or paused other flows (boot camp alumni, past job-search participants), and give it real steps.
 - **Notes:** prod has 121 participants on Nurture → *Monthly Newsletter*, which is a placeholder; there is no newsletter. The staff redesign migrates them to a generic *Nurture* step in a Nurture flow until this is defined.
 
-## IDEA-007 — Resume generation and keyword extraction through hlagents
-- **Status:** In progress: R (resume generation) merged into develop in c847d4c; K (keywords) done on `feature/idea-007-keywords` · **Area:** cold_apply · **Source:** `docs/hlagents.md` §7 on `feature/hlagents-01`, Jeff's answer to Q6 (2026-10-22)
-- **Plan:** `docs/ai-tasks.md` (agreed 2026-10-23): effort R (resume generation, with a text-only Gemini provider) on `feature/idea-007-resume`, then effort K (keywords) on `feature/idea-007-keywords`.
-- **What:** run resume generation (`cold_apply/text_generation.py`) and job keyword extraction (today an in-house algorithm) through the hlagents provider layer, so their model and provider can be switched in settings like the agents'.
-- **Notes:** needs hlagents H1 (providers) merged first. Resume generation now calls Gemini on Vertex directly (`settings.GEMINI_MODEL`, BUG-038), so this is about switching provider in settings, not a fix. Do these as two separate efforts, not part of the hlagents build.
-
 ## IDEA-008 — All agents through GCP AI APIs
 - **Status:** Idea · **Area:** hlagents · **Source:** None [**TODO:claude** create a design doc to work from] 
 - **What:** run all agents (funding, outreach, and unbuilt, future agents) through GCP AI APIs instead of Tavily and Ollama
@@ -67,6 +60,7 @@ Design and development ideas that came up during other work and are **not bugs**
 |---|---|---|---|
 | IDEA-002 | Done | pipeline | Kanban view of a flow on the staff dashboard |
 | IDEA-005 | Done | accounts | Volunteer logins |
+| IDEA-007 | Done | cold_apply | Resume generation and keyword extraction through the hlagents provider layer |
 
 ## IDEA-002 — Kanban view of a flow
 - **Status:** Done (`feature/kanban-board`, B1–B4, merged into develop in 800e7cb on 2026-10-20) · **Area:** pipeline · **Source:** `docs/cold-apply-staff-redesign.md` §4.4 and §5.2 (2026-10-19)
@@ -80,3 +74,11 @@ Design and development ideas that came up during other work and are **not bugs**
 - **Notes:** Jeff expects volunteers, but not soon. Assignee choices are limited to `is_staff` users until then. A volunteer role will need its own permission set, with no DD214 access.
 - **Commit** 3f7c025
 - **Release** 3.4.0
+
+## IDEA-007 — Resume generation and keyword extraction through hlagents
+- **Status:** Done (R merged into develop in c847d4c, K in 29cdaf2, on 2026-10-23) · **Area:** cold_apply · **Source:** `docs/hlagents.md` §7 on `feature/hlagents-01`, Jeff's answer to Q6 (2026-10-22)
+- **Plan:** `docs/ai-tasks.md` (agreed 2026-10-23; §8 records what was built): effort R (resume generation, with a text-only Gemini provider) on `feature/idea-007-resume`, then effort K (keywords) on `feature/idea-007-keywords`.
+- **What:** run resume generation (`cold_apply/text_generation.py`) and job keyword extraction (today an in-house algorithm) through the hlagents provider layer, so their model and provider can be switched in settings like the agents'.
+- **Notes:** needs hlagents H1 (providers) merged first. Resume generation now calls Gemini on Vertex directly (`settings.GEMINI_MODEL`, BUG-038), so this is about switching provider in settings, not a fix. Do these as two separate efforts, not part of the hlagents build.
+- **Commit** 29cdaf2
+- **Release** not released yet

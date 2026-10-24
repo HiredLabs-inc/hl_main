@@ -2,7 +2,7 @@
 
 Branches `feature/idea-007-resume` (effort R), then `feature/idea-007-keywords` (effort K), both from `develop`.
 
-> **Status:** design agreed with Jeff on 2026-10-23 (decisions in §7). R merged into develop (c847d4c). K done on `feature/idea-007-keywords` (§8).
+> **Status:** design agreed with Jeff on 2026-10-23 (decisions in §7). R merged into develop in c847d4c and K in 29cdaf2 (§8). Done.
 
 ## 1. Context
 IDEA-007 in `docs/backlog.md`, from `docs/hlagents.md` §6.14: run resume generation and job keyword extraction through the hlagents provider layer, so their provider and model can be switched in settings like the agents'.
