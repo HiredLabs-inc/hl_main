@@ -15,6 +15,7 @@ from django.utils import timezone
 
 from hl_main.models import TrackedModel
 from hlagents.agents import agent_type_choices, get_agent_type
+from hlagents.task_types import task_choices
 
 User = settings.AUTH_USER_MODEL
 
@@ -22,6 +23,7 @@ User = settings.AUTH_USER_MODEL
 class ProviderConfig(TrackedModel):
     class Kind(models.TextChoices):
         OLLAMA = "ollama", "Ollama"
+        GEMINI = "gemini", "Gemini on Vertex AI"
 
     name = models.CharField(max_length=100, unique=True)
     kind = models.CharField(max_length=20, choices=Kind.choices)
@@ -29,6 +31,8 @@ class ProviderConfig(TrackedModel):
     # Name of the env var (loaded from Secret Manager on Cloud Run) that holds the
     # API key. Keys are never stored in the DB.
     secret_env = models.CharField(max_length=100, blank=True)
+    # Gemini only: the Vertex AI location, blank for settings.GEMINI_LOCATION
+    location = models.CharField(max_length=50, blank=True)
     # Admin-entered estimates for the cost cap, in $ per million tokens
     input_cost_per_mtok = models.DecimalField(max_digits=10, decimal_places=4, default=0)
     output_cost_per_mtok = models.DecimalField(max_digits=10, decimal_places=4, default=0)
@@ -120,12 +124,6 @@ class AgentRun(TrackedModel):
     def in_progress(self):
         return self.status in (self.Status.QUEUED, self.Status.RUNNING)
 
-    @classmethod
-    def spent_today(cls, exclude=None):
-        runs = cls.objects.filter(created_at__date=timezone.localdate())
-        if exclude is not None:
-            runs = runs.exclude(pk=exclude.pk)
-        return runs.aggregate(total=Sum("cost"))["total"] or Decimal(0)
 
 
 class Lead(TrackedModel):
@@ -200,3 +198,51 @@ class AgentLimits(models.Model):
 
     def tool_cost(self, name):
         return Decimal(str(self.tool_costs.get(name, 0)))
+
+
+class TaskConfig(TrackedModel):
+    """The provider, model and instructions for one single-shot task, such as
+    writing a resume overview (docs/ai-tasks.md §3.3)."""
+
+    key = models.CharField(max_length=50, unique=True, choices=task_choices())
+    provider = models.ForeignKey(ProviderConfig, on_delete=models.PROTECT, related_name="tasks")
+    model = models.CharField(max_length=100)
+    # The system prompt; the app builds the user message from its data
+    instructions = models.TextField()
+    # ChatProvider options, e.g. {"temperature": 0.5, "max_output_tokens": 1024}
+    options = models.JSONField(default=dict, blank=True)
+    active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["key"]
+
+    def __str__(self):
+        return self.get_key_display()
+
+
+class TaskCall(models.Model):
+    """One call to a task's provider, kept for the daily cost cap and usage."""
+
+    config = models.ForeignKey(TaskConfig, on_delete=models.CASCADE, related_name="calls")
+    model = models.CharField(max_length=100)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
+    input_tokens = models.PositiveIntegerField(default=0)
+    output_tokens = models.PositiveIntegerField(default=0)
+    cost = models.DecimalField(max_digits=10, decimal_places=4, default=0)
+    ok = models.BooleanField(default=True)
+    error = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.config} call {self.pk}"
+
+
+def spent_today():
+    """Today's estimated spend: agent runs plus task calls, for the daily cap."""
+    today = timezone.localdate()
+    runs = AgentRun.objects.filter(created_at__date=today).aggregate(total=Sum("cost"))["total"]
+    calls = TaskCall.objects.filter(created_at__date=today).aggregate(total=Sum("cost"))["total"]
+    return (runs or Decimal(0)) + (calls or Decimal(0))

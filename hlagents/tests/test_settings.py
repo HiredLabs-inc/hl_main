@@ -8,7 +8,7 @@ from django.urls import reverse
 from background_tasks.models import Task
 from hlagents import services
 from hlagents.loop import run_agent
-from hlagents.models import AgentConfig, AgentLimits, AgentRun, ProviderConfig
+from hlagents.models import AgentConfig, AgentLimits, AgentRun, ProviderConfig, TaskCall, TaskConfig
 from hlagents.tests.fakes import FakeProvider, answer, make_config, make_provider, tool_call
 
 
@@ -164,6 +164,67 @@ class ProviderSettingsTest(SettingsTestCase):
         response = self.client.post(reverse("hlagents:new_provider"), self.provider_data(name="Local Ollama", secret_env=""))
         self.assertRedirects(response, reverse("hlagents:settings"))
         self.assertTrue(ProviderConfig.objects.filter(name="Local Ollama").exists())
+
+    def test_new_gemini_provider_with_a_location(self):
+        data = self.provider_data(name="Gemini central", kind="gemini", location="us-central1", secret_env="")
+        response = self.client.post(reverse("hlagents:new_provider"), data)
+        self.assertRedirects(response, reverse("hlagents:settings"))
+        provider = ProviderConfig.objects.get(name="Gemini central")
+        self.assertEqual((provider.kind, provider.location, provider.key_problem()), ("gemini", "us-central1", ""))
+
+
+class TaskSettingsTest(SettingsTestCase):
+    def setUp(self):
+        super().setUp()
+        self.task = TaskConfig.objects.get(key="resume_overview")
+
+    def task_data(self, **kwargs):
+        return {
+            "provider": self.provider.pk,
+            "model": "gemma4:31b",
+            "instructions": "Write an overview.",
+            "options": '{"temperature": 0.2}',
+            "active": "on",
+            **kwargs,
+        }
+
+    def test_agents_group_cant_edit_tasks(self):
+        self.client.force_login(self.agent_user)
+        self.assertEqual(self.client.get(reverse("hlagents:task_settings", args=[self.task.pk])).status_code, 403)
+
+    def test_settings_lists_tasks_with_todays_calls(self):
+        TaskCall.objects.create(config=self.task, model=self.task.model, cost=Decimal("0.0123"))
+        response = self.client.get(reverse("hlagents:settings"))
+        self.assertContains(response, reverse("hlagents:task_settings", args=[self.task.pk]))
+        self.assertContains(response, "Resume overview")
+        self.assertContains(response, "1 call, $0.01")
+
+    def test_changing_provider_and_model(self):
+        response = self.client.post(reverse("hlagents:task_settings", args=[self.task.pk]), self.task_data())
+        self.assertRedirects(response, reverse("hlagents:settings"))
+        self.task.refresh_from_db()
+        self.assertEqual((self.task.provider, self.task.model, self.task.options), (self.provider, "gemma4:31b", {"temperature": 0.2}))
+
+    def test_options_must_be_an_object(self):
+        response = self.client.post(reverse("hlagents:task_settings", args=[self.task.pk]), self.task_data(options="[1]"))
+        self.assertContains(response, "Options must be a JSON object")
+
+    def test_recent_calls_are_shown(self):
+        TaskCall.objects.create(config=self.task, model="old-model", user=self.admin, ok=False, error="404")
+        response = self.client.get(reverse("hlagents:task_settings", args=[self.task.pk]))
+        self.assertContains(response, "old-model")
+        self.assertContains(response, "Failed")
+
+
+class GeminiAgentTest(SettingsTestCase):
+    def test_agents_cant_use_gemini_yet(self):
+        gemini = ProviderConfig.objects.get(kind="gemini")
+        response = self.client.post(
+            reverse("hlagents:agent_settings", args=[self.config.pk]), self.agent_data(provider=gemini.pk)
+        )
+        self.assertContains(response, "Gemini can&#x27;t run agents yet")
+        self.config.refresh_from_db()
+        self.assertEqual(self.config.provider, self.provider)
 
 
 class LimitsTest(SettingsTestCase):

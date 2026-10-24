@@ -69,6 +69,7 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 | BUG-046 | High | Fixed | cold_apply | Delete bullet on resume preview does nothing |
 | BUG-047 | High | Fixed | cold_apply | "Back to configuration" button on resume preview does nothing |
 | BUG-048 | High | Fixed | cold_apply | "Generate PDF" button on resume preview does nothing |
+| BUG-049 | Medium | Fixed | cold_apply | Some generated bullets and rewrites are cut off, because Gemini's thinking uses up the 1024-token output limit |
 
 ---
 ## BUG-001 — Deletes and keyword refresh run on GET links (CSRF)
@@ -401,3 +402,9 @@ the AI generated option, or when trying to edit/delete an existing overview, a 5
 - **Problem:** Clicking "Generate PDF" does nothing. The button's only handler is an Alpine `@click.prevent` (set `preview=False`, target `_blank`, submit), but `resume/templates/resume/base_resume.html` no longer loads Alpine or htmx: 7c1aac0 commented out the script tags. Same root cause as BUG-044 to BUG-047.
 - **Fix idea:** Load htmx and Alpine on the preview page, and make the button a plain submit (`name="preview" value="False" formtarget="_blank"`) so it doesn't need JS.
 - **Fix:** Root cause for BUG-044 to BUG-048: `resume/templates/resume/base_resume.html` stopped loading htmx and Alpine (7c1aac0 commented out the script tags), so the preview's hx-/Alpine controls fell back to plain links or did nothing. The preview now loads them from a new Vite entry, `frontend/src/resume_preview.js` (no CSS); the PDF render doesn't. For this bug, the button is now a plain submit with `name="preview" value="False" formtarget="_blank"` (no JS needed). Tests: `cold_apply/tests/test_views.py` (`ResumePreviewEditViewsTest`, `TailoredResumeViewTestCase`, browser test `test_preview_controls`).
+
+## BUG-049 — Gemini's thinking cuts off generated resume text
+- **Severity:** Medium · **Status:** Fixed (`feature/idea-007-resume`) · **Found:** 2026-10-23, IDEA-007 end-to-end check (`docs/ai-tasks.md`)
+- **Where:** `cold_apply/text_generation.py` `generate_text()` on develop (BUG-038's Gemini call): `max_output_tokens=1024` with `ThinkingConfig(thinking_budget=0)`
+- **Problem:** `gemini-3.8-flash` often thinks anyway: 650–950 thinking tokens on calls that return 35–130 tokens of text, in about half the calls tried on `hl-main-stage`. Thinking counts against `max_output_tokens`, so some replies stopped at the limit (`finish_reason` MAX_TOKENS). One bullet list came back as `["Diagnosed and repaired … in demanding`, and one rewrite failed. Develop saves such a cut-off reply as the bullet text, because it only checks for empty text. `thinking_level` doesn't help: MINIMAL is refused (400), and LOW still thinks and took about 30 s.
+- **Fix:** the hlagents tasks (IDEA-007) seed `max_output_tokens: 8192`, which leaves room for the thinking, and `GeminiProvider` raises `ProviderError` when a reply's finish reason isn't STOP, so a cut-off reply shows the failure message instead of being saved. Thinking is billed as output, so `GeminiProvider` adds `thoughts_token_count` to the output tokens for the cost estimate.

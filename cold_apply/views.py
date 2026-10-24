@@ -712,6 +712,7 @@ class OverviewCreateView(HtmxViewMixin, ParticipantAccessMixin, CreateView):
             **super().get_form_kwargs(),
             "position": self.position,
             "job": self.job,
+            "user": self.request.user,
         }
 
     def get_form(self, form_class=None):
@@ -823,6 +824,7 @@ class BulletCreateView(HtmxViewMixin, ParticipantAccessMixin, CreateView):
         return {
             **super().get_form_kwargs(),
             "participant": Participant.objects.get(id=self.kwargs["pk"]),
+            "user": self.request.user,
         }
 
     def get_initial(self) -> Dict[str, Any]:
@@ -860,7 +862,7 @@ def regenerate_bullet_view(request, bullet_id, job_id):
     job = get_object_or_404(owned_by(Job.objects, request.user, "participant__user"), pk=job_id)
 
     try:
-        rewritten_text = rewrite_bullet_for_job(bullet, job)
+        rewritten_text = rewrite_bullet_for_job(bullet, job, user=request.user)
     except TextGenerationError as e:
         return HttpResponse(str(e), status=502)
     bullet.text = rewritten_text

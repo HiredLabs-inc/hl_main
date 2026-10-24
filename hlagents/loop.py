@@ -12,7 +12,7 @@ from django.conf import settings
 from hlagents import services
 from hlagents.agents import ParseError
 from hlagents.conversation import note
-from hlagents.models import AgentLimits, AgentRun
+from hlagents.models import AgentLimits, AgentRun, spent_today
 from hlagents.providers import ChatProvider, get_provider
 from hlagents.tools import TOOLS, tool_schema
 
@@ -104,7 +104,7 @@ class _Turn:
         it has."""
         run = self.run
         while True:
-            if run.cost >= self.limits.run_cost_cap or AgentRun.spent_today() >= self.limits.daily_cost_cap:
+            if run.cost >= self.limits.run_cost_cap or spent_today() >= self.limits.daily_cost_cap:
                 return _stop(run, AgentRun.Status.CAPPED, "Stopped at the cost cap.")
             if self.steps >= run.config.max_iterations:
                 return _stop(run, AgentRun.Status.FAILED, f"Stopped after {self.steps} steps without a final answer.")

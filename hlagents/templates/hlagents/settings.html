@@ -5,7 +5,7 @@
     <div>
         <p class="mb-2 text-sm"><a href="{% url 'hlagents:index' %}">← Agents</a></p>
         <h1 class="!mb-1">Agent settings</h1>
-        <p class="text-sm text-hl-muted">Changes take effect on the next run. A run in progress, and follow-ups on it, keep the provider and model it started with.</p>
+        <p class="text-sm text-hl-muted">Changes take effect on the next run or task call. A run in progress, and follow-ups on it, keep the provider and model it started with.</p>
     </div>
 
     <section aria-labelledby="agents-heading" class="space-y-2">
@@ -37,6 +37,35 @@
         </div>
     </section>
 
+    <section aria-labelledby="tasks-heading" class="space-y-2">
+        <div>
+            <h2 id="tasks-heading" class="!mb-0 text-lg">Tasks</h2>
+            <p class="text-sm text-hl-muted">Single calls other pages make, such as writing a resume overview. They count toward the daily cap.</p>
+        </div>
+        <div class="overflow-x-auto rounded-lg border border-hl-line bg-white">
+            <table class="w-full min-w-[36rem] text-left text-sm">
+                <thead class="bg-hl-mist text-xs uppercase tracking-wide text-hl-muted">
+                    <tr>
+                        <th scope="col" class="px-3 py-2 font-medium">Task</th>
+                        <th scope="col" class="px-3 py-2 font-medium">Provider and model</th>
+                        <th scope="col" class="px-3 py-2 text-right font-medium">Today</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-hl-line">
+                    {% for task in tasks %}
+                        <tr>
+                            <td class="px-3 py-2"><a href="{% url 'hlagents:task_settings' task.pk %}">{{ task }}</a>{% if not task.active %} <span class="staff-badge staff-badge-plain">Inactive</span>{% endif %}</td>
+                            <td class="px-3 py-2">{{ task.provider }} · <code>{{ task.model }}</code></td>
+                            <td class="px-3 py-2 text-right tabular-nums">{{ task.calls_today }} call{{ task.calls_today|pluralize }}, ${{ task.cost_today|default:0|floatformat:2 }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="3" class="px-3 py-2 text-hl-muted">No tasks.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
     <section aria-labelledby="providers-heading" class="space-y-2">
         <div class="flex items-center justify-between gap-4">
             <h2 id="providers-heading" class="!mb-0 text-lg">Providers</h2>
@@ -59,7 +88,8 @@
                                 {% if not provider.active %} <span class="staff-badge staff-badge-plain">Inactive</span>{% endif %}
                             </td>
                             <td class="px-3 py-2">
-                                {% if not provider.secret_env %}<span class="text-hl-muted">None</span>
+                                {% if provider.kind == 'gemini' %}<span class="text-hl-muted">Google credentials</span>
+                                {% elif not provider.secret_env %}<span class="text-hl-muted">None</span>
                                 {% elif provider.problem %}<span class="staff-badge staff-badge-bad" title="{{ provider.problem }}">{{ provider.secret_env }} missing</span>
                                 {% else %}<span class="staff-badge staff-badge-ok">{{ provider.secret_env }} set</span>{% endif %}
                             </td>
@@ -73,7 +103,7 @@
 
     <section aria-labelledby="caps-heading" class="space-y-2">
         <h2 id="caps-heading" class="!mb-0 text-lg">Cost caps and rates</h2>
-        <p class="text-sm text-hl-muted">Costs are estimates from the provider rates above and the per-call tool rates. Today's runs: ${{ spent_today|floatformat:2 }} of ${{ limits.daily_cost_cap }}.</p>
+        <p class="text-sm text-hl-muted">Costs are estimates from the provider rates above and the per-call tool rates. Today's runs and tasks: ${{ spent_today|floatformat:2 }} of ${{ limits.daily_cost_cap }}.</p>
         {% if limits_form %}
             <form method="post" class="space-y-3 rounded-lg border border-hl-line bg-white p-4">
                 {% csrf_token %}

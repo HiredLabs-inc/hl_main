@@ -4,15 +4,18 @@ Every provider speaks the same message format (ChatProvider), so runs can
 switch provider without touching the loop or stored conversations.
 """
 from .base import ChatProvider, ChatResult, ProviderError
+from .gemini import GeminiProvider
 from .ollama import OllamaProvider
 
 PROVIDERS = {
     "ollama": OllamaProvider,
+    "gemini": GeminiProvider,
 }
 
 
-def get_provider(config) -> ChatProvider:
-    """A provider for a ProviderConfig."""
+def get_provider(config, timeout=None) -> ChatProvider:
+    """A provider for a ProviderConfig. `timeout` is seconds per call; each
+    adapter has its own default."""
     if problem := config.key_problem():
         raise ProviderError(problem)
-    return PROVIDERS[config.kind](base_url=config.base_url, api_key=config.api_key())
+    return PROVIDERS[config.kind].from_config(config, timeout=timeout)

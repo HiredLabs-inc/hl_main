@@ -46,6 +46,20 @@ class OllamaProviderTest(TestCase):
         )
         self.assertEqual((result.input_tokens, result.output_tokens), (120, 30))
 
+    def test_timeout_and_options(self):
+        with mock.patch("hlagents.providers.ollama.Client") as client:
+            provider = OllamaProvider(timeout=45)
+        self.assertEqual(client.call_args.kwargs["timeout"], 45)
+        provider.client.chat.return_value = ChatResponse(model="m", message=Message(role="assistant", content="hi"))
+        provider.chat("m", [{"role": "user", "content": "hi"}], None, {"temperature": 0.5, "max_output_tokens": 100, "thinking_budget": 0})
+        provider.client.chat.assert_called_once_with(
+            model="m",
+            messages=[{"role": "user", "content": "hi"}],
+            tools=None,
+            options={"temperature": 0.5, "num_predict": 100},
+        )
+
+
 
 @override_settings(HLAGENTS_PROVIDER_SECRETS=["HLAGENTS_TEST_KEY", "HLAGENTS_TEST_UNSET_KEY"])
 class GetProviderTest(TestCase):
