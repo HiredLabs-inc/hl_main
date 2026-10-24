@@ -16,39 +16,6 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 
 | ID | Severity | Status | Area | Summary |
 |---|---|---|---|---|
-| BUG-044 | High | Open | cold_apply | Changing resume overview returns error 500 |
-| BUG-045 | High | Open | cold_apply | Changing bullet points in resume preview returns error 500 |
-| BUG-046 | High | Open | cold_apply | Delete bullet on resume preview does nothing |
-| BUG-047 | High | Open | cold_apply | "Back to configuration" button on resume preview does nothing |
-
-## BUG-044 — Changing resume overview returns error 500
-- **Severity:** High · **Status:** Open · **Found:** 2026-10-23 16:41:52.381 PDT
-- **Where:** In staging: `/cold_apply/overviews/1/`  
-- **Problem:** The "Preview Content" button works and takes users to a preview of the resume content. The interface to add an overview works, but when a user selects
-the AI generated option, or when trying to edit/delete an existing overview, a 500 error is thrown, and the logs show
-"...TemplateDoesNotExist: cold_apply/overview_update.html"
-- **Fix idea:** investigate where and why the overview_update.html is referenced. If it is needed, make sure it exists.
-If it doesn't exist, make it. If it is not needed, remove the reference(s) to it.
-
-## BUG-045 — Changing bullet points in resume preview returns error 500
-- **Severity:** High · **Status:** Open · **Found:** 2026-10-23 17:04:09.362 PDT
-- **Where:** In staging: `/cold_apply/overviews/1/`  
-- **Problem:** The "Preview Content" button works and takes users to a preview of the resume content. The interface to add an overview works, but when a user selects
-the AI generated option, or when trying to edit/delete an existing overview, a 500 error is thrown. See staging log at the FOUND time above.
-- **Fix idea:** None
-
-## BUG-046 — Delete bullet on resume preview does nothing
-- **Severity:** High · **Status:** Open · **Found:** 2026-10-23
-- **Where:** In staging: `/cold_apply/overviews/1/`  
-- **Problem:** Clicking on the delete button next to a bullet point does nothing. It's currently set to href="#"
-- **Fix idea:** Button should delete the bullet without leaving the preview page, but user's should be asked to confirm deletion before going ahead with it.
-
-## BUG-047 — "Back to configuration" button on resume preview does nothing
-- **Severity:** High · **Status:** Open · **Found:** 2026-10-23
-- **Where:** In staging: `/cold_apply/overviews/1/`  
-- **Problem:** Clicking on the button does nothing, when it should take the user back to the resume configuration page
-- **Fix idea:** None
-
 
 ---
 ## Fixed and Skipped
@@ -97,6 +64,11 @@ the AI generated option, or when trying to edit/delete an existing overview, a 5
 | BUG-041 | Low | Fixed | cold_apply | `ConfirmApplicationView` is dead code: no URL, no template, no auth |
 | BUG-042 | Low | Fixed | staff UI | Release-notes links show to all staff, but plain staff get a 403 |
 | BUG-043 | Low | Fixed | cold_apply | NLTK tokenizer/tagger code needs data the image doesn't include (only `stopwords` is baked in) |
+| BUG-044 | High | Fixed | cold_apply | Changing resume overview returns error 500 |
+| BUG-045 | High | Fixed | cold_apply | Changing bullet points in resume preview returns error 500 |
+| BUG-046 | High | Fixed | cold_apply | Delete bullet on resume preview does nothing |
+| BUG-047 | High | Fixed | cold_apply | "Back to configuration" button on resume preview does nothing |
+| BUG-048 | High | Fixed | cold_apply | "Generate PDF" button on resume preview does nothing |
 
 ---
 ## BUG-001 — Deletes and keyword refresh run on GET links (CSRF)
@@ -390,3 +362,42 @@ be editable. Admins might make mistakes, and the current interface is too rigid,
 - **Problem:** these call `word_tokenize`, `pos_tag(tagset='universal')`, `wordnet` and `treebank`. The Dockerfile only bakes `stopwords` into `$NLTK_DATA`, so they would raise `LookupError` (`punkt`, `averaged_perceptron_tagger`, `universal_tagset`, …). No view reaches them today: `weigh()` and `analyze()` don't call them, and `composer.py` imports a `lang_processors` package that doesn't exist.
 - **Fix idea:** delete the unused functions and `composer.py`, or add the corpora to the Dockerfile's `nltk.downloader` line. Never call `nltk.download()` at runtime (that caused hotfix-01).
 - **Fix:** deleted the dead code instead of adding corpora: `keyword_analyzer/analyzer.py`, `composer.py`, `resume_writer/main.py` (never run; it used undefined names) and `vars.py`, plus every `bullet_weighter.py` function except `weigh()` and `hook_after_weighting()`. What's left needs only `stopwords` and `PorterStemmer`. Test: `cold_apply/tests/test_bullet_weighter.py`.
+
+## BUG-044 — Changing resume overview returns error 500
+- **Severity:** High · **Status:** Fixed (`fix/resume-preview`, b89bcf6; root cause 7c1aac0) · **Found:** 2026-10-23 16:41:52.381 PDT
+- **Where:** In staging: `/cold_apply/overviews/1/`  
+- **Problem:** The "Preview Content" button works and takes users to a preview of the resume content. The interface to add an overview works, but when a user selects
+the AI generated option, or when trying to edit/delete an existing overview, a 500 error is thrown, and the logs show
+"...TemplateDoesNotExist: cold_apply/overview_update.html"
+- **Fix idea:** investigate where and why the overview_update.html is referenced. If it is needed, make sure it exists.
+If it doesn't exist, make it. If it is not needed, remove the reference(s) to it.
+- **Fix:** Root cause for BUG-044 to BUG-048: `resume/templates/resume/base_resume.html` stopped loading htmx and Alpine (7c1aac0 commented out the script tags), so the preview's hx-/Alpine controls fell back to plain links or did nothing. The preview now loads them from a new Vite entry, `frontend/src/resume_preview.js` (no CSS); the PDF render doesn't. For this bug, added the missing full-page `overview_detail.html`, `overview_update.html` and `overview_delete.html`, so the views no longer 500 when reached without htmx. Tests: `cold_apply/tests/test_views.py` (`ResumePreviewEditViewsTest`, `TailoredResumeViewTestCase`, browser test `test_preview_controls`).
+
+## BUG-045 — Changing bullet points in resume preview returns error 500
+- **Severity:** High · **Status:** Fixed (`fix/resume-preview`, b89bcf6; root cause 7c1aac0) · **Found:** 2026-10-23 17:04:09.362 PDT
+- **Where:** In staging: `/cold_apply/overviews/1/`  
+- **Problem:** The "Preview Content" button works and takes users to a preview of the resume content. The interface to add an overview works, but when a user selects
+the AI generated option, or when trying to edit/delete an existing overview, a 500 error is thrown. See staging log at the FOUND time above.
+- **Fix idea:** None
+- **Fix:** Root cause for BUG-044 to BUG-048: `resume/templates/resume/base_resume.html` stopped loading htmx and Alpine (7c1aac0 commented out the script tags), so the preview's hx-/Alpine controls fell back to plain links or did nothing. The preview now loads them from a new Vite entry, `frontend/src/resume_preview.js` (no CSS); the PDF render doesn't. For this bug, `BulletUpdateView` now puts `participant` in the context for the full-page `participant_update.html`, and the missing `bullet_detail.html` was added. Tests: `cold_apply/tests/test_views.py` (`ResumePreviewEditViewsTest`, `TailoredResumeViewTestCase`, browser test `test_preview_controls`).
+
+## BUG-046 — Delete bullet on resume preview does nothing
+- **Severity:** High · **Status:** Fixed (`fix/resume-preview`, b89bcf6; root cause 7c1aac0) · **Found:** 2026-10-23
+- **Where:** In staging: `/cold_apply/overviews/1/`  
+- **Problem:** Clicking on the delete button next to a bullet point does nothing. It's currently set to href="#"
+- **Fix idea:** Button should delete the bullet without leaving the preview page, but user's should be asked to confirm deletion before going ahead with it.
+- **Fix:** Root cause for BUG-044 to BUG-048: `resume/templates/resume/base_resume.html` stopped loading htmx and Alpine (7c1aac0 commented out the script tags), so the preview's hx-/Alpine controls fell back to plain links or did nothing. The preview now loads them from a new Vite entry, `frontend/src/resume_preview.js` (no CSS); the PDF render doesn't. For this bug, no template change needed: the existing `hx-post`/`hx-confirm` link works once htmx loads, and `delete_bullet` refreshes the preview. Tests: `cold_apply/tests/test_views.py` (`ResumePreviewEditViewsTest`, `TailoredResumeViewTestCase`, browser test `test_preview_controls`).
+
+## BUG-047 — "Back to configuration" button on resume preview does nothing
+- **Severity:** High · **Status:** Fixed (`fix/resume-preview`, b89bcf6; root cause 7c1aac0) · **Found:** 2026-10-23
+- **Where:** In staging: `/cold_apply/overviews/1/`  
+- **Problem:** Clicking on the button does nothing, when it should take the user back to the resume configuration page
+- **Fix idea:** None
+- **Fix:** Root cause for BUG-044 to BUG-048: `resume/templates/resume/base_resume.html` stopped loading htmx and Alpine (7c1aac0 commented out the script tags), so the preview's hx-/Alpine controls fell back to plain links or did nothing. The preview now loads them from a new Vite entry, `frontend/src/resume_preview.js` (no CSS); the PDF render doesn't. For this bug, the button is now a plain submit with `formaction` (no JS needed). Tests: `cold_apply/tests/test_views.py` (`ResumePreviewEditViewsTest`, `TailoredResumeViewTestCase`, browser test `test_preview_controls`).
+
+## BUG-048 — "Generate PDF" button on resume preview does nothing
+- **Severity:** High · **Status:** Fixed (`fix/resume-preview`, b89bcf6; root cause 7c1aac0) · **Found:** 2026-10-23
+- **Where:** In staging: resume preview (`/cold_apply/job/<job>/resume?...&preview=True`)
+- **Problem:** Clicking "Generate PDF" does nothing. The button's only handler is an Alpine `@click.prevent` (set `preview=False`, target `_blank`, submit), but `resume/templates/resume/base_resume.html` no longer loads Alpine or htmx: 7c1aac0 commented out the script tags. Same root cause as BUG-044 to BUG-047.
+- **Fix idea:** Load htmx and Alpine on the preview page, and make the button a plain submit (`name="preview" value="False" formtarget="_blank"`) so it doesn't need JS.
+- **Fix:** Root cause for BUG-044 to BUG-048: `resume/templates/resume/base_resume.html` stopped loading htmx and Alpine (7c1aac0 commented out the script tags), so the preview's hx-/Alpine controls fell back to plain links or did nothing. The preview now loads them from a new Vite entry, `frontend/src/resume_preview.js` (no CSS); the PDF render doesn't. For this bug, the button is now a plain submit with `name="preview" value="False" formtarget="_blank"` (no JS needed). Tests: `cold_apply/tests/test_views.py` (`ResumePreviewEditViewsTest`, `TailoredResumeViewTestCase`, browser test `test_preview_controls`).

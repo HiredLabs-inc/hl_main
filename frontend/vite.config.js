@@ -5,7 +5,7 @@ export default defineConfig({
     build: {
         manifest: true,
         rollupOptions: {
-            input: 'src/main.js',
+            input: ['src/main.js', 'src/resume_preview.js'],
         },
         outDir: 'build',
         assetsDir: 'static',
