@@ -47,7 +47,7 @@ Design and development ideas that came up during other work and are **not bugs**
 - **Notes:** prod has 121 participants on Nurture → *Monthly Newsletter*, which is a placeholder; there is no newsletter. The staff redesign migrates them to a generic *Nurture* step in a Nurture flow until this is defined.
 
 ## IDEA-007 — Resume generation and keyword extraction through hlagents
-- **Status:** In progress: R (resume generation) done on `feature/idea-007-resume`; K (keywords) next · **Area:** cold_apply · **Source:** `docs/hlagents.md` §7 on `feature/hlagents-01`, Jeff's answer to Q6 (2026-10-22)
+- **Status:** In progress: R (resume generation) merged into develop in c847d4c; K (keywords) done on `feature/idea-007-keywords` · **Area:** cold_apply · **Source:** `docs/hlagents.md` §7 on `feature/hlagents-01`, Jeff's answer to Q6 (2026-10-22)
 - **Plan:** `docs/ai-tasks.md` (agreed 2026-10-23): effort R (resume generation, with a text-only Gemini provider) on `feature/idea-007-resume`, then effort K (keywords) on `feature/idea-007-keywords`.
 - **What:** run resume generation (`cold_apply/text_generation.py`) and job keyword extraction (today an in-house algorithm) through the hlagents provider layer, so their model and provider can be switched in settings like the agents'.
 - **Notes:** needs hlagents H1 (providers) merged first. Resume generation now calls Gemini on Vertex directly (`settings.GEMINI_MODEL`, BUG-038), so this is about switching provider in settings, not a fix. Do these as two separate efforts, not part of the hlagents build.

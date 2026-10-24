@@ -29,22 +29,9 @@ def weigh(jd_keywords: object, bullet: object):
     jd_unique = set()
     bullet_stems = set()
     for word in jd_keywords:
-        bigram_singles = word.bigram.split(' ')
-        bigram_1, bigram_2 = bigram_singles[0], bigram_singles[1]
-        trigram_singles = word.trigram.split(' ')
-        trigram_1, trigram_2, trigram_3 = trigram_singles[0], trigram_singles[1], trigram_singles[2]
-        if word.unigram not in jd_unique:
-            jd_unique.add(word.unigram)
-        if bigram_1 not in jd_unique:
-            jd_unique.add(bigram_1)
-        if bigram_2 not in jd_unique:
-            jd_unique.add(bigram_2)
-        if trigram_1 not in jd_unique:
-            jd_unique.add(trigram_1)
-        if trigram_2 not in jd_unique:
-            jd_unique.add(trigram_2)
-        if trigram_3 not in jd_unique:
-            jd_unique.add(trigram_3)
+        # A row's cells can be blank when its keyword lists differ in length
+        for phrase in (word.unigram, word.bigram, word.trigram):
+            jd_unique.update(phrase.split())
 
     jd_stems = set()
     for word in jd_unique:

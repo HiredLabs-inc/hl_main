@@ -31,7 +31,8 @@ def get_keywords(job: Job):
 
 def _keyword_text(job: Job) -> str:
     unigrams, bigrams, trigrams = get_keywords(job)
-    return ", ".join(unigrams + bigrams + trigrams)
+    # Cells are blank where a row's keyword lists differ in length
+    return ", ".join(phrase for phrase in unigrams + bigrams + trigrams if phrase)
 
 
 def rewrite_bullet_for_job(bullet: Bullet, job: Job, user=None) -> str:

@@ -49,6 +49,7 @@ class ColdApplyAccessTest(TestCase):
             ("get", reverse("cold_apply:job_detail", args=[j])),
             ("get", reverse("cold_apply:update_job", args=[j])),
             ("post", reverse("cold_apply:refresh_keywords", args=[j])),
+            ("post", reverse("cold_apply:job_keywords", args=[j])),
             ("post", reverse("cold_apply:delete_job", args=[j])),
             ("post", reverse("cold_apply:job_status_update_modal", args=[j])),
             ("get", reverse("cold_apply:configure_tailored_resume", args=[j])),

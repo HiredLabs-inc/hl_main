@@ -41,6 +41,7 @@ from .views import (
     home_view,
     job_status_update_modal_view,
     refresh_keywords,
+    job_keywords_view,
     regenerate_bullet_view,
     tailored_resume_view,
     task_get_jobs_for_participant,
@@ -111,6 +112,7 @@ urlpatterns += [
     path("participants/<int:pk>/add_job/", JobCreateView.as_view(), name="create_job"),
     path("jobs/confirm_add/", ConfirmCreateView.as_view(), name="confirm_add_job"),
     path("jobs/<int:pk>/", JobDetailView.as_view(), name="job_detail"),
+    path("jobs/<int:pk>/keywords/", job_keywords_view, name="job_keywords"),
     path("jobs/<int:pk>/update/", JobUpdateView.as_view(), name="update_job"),
     path(
         "jobs/confirm_update/", ConfirmCreateView.as_view(), name="confirm_update_job"
