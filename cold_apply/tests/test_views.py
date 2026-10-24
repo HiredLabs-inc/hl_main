@@ -1,11 +1,13 @@
 import datetime
 import os
+from unittest import mock
 from urllib.parse import urlencode
 
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.shortcuts import resolve_url
+from django.template.loader import render_to_string
 from django.test import TestCase
 from django.urls import reverse
 from playwright.sync_api import sync_playwright
@@ -31,6 +33,7 @@ from resume.models import (
     Education,
     Experience,
     Organization,
+    Overview,
 )
 from resume.pdf import (
     RESUME_TEMPLATE_SECTIONS_JSON,
@@ -120,6 +123,67 @@ class ColdApplyBrowserTest(StaticLiveServerTestCase):
         page1.get_by_role("button", name="Preview Content").click()
         assert page1.get_by_text("Jane Veteran").first.is_visible()
         page1.get_by_role("button", name="Back to Configuration").click()
+
+        context.close()
+
+    def test_preview_controls(self):
+        """BUG-044 to BUG-048: the preview's inline edits, delete and buttons work."""
+        job = self.participant.job_set.first()
+        Overview.objects.create(participant=self.participant, title=job.title, text="Old overview")
+        experiences = Experience.objects.filter(participant=self.participant)
+        query = urlencode(
+            {
+                "sections": [v for v, k in ResumeSections.choices],
+                "bullets_content": ResumeFormatChoices.CHRONOLOGICAL,
+                "resume_template": ResumeCoreTemplates.STANDARD,
+                "experiences": list(experiences.values_list("id", flat=True)),
+                "preview": True,
+            },
+            doseq=True,
+        )
+        preview_url = f"{reverse('cold_apply:tailored_resume', args=[job.id])}?{query}"
+
+        context = self.browser.new_context()
+        page = context.new_page()
+        page.goto(f"{self.live_server_url}{reverse('account_login')}?{urlencode({'next': preview_url})}")
+        page.locator("#id_login").fill("admin@example.com")
+        page.locator("#id_password").fill("admin")
+        page.get_by_role("button", name="Sign In").click()
+        page.wait_for_url(f"**{reverse('cold_apply:tailored_resume', args=[job.id])}**")
+
+        # Overview: [edit] swaps in the form, saving refreshes the preview
+        page.locator("#overview").get_by_text("[edit]").click()
+        page.locator("textarea[name=text]").fill("New overview")
+        page.get_by_role("button", name="Update Overview").click()
+        page.locator("#overview").get_by_text("New overview").wait_for()
+
+        # Bullet: [edit] swaps in the form, without leaving the page
+        page.locator("li").get_by_text("[edit]").first.click()
+        page.get_by_role("heading", name="Edit Bullet Point").wait_for()
+        page.reload()
+
+        # Bullet: [delete] asks first; dismissing keeps it, accepting deletes it
+        bullets = Bullet.objects.filter(experience__participant=self.participant)
+        count = bullets.count()
+        page.once("dialog", lambda dialog: dialog.dismiss())
+        page.locator("li").get_by_text("[delete]").first.click()
+        page.wait_for_timeout(500)
+        self.assertEqual(bullets.count(), count)
+        page.once("dialog", lambda dialog: dialog.accept())
+        with page.expect_navigation():
+            page.locator("li").get_by_text("[delete]").first.click()
+        self.assertEqual(bullets.count(), count - 1)
+
+        # Generate PDF opens the PDF in a new tab; the preview stays put.
+        # Headless Chromium downloads PDFs, so check the response, not the tab.
+        with context.expect_event("response", lambda r: "preview=False" in r.url) as response_info:
+            with page.expect_popup():
+                page.get_by_role("button", name="Generate PDF").click()
+        self.assertEqual(response_info.value.headers["content-type"], "application/pdf")
+        self.assertIn("preview=True", page.url)
+
+        page.get_by_role("button", name="Back to Configuration").click()
+        page.wait_for_url(f"**{reverse('cold_apply:configure_tailored_resume', args=[job.id])}**")
 
         context.close()
 
@@ -306,3 +370,98 @@ class TailoredResumeViewTestCase(TestCase):
         self.assertEqual(len(experiences), 3)
         for i, ex in enumerate(experiences[:-1]):
             self.assertGreater(ex["obj"].start_date, experiences[i + 1]["obj"].start_date)
+
+    def test_preview_loads_htmx_and_alpine(self):
+        # BUG-044 to BUG-048: the preview's edit, delete and button controls need them
+        self.client.force_login(self.user)
+        response = self.client.get(self.url, self.resume_params(preview=True))
+        self.assertContains(response, "static/resume_preview-")
+
+    def test_pdf_does_not_load_preview_scripts(self):
+        self.client.force_login(self.user)
+        rendered = {}
+
+        def fake_pdf(request, template_name, context):
+            rendered["html"] = render_to_string(template_name, context=context)
+            return b"%PDF"
+
+        with mock.patch("cold_apply.views.write_template_to_pdf", side_effect=fake_pdf):
+            self.client.get(self.url, self.resume_params())
+        self.assertNotIn("resume_preview", rendered["html"])
+
+    def test_preview_buttons_work_without_js(self):
+        # BUG-047 and BUG-048
+        self.client.force_login(self.user)
+        response = self.client.get(self.url, self.resume_params(preview=True))
+        config_url = reverse("cold_apply:configure_tailored_resume", args=[self.job.pk])
+        self.assertContains(response, f'formaction="{config_url}"')
+        self.assertContains(response, 'name="preview" value="False"')
+        self.assertContains(response, 'formtarget="_blank"')
+
+    def test_generate_pdf_from_preview(self):
+        # The browser sends the hidden preview=True, then the button's preview=False
+        self.client.force_login(self.user)
+        query = urlencode(self.resume_params(preview=True), doseq=True) + "&preview=False"
+        with mock.patch("cold_apply.views.write_template_to_pdf", return_value=b"%PDF") as pdf:
+            response = self.client.get(f"{self.url}?{query}")
+        pdf.assert_called_once()
+        self.assertEqual(response["Content-Type"], "application/pdf")
+
+
+class ResumePreviewEditViewsTest(TestCase):
+    """The overview and bullet views the resume preview links to (BUG-044 to BUG-046)."""
+
+    HTMX = {"HTTP_HX_REQUEST": "true"}
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_superuser(username="testuser", password="testpassword")
+        participant = make_resume_participant()
+        cls.job = participant.job_set.first()
+        cls.bullet = Bullet.objects.filter(experience__participant=participant).first()
+        cls.overview = Overview.objects.create(
+            participant=participant, title=cls.job.title, text="Old overview", auto_generated=True
+        )
+
+    def setUp(self):
+        self.client.force_login(self.user)
+
+    def test_full_page_views_render(self):
+        urls = [
+            reverse("cold_apply:overview_detail", args=[self.overview.id]),
+            reverse("cold_apply:update_overview", args=[self.overview.id]),
+            reverse("cold_apply:delete_overview", args=[self.overview.id]),
+            reverse("cold_apply:bullet_detail", args=[self.bullet.id]),
+            reverse("cold_apply:bullet_detail_for_job", args=[self.bullet.id, self.job.id]),
+            reverse("cold_apply:update_bullet", args=[self.bullet.id]),
+            reverse("cold_apply:update_bullet_for_job", args=[self.bullet.id, self.job.id]),
+        ]
+        for url in urls:
+            with self.subTest(url=url):
+                self.assertEqual(self.client.get(url).status_code, 200)
+
+    def test_htmx_edit_overview_returns_form(self):
+        url = reverse("cold_apply:update_overview", args=[self.overview.id])
+        response = self.client.get(url, **self.HTMX)
+        self.assertTemplateUsed(response, "cold_apply/partials/overview_update_form.html")
+
+    def test_htmx_update_overview_refreshes(self):
+        url = reverse("cold_apply:update_overview", args=[self.overview.id])
+        response = self.client.post(url, {"text": "New overview"}, **self.HTMX)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Hx-Refresh"], "true")
+        self.overview.refresh_from_db()
+        self.assertEqual(self.overview.text, "New overview")
+        self.assertFalse(self.overview.auto_generated)
+
+    def test_full_page_update_overview_redirects(self):
+        url = reverse("cold_apply:update_overview", args=[self.overview.id])
+        response = self.client.post(url, {"text": "New overview"})
+        self.assertRedirects(response, reverse("cold_apply:overview_detail", args=[self.overview.id]))
+
+    def test_htmx_delete_bullet_refreshes(self):
+        url = reverse("cold_apply:delete_bullet", args=[self.bullet.id])
+        response = self.client.post(url, **self.HTMX)
+        self.assertEqual(response.status_code, 204)
+        self.assertEqual(response["Hx-Refresh"], "true")
+        self.assertFalse(Bullet.objects.filter(id=self.bullet.id).exists())

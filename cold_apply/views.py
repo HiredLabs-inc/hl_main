@@ -888,6 +888,8 @@ class BulletUpdateView(HtmxViewMixin, OwnedObjectMixin, UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        # participant_update.html (the non-HTMX page) links back to the participant
+        context["participant"] = self.object.experience.participant
         if self.kwargs.get("experience_pk"):
             experience = Experience.objects.get(id=self.kwargs["experience_pk"])
             context["experience"] = experience
