@@ -211,7 +211,7 @@ def filtered(qs, user, tab, filters):
             )
     return qs.order_by(
         "flow__order", "current_step__phase__order", "current_step__phase_id",
-        "current_step__order", "current_step_id", "step_entered_at",
+        "current_step__order", "current_step_id", "step_entered_at", "pk",
     )
 
 
@@ -219,13 +219,16 @@ def filtered(qs, user, tab, filters):
 class Column:
     """One step on a board. cards are the first ones shown (or the page after
     offset); count is how many match the filters; open is everyone on the step,
-    whatever the filters, so filtering doesn't collapse columns."""
+    whatever the filters, so filtering doesn't collapse columns. left is how
+    many come after cards, when cards moving since the board loaded make that
+    differ from count less those shown."""
 
     step: Step
     cards: list
     count: int
     open: int
     offset: int = 0
+    left: int = None
 
     @property
     def next_offset(self):
@@ -233,7 +236,13 @@ class Column:
 
     @property
     def more(self):
-        return self.count - self.next_offset
+        return self.count - self.next_offset if self.left is None else self.left
+
+    @property
+    def cursor(self):
+        """(step_entered_at, pk) of the last card shown; "Show more" pages after it"""
+        last = self.cards[-1]
+        return last.step_entered_at.isoformat(), last.pk
 
     @property
     def next_page(self):
@@ -351,10 +360,18 @@ def board_counts(user, flow, filters, steps):
     return step_counts, phase_counts
 
 
-def board_column(user, flow, step, filters, offset):
-    """The page of a board column after offset ("Show more")"""
+def board_column(user, flow, step, filters, offset, after=None):
+    """The page of a board column ("Show more") after the card at after,
+    (step_entered_at, pk), else after offset. Paging after a card, not a count,
+    doesn't skip one when a card shown earlier moves to another step. offset
+    is still how many the board shows already, for "Showing N of M"."""
     qs = filtered(card_queryset(), user, flow.slug, filters).filter(current_step=step)
-    return Column(step, cards(qs[offset : offset + BOARD_PAGE], user), qs.count(), 0, offset)
+    if after is None:
+        return Column(step, cards(qs[offset : offset + BOARD_PAGE], user), qs.count(), 0, offset)
+    entered, pk = after
+    rest = qs.filter(Q(step_entered_at__gt=entered) | Q(step_entered_at=entered, pk__gt=pk))
+    page = cards(rest[:BOARD_PAGE], user)
+    return Column(step, page, qs.count(), 0, offset, left=rest.count() - len(page))
 
 
 def header_counts():

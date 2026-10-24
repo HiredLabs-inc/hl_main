@@ -1,0 +1,16 @@
+{% extends 'base_app.html' %}
+{% block breadcrumbs %}
+    {% if request.user.is_staff %}
+        {% breadcrumb 'Dashboard' 'staff' %}
+    {% endif %}
+    {% breadcrumb bullet.experience.participant.user.get_full_name 'cold_apply:participant_detail' bullet.experience.participant_id %}
+    {% breadcrumb 'Experiences' 'cold_apply:participant_experience_list' bullet.experience.participant_id %}
+    {% breadcrumb 'Bullet Point' %}
+{% endblock breadcrumbs %}
+
+{% block content %}
+    <h1>Bullet Point</h1>
+    <ul>
+        {% include 'cold_apply/partials/bullet_detail_li.html' %}
+    </ul>
+{% endblock content %}

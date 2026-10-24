@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 from django.urls import reverse
 
@@ -5,7 +6,7 @@ from django.urls import reverse
 class Overview(models.Model):
     text = models.TextField()
     title = models.ForeignKey(
-        "Position", on_delete=models.CASCADE, default=None, null=True
+        "Position", on_delete=models.PROTECT, default=None, null=True
     )
     participant = models.ForeignKey("cold_apply.Participant", on_delete=models.CASCADE)
     auto_generated = models.BooleanField(default=False)
@@ -28,6 +29,11 @@ class Organization(models.Model):
     )
     name = models.CharField(max_length=250, unique=True)
     website = models.CharField(max_length=100)
+    # Who added it, so they can edit or delete it while nobody else uses it
+    # (cold_apply/reference.py). None for imported or older rows: staff only.
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
+    )
 
     def __str__(self):
         return f"{self.name}"
@@ -39,6 +45,11 @@ class Organization(models.Model):
 
 class Position(models.Model):
     title = models.CharField(max_length=100, unique=True)
+    # Who added it, so they can edit or delete it while nobody else uses it
+    # (cold_apply/reference.py). None for imported or older rows: staff only.
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
+    )
 
     def __str__(self):
         return f"{self.title}"
@@ -58,6 +69,11 @@ class Degree(models.Model):
 
 class Concentration(models.Model):
     name = models.CharField(max_length=150)
+    # Who added it, so they can edit or delete it while nobody else uses it
+    # (cold_apply/reference.py). None for imported or older rows: staff only.
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
+    )
 
     def __str__(self):
         return self.name
@@ -66,8 +82,8 @@ class Concentration(models.Model):
 class Experience(models.Model):
     start_date = models.DateField()
     end_date = models.DateField(null=True, blank=True)
-    org = models.ForeignKey(Organization, on_delete=models.CASCADE)
-    position = models.ForeignKey(Position, on_delete=models.CASCADE)
+    org = models.ForeignKey(Organization, on_delete=models.PROTECT)
+    position = models.ForeignKey(Position, on_delete=models.PROTECT)
     participant = models.ForeignKey("cold_apply.Participant", on_delete=models.CASCADE)
 
     def __str__(self):
@@ -98,9 +114,9 @@ class Education(models.Model):
         COMPLETED = "completed", "Coursework Completed"
         IN_PROGRESS = "in_progress", "In Progress"
 
-    org = models.ForeignKey(Organization, on_delete=models.CASCADE)
+    org = models.ForeignKey(Organization, on_delete=models.PROTECT)
     degree = models.ForeignKey(Degree, on_delete=models.CASCADE)
-    concentration = models.ForeignKey(Concentration, on_delete=models.CASCADE)
+    concentration = models.ForeignKey(Concentration, on_delete=models.PROTECT)
     participant = models.ForeignKey("cold_apply.Participant", on_delete=models.CASCADE)
     status = models.CharField(
         choices=EducationStatus.choices,
@@ -124,7 +140,7 @@ class CertProjectActivity(models.Model):
         ("Activity", "Activity"),
         ("Award", "Award"),
     ]
-    org = models.ForeignKey(Organization, on_delete=models.CASCADE)
+    org = models.ForeignKey(Organization, on_delete=models.PROTECT)
     title = models.CharField(max_length=250)
     description = models.TextField()
     variety = models.CharField(max_length=20, choices=OPTIONS)

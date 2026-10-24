@@ -69,8 +69,6 @@ class ColdApplyAccessTest(TestCase):
             reverse("cold_apply:index"),
             reverse("cold_apply:process"),
             reverse("cold_apply:update_participant", args=[self.owner.pk]),
-            reverse("cold_apply:update_company", args=[self.job.company.pk]),
-            reverse("cold_apply:update_title", args=[self.job.title.pk]),
             reverse("staff"),
             reverse("userprofile:veteran_status_update_view", args=[self.owner.user.pk]),
         ]
@@ -171,6 +169,11 @@ class ColdApplyAccessTest(TestCase):
         self.client.force_login(UserFactory())
         response = self.client.get(reverse("cold_apply:home"))
         self.assertRedirects(response, reverse("userprofile:user_home"), fetch_redirect_response=False)
+
+    def test_old_resume_index_is_gone(self):
+        # BUG-040: it listed every participant's resume data with no auth
+        self.client.force_login(self.staff)
+        self.assertEqual(self.client.get(f"/resume/resumes/{self.job.title.pk}").status_code, 404)
 
 
 class OverviewDeleteTest(TestCase):

@@ -5,7 +5,9 @@ from django import http
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.conf import settings
-from django.core.exceptions import ObjectDoesNotExist
+from django.contrib import messages
+from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
+from django.db.models import ProtectedError
 from django.forms import models as model_forms
 from django.http import HttpResponse, JsonResponse
 from django.http.response import HttpResponse
@@ -13,6 +15,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.template import RequestContext
 from django.urls import Resolver404, resolve, reverse, reverse_lazy
 from django.utils import timezone
+from django.template.defaultfilters import pluralize
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods, require_POST
@@ -25,18 +28,20 @@ from django.views.generic import (
     RedirectView,
     TemplateView,
     UpdateView,
+    View,
 )
 from django.views.generic.edit import FormMixin
 
 from background_tasks.models import Task, TaskStatusChoices
 from background_tasks.queue import is_authorized_task_request, queue_task, work_task
-from cold_apply.guards import OwnedObjectMixin, ParticipantAccessMixin, owned_by
+from cold_apply import reference
+from cold_apply.guards import OwnedObjectMixin, ParticipantAccessMixin, ParticipantOrStaffMixin, owned_by
 from cold_apply.jobs import get_jobs_for_participant
 from cold_apply.resume_formatting import (
     group_bullets_by_experience,
     group_bullets_by_skill,
 )
-from cold_apply.text_generation import generate_bullet, rewrite_bullet_for_job
+from cold_apply.text_generation import TextGenerationError, rewrite_bullet_for_job
 from hl_main.mixins import HtmxViewMixin
 from rates.models import Country
 from resume.models import (
@@ -119,16 +124,6 @@ class ConfirmCreateView(LoginRequiredMixin, TemplateView):
         return context
 
 
-class ConfirmApplicationView(TemplateView):
-    template_name = "confirm_application_submit.html"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["now"] = timezone.now()
-
-        return context
-
-
 # Read Participant details
 class ParticipantDetailView(OwnedObjectMixin, FormMixin, DetailView):
     model = Participant
@@ -192,8 +187,29 @@ class ParticipantDetailView(OwnedObjectMixin, FormMixin, DetailView):
         return context
 
 
+class ReuseExistingMixin(ParticipantOrStaffMixin):
+    """For HtmxViewMixin create views of shared reference data (BUG-030): a value
+    that already exists, in any case, is reused instead of added again."""
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        # An exact duplicate is reused too, not refused by the unique check
+        form.validate_unique = lambda: None
+        return form
+
+    def form_valid(self, form):
+        existing = reference.find_existing(self.model, form.cleaned_data)
+        if existing is None:
+            form.instance.created_by = self.request.user
+            return super().form_valid(form)
+        self.object = existing
+        if "Hx-Request" in self.request.headers:
+            return self.htmx_saved_response()
+        return redirect(self.get_success_url())
+
+
 # Organizations
-class OrganizationCreateView(HtmxViewMixin, LoginRequiredMixin, CreateView):
+class OrganizationCreateView(ReuseExistingMixin, HtmxViewMixin, CreateView):
     model = Organization
     template_name = "cold_apply/company_add.html"
     htmx_template = "cold_apply/modals/company_add_modal.html"
@@ -204,31 +220,9 @@ class OrganizationCreateView(HtmxViewMixin, LoginRequiredMixin, CreateView):
     # TODO OrganizationDetail view for success_url
     success_url = reverse_lazy("staff")
 
-    def form_valid(self, form):
-        form.instance.created_by = self.request.user
-        form.instance.updated_by = self.request.user
-
-        return super().form_valid(form)
-
-
-class OrganizationUpdateView(StaffRequiredMixin, UpdateView):
-    model = Organization
-    template_name = "cold_apply/company_update.html"
-    fields = ["name", "website", "org_type"]
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["now"] = timezone.now()
-
-        return context
-
-    def form_valid(self, form):
-        form.save()
-        return redirect(reverse("cold_apply:confirm_update_company"))
-
 
 # Titles
-class TitleCreateView(HtmxViewMixin, LoginRequiredMixin, CreateView):
+class TitleCreateView(ReuseExistingMixin, HtmxViewMixin, CreateView):
     model = Position
     fields = ["title"]
     template_name = "cold_apply/title_create.html"
@@ -237,22 +231,6 @@ class TitleCreateView(HtmxViewMixin, LoginRequiredMixin, CreateView):
     refresh_on_save = True
     success_url = reverse_lazy("staff")
     # TODO TitleDetail view for success_url
-
-
-class TitleUpdateView(StaffRequiredMixin, UpdateView):
-    model = Position
-    template_name = "cold_apply/title_update.html"
-    fields = ["title"]
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["now"] = timezone.now()
-
-        return context
-
-    def form_valid(self, form):
-        form.save()
-        return redirect(reverse("cold_apply:confirm_update_title"))
 
 
 # Jobs
@@ -471,7 +449,7 @@ class EducationUpdateView(OwnedObjectMixin, UpdateView):
         return redirect(reverse("cold_apply:confirm_update_education"))
 
 
-class ConcentrationCreateView(HtmxViewMixin, LoginRequiredMixin, CreateView):
+class ConcentrationCreateView(ReuseExistingMixin, HtmxViewMixin, CreateView):
     model = Concentration
     template_name = "cold_apply/concentration_create.html"
     htmx_template = "cold_apply/modals/concentration_create_modal.html"
@@ -751,7 +729,11 @@ class OverviewCreateView(HtmxViewMixin, ParticipantAccessMixin, CreateView):
 
     def form_valid(self, form):
         form.instance.participant_id = self.kwargs["pk"]
-        return super().form_valid(form)
+        try:
+            return super().form_valid(form)
+        except TextGenerationError as e:
+            form.add_error(None, str(e))
+            return self.form_invalid(form)
 
 
 class OverviewUpdateView(HtmxViewMixin, OwnedObjectMixin, UpdateView):
@@ -853,9 +835,11 @@ class BulletCreateView(HtmxViewMixin, ParticipantAccessMixin, CreateView):
         }
 
     def form_valid(self, form):
-        # form.instance.created_by = self.request.user
-        # form.instance.updated_by = self.request.user
-        return super().form_valid(form)
+        try:
+            return super().form_valid(form)
+        except TextGenerationError as e:
+            form.add_error(None, str(e))
+            return self.form_invalid(form)
 
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
         return {
@@ -875,7 +859,10 @@ def regenerate_bullet_view(request, bullet_id, job_id):
     )
     job = get_object_or_404(owned_by(Job.objects, request.user, "participant__user"), pk=job_id)
 
-    rewritten_text = rewrite_bullet_for_job(bullet, job)
+    try:
+        rewritten_text = rewrite_bullet_for_job(bullet, job)
+    except TextGenerationError as e:
+        return HttpResponse(str(e), status=502)
     bullet.text = rewritten_text
     bullet.auto_generated = True
     bullet.save()
@@ -901,6 +888,8 @@ class BulletUpdateView(HtmxViewMixin, OwnedObjectMixin, UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        # participant_update.html (the non-HTMX page) links back to the participant
+        context["participant"] = self.object.experience.participant
         if self.kwargs.get("experience_pk"):
             experience = Experience.objects.get(id=self.kwargs["experience_pk"])
             context["experience"] = experience
@@ -940,7 +929,7 @@ class BulletDetailView(HtmxViewMixin, OwnedObjectMixin, DetailView):
 
 
 # TODO View applicant list using generic ListView (login required)
-class PositionCreateView(HtmxViewMixin, LoginRequiredMixin, CreateView):
+class PositionCreateView(ReuseExistingMixin, HtmxViewMixin, CreateView):
     model = Position
     htmx_template = "cold_apply/modals/position_create_modal.html"
     empty_response_on_save = True
@@ -949,34 +938,123 @@ class PositionCreateView(HtmxViewMixin, LoginRequiredMixin, CreateView):
     success_url = reverse_lazy("staff")
 
 
-class LocationCreateView(HtmxViewMixin, LoginRequiredMixin, CreateView):
+class LocationCreateView(ReuseExistingMixin, HtmxViewMixin, CreateView):
     fields = ["city", "state", "country"]
     model = Location
     template_name = "cold_apply/location_create.html"
     htmx_template = "cold_apply/modals/location_create_modal.html"
     empty_response_on_save = True
     refresh_on_save = True
+    success_url = reverse_lazy("cold_apply:reference_list", args=["locations"])
 
     def get_initial(self) -> Dict[str, Any]:
         return {"country": Country.objects.get(name="United States")}
 
 
-class LocationUpdateView(StaffRequiredMixin, UpdateView):
-    fields = ["city", "state", "country"]
-    model = Location
-    template_name = "cold_apply/location_update.html"
-
-
-class LocationDetailView(LoginRequiredMixin, DetailView):
-    fields = ["city", "state", "country"]
+class LocationDetailView(ParticipantOrStaffMixin, DetailView):
     model = Location
     template_name = "cold_apply/location_detail.html"
 
+    def get_queryset(self):
+        return reference.visible(Location, self.request.user)
 
-class LocationListView(LoginRequiredMixin, ListView):
-    model = Location
-    template_name = "cold_apply/location_list.html"
-    context_object_name = "locations"
+
+class ReferenceMixin(ParticipantOrStaffMixin):
+    """Pages for one kind of reference data, from the URL's kind or as_view(kind=...)"""
+
+    kind = None
+
+    def dispatch(self, request, *args, **kwargs):
+        self.ref = reference.KINDS.get(kwargs.get("kind", self.kind))
+        if self.ref is None:
+            raise http.Http404
+        return super().dispatch(request, *args, **kwargs)
+
+    def list_url(self):
+        return reverse("cold_apply:reference_list", args=[self.ref.slug])
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["ref"] = self.ref
+        context["kinds"] = reference.KINDS.values()
+        return context
+
+
+class ReferenceListView(ReferenceMixin, ListView):
+    """Staff see every row; participants see what they added"""
+
+    template_name = "cold_apply/reference_list.html"
+    paginate_by = 50
+
+    def get_queryset(self):
+        rows = reference.visible(self.ref.model, self.request.user)
+        query = self.request.GET.get("q", "").strip()
+        if query:
+            rows = rows.filter(**{f"{self.ref.text_field}__icontains": query})
+        return rows.order_by(self.ref.text_field, "pk")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        used = reference.usage(context["object_list"], user)
+        context["rows"] = [
+            {
+                "obj": obj,
+                "uses": used[obj.pk][0],
+                "can_edit": reference.can_edit(user, obj, used[obj.pk]),
+                "can_delete": reference.can_delete(user, obj, used[obj.pk]),
+            }
+            for obj in context["object_list"]
+        ]
+        context["q"] = self.request.GET.get("q", "")
+        return context
+
+
+class ReferenceUpdateView(ReferenceMixin, UpdateView):
+    template_name = "cold_apply/reference_form.html"
+
+    def get_queryset(self):
+        return self.ref.model.objects.all()
+
+    def get_object(self, queryset=None):
+        obj = super().get_object(queryset)
+        if not reference.can_edit(self.request.user, obj):
+            raise PermissionDenied
+        return obj
+
+    def get_form_class(self):
+        return model_forms.modelform_factory(self.ref.model, fields=self.ref.fields)
+
+    def form_valid(self, form):
+        existing = reference.find_existing(self.ref.model, form.cleaned_data, exclude_pk=self.object.pk)
+        if existing:
+            # Merging duplicates is IDEA-003
+            form.add_error(self.ref.text_field, f'"{existing}" already exists. Pick it instead.')
+            return self.form_invalid(form)
+        form.save()
+        messages.success(self.request, f"Saved {self.object}.")
+        return redirect(self.list_url())
+
+
+class ReferenceDeleteView(ReferenceMixin, View):
+    http_method_names = ["post"]
+
+    def post(self, request, *args, **kwargs):
+        obj = get_object_or_404(reference.visible(self.ref.model, request.user), pk=kwargs["pk"])
+        uses = reference.uses(obj)
+        if uses:
+            messages.error(request, f"{obj} is used by {uses} record{pluralize(uses)}. Change those first.")
+            return redirect(self.list_url())
+        if not reference.can_delete(request.user, obj):
+            raise PermissionDenied
+        try:
+            obj.delete()
+        except ProtectedError:
+            # Something started using it since the check
+            messages.error(request, f"{obj} is in use now. Change those records first.")
+            return redirect(self.list_url())
+        messages.success(request, f"Deleted {obj}.")
+        return redirect(self.list_url())
 
 
 @login_required

@@ -1,0 +1,20 @@
+{% extends 'base_app.html' %}
+{% block breadcrumbs %}
+    {% if request.user.is_staff %}
+        {% breadcrumb 'Dashboard' 'staff' %}
+    {% endif %}
+    {% breadcrumb overview.participant.user.get_full_name 'cold_apply:participant_detail' overview.participant_id %}
+    {% breadcrumb 'Overview' 'cold_apply:overview_detail' overview.id %}
+    {% breadcrumb 'Delete' %}
+{% endblock breadcrumbs %}
+
+{% block content %}
+    <h1>Delete Overview</h1>
+    <form method="post" action="{% url 'cold_apply:delete_overview' overview.id %}">
+        {% csrf_token %}
+        <p>Are you sure you want to delete this overview?</p>
+        <blockquote class="my-3">{{ overview.text }}</blockquote>
+        <input class="btn btn-danger" type="submit" value="Delete">
+        <a class="btn btn-secondary" href="{% url 'cold_apply:overview_detail' overview.id %}">Cancel</a>
+    </form>
+{% endblock content %}

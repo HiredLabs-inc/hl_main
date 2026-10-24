@@ -1,4 +1,5 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import PermissionDenied
 from django.http import Http404
 
 from .models import Participant
@@ -32,4 +33,14 @@ class ParticipantAccessMixin(LoginRequiredMixin):
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated and not can_access_participant(request.user, kwargs["pk"]):
             raise Http404
+        return super().dispatch(request, *args, **kwargs)
+
+
+class ParticipantOrStaffMixin(LoginRequiredMixin):
+    """For pages any participant may use, but not a signup with no Participant yet"""
+
+    def dispatch(self, request, *args, **kwargs):
+        user = request.user
+        if user.is_authenticated and not (user.is_staff or Participant.objects.filter(user=user).exists()):
+            raise PermissionDenied
         return super().dispatch(request, *args, **kwargs)

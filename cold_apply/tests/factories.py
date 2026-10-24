@@ -187,6 +187,8 @@ class UserFactory(DjangoModelFactory):
 class OrganizationFactory(DjangoModelFactory):
     class Meta:
         model = Organization
+        # Faker repeats company names, and Organization.name is unique (BUG-039)
+        django_get_or_create = ("name",)
 
     org_type = factory.Faker("random_element", elements=["Work", "Edu", "Activity"])
     name = factory.Faker("company")
@@ -213,7 +215,8 @@ class CountryFactory(DjangoModelFactory):
         model = Country
 
     rank = factory.Faker("random_int", min=1, max=200)
-    name = factory.Faker("country")
+    # One Faker country is longer than Country.name allows (BUG-033)
+    name = factory.LazyFunction(lambda: fake.country()[: Country._meta.get_field("name").max_length])
     value = factory.Faker("pydecimal", left_digits=5, right_digits=3, positive=True)
     hdi = factory.Faker("random_element", elements=["High", "Medium", "Low"])
     zone = factory.Faker("random_element", elements=["A", "B", "C"])
