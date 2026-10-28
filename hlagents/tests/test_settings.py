@@ -217,14 +217,14 @@ class TaskSettingsTest(SettingsTestCase):
 
 
 class GeminiAgentTest(SettingsTestCase):
-    def test_agents_cant_use_gemini_yet(self):
+    def test_agents_can_use_gemini(self):
         gemini = ProviderConfig.objects.get(kind="gemini")
         response = self.client.post(
             reverse("hlagents:agent_settings", args=[self.config.pk]), self.agent_data(provider=gemini.pk)
         )
-        self.assertContains(response, "Gemini can&#x27;t run agents yet")
+        self.assertRedirects(response, reverse("hlagents:settings"))
         self.config.refresh_from_db()
-        self.assertEqual(self.config.provider, self.provider)
+        self.assertEqual(self.config.provider, gemini)
 
 
 class LimitsTest(SettingsTestCase):

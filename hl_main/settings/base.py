@@ -226,6 +226,13 @@ HLAGENTS_PROVIDER_SECRETS = ["OLLAMA_API_KEY"]
 # Seconds an agent run may take. Cloud Tasks waits 10 minutes before retrying a
 # task, and the worker only starts queued runs, so a retry can't run one twice.
 HLAGENTS_RUN_TIME_LIMIT = 480
+# Seconds one model call in a run may take, or less if the run has less time left
+# (docs/gcp-agents.md §3.7).
+HLAGENTS_CALL_TIME_LIMIT = 120
+# A run still Running this many seconds after its last save was killed with the
+# worker's request (its Cloud Run timeout, infra/terraform/modules/hl-env/main.tf),
+# and is marked Failed.
+HLAGENTS_STALE_RUN_AFTER = 900
 
 # Gemini on Vertex AI, the hlagents "gemini" provider (docs/ai-tasks.md §3.1).
 # GEMINI_MODEL only seeds the resume tasks (hlagents 0008); after that each task's

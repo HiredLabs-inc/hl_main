@@ -1,4 +1,5 @@
-"""Runs an agent until it gives a final answer (docs/hlagents.md §3.1, §3.8).
+"""Runs an agent until it gives a final answer (docs/hlagents.md §3.1, §3.8;
+time limits and Stop in docs/gcp-agents.md §3.7).
 
 Ported from examples/utils/agent_loop.py. Messages are saved after every turn,
 so the run page shows progress and a crash keeps the history.
@@ -13,7 +14,7 @@ from hlagents import services
 from hlagents.agents import ParseError
 from hlagents.conversation import note
 from hlagents.models import AgentLimits, AgentRun, spent_today
-from hlagents.providers import ChatProvider, get_provider
+from hlagents.providers import ChatProvider, call_with_limit, get_provider
 from hlagents.tools import TOOLS, tool_schema
 
 logger = logging.getLogger(__name__)
@@ -29,6 +30,7 @@ CORRECT = (
     "isn't a person's. Fix or replace them using your tools, and answer with only the fixed or new candidates, "
     "in the same JSON format. Return [] if you can't."
 )
+TOOL_STOPPED = "The run was stopped before this tool ran."
 
 
 def run_agent(run: AgentRun, provider: ChatProvider = None) -> AgentRun:
@@ -43,7 +45,7 @@ def run_agent(run: AgentRun, provider: ChatProvider = None) -> AgentRun:
 
     run.status = AgentRun.Status.RUNNING
     run.error = ""
-    run.save()
+    run.save_progress()
     saved = services.SaveResult()
     try:
         turn = _Turn(run, provider or get_provider(run.provider), tools, tool_names)
@@ -77,7 +79,7 @@ def run_agent(run: AgentRun, provider: ChatProvider = None) -> AgentRun:
     # A turn cut short after a first answer still reports the leads it saved
     if saved.inserted or saved.skipped:
         run.result = saved.summary()
-    run.save()
+    run.save_progress()
     return run
 
 
@@ -104,6 +106,8 @@ class _Turn:
         it has."""
         run = self.run
         while True:
+            if _stop_requested(run):
+                return _stop(run, AgentRun.Status.STOPPED, services.STOPPED_BY_STAFF)
             if run.cost >= self.limits.run_cost_cap or spent_today() >= self.limits.daily_cost_cap:
                 return _stop(run, AgentRun.Status.CAPPED, "Stopped at the cost cap.")
             if self.steps >= run.config.max_iterations:
@@ -114,7 +118,12 @@ class _Turn:
             wrap_up = bool(self.tools) and self.steps == run.config.max_iterations - 1
             if wrap_up:
                 run.messages.append(note(WRAP_UP, "Step limit"))
-            result = self.provider.chat(model=run.model, messages=run.messages, tools=[] if wrap_up else self.tools)
+            tools = [] if wrap_up else self.tools
+            # The run's time limit only holds if one slow call can't outlast it
+            seconds = min(settings.HLAGENTS_CALL_TIME_LIMIT, self.deadline - time.monotonic())
+            result = call_with_limit(
+                lambda: self.provider.chat(model=run.model, messages=run.messages, tools=tools), seconds, run.model
+            )
             self.steps += 1
             run.iterations += 1
             run.input_tokens += result.input_tokens
@@ -128,16 +137,21 @@ class _Turn:
                 result.message.pop("tool_calls")
                 calls = None
             if not calls:
-                run.save()
+                run.save_progress()
                 return result.message
 
-            for call in calls:
+            for index, call in enumerate(calls):
+                if _stop_requested(run):
+                    # Every call gets a reply, so the run can take a follow-up
+                    for skipped in calls[index:]:
+                        run.messages.append(_tool_reply(skipped["function"]["name"], {"error": TOOL_STOPPED}))
+                    return _stop(run, AgentRun.Status.STOPPED, services.STOPPED_BY_STAFF)
                 name = call["function"]["name"]
                 output = _call_tool(name, call["function"].get("arguments") or {}, self.tool_names)
                 run.tool_calls += 1
                 run.cost += self.limits.tool_cost(name)
-                run.messages.append({"role": "tool", "tool_name": name, "content": json.dumps(output, default=str)})
-            run.save()
+                run.messages.append(_tool_reply(name, output))
+            run.save_progress()
 
 
 def _call_tool(name, arguments, tool_names):
@@ -156,8 +170,18 @@ def _call_tool(name, arguments, tool_names):
         return {"error": str(e) or e.__class__.__name__}
 
 
+def _tool_reply(name, output):
+    return {"role": "tool", "tool_name": name, "content": json.dumps(output, default=str)}
+
+
+def _stop_requested(run):
+    """Whether staff pressed Stop. Read from the database, since the view sets it
+    while this run is held in memory."""
+    return AgentRun.objects.filter(pk=run.pk, stop_requested=True).exists()
+
+
 def _stop(run, status, error):
     run.status = status
     run.error = error
-    run.save()
+    run.save_progress()
     return None
