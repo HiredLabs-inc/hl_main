@@ -37,9 +37,12 @@ class GeminiProvider(ChatProvider):
     def chat(self, model, messages, tools, options=None):
         options = options or {}
         system = [m["content"] for m in messages if m["role"] == "system"]
+        gemini_tools = [_tool(tools)] if tools else []
+        if options.get("google_search"):
+            gemini_tools.append(types.Tool(google_search=types.GoogleSearch()))
         config = types.GenerateContentConfig(
             system_instruction="\n\n".join(system) or None,
-            tools=[_tool(tools)] if tools else None,
+            tools=gemini_tools or None,
             automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
             **{name: options[name] for name in GENERATION_OPTIONS if name in options},
         )
@@ -63,8 +66,11 @@ class GeminiProvider(ChatProvider):
         if calls:
             message["tool_calls"] = calls
         usage = response.usage_metadata
+        sources, suggestions = _grounding(candidate)
         return ChatResult(
             message=message,
+            sources=sources,
+            suggestions=suggestions,
             input_tokens=(usage and usage.prompt_token_count) or 0,
             # Thinking is billed as output
             output_tokens=((usage and usage.candidates_token_count) or 0) + ((usage and usage.thoughts_token_count) or 0),
@@ -163,3 +169,24 @@ def _tool_call(part):
     if part.thought_signature:
         call["thought_signature"] = base64.b64encode(part.thought_signature).decode()
     return call
+
+
+def _grounding(candidate):
+    """The web sources a grounded reply cites, each with the parts of the reply
+    that cite it, and Google's search-suggestions HTML."""
+    metadata = candidate and candidate.grounding_metadata
+    if not metadata:
+        return [], ""
+    # Kept in Gemini's order, since supports refer to chunks by index
+    sources = [
+        {"title": chunk.web.title or "", "uri": chunk.web.uri or "", "snippets": []} if chunk.web else None
+        for chunk in metadata.grounding_chunks or []
+    ]
+    for support in metadata.grounding_supports or []:
+        text = (support.segment and support.segment.text or "").strip()
+        for index in support.grounding_chunk_indices or []:
+            source = sources[index] if index < len(sources) else None
+            if source and text and text not in source["snippets"]:
+                source["snippets"].append(text)
+    entry_point = metadata.search_entry_point
+    return [s for s in sources if s and s["uri"]], (entry_point and entry_point.rendered_content) or ""

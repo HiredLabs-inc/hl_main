@@ -46,7 +46,7 @@ Design and development ideas that came up during other work and are **not bugs**
 - **Notes:** prod has 121 participants on Nurture → *Monthly Newsletter*, which is a placeholder; there is no newsletter. The staff redesign migrates them to a generic *Nurture* step in a Nurture flow until this is defined.
 
 ## IDEA-008 — All agents through GCP AI APIs
-- **Status:** In progress: T (Gemini tool calls, time limits, Stop) built on `feature/idea-008-tools` (2026-10-28); S and M next · **Area:** hlagents · **Source:** None
+- **Status:** In progress: T (Gemini tool calls, time limits, Stop) on `feature/idea-008-tools` and S (Google search, direct page reads) on `feature/idea-008-search` (2026-10-28); M next · **Area:** hlagents · **Source:** None
 - **Plan:** `docs/gcp-agents.md` (agreed 2026-10-28, §7): effort T (Gemini tool calls), S (Google search grounding and direct page fetch in place of Tavily), M (compare, move the seeded agents, remove Tavily).
 - **What:** run all agents (funding, outreach, and unbuilt, future agents) through GCP AI APIs instead of Tavily and Ollama
 - **Notes:** needs hlagents H1. IDEA-007 added a text-only `GeminiProvider` (`hlagents/providers/gemini.py`, `docs/hlagents.md` §9). This idea would add tool calls to it (translating to and from the canonical message shape) and replace Tavily with Google search grounding.

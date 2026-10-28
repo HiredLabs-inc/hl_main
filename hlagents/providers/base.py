@@ -1,6 +1,6 @@
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import TimeoutError as FutureTimeout
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 class ProviderError(Exception):
@@ -13,6 +13,10 @@ class ChatResult:
     message: dict
     input_tokens: int = 0
     output_tokens: int = 0
+    # From Google Search grounding (docs/gcp-agents.md §3.2): the sources Gemini
+    # cited, [{"title", "uri", "snippets"}], and Google's search-suggestions HTML
+    sources: list = field(default_factory=list)
+    suggestions: str = ""
 
 
 class ChatProvider:
@@ -20,8 +24,9 @@ class ChatProvider:
     arguments as a dict, and {"role": "tool", "tool_name", "content"} replies.
     Adapters for other APIs translate to and from it.
 
-    `options` tunes one call: temperature, top_p, top_k, max_output_tokens and
-    thinking_budget. An adapter maps the ones its API has and ignores the rest."""
+    `options` tunes one call: temperature, top_p, top_k, max_output_tokens,
+    thinking_budget and google_search. An adapter maps the ones its API has and
+    ignores the rest."""
 
     def __init__(self, base_url="", api_key="", timeout=None):
         self.base_url = base_url

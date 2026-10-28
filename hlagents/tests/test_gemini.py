@@ -92,7 +92,7 @@ class GeminiProviderTest(TestCase):
         [tool] = config.tools
         declarations = tool.function_declarations
         self.assertEqual([d.name for d in declarations], ["web_search", "read_page"])
-        self.assertEqual(declarations[0].description, "Search for grants.")
+        self.assertEqual(declarations[0].description, "Search for grants. Snippets leave out links and email addresses: read the page for those.")
         self.assertEqual(declarations[0].parameters_json_schema, tools[0]["function"]["parameters"])
         # The loop runs the tools
         self.assertTrue(config.automatic_function_calling.disable)
@@ -200,3 +200,50 @@ class GeminiProviderTest(TestCase):
         self.client.models.generate_content.return_value = gemini_response(usage=False)
         result = GeminiProvider().chat("gemini-test", [{"role": "user", "content": "Hi"}], None)
         self.assertEqual((result.input_tokens, result.output_tokens), (0, 0))
+
+    def test_google_search_grounding(self):
+        metadata = types.GroundingMetadata(
+            grounding_chunks=[
+                types.GroundingChunk(web=types.GroundingChunkWeb(uri="https://redirect/a", title="a.org")),
+                types.GroundingChunk(),
+                types.GroundingChunk(web=types.GroundingChunkWeb(uri="https://redirect/b", title="b.org")),
+            ],
+            grounding_supports=[
+                types.GroundingSupport(segment=types.Segment(text="A funds training."), grounding_chunk_indices=[0, 2]),
+                types.GroundingSupport(segment=types.Segment(text="B is open now."), grounding_chunk_indices=[2, 9]),
+                types.GroundingSupport(segment=types.Segment(text="A funds training."), grounding_chunk_indices=[0]),
+            ],
+            search_entry_point=types.SearchEntryPoint(rendered_content="<div>chips</div>"),
+        )
+        response = gemini_response(text="A funds training. B is open now.")
+        response.candidates[0].grounding_metadata = metadata
+        self.client.models.generate_content.return_value = response
+
+        result = GeminiProvider().chat("gemini-test", [{"role": "user", "content": "grants"}], None, {"google_search": True})
+
+        [tool] = self.sent()["config"].tools
+        self.assertIsNotNone(tool.google_search)
+        self.assertEqual(result.sources, [
+            {"title": "a.org", "uri": "https://redirect/a", "snippets": ["A funds training."]},
+            {"title": "b.org", "uri": "https://redirect/b", "snippets": ["A funds training.", "B is open now."]},
+        ])
+        self.assertEqual(result.suggestions, "<div>chips</div>")
+
+    def test_google_search_alongside_function_tools(self):
+        GeminiProvider().chat("gemini-test", [{"role": "user", "content": "Hi"}], [tool_schema("read_page")], {"google_search": True})
+        tools = self.sent()["config"].tools
+        self.assertEqual([bool(t.function_declarations) for t in tools], [True, False])
+        self.assertIsNotNone(tools[1].google_search)
+
+    def test_no_grounding_without_the_option(self):
+        result = GeminiProvider().chat("gemini-test", [{"role": "user", "content": "Hi"}], None)
+        self.assertEqual((result.sources, result.suggestions), ([], ""))
+
+    def test_suggestions_on_a_tool_message_arent_sent(self):
+        messages = [
+            {"role": "user", "content": "Find 2."},
+            {"role": "assistant", "content": "", "tool_calls": [{"function": {"name": "web_search", "arguments": {"query": "q"}}}]},
+            {"role": "tool", "tool_name": "web_search", "content": json.dumps({"results": []}), "suggestions": "<div>chips</div>"},
+        ]
+        GeminiProvider().chat("gemini-test", messages, None)
+        self.assertEqual(self.sent()["contents"][2].parts[0].function_response.response, {"results": []})

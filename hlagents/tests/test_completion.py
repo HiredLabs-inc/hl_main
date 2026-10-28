@@ -4,9 +4,9 @@ from unittest import mock
 from django.contrib.auth.models import AnonymousUser, User
 from django.test import TestCase
 
-from hlagents.completion import CompletionFailed, complete
+from hlagents.completion import CompletionFailed, complete, complete_result
 from hlagents.models import AgentLimits, AgentRun, TaskCall, TaskConfig, spent_today
-from hlagents.providers import ProviderError
+from hlagents.providers import ChatResult, ProviderError
 from hlagents.tests.fakes import FakeProvider, answer, make_provider, make_run
 
 
@@ -105,6 +105,20 @@ class CompleteTest(TestCase):
     def test_empty_reply(self):
         with self.assertRaisesMessage(CompletionFailed, "empty"):
             self.complete_with(answer("  "))
+        self.assertFalse(TaskCall.objects.get().ok)
+
+    def test_complete_result_returns_the_sources(self):
+        reply = ChatResult(message={"role": "assistant", "content": " Found. "}, sources=[{"uri": "u"}], suggestions="<div/>")
+        with mock.patch("hlagents.completion.get_provider", return_value=FakeProvider(reply)):
+            result = complete_result("resume_overview", "q")
+        self.assertEqual((result.message["content"], result.sources, result.suggestions), ("Found.", [{"uri": "u"}], "<div/>"))
+
+    def test_complete_result_limits_the_call(self):
+        with mock.patch("hlagents.completion.get_provider", return_value=FakeProvider(answer("Hi"))), \
+                mock.patch("hlagents.completion.call_with_limit", side_effect=ProviderError("test-model didn't answer within 5 s.")) as limit:
+            with self.assertRaisesMessage(CompletionFailed, "didn't answer within 5 s"):
+                complete_result("resume_overview", "q", limit=5)
+        self.assertEqual(limit.call_args.args[1:], (5, "test-model"))
         self.assertFalse(TaskCall.objects.get().ok)
 
     def test_unknown_task(self):

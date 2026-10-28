@@ -2,7 +2,7 @@
 
 Branches `feature/idea-008-tools` (effort T), then `feature/idea-008-search` (effort S), then `feature/idea-008-move` (effort M), each from `develop`.
 
-> **Status:** design agreed with Jeff on 2026-10-28 (§7). T built on `feature/idea-008-tools` (§9). S and M not started.
+> **Status:** design agreed with Jeff on 2026-10-28 (§7). T built on `feature/idea-008-tools`, and S on `feature/idea-008-search`, which branches from T (§9). M not started.
 
 ## 1. Context
 IDEA-008 in `docs/backlog.md`: run the agents (funding, outreach and future ones) on Google's APIs on Vertex AI instead of Ollama Cloud and Tavily.
@@ -189,3 +189,19 @@ Built as §3.1 and §3.7, with these differences:
 - **Tests:** `hlagents/tests/test_gemini.py` (rewritten with real SDK response types), and the new `test_run_limits.py`: the call limit, Stop on queued and running runs, stuck runs, the Stop view and its permission, and a full run through a mocked Gemini client. In `test_settings.py`, an agent can now use Gemini. The full suite (641) passes.
 
 **Not done in T:** Stop and the time limits were only tested by the tests and the 1 s run above, not by pressing Stop in a browser.
+
+### S — Google search and direct page reads (2026-10-28, `feature/idea-008-search`)
+Branched from `feature/idea-008-tools`, not `develop`, because it needs T's provider. Built as §3.2 and §3.4, with these differences:
+- **No `grounded_tools`.** §3.3 planned to count only `read_page` replies as an outreach agent's sources. Instead, `web_search` removes URLs and email addresses from its snippets, which are Gemini's own words. Real URLs come only from the resolved sources, and emails only from pages. Both agents' checks stay strict, and neither agent needs a special case. `web_search`'s new `note` tells the model "Snippets leave out links and email addresses: read the page for those." `tool_schema` always adds a tool's note after its description, because the seeded agents override `web_search`'s description.
+- **`read_page` keeps headers, footers and nav**, where contact emails and links to the right page often are. Only script, style, noscript, template, svg and iframe are dropped. Lines break only at block elements, and links are spaced apart so a link with no text can't run into the next one's URL.
+- **Search suggestions** are a `suggestions` key on the tool message, beside `content`, which is all the providers send. The run page shows them in a sandboxed `<iframe srcdoc>`, unchanged, with a `<base target="_blank">` so their links open in a new tab.
+- **Names:** `completion.complete_result(key, message, user=None, limit=None)` returns the `ChatResult`. `web_search` calls it with `limit=HLAGENTS_CALL_TIME_LIMIT`. The task key is `web_search` ("Web search for agents"), seeded by `hlagents/0012_web_search_task` with the resume options at temperature 0.2 plus `google_search: true`. New dependency `beautifulsoup4==4.15.0`.
+- **Not done yet (M):** `tavily-python`, `TAVILY_API_KEY` and the Tavily-era `tool_costs` (search $0.016, read $0.002) are still there, but nothing uses Tavily.
+- **Checked against `hl-main-stage`** (`gemini-3.8-flash` for agent and search, no Tavily key, local dev data, rolled back):
+  - One search took 12.6 s and returned 4 results. Every grounding link resolved to the real page with one HEAD request.
+  - `read_page` read `cst.dav.org/grants` in 1.6 s. It refused `169.254.169.254`, `localhost` and an `ftp` URL.
+  - **Funding:** Done in 15 steps, 14 tool calls (11 searches, 3 reads) and **293 s**. It saved 3 leads on the funders' own pages (Call of Duty Endowment, Bank of America Charitable Foundation, DAV Charitable Service Trust).
+  - **Outreach:** Done in 15 steps, 14 tool calls (5 searches, 9 reads) and 161 s. It saved 3 county or post contacts, each email from a page it read.
+  - Every search had suggestions, and all 7 outreach searches were logged as `web_search` task calls with none failed. The outreach run page showed 6 suggestion frames for 7 searches. I couldn't reproduce that with test data (7 searches give 7 frames, and a view test covers it), so check it on stage.
+- **Latency for M:** a grounded search takes about 10–20 s, so search-heavy runs are slow. The funding run used 293 of its 480 s. The comparison should look at a faster model for the `web_search` task, fewer searches per run, or a longer run limit.
+- **Tests:** `test_tools.py` was rewritten for both tools: grounding results, redirects, URL and email removal, dedupe and cap, HTML to text, size cap, redirects, and the address guard. Also added: grounding and suggestions in `test_gemini.py`, `complete_result` in `test_completion.py`, suggestions in `test_loop.py`, `test_conversation.py` and `test_views.py`, and the seed in `test_seed.py`. Loop tests mock `web_search.search` instead of Tavily. The full suite (657) passes.

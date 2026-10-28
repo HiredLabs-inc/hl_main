@@ -47,6 +47,11 @@
                                 <summary class="cursor-pointer text-xs font-medium text-hl-muted">{% if entry.kind == 'result' %}{{ entry.label }}{% if entry.text %}: {{ entry.text }}{% endif %}{% elif entry.kind == 'note' %}Note to the agent: {{ entry.text }}{% else %}{{ entry.text }}{% endif %}</summary>
                                 <pre class="mt-1 max-h-96 overflow-auto whitespace-pre-wrap text-xs">{{ entry.detail }}</pre>
                             </details>
+                            {% if entry.suggestions %}
+                                {# Google's search suggestions, shown as Google sent them; sandboxed so its styles stay inside #}
+                                <iframe title="Google search suggestions" class="mt-2 h-16 w-full" sandbox="allow-popups allow-popups-to-escape-sandbox"
+                                        srcdoc="&lt;base target=&quot;_blank&quot;&gt;{{ entry.suggestions }}"></iframe>
+                            {% endif %}
                         {% endif %}
                     </li>
                 {% endfor %}
