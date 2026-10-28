@@ -311,3 +311,17 @@ Besides agents, hlagents runs **tasks**: single provider calls with no tools, us
 - **Settings:** `/agents/settings/` lists the tasks with today's calls and cost. `/agents/settings/tasks/<id>/` edits a task and shows its recent calls (Agent admins).
 - **Tasks so far:** `resume_overview`, `resume_bullets` and `bullet_rewrite`, used by `cold_apply/text_generation.py`, and `job_keywords`, used by `cold_apply/keywords.py` (with the in-house analyzer as its fallback).
 
+## 10. Agents on Gemini and Google search (IDEA-008, `docs/gcp-agents.md`)
+- **Provider:** `GeminiProvider` handles tool calls, so agents can run on Gemini. Thought signatures are kept on each tool call (`thought_signature`, base64) and sent back. Tool replies share a Gemini turn, and text gets its own.
+- **Tools:**
+  - `web_search` runs the `web_search` task: a Gemini call with Google Search grounding. It returns the cited sources with real URLs and snippets with links and emails removed, plus Google's search suggestions. The run page shows those, and the model never sees them.
+  - `read_page` fetches the page itself (HTML, text or PDF) and refuses non-public addresses.
+  - Tavily is no longer used.
+- **Time limits and Stop:** each model call in a run is cut off at `HLAGENTS_CALL_TIME_LIMIT` (120 s) or the time left in the run. Staff can stop a run from its page (*Stopped by staff*). Runs left Running after the worker died are marked Failed after `HLAGENTS_STALE_RUN_AFTER` (900 s).
+- **Seeds (0013):**
+  - Both agents are on Gemini on Vertex with `GEMINI_MODEL`.
+  - Searches use `gemini-3.5-flash-lite`.
+  - Tool costs are $0.014 per search and $0 per read.
+  - Ollama Cloud is still a provider an agent can be switched to.
+- **Comparing:** `hlagents_compare` takes `--provider` and `--search-model`.
+

@@ -14,6 +14,27 @@ from hlagents.tools.web_search import REDIRECT_HOST, SNIPPET_LENGTH, web_search
 REDIRECT = f"https://{REDIRECT_HOST}/grounding-api-redirect/"
 
 
+def make_pdf(*lines):
+    """A one-page PDF showing the lines."""
+    text = " ".join(f"({line}) Tj 0 -20 Td" for line in lines)
+    stream = f"BT /F1 12 Tf 72 720 Td {text} ET".encode()
+    objects = [
+        b"<< /Type /Catalog /Pages 2 0 R >>",
+        b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+        b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>",
+        b"<< /Length %d >>\nstream\n%s\nendstream" % (len(stream), stream),
+        b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+    ]
+    pdf, offsets = b"%PDF-1.4\n", []
+    for number, obj in enumerate(objects, 1):
+        offsets.append(len(pdf))
+        pdf += b"%d 0 obj\n%s\nendobj\n" % (number, obj)
+    xref = len(pdf)
+    pdf += b"xref\n0 %d\n0000000000 65535 f \n" % (len(objects) + 1)
+    pdf += b"".join(b"%010d 00000 n \n" % offset for offset in offsets)
+    return pdf + b"trailer\n<< /Root 1 0 R /Size %d >>\nstartxref\n%d\n%%%%EOF\n" % (len(objects) + 1, xref)
+
+
 def grounded(*sources, suggestions="<div>chips</div>"):
     return ChatResult(
         message={"role": "assistant", "content": "Acme funds veterans."},
@@ -138,10 +159,20 @@ class ReadPageTest(SimpleTestCase):
 
     def test_errors_and_other_content_types_are_tool_errors(self, mocker, dns):
         mocker.get("https://a.org/missing", status_code=404)
-        self.page(mocker, "https://a.org/guide.pdf", b"%PDF-1.7", content_type="application/pdf")
+        self.page(mocker, "https://a.org/logo.png", b"\x89PNG", content_type="image/png")
         with self.assertRaisesMessage(ToolError, "Couldn't read https://a.org/missing: HTTP 404"):
             read_page("https://a.org/missing")
-        with self.assertRaisesMessage(ToolError, "Can't read application/pdf pages."):
+        with self.assertRaisesMessage(ToolError, "Can't read image/png pages."):
+            read_page("https://a.org/logo.png")
+
+    def test_pdfs_are_read(self, mocker, dns):
+        self.page(mocker, "https://a.org/guide.pdf", make_pdf("Grants up to $50,000.", "Write to jo@a.org"), content_type="application/pdf")
+        page = read_page("https://a.org/guide.pdf")
+        self.assertEqual(page, {"url": "https://a.org/guide.pdf", "content": "Grants up to $50,000.\nWrite to jo@a.org", "truncated": False})
+
+    def test_a_broken_pdf_is_a_tool_error(self, mocker, dns):
+        self.page(mocker, "https://a.org/guide.pdf", b"%PDF-1.7 cut off", content_type="application/pdf")
+        with self.assertRaisesMessage(ToolError, "Couldn't read the PDF"):
             read_page("https://a.org/guide.pdf")
 
 

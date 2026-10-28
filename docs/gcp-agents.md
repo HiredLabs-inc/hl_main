@@ -2,7 +2,7 @@
 
 Branches `feature/idea-008-tools` (effort T), then `feature/idea-008-search` (effort S), then `feature/idea-008-move` (effort M), each from `develop`.
 
-> **Status:** design agreed with Jeff on 2026-10-28 (§7). T built on `feature/idea-008-tools`, and S on `feature/idea-008-search`, which branches from T (§9). M not started.
+> **Status:** design agreed with Jeff on 2026-10-28 (§7). T, S and M are built, on `feature/idea-008-tools`, `feature/idea-008-search` and `feature/idea-008-move`, each branched from the one before (§9). Next: stage, then remove Tavily (§9 M checklist).
 
 ## 1. Context
 IDEA-008 in `docs/backlog.md`: run the agents (funding, outreach and future ones) on Google's APIs on Vertex AI instead of Ollama Cloud and Tavily.
@@ -166,11 +166,14 @@ Single-shot tasks (`completion.complete`) could use `call_with_limit` too, but t
 3. **`read_page` fetches directly** and converts the HTML in-house, so its text is the real page and the checks stay strict. Gemini URL context isn't used.
 4. **Show Google's search suggestions** on the run page (§3.2). Answered for §8 question 1 ("Does that apply when only staff see the results?"): yes.
 5. **Run time limits and Stop** (§3.7): Jeff asked for a way to stop a long run and a built-in cap on how long a run takes. 120 s per call and 480 s per run, agreed.
+6. **Funding:** tune its prompt for Gemini and compare again before moving it (after the first comparison in §9 M, where Gemini found no funding leads).
+7. **Search model:** `gemini-3.5-flash-lite` for the `web_search` task.
+8. **PDFs:** `read_page` reads them now, not later.
 
 ## 8. Notes for later
 None of these need a decision now. They'll be checked during the comparison (§4 M1).
 1. **Latency.** Covered by §3.7. In the comparison, count how many runs hit the call or run limit. If many do, raise the limits or use a faster model.
-2. **PDFs.** Tavily extract read PDFs, and some grant guidelines are PDFs. Add `pypdf` to `read_page` if the comparison shows runs need it.
+2. **PDFs.** Done in M (decision 8).
 3. **Bot blocking.** Some sites block plain fetches or need JavaScript. Tavily got past some of these. Count failed reads in the comparison.
 4. **Model.** The comparison decides which Gemini model the agents use (flash or pro). It's a settings change.
 5. **Task time limits.** Resume generation and keywords also have no Gemini timeout. They could use `call_with_limit` with `completion.TIMEOUT` (45 s) in a later effort.
@@ -205,3 +208,49 @@ Branched from `feature/idea-008-tools`, not `develop`, because it needs T's prov
   - Every search had suggestions, and all 7 outreach searches were logged as `web_search` task calls with none failed. The outreach run page showed 6 suggestion frames for 7 searches. I couldn't reproduce that with test data (7 searches give 7 frames, and a view test covers it), so check it on stage.
 - **Latency for M:** a grounded search takes about 10–20 s, so search-heavy runs are slow. The funding run used 293 of its 480 s. The comparison should look at a faster model for the `web_search` task, fewer searches per run, or a longer run limit.
 - **Tests:** `test_tools.py` was rewritten for both tools: grounding results, redirects, URL and email removal, dedupe and cap, HTML to text, size cap, redirects, and the address guard. Also added: grounding and suggestions in `test_gemini.py`, `complete_result` in `test_completion.py`, suggestions in `test_loop.py`, `test_conversation.py` and `test_views.py`, and the seed in `test_seed.py`. Loop tests mock `web_search.search` instead of Tavily. The full suite (657) passes.
+
+### M — Move the agents (2026-10-28, `feature/idea-008-move`, from `feature/idea-008-search`)
+- **`hlagents_compare`** takes `--provider` (run on another provider than the agent's) and `--search-model` (the `web_search` task's model, for these runs only). Its table has a column for searches.
+- **Migration `hlagents/0013_agents_on_gemini`** (reversible; anything edited in settings is kept):
+  - moves the seeded agents from Ollama Cloud and `gemma4:31b` to Gemini on Vertex and `GEMINI_MODEL`
+  - sets `tool_costs` to $0.014 per search and $0 per page read. Google bills $14 per 1,000 grounding queries on Gemini 3, after 5,000 free a month, and one search can send more than one query.
+  - puts the `web_search` task on `gemini-3.5-flash-lite` (decision 7)
+  - adds two steps to the funding prompt (decision 6): make several tool calls per step and spend no more than two or three steps on a funder; and at the step limit, answer with every program whose page it has read, returning `[]` only if it read none
+- **Comparison (2026-10-28, `hl-main-stage`, local dev data, rolled back, one run each, six at once).** Requests: "Find 5 grants for nonprofits that train veterans for tech jobs." and "Find 5 veteran service officers or outreach staff in Ohio with their work emails." The Tavily baseline is H7's comparison in `docs/hlagents.md`: on `gemma4:31b`, outreach found 5 contacts in 17 s, and funding found 6 leads in 43 s, some on listing sites.
+
+| Agent | Agent model | Search model | Result | Steps | Tool calls (searches) | Seconds |
+|---|---|---|---|---|---|---|
+| Funding | gemini-3.8-flash | gemini-3.8-flash | Failed at the 480 s run limit, no leads | 14 | 14 (8) | 480 |
+| Funding | gemini-3.8-flash | gemini-3.5-flash-lite | Done, answered `[]` | 15 | 14 (10) | 173 |
+| Funding | gemini-3.8-flash | gemini-3.5-flash-lite | Done, answered `[]` (rerun, kept as dev run 13) | 15 | 14 (11) | 176 |
+| Funding | gemma4:31b (Ollama) | gemini-3.8-flash | 4 leads, 1 home page skipped | 6 | 13 (8) | 200 |
+| Outreach | gemini-3.8-flash | gemini-3.8-flash | 5 contacts (all Medina County) | 15 | 14 (8) | 371 |
+| Outreach | gemini-3.8-flash | gemini-3.5-flash-lite | 5 contacts (Clark and Ashtabula counties) | 15 | 14 (6) | 230 |
+| Outreach | gemma4:31b (Ollama) | gemini-3.8-flash | 0: 10 skipped, not in sources | 6 | 14 (11) | 370 |
+
+- **Gemini on funding** makes one tool call per step and researches one funder at a time. In run 13 it found program pages (DVNF capacity-building grants, Motorola Solutions Foundation annual grants, Call of Duty Endowment) but never confirmed them to its own standard, and answered `[]` at the step limit. gemma makes several calls per step.
+- **gemma on outreach** gave emails that weren't on any page it read. Snippets no longer carry emails (§9 S), so these were guesses, and the check caught them.
+- **Speed:** every setup is 4–20 times slower than Tavily on gemma. Grounded searches take about 10–20 s each, and these six ran at once. The lite search model cut outreach from 371 s to 230 s, and funding from 480 s (out of time) to 173 s, with no loss in outreach quality.
+- **Reads that failed:** PDFs (Motorola's grant priorities, DVNF's funding policy, DAV's application), and 403s from cisco.com and franklincountyohio.gov.
+
+- **Changes after the first comparison** (decisions 6–8): the funding prompt's new steps, `gemini-3.5-flash-lite` for searches, and **PDF reading** in `read_page`. PDFs are read with `pypdf==6.21.4` (new dependency), with the same 3 MB and 12,000-character limits. A broken or cut-off PDF is a `ToolError`.
+- **Second comparison** (same requests, same setup, four at once):
+
+| Agent | Agent model | Result | Steps | Tool calls (searches) | Seconds |
+|---|---|---|---|---|---|
+| Funding | gemini-3.8-flash | 5 leads: Truist Foundation, Bank of America Charitable Foundation, Call of Duty Endowment, TD Charitable Foundation, Motorola Solutions Foundation | 15 | 37 (30) | 271 |
+| Funding | gemini-3.8-flash | 2 leads: DAV Charitable Service Trust, Truist Foundation | 15 | 25 (17) | 193 |
+| Funding | gemma4:31b (Ollama) | 1 lead: ATI Foundation | 3 | 9 (4) | 40 |
+| Outreach | gemini-3.8-flash | 5 contacts (Ohio State and Ohio University veterans services) | 15 | 14 (8) | 140 |
+
+  - Gemini funding now makes several calls per step and finishes inside the run limit. Every lead is on the funder's own page.
+  - **Cost:** the 5-lead run made 30 searches, so about $0.42 for searches plus its tokens. That's under the $1.00 run cap, but more searches per run would reach it.
+  - One PDF failed to parse (`PdfReadError`), and cisco.com still returns 403.
+- **Tests:** `test_compare.py` covers `--provider` and `--search-model`. `test_seed.py` covers 0013, both ways and with edits kept. `test_tools.py` reads a generated PDF and a broken one. The full suite (663) passes.
+
+**Stage checklist (M):**
+1. Deploy T, S and M. Migrations `hlagents` 0011–0013 run.
+2. In `/agents/settings/`, check that both agents are on **Gemini on Vertex** with `gemini-3.8-flash`, and that **Web search for agents** is on `gemini-3.5-flash-lite`. Stage's agents stay on Ollama if their model or provider was changed in settings. Enter the Gemini token rates if they aren't there yet, and check the tool costs ($0.014 per search, $0 per read).
+3. Check that Grounding with Google Search is available to the service account on stage. The first search fails with a permission error if it isn't.
+4. Run each agent once and review its leads on the run page. Check that each search shows Google's suggestions (S noted 6 frames for 7 searches once), and press Stop on one run.
+5. Then remove Tavily (§3.5): `tavily-python`, `TAVILY_API_KEY` in `hl_main/settings/base.py` and `cloud.py`, and the secret wherever it's set. Nothing calls it now.
