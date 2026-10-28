@@ -1,12 +1,17 @@
 """Reads a page by fetching it directly (docs/gcp-agents.md §3.4)."""
+import io
 import ipaddress
+import logging
 import socket
 from urllib.parse import urljoin, urlsplit
 
 import requests
 from bs4 import BeautifulSoup
+from pypdf import PdfReader
 
 from .base import Tool, ToolError
+
+logger = logging.getLogger(__name__)
 
 # Characters of the page the model sees
 PAGE_LENGTH = 12000
@@ -93,6 +98,23 @@ def html_text(html, url, encoding=None):
     return "\n".join(line for line in lines if line)
 
 
+def pdf_text(body):
+    """A PDF's text, page by page, until there's more than the model sees."""
+    try:
+        reader = PdfReader(io.BytesIO(body))
+        text = ""
+        for page in reader.pages:
+            text += (page.extract_text() or "") + "\n"
+            if len(text) > PAGE_LENGTH:
+                break
+    except Exception as e:
+        # pypdf raises many kinds of errors on broken or cut-off files
+        logger.info("Couldn't read a PDF: %s", e)
+        raise ToolError(f"Couldn't read the PDF ({e.__class__.__name__}).") from e
+    lines = (" ".join(line.split()) for line in text.splitlines())
+    return "\n".join(line for line in lines if line)
+
+
 def read_page(url: str) -> dict:
     url, response = fetch(url.strip())
     if response.status_code >= 400:
@@ -105,6 +127,8 @@ def read_page(url: str) -> dict:
         content = html_text(read_body(response), url, encoding)
     elif content_type == "text/plain":
         content = read_body(response).decode(response.encoding or "utf-8", errors="replace")
+    elif content_type == "application/pdf":
+        content = pdf_text(read_body(response))
     else:
         response.close()
         raise ToolError(f"Can't read {content_type or 'unknown'} pages.")
@@ -117,7 +141,10 @@ def read_page(url: str) -> dict:
 
 READ_PAGE = Tool(
     name="read_page",
-    description="Read a web page's text, with its links and email addresses, to check details a search snippet doesn't show.",
+    description=(
+        "Read a web page's or PDF's text, with its links and email addresses, to check details a search snippet "
+        "doesn't show."
+    ),
     parameters={
         "type": "object",
         "properties": {"url": {"type": "string", "description": "The page's full URL"}},
