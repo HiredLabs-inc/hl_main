@@ -15,7 +15,7 @@ from hlagents.agents import ParseError
 from hlagents.conversation import note
 from hlagents.models import AgentLimits, AgentRun, spent_today
 from hlagents.providers import ChatProvider, call_with_limit, get_provider
-from hlagents.tools import TOOLS, tool_schema
+from hlagents.tools import SUGGESTIONS, TOOLS, tool_schema
 
 logger = logging.getLogger(__name__)
 
@@ -171,7 +171,14 @@ def _call_tool(name, arguments, tool_names):
 
 
 def _tool_reply(name, output):
-    return {"role": "tool", "tool_name": name, "content": json.dumps(output, default=str)}
+    """The tool's output as a message. Search suggestions are kept beside the
+    content, for the run page, so the model never sees them."""
+    reply = {"role": "tool", "tool_name": name}
+    if isinstance(output, dict) and SUGGESTIONS in output:
+        output = dict(output)
+        reply[SUGGESTIONS] = output.pop(SUGGESTIONS)
+    reply["content"] = json.dumps(output, default=str)
+    return reply
 
 
 def _stop_requested(run):

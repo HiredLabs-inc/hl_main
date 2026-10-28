@@ -7,7 +7,7 @@ not, is recorded as a TaskCall and counts toward the agents' daily cap.
 import logging
 
 from hlagents.models import TaskCall, TaskConfig
-from hlagents.providers import get_provider
+from hlagents.providers import ChatResult, call_with_limit, get_provider
 from hlagents.services import cap_problem, provider_problem
 
 logger = logging.getLogger(__name__)
@@ -29,6 +29,13 @@ class CompletionFailed(Exception):
 
 def complete(key, user_message, user=None) -> str:
     """The task's reply to `user_message`, or CompletionFailed."""
+    return complete_result(key, user_message, user).message["content"]
+
+
+def complete_result(key, user_message, user=None, limit=None) -> ChatResult:
+    """complete() with the provider's whole result, including the sources of a
+    search (docs/gcp-agents.md §3.2). `limit` is the most seconds the call may
+    take (call_with_limit)."""
     config = TaskConfig.objects.select_related("provider").filter(key=key).first()
     if config is None:
         raise CompletionFailed("", f"No task is set up for {key}.")
@@ -42,13 +49,17 @@ def complete(key, user_message, user=None) -> str:
     ]
     try:
         provider = get_provider(config.provider, timeout=TIMEOUT)
-        result = provider.chat(config.model, messages, tools=None, options=config.options)
+
+        def chat():
+            return provider.chat(config.model, messages, tools=None, options=config.options)
+
+        result = call_with_limit(chat, limit, config.model) if limit else chat()
     except Exception as e:
         logger.exception("Task %s failed (%s)", key, config.model)
         _record(config, user, error=f"{type(e).__name__}: {e}")
         raise CompletionFailed(config.model, str(e)) from e
 
-    text = (result.message.get("content") or "").strip()
+    text = result.message["content"] = (result.message.get("content") or "").strip()
     _record(
         config,
         user,
@@ -60,7 +71,7 @@ def complete(key, user_message, user=None) -> str:
         raise CompletionFailed(config.model, "The reply was empty.")
     # Messages hold participant data, so only sizes are logged
     logger.debug("Task %s: %d chars from a %d char message", key, len(text), len(user_message))
-    return text
+    return result
 
 
 def task_problem(config: TaskConfig) -> str:

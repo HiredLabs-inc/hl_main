@@ -49,11 +49,10 @@ class CallWithLimitTest(TestCase):
             call_with_limit(lambda: (_ for _ in ()).throw(ConnectionError("down")), 5)
 
 
-@override_settings(TAVILY_API_KEY="tavily-key")
-@mock.patch("hlagents.tools.web_search.TavilyClient")
+@mock.patch("hlagents.tools.web_search.search", return_value=(SEARCH_RESULTS, ""))
 class TimeLimitTest(TestCase):
     @override_settings(HLAGENTS_CALL_TIME_LIMIT=0.1)
-    def test_a_slow_call_fails_the_run_and_it_can_take_a_follow_up(self, tavily):
+    def test_a_slow_call_fails_the_run_and_it_can_take_a_follow_up(self, search):
         run = make_run()
         run_agent(run, SlowProvider(1, answer([])))
 
@@ -63,23 +62,22 @@ class TimeLimitTest(TestCase):
         self.assertEqual(services.follow_up_problem(run), "")
 
     @override_settings(HLAGENTS_CALL_TIME_LIMIT=120, HLAGENTS_RUN_TIME_LIMIT=30)
-    def test_the_call_limit_is_the_time_left_in_the_run(self, tavily):
+    def test_the_call_limit_is_the_time_left_in_the_run(self, search):
         with mock.patch("hlagents.loop.call_with_limit", side_effect=lambda func, seconds, model: func()) as limit:
             run_agent(make_run(), FakeProvider(answer([])))
         seconds = limit.call_args.args[1]
         self.assertTrue(29 < seconds <= 30, seconds)
 
     @override_settings(HLAGENTS_CALL_TIME_LIMIT=5)
-    def test_the_call_limit_applies_when_the_run_has_more_time(self, tavily):
+    def test_the_call_limit_applies_when_the_run_has_more_time(self, search):
         with mock.patch("hlagents.loop.call_with_limit", side_effect=lambda func, seconds, model: func()) as limit:
             run_agent(make_run(), FakeProvider(answer([])))
         self.assertEqual(limit.call_args.args[1], 5)
 
 
-@override_settings(TAVILY_API_KEY="tavily-key")
-@mock.patch("hlagents.tools.web_search.TavilyClient")
+@mock.patch("hlagents.tools.web_search.search", return_value=(SEARCH_RESULTS, ""))
 class StopTest(TestCase):
-    def test_stopping_a_queued_run_stops_it_and_the_worker_skips_it(self, tavily):
+    def test_stopping_a_queued_run_stops_it_and_the_worker_skips_it(self, search):
         run = make_run()
         services.stop_run(run)
 
@@ -87,10 +85,10 @@ class StopTest(TestCase):
         self.assertEqual((run.status, run.error), (AgentRun.Status.STOPPED, services.STOPPED_BY_STAFF))
         self.assertEqual(run_agent_task(run.pk), "skipped (stopped)")
 
-    def test_a_run_stops_before_its_next_step(self, tavily):
+    def test_a_run_stops_before_its_next_step(self, search):
         run = make_run()
         # Staff press Stop while the search runs; the loop saves after it
-        tavily.return_value.search.side_effect = lambda **kwargs: press_stop(run) or SEARCH_RESULTS
+        search.side_effect = lambda query, max_results: press_stop(run) or (SEARCH_RESULTS, "")
         provider = FakeProvider(tool_call(), answer(FUNDERS))
 
         run_agent(run, provider)
@@ -100,24 +98,23 @@ class StopTest(TestCase):
         self.assertEqual(len(provider.calls), 1)
         self.assertEqual(run.messages[-1]["role"], "tool")
 
-    def test_a_run_stops_before_its_next_tool_call_and_every_call_gets_a_reply(self, tavily):
+    def test_a_run_stops_before_its_next_tool_call_and_every_call_gets_a_reply(self, search):
         run = make_run()
         two_calls = tool_call()
         two_calls.message["tool_calls"].append({"function": {"name": "web_search", "arguments": {"query": "more"}}})
-        tavily.return_value.search.side_effect = lambda **kwargs: press_stop(run) or SEARCH_RESULTS
+        search.side_effect = lambda query, max_results: press_stop(run) or (SEARCH_RESULTS, "")
 
         run_agent(run, FakeProvider(two_calls))
 
         run.refresh_from_db()
         self.assertEqual(run.status, AgentRun.Status.STOPPED)
-        self.assertEqual(tavily.return_value.search.call_count, 1)
+        self.assertEqual(search.call_count, 1)
         replies = [json.loads(m["content"]) for m in run.messages if m["role"] == "tool"]
         self.assertEqual(replies[1], {"error": TOOL_STOPPED})
         self.assertEqual(run.tool_calls, 1)
 
-    def test_a_stopped_run_keeps_its_leads_and_can_take_a_follow_up(self, tavily):
+    def test_a_stopped_run_keeps_its_leads_and_can_take_a_follow_up(self, search):
         run = make_run()
-        tavily.return_value.search.return_value = SEARCH_RESULTS
         # Rejected candidates are sent back to be fixed; Stop is pressed meanwhile
         provider = FakeProvider(
             tool_call(),
@@ -204,12 +201,11 @@ class StopViewTest(TestCase):
         self.assertNotContains(response, reverse("hlagents:stop", args=[self.run.pk]))
 
 
-@override_settings(GCP_PROJECT_ID="test-project", GEMINI_LOCATION="global", TAVILY_API_KEY="tavily-key")
-@mock.patch("hlagents.tools.web_search.TavilyClient")
+@override_settings(GCP_PROJECT_ID="test-project", GEMINI_LOCATION="global")
+@mock.patch("hlagents.tools.web_search.search", return_value=(SEARCH_RESULTS, ""))
 @mock.patch("hlagents.providers.gemini.genai.Client")
 class GeminiRunTest(TestCase):
-    def test_a_funding_run_on_gemini_searches_and_saves_leads(self, client_class, tavily):
-        tavily.return_value.search.return_value = SEARCH_RESULTS
+    def test_a_funding_run_on_gemini_searches_and_saves_leads(self, client_class, search):
         generate = client_class.return_value.models.generate_content
         generate.side_effect = [
             gemini_response(parts=[function_call(signature=b"sig", query="veteran grants")]),
@@ -221,7 +217,7 @@ class GeminiRunTest(TestCase):
 
         run.refresh_from_db()
         self.assertEqual((run.status, run.result), (AgentRun.Status.DONE, "Inserted 2."))
-        tavily.return_value.search.assert_called_once_with(query="veteran grants", search_depth="advanced", max_results=8)
+        search.assert_called_once_with("veteran grants", 8)
         # The second call sends the search back with its signature and reply
         contents = generate.call_args_list[1].kwargs["contents"]
         self.assertEqual([c.role for c in contents], ["user", "model", "user"])
