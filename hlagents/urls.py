@@ -10,6 +10,7 @@ urlpatterns = [
     path("runs/<int:pk>/", views.run_view, name="run"),
     path("runs/<int:pk>/status/", views.run_status_view, name="run_status"),
     path("runs/<int:pk>/follow-up/", views.follow_up_view, name="follow_up"),
+    path("runs/<int:pk>/stop/", views.stop_view, name="stop"),
     path("leads/", views.leads_view, name="leads"),
     path("leads/import/", views.import_view, name="import"),
     path("leads/<int:pk>/", views.lead_view, name="lead"),

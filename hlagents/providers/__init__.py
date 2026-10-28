@@ -3,7 +3,7 @@
 Every provider speaks the same message format (ChatProvider), so runs can
 switch provider without touching the loop or stored conversations.
 """
-from .base import ChatProvider, ChatResult, ProviderError
+from .base import ChatProvider, ChatResult, ProviderError, call_with_limit
 from .gemini import GeminiProvider
 from .ollama import OllamaProvider
 

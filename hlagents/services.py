@@ -5,7 +5,9 @@ import io
 import re
 from collections import Counter
 from dataclasses import dataclass, field
+from datetime import timedelta
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 from django.urls import reverse
@@ -50,6 +52,8 @@ def _record(lead, actor, kind, text="", from_value="", to_value=""):
 
 # How many known leads an agent is told about, most recent first
 KNOWN_LEADS_LIMIT = 300
+STOPPED_BY_STAFF = "Stopped by staff."
+WORKER_DIED = "The worker stopped before the run finished."
 
 
 def known_leads_hint(kind) -> str:
@@ -154,9 +158,37 @@ def follow_up(run: AgentRun, text: str) -> AgentRun:
         _with_known_leads(run.messages, run.config.agent().lead_kind)
         run.status = AgentRun.Status.QUEUED
         run.result = run.error = ""
+        run.stop_requested = False
         run.save()
     _queue(run)
     return run
+
+
+def stop_run(run: AgentRun) -> AgentRun:
+    """Stop a queued run now. A running one is asked to stop, and does before its
+    next step or tool call (docs/gcp-agents.md §3.7)."""
+    with transaction.atomic():
+        run = AgentRun.objects.select_for_update().get(pk=run.pk)
+        if run.status == AgentRun.Status.QUEUED:
+            # The worker only starts queued runs, so it skips this one
+            run.status = AgentRun.Status.STOPPED
+            run.error = STOPPED_BY_STAFF
+            run.save(update_fields=["status", "error", "updated_at"])
+        elif run.status == AgentRun.Status.RUNNING:
+            run.stop_requested = True
+            run.save(update_fields=["stop_requested", "updated_at"])
+    return run
+
+
+def fail_stale_runs() -> int:
+    """Mark Failed the runs whose worker was killed mid-run, which nothing else
+    would: still Running, but not saved for longer than the worker's timeout.
+    The loop saves after every step, so a live run is never this old."""
+    now = timezone.now()
+    cutoff = now - timedelta(seconds=settings.HLAGENTS_STALE_RUN_AFTER)
+    return AgentRun.objects.filter(status=AgentRun.Status.RUNNING, updated_at__lt=cutoff).update(
+        status=AgentRun.Status.FAILED, error=WORKER_DIED, stop_requested=False, updated_at=now
+    )
 
 
 def _fit(field_name, value):
