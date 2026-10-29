@@ -17,10 +17,10 @@ Design and development ideas that came up during other work and are **not bugs**
 | ID | Status | Area | Summary |
 |---|---|---|---|
 | IDEA-001 | Planned | pipeline | Email assignees about new assignments and enrollments stuck in a step |
-| IDEA-003 | Idea | cold_apply | Staff pages to list, merge and delete companies, titles and locations |
+| IDEA-003 | Planned | cold_apply | Staff pages to list, merge and delete companies, titles and locations |
 | IDEA-004 | Idea | cold_apply | Self-service participant portal with its own access level |
 | IDEA-005 | In progress | accounts | Volunteer logins |
-| IDEA-006 | Idea | pipeline | Define the Nurture flow (today it's a placeholder) |
+| IDEA-006 | Planned | pipeline | Define the Nurture flow (today it's a placeholder) |
 | IDEA-008 | In progress | hlagents | Move agents to Google AI APIs where possible |
 | IDEA-009 | Idea | cold_apply | Parse an uploaded resume into experience, education, companies, titles and locations |
 | IDEA-010 | Planned | whole_site | Add dark-mode option |
@@ -33,7 +33,8 @@ Design and development ideas that came up during other work and are **not bugs**
 - **Notes:** could reuse the daily `send_signup_reminders` command / Cloud Run Job from the signup redesign. Activity rows already record assignments and step changes, so the data is there.
 
 ## IDEA-003 — Reference data management
-- **Status:** Idea · **Area:** cold_apply · **Source:** `docs/designs/completed/cold-apply-staff-redesign.md` §4.2 item 9 and §5.6 (2026-10-19)
+- **Status:** Planned · **Area:** cold_apply · **Source:** `docs/designs/completed/cold-apply-staff-redesign.md` §4.2 item 9 and §5.6 (2026-10-19)
+- **Plan:** `docs/designs/planned/reference-data.md` (drafted 2026-10-29, not agreed): stages R1 (merge service), R2 (merge pages), R3 (duplicates page and import fixes), R4 (staff layout and nav). List, edit and delete already shipped with BUG-030 (4f703c5).
 - **What:** staff pages to list, search, merge duplicates of and delete Companies (`resume.Organization`), Titles (`resume.Position`) and Locations.
 - **Notes:** job imports and manual entry create duplicates over time. Merging means re-pointing foreign keys (jobs, experiences, overviews) before deleting.
 
@@ -50,7 +51,8 @@ Design and development ideas that came up during other work and are **not bugs**
 - **Release** 3.4.0
 
 ## IDEA-006 — Define the Nurture flow
-- **Status:** Idea · **Area:** pipeline · **Source:** `docs/designs/completed/cold-apply-staff-redesign.md` §7 (2026-10-19)
+- **Status:** Planned · **Area:** pipeline · **Source:** `docs/designs/completed/cold-apply-staff-redesign.md` §7 (2026-10-19)
+- **Plan:** `docs/designs/planned/nurture-flow.md` (drafted 2026-10-29, not agreed): stages NF1 (steps and due), NF2 (entering and leaving), NF3 (check-in emails), NF4 (re-permission pass), NF5 (outcomes, optional).
 - **What:** decide what Nurture means for people who have finished or paused other flows (boot camp alumni, past job-search participants), and give it real steps.
 - **Notes:** prod has 121 participants on Nurture → *Monthly Newsletter*, which is a placeholder; there is no newsletter. The staff redesign migrates them to a generic *Nurture* step in a Nurture flow until this is defined.
 
