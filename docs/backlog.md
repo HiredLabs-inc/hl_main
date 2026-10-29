@@ -16,18 +16,19 @@ Design and development ideas that came up during other work and are **not bugs**
 
 | ID | Status | Area | Summary |
 |---|---|---|---|
-| IDEA-001 | Idea | pipeline | Email assignees about new assignments and enrollments stuck in a step |
+| IDEA-001 | Planned | pipeline | Email assignees about new assignments and enrollments stuck in a step |
 | IDEA-003 | Idea | cold_apply | Staff pages to list, merge and delete companies, titles and locations |
 | IDEA-004 | Idea | cold_apply | Self-service participant portal with its own access level |
 | IDEA-005 | In progress | accounts | Volunteer logins |
 | IDEA-006 | Idea | pipeline | Define the Nurture flow (today it's a placeholder) |
 | IDEA-008 | In progress | hlagents | Move agents to Google AI APIs where possible |
 | IDEA-009 | Idea | cold_apply | Parse an uploaded resume into experience, education, companies, titles and locations |
-| IDEA-010 | Idea | whole_site | Add dark-mode option |
+| IDEA-010 | Planned | whole_site | Add dark-mode option |
 ---
 
 ## IDEA-001 — Assignee notifications
-- **Status:** Idea · **Area:** pipeline · **Source:** `docs/designs/completed/cold-apply-staff-redesign.md` §5.5, left out of §8 (2026-10-19)
+- **Status:** Planned · **Area:** pipeline · **Source:** `docs/designs/completed/cold-apply-staff-redesign.md` §5.5, left out of §8 (2026-10-19)
+- **Plan:** `docs/designs/planned/assignee-notifications.md` (drafted 2026-10-29): stages N1 (assigned email), N2 (stuck digest and command), N3 (Cloud Run job and scheduler).
 - **What:** email a staff member when an enrollment is assigned to them, and when one of their enrollments has sat in the same step longer than N days.
 - **Notes:** could reuse the daily `send_signup_reminders` command / Cloud Run Job from the signup redesign. Activity rows already record assignments and step changes, so the data is there.
 
@@ -65,7 +66,8 @@ Design and development ideas that came up during other work and are **not bugs**
 - **Notes:** an earlier parser lived in a separate `resume_parser` app. It isn't in this repo's history, but `ML_MODELS_PATH`, `ENTITIES_PATH` and `RESUME_OUT_PATH` in `hl_main/settings/base.py` still point at it. This would use Gemini on Vertex like `cold_apply/text_generation.py` (or hlagents, see IDEA-007). Related to IDEA-003 (merging duplicates).
 
 ## IDEA-010 — Dark mode
-- **Status:** Idea · **Area:** whole_site · **Source:** Human brain
+- **Status:** Planned · **Area:** whole_site · **Source:** Human brain
+- **Plan:** `docs/designs/planned/dark-mode.md` (drafted 2026-10-29): stages D1 (tokens and switcher), D2 (staff), D3 (public, account, onboarding), D4 (legacy cold_apply and shared pieces), D5 (check and merge).
 - **What:** users and site visitors can select dark or light mode, and the site defaults to the system setting.
 - **Notes:** It's only white background now.
 
