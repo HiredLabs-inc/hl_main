@@ -14,16 +14,17 @@ Design and development ideas that came up during other work and are **not bugs**
 
 ## Index
 
-| ID | Status | Area | Summary |
-|---|---|---|---|
-| IDEA-001 | Planned | pipeline | Email assignees about new assignments and enrollments stuck in a step |
-| IDEA-003 | Planned | cold_apply | Staff pages to list, merge and delete companies, titles and locations |
-| IDEA-004 | Idea | cold_apply | Self-service participant portal with its own access level |
-| IDEA-005 | In progress | accounts | Volunteer logins |
-| IDEA-006 | Planned | pipeline | Define the Nurture flow (today it's a placeholder) |
-| IDEA-008 | In progress | hlagents | Move agents to Google AI APIs where possible |
-| IDEA-009 | Idea | cold_apply | Parse an uploaded resume into experience, education, companies, titles and locations |
-| IDEA-010 | Planned | whole_site | Add dark-mode option |
+| ID       | Status      | Area       | Summary                                                                              |
+|----------|-------------|------------|--------------------------------------------------------------------------------------|
+| IDEA-001 | Planned     | pipeline   | Email assignees about new assignments and enrollments stuck in a step                |
+| IDEA-003 | Planned     | cold_apply | Staff pages to list, merge and delete companies, titles and locations                |
+| IDEA-004 | Planned     | cold_apply | Self-service participant portal with its own access level                            |
+| IDEA-005 | In progress | accounts   | Volunteer logins                                                                     |
+| IDEA-006 | Planned     | pipeline   | Define the Nurture flow (today it's a placeholder)                                   |
+| IDEA-008 | In progress | hlagents   | Move agents to Google AI APIs where possible                                         |
+| IDEA-009 | Idea        | cold_apply | Parse an uploaded resume into experience, education, companies, titles and locations |
+| IDEA-010 | Planned     | whole_site | Add dark-mode option                                                                 |
+
 ---
 
 ## IDEA-001 — Assignee notifications
