@@ -16,13 +16,12 @@ Design and development ideas that came up during other work and are **not bugs**
 | ID | Status | Area | Summary |
 |---|---|---|---|
 | IDEA-001 | Idea | pipeline | Email assignees about new assignments and enrollments stuck in a step |
-
 | IDEA-003 | Idea | cold_apply | Staff pages to list, merge and delete companies, titles and locations |
 | IDEA-004 | Idea | cold_apply | Self-service participant portal with its own access level |
 | IDEA-006 | Idea | pipeline | Define the Nurture flow (today it's a placeholder) |
 | IDEA-008 | In progress | hlagents | Move agents to Google AI APIs where possible |
 | IDEA-009 | Idea | cold_apply | Parse an uploaded resume into experience, education, companies, titles and locations |
-
+| IDEA-010 | Idea | whole_site | Add dark-mode option |
 ---
 
 ## IDEA-001 — Assignee notifications
@@ -55,6 +54,11 @@ Design and development ideas that came up during other work and are **not bugs**
 - **Status:** Idea · **Area:** cold_apply · **Source:** BUG-030 discussion (2026-10-23)
 - **What:** a participant or staff member uploads a resume (PDF or DOCX), and an LLM extracts experiences, education, bullets, companies, titles and locations. The person reviews the extracted values before they're saved. Each value is matched case-insensitively to an existing row (the matching BUG-030 added), and only unmatched values create new rows. Less typing, fewer duplicates.
 - **Notes:** an earlier parser lived in a separate `resume_parser` app. It isn't in this repo's history, but `ML_MODELS_PATH`, `ENTITIES_PATH` and `RESUME_OUT_PATH` in `hl_main/settings/base.py` still point at it. This would use Gemini on Vertex like `cold_apply/text_generation.py` (or hlagents, see IDEA-007). Related to IDEA-003 (merging duplicates).
+
+## IDEA-010 — Dark mode
+- **Status:** Idea · **Area:** whole_site · **Source:** Human brain
+- **What:** users and site visitors can select dark or light mode, and the site defaults to the system setting.
+- **Notes:** It's only white background now.
 
 ## Completed
 | ID | Status | Area | Summary |
