@@ -37,6 +37,9 @@ class ProviderConfig(TrackedModel):
     input_cost_per_mtok = models.DecimalField(max_digits=10, decimal_places=4, default=0)
     output_cost_per_mtok = models.DecimalField(max_digits=10, decimal_places=4, default=0)
     active = models.BooleanField(default=True)
+    # Models anyone who runs agents can pick on /agents/. Last, because the name
+    # hides the models module for the rest of the class body.
+    models = models.JSONField(default=list, blank=True)
 
     class Meta:
         ordering = ["name"]

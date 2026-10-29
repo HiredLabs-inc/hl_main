@@ -133,3 +133,23 @@ class AgentsOnGeminiTest(TestCase):
         self.assertEqual(TaskConfig.objects.get(key="web_search").model, "search-edited")
         self.assertEqual(AgentConfig.objects.get(agent_type="outreach").provider.name, "Gemini on Vertex")
         self.assertEqual(AgentLimits.get().tool_costs, {"web_search": "0.05", "read_page": "0.002"})
+
+
+class ProviderModelsTest(TestCase):
+    """0014 lists each provider's models from what its agents and tasks use."""
+
+    migration = import_module("hlagents.migrations.0014_provider_models")
+
+    def test_providers_start_with_the_models_in_use(self):
+        self.assertEqual(
+            ProviderConfig.objects.get(name="Gemini on Vertex").models, [settings.GEMINI_MODEL, "gemini-3.5-flash-lite"]
+        )
+        self.assertEqual(ProviderConfig.objects.get(name="Ollama Cloud").models, ["gemma4:31b"])
+
+    def test_seeds_from_edited_agents(self):
+        ollama = ProviderConfig.objects.get(name="Ollama Cloud")
+        AgentConfig.objects.filter(agent_type="funding").update(provider=ollama, model="nemotron-3-ultra")
+
+        self.migration.seed_models(django_apps, None)
+
+        self.assertEqual(ProviderConfig.objects.get(pk=ollama.pk).models, ["nemotron-3-ultra", "gemma4:31b"])

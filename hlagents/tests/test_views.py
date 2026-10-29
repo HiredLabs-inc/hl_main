@@ -10,8 +10,8 @@ from django.urls import reverse
 from background_tasks.models import Task
 from background_tasks.queue import TASK_ID_HEADER
 from hlagents import services
-from hlagents.models import AgentConfig, AgentRun, Lead
-from hlagents.tests.fakes import make_config, make_run
+from hlagents.models import AgentConfig, AgentRun, Lead, ProviderConfig
+from hlagents.tests.fakes import make_config, make_provider, make_run
 from pipeline.models import Step
 
 
@@ -89,6 +89,42 @@ class StartRunTest(ViewTestCase):
         )
         self.assertRedirects(response, reverse("hlagents:index"))
         self.assertFalse(AgentRun.objects.exists())
+
+    @mock.patch("hlagents.services.queue_task")
+    def test_runs_on_the_model_picked(self, queue_task):
+        queue_task.return_value = Task.objects.create(target_path="/", payload={})
+        other = make_provider(models=["big-model"])
+        response = self.client.post(
+            reverse("hlagents:start_run", args=[self.config.pk]),
+            {f"agent-{self.config.pk}-request": "x", f"agent-{self.config.pk}-model": f"{other.pk}:big-model"},
+        )
+
+        run = AgentRun.objects.get()
+        self.assertRedirects(response, reverse("hlagents:run", args=[run.pk]))
+        self.assertEqual((run.provider, run.model), (other, "big-model"))
+        self.config.refresh_from_db()
+        self.assertEqual(self.config.model, "test-model")
+
+    def test_unlisted_model_is_refused(self):
+        other = make_provider(models=["big-model"])
+        for value in [f"{other.pk}:made-up", "nonsense"]:
+            response = self.client.post(
+                reverse("hlagents:start_run", args=[self.config.pk]),
+                {f"agent-{self.config.pk}-request": "x", f"agent-{self.config.pk}-model": value},
+                follow=True,
+            )
+            self.assertContains(response, "That model isn&#x27;t available. Pick another.")
+        self.assertFalse(AgentRun.objects.exists())
+
+    def test_model_picker_shows_only_with_a_choice(self):
+        ProviderConfig.objects.exclude(pk=self.config.provider_id).update(active=False)
+        response = self.client.get(reverse("hlagents:index"))
+        self.assertNotContains(response, f'<select name="agent-{self.config.pk}-model"')
+        other = make_provider(models=["big-model"])
+        response = self.client.get(reverse("hlagents:index"))
+        self.assertContains(response, f'<select name="agent-{self.config.pk}-model"')
+        self.assertContains(response, f'<option value="{other.pk}:big-model">{other} · big-model</option>')
+        self.assertContains(response, f"{self.config.provider} · test-model (default)")
 
     def test_inactive_agent_is_404(self):
         AgentConfig.objects.filter(pk=self.config.pk).update(active=False)
