@@ -76,10 +76,10 @@ UI (templates + htmx)  ──►  AgentRun  ──►  background_tasks (Cloud T
 
 ### 3.4 UI
 Built with Django templates, htmx, Alpine, Tailwind and Preline, in the same style as `/staff/`.
-- **`/agents/`**: a card per active `AgentConfig` (type, provider and model, last run) with a Run button, and recent runs below.
+- **`/agents/`**: a card per active `AgentConfig` (type, provider and model, last run) with a Run button, and recent runs below. Anyone who can run agents can pick a model for one run. The choices are the agent's own model plus the models staff list on each usable provider (`ProviderConfig.models`). The agent's model stays the default, and the run records what it used.
 - **`/agents/runs/<id>/`**: on the left, the conversation (user messages, tool calls collapsed as "searched: …", agent replies) and a follow-up box. On the right, this run's candidates, each with Approve, Reject and inline edit.
 - **`/agents/leads/`**: all leads, filtered by kind and review status.
-- **`/agents/settings/`**: edit agents (provider, model, prompt, tools, default request) and providers.
+- **`/agents/settings/`**: edit agents (provider, model, prompt, tools, default request) and providers, including each provider's list of models that people can pick per run.
 
 ### 3.5 Permissions
 - Every page uses `app_permission_required("hlagents")` from `userprofile/guards.py`. Staff are granted the permission now. Volunteers get it when IDEA-005 (volunteer logins) lands, with no code change.
@@ -150,6 +150,10 @@ Added 2026-10-22, from Jeff's answers in §7:
 13. **Everything goes in the activity log** from the start (§3.10).
 14. **Resume generation** (BUG-038) and **keyword extraction** will move onto this provider layer later, as separate efforts (IDEA-007).
 15. The **default model** for the seeded agents is `gemma4:31b`, the model the prototype used (2026-10-22). The prototype ran it as `gemma4:31b-cloud` through a local Ollama. The `-cloud` suffix is only for local Ollama; calling `https://ollama.com` directly takes the plain name. This gets confirmed on the first real run in H2.
+
+Added 2026-10-29:
+
+16. **Model per run:** anyone with `add_agentrun` picks a provider and model for each run on `/agents/`, from the models staff list on each provider. It doesn't change the agent's saved default. Cost rates are still per provider, so a model is costed at its provider's rate.
 
 ## 7. Open questions
 Answered 2026-10-22, and folded into §6 and §3, including the partners CSV columns and the prototype model. Nothing is open.

@@ -50,8 +50,9 @@ def index_view(request):
     configs = AgentConfig.objects.filter(active=True).select_related("provider")
     for config in configs:
         config.last_run = config.runs.first()
-        config.form = RunForm(initial={"request": config.default_request}, prefix=f"agent-{config.pk}")
-        config.problem = services.start_problem(config)
+        choices = services.run_choices(config)
+        config.form = RunForm(initial={"request": config.default_request}, prefix=f"agent-{config.pk}", choices=choices)
+        config.problem = services.start_problem(config, choices)
     runs = AgentRun.objects.select_related("config", "started_by").annotate(lead_count=Count("leads"))[:20]
     return render(request, "hlagents/index.html", {"configs": configs, "runs": runs})
 
@@ -61,12 +62,16 @@ def index_view(request):
 def start_run_view(request, config_pk):
     _require(request.user, "hlagents.add_agentrun")
     config = get_object_or_404(AgentConfig, pk=config_pk, active=True)
-    form = RunForm(request.POST, prefix=f"agent-{config.pk}")
+    form = RunForm(request.POST, prefix=f"agent-{config.pk}", choices=services.run_choices(config))
     if not form.is_valid():
-        messages.error(request, "The request can't be empty.")
+        if "model" in form.errors:
+            messages.error(request, "That model isn't available. Pick another.")
+        else:
+            messages.error(request, "The request can't be empty.")
         return redirect("hlagents:index")
+    provider, model = form.cleaned_choice()
     try:
-        run = services.start_run(config, request.user, form.cleaned_data["request"])
+        run = services.start_run(config, request.user, form.cleaned_data["request"], provider, model)
     except ValidationError as e:
         messages.error(request, e.messages[0])
         return redirect("hlagents:index")

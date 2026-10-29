@@ -125,6 +125,7 @@ class ProviderSettingsTest(SettingsTestCase):
             "name": self.provider.name,
             "kind": "ollama",
             "base_url": "",
+            "models": "",
             "secret_env": "OLLAMA_API_KEY",
             "input_cost_per_mtok": "0.5",
             "output_cost_per_mtok": "1.5",
@@ -150,7 +151,16 @@ class ProviderSettingsTest(SettingsTestCase):
         )
         self.assertContains(response, "greater than or equal to 0")
 
+    def test_models_one_per_line(self):
+        data = self.provider_data(models=" big-model\n\nsmall-model\nbig-model \n")
+        self.client.post(reverse("hlagents:provider_settings", args=[self.provider.pk]), data)
+        self.provider.refresh_from_db()
+        self.assertEqual(self.provider.models, ["big-model", "small-model"])
+        response = self.client.get(reverse("hlagents:provider_settings", args=[self.provider.pk]))
+        self.assertContains(response, "big-model\nsmall-model</textarea>")
+
     def test_turning_a_provider_off_stops_new_runs(self):
+        ProviderConfig.objects.exclude(pk=self.provider.pk).update(active=False)
         self.client.post(reverse("hlagents:provider_settings", args=[self.provider.pk]), self.provider_data(secret_env="", active=""))
         response = self.client.get(reverse("hlagents:index"))
         self.assertContains(response, f"{self.provider.name} is turned off in settings.")

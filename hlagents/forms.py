@@ -10,8 +10,35 @@ from .tools import TOOLS
 MAX_IMPORT_BYTES = 2 * 1024 * 1024
 
 
+def model_choice(provider, model):
+    return f"{provider.pk}:{model}"
+
+
 class RunForm(forms.Form):
+    """A run's request, and the provider and model to run it on, from
+    services.run_choices (the agent's own first). No model means the agent's own."""
+
+    model = forms.ChoiceField(required=False, widget=forms.Select(attrs={"class": "staff-field w-full"}))
     request = forms.CharField(widget=forms.Textarea(attrs={"rows": 2, "class": "staff-field w-full"}))
+
+    def __init__(self, *args, choices=(), **kwargs):
+        super().__init__(*args, **kwargs)
+        self.choices = list(choices)
+        self.fields["model"].choices = [
+            (model_choice(provider, model), f"{provider} · {model}" + (" (default)" if i == 0 else ""))
+            for i, (provider, model) in enumerate(self.choices)
+        ]
+        if self.choices:
+            self.fields["model"].initial = model_choice(*self.choices[0])
+        if len(self.choices) < 2:
+            self.fields["model"].widget = forms.HiddenInput()
+
+    def cleaned_choice(self):
+        """The (provider, model) picked, or (None, None) for the agent's own."""
+        value = self.cleaned_data["model"]
+        if not value:
+            return None, None
+        return next((provider, model) for provider, model in self.choices if model_choice(provider, model) == value)
 
 
 class FollowUpForm(forms.Form):
@@ -104,10 +131,15 @@ class ProviderConfigForm(forms.ModelForm):
     )
     input_cost_per_mtok = forms.DecimalField(label="Input $ per million tokens", min_value=0, decimal_places=4)
     output_cost_per_mtok = forms.DecimalField(label="Output $ per million tokens", min_value=0, decimal_places=4)
+    models = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={"rows": 4}),
+        help_text="One per line, as the provider names it. People who run agents can pick these on the Agents page.",
+    )
 
     class Meta:
         model = ProviderConfig
-        fields = ["name", "kind", "base_url", "location", "secret_env", "input_cost_per_mtok", "output_cost_per_mtok", "active"]
+        fields = ["name", "kind", "base_url", "location", "models", "secret_env", "input_cost_per_mtok", "output_cost_per_mtok", "active"]
         labels = {"base_url": "Base URL"}
         help_texts = {
             "base_url": "Ollama only. Leave blank for Ollama Cloud. The API key is sent here.",
@@ -120,7 +152,11 @@ class ProviderConfigForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields["secret_env"].choices = [("", "No key")] + [(name, name) for name in settings.HLAGENTS_PROVIDER_SECRETS]
         self.fields["input_cost_per_mtok"].help_text = "Estimates for the cost cap. 0 for a subscription."
+        self.initial["models"] = "\n".join(self.instance.models)
         _style(self)
+
+    def clean_models(self):
+        return list(dict.fromkeys(line.strip() for line in self.cleaned_data["models"].splitlines() if line.strip()))
 
 
 class TaskConfigForm(forms.ModelForm):

@@ -9,7 +9,7 @@ from django.urls import reverse
 from background_tasks.models import Task
 from hlagents import services
 from hlagents.loop import run_agent
-from hlagents.models import AgentLimits, AgentRun, Lead
+from hlagents.models import AgentConfig, AgentLimits, AgentRun, Lead, ProviderConfig
 from hlagents.tests.fakes import FUNDERS, FakeProvider, answer, cite, make_config, make_provider, make_run
 
 MORE_FUNDERS = [{**FUNDERS[0], "org_name": "Texas Fund"}]
@@ -102,6 +102,58 @@ class StartRunChecksTest(TestCase):
         config = make_config(provider=make_provider(secret_env="HLAGENTS_TEST_UNSET_KEY"))
         with self.assertRaisesMessage(ValidationError, "HLAGENTS_TEST_UNSET_KEY isn't set"):
             services.start_run(config, None)
+        self.assertFalse(AgentRun.objects.exists())
+
+
+@mock.patch("hlagents.services.queue_task", side_effect=lambda *args: Task.objects.create(target_path="/", payload={}))
+class RunChoicesTest(TestCase):
+    def setUp(self):
+        # Only this test's providers
+        ProviderConfig.objects.update(active=False)
+        self.provider = make_provider(models=["test-model", "small-model"])
+        self.other = make_provider(models=["big-model"])
+        self.config = make_config(provider=self.provider, model="own-model")
+
+    def test_the_agents_own_model_first_then_the_listed_ones(self, queue_task):
+        self.assertEqual(
+            services.run_choices(self.config),
+            [(self.provider, "own-model"), (self.provider, "test-model"), (self.provider, "small-model"), (self.other, "big-model")],
+        )
+
+    def test_listed_own_model_isnt_repeated(self, queue_task):
+        self.config.model = "small-model"
+        self.assertEqual(
+            services.run_choices(self.config),
+            [(self.provider, "small-model"), (self.provider, "test-model"), (self.other, "big-model")],
+        )
+
+    @override_settings(HLAGENTS_PROVIDER_SECRETS=["HLAGENTS_TEST_UNSET_KEY"])
+    def test_providers_that_cant_be_used_are_left_out(self, queue_task):
+        ProviderConfig.objects.filter(pk=self.provider.pk).update(active=False)
+        make_provider(models=["keyless"], secret_env="HLAGENTS_TEST_UNSET_KEY")
+        self.config = AgentConfig.objects.get(pk=self.config.pk)
+        self.assertEqual(services.run_choices(self.config), [(self.other, "big-model")])
+        # The agent can still run on another provider
+        self.assertEqual(services.start_problem(self.config), "")
+
+    def test_no_choices_is_a_problem(self, queue_task):
+        ProviderConfig.objects.update(active=False)
+        self.config = AgentConfig.objects.get(pk=self.config.pk)
+        self.assertIn("is turned off in settings", services.start_problem(self.config))
+
+    def test_runs_on_the_chosen_model_and_keeps_the_agents(self, queue_task):
+        run = services.start_run(self.config, None, "", self.other, "big-model")
+        self.assertEqual((run.provider, run.model), (self.other, "big-model"))
+        self.config.refresh_from_db()
+        self.assertEqual((self.config.provider, self.config.model), (self.provider, "own-model"))
+
+    def test_unlisted_model_is_refused(self, queue_task):
+        for provider, model in [(self.other, "own-model"), (self.other, "made-up")]:
+            with self.assertRaisesMessage(ValidationError, "That model isn't available"):
+                services.start_run(self.config, None, "", provider, model)
+        ProviderConfig.objects.filter(pk=self.other.pk).update(active=False)
+        with self.assertRaisesMessage(ValidationError, "That model isn't available"):
+            services.start_run(self.config, None, "", self.other, "big-model")
         self.assertFalse(AgentRun.objects.exists())
 
 

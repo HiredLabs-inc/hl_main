@@ -16,7 +16,7 @@ from django.utils import timezone
 from background_tasks.queue import queue_task
 from hlagents.agents import CORRECTABLE, DUPLICATE, INCOMPLETE, agent_for_lead_kind
 from hlagents.conversation import note, tool_text
-from hlagents.models import AgentConfig, AgentLimits, AgentRun, Lead, spent_today
+from hlagents.models import AgentConfig, AgentLimits, AgentRun, Lead, ProviderConfig, spent_today
 from pipeline import services as pipeline
 from pipeline.models import Activity, Enrollment, Flow, Step
 
@@ -81,14 +81,15 @@ def _with_known_leads(messages, kind):
     return messages
 
 
-def create_run(config: AgentConfig, started_by, request: str = "") -> AgentRun:
+def create_run(config: AgentConfig, started_by, request: str = "", provider=None, model=None) -> AgentRun:
     """A queued run of the config, starting from its prompt and default request,
-    with today's date and the leads we already have."""
+    with today's date and the leads we already have. It runs on the config's
+    provider and model unless others are given."""
     today = timezone.localdate().strftime("%B %-d, %Y")
     return AgentRun.objects.create(
         config=config,
-        provider=config.provider,
-        model=config.model,
+        provider=provider or config.provider,
+        model=model or config.model,
         started_by=started_by,
         messages=_with_known_leads(
             [
@@ -116,9 +117,28 @@ def provider_problem(provider):
     return provider.key_problem()
 
 
-def start_problem(config: AgentConfig) -> str:
-    """Why the config can't start a run right now, or ""."""
-    return provider_problem(config.provider) or cap_problem()
+def run_choices(config: AgentConfig) -> list[tuple[ProviderConfig, str]]:
+    """The (provider, model) pairs a run of the config can use: its own first,
+    then the models staff listed on each provider. Providers that can't be used
+    right now are left out."""
+    providers = [config.provider] + [p for p in ProviderConfig.objects.filter(active=True) if p.pk != config.provider_id]
+    choices = []
+    for provider in providers:
+        if provider_problem(provider):
+            continue
+        models = [config.model] if provider == config.provider else []
+        choices += [(provider, model) for model in dict.fromkeys(models + provider.models)]
+    return choices
+
+
+def start_problem(config: AgentConfig, choices=None) -> str:
+    """Why the config can't start a run right now, or "". Pass run_choices(config)
+    if you have it."""
+    if problem := cap_problem():
+        return problem
+    if not (run_choices(config) if choices is None else choices):
+        return provider_problem(config.provider) or "No provider can run this agent right now."
+    return ""
 
 
 def follow_up_problem(run: AgentRun) -> str:
@@ -133,12 +153,18 @@ def _queue(run):
     run.save(update_fields=["task", "updated_at"])
 
 
-def start_run(config: AgentConfig, started_by, request: str = "") -> AgentRun:
-    """Create a run and queue it for the worker. Raises ValidationError if it
-    can't start (start_problem)."""
-    if problem := start_problem(config):
+def start_run(config: AgentConfig, started_by, request: str = "", provider=None, model=None) -> AgentRun:
+    """Create a run and queue it for the worker, on the config's provider and
+    model or one of its other run_choices. Raises ValidationError if it can't
+    start (start_problem), or the choice isn't one of them."""
+    if problem := cap_problem():
         raise ValidationError(problem)
-    run = create_run(config, started_by, request)
+    if provider is None and model is None:
+        if problem := provider_problem(config.provider):
+            raise ValidationError(problem)
+    elif (provider, model) not in run_choices(config):
+        raise ValidationError("That model isn't available. Pick another.")
+    run = create_run(config, started_by, request, provider, model)
     _queue(run)
     return run
 
