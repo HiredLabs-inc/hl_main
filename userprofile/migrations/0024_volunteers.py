@@ -1,5 +1,5 @@
 """The Volunteers group, which marks volunteers and holds no permissions, and
-VolunteerInvite (docs/volunteer-logins.md §3.1, §3.4)."""
+VolunteerInvite (docs/designs/in-progress/volunteer-logins.md §3.1, §3.4)."""
 from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion

@@ -1,5 +1,5 @@
-"""Runs an agent until it gives a final answer (docs/hlagents.md §3.1, §3.8;
-time limits and Stop in docs/gcp-agents.md §3.7).
+"""Runs an agent until it gives a final answer (docs/designs/completed/hlagents.md §3.1, §3.8;
+time limits and Stop in docs/designs/in-progress/gcp-agents.md §3.7).
 
 Ported from examples/utils/agent_loop.py. Messages are saved after every turn,
 so the run page shows progress and a crash keeps the history.

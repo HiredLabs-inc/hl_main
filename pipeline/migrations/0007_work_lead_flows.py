@@ -1,5 +1,5 @@
 """pipeline.work_lead_flows, given to the Agents group so volunteers in it can
-work the Funding and Outreach boards (docs/volunteer-logins.md §3.3). Staff pass
+work the Funding and Outreach boards (docs/designs/in-progress/volunteer-logins.md §3.3). Staff pass
 through is_staff, so nothing changes for them."""
 from django.contrib.auth.management import create_permissions
 from django.db import migrations

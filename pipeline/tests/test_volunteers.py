@@ -1,6 +1,6 @@
 """Volunteers on the lead flows: with work_lead_flows (the Agents group) they
 see and work Funding and Outreach like staff, and nothing about people
-(docs/volunteer-logins.md §3.3)."""
+(docs/designs/in-progress/volunteer-logins.md §3.3)."""
 from django.contrib.auth.models import Group, User
 from django.core.exceptions import ValidationError
 from django.test import TestCase

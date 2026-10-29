@@ -5,7 +5,7 @@ Branches `feature/idea-007-resume` (effort R), then `feature/idea-007-keywords` 
 > **Status:** design agreed with Jeff on 2026-10-23 (decisions in §7). R merged into develop in c847d4c and K in 29cdaf2 (§8). Done.
 
 ## 1. Context
-IDEA-007 in `docs/backlog.md`, from `docs/hlagents.md` §6.14: run resume generation and job keyword extraction through the hlagents provider layer, so their provider and model can be switched in settings like the agents'.
+IDEA-007 in `docs/backlog.md`, from `docs/designs/completed/hlagents.md` §6.14: run resume generation and job keyword extraction through the hlagents provider layer, so their provider and model can be switched in settings like the agents'.
 
 **Resume generation works today.** BUG-038 was fixed in e61356f and merged in c92d401.
 - `cold_apply/text_generation.py` `generate_text()` calls Gemini on Vertex directly through `google-genai`.
@@ -113,7 +113,7 @@ hlagents H1–H7 are merged into develop. The provider layer is `hlagents/provid
 3. The `vertex` command calls `complete("resume_overview", …)` and prints the provider, model and token counts.
 4. `settings.GEMINI_MODEL` is read only by the seed migration. A comment says the runtime model choice is in `TaskConfig`. `GEMINI_LOCATION` stays as the provider's default location.
 5. Docs:
-   - a §9 "Tasks and the Gemini provider" in `docs/hlagents.md`
+   - a §9 "Tasks and the Gemini provider" in `docs/designs/completed/hlagents.md`
    - IDEA-007 → In progress
    - a note in IDEA-008 that a text-only `GeminiProvider` exists
 6. **Stage checklist:**

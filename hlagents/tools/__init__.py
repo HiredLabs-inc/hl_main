@@ -1,4 +1,4 @@
-"""Tools agents can call (docs/hlagents.md §3.1)."""
+"""Tools agents can call (docs/designs/completed/hlagents.md §3.1)."""
 from .base import SUGGESTIONS, Tool, ToolError
 from .read_page import READ_PAGE
 from .web_search import WEB_SEARCH

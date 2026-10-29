@@ -1,5 +1,5 @@
 """Lead flows: Funding and Outreach hold hlagents leads, not people
-(docs/hlagents.md §3.6)."""
+(docs/designs/completed/hlagents.md §3.6)."""
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction

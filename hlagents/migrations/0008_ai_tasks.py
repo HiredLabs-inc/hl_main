@@ -1,4 +1,4 @@
-"""AI tasks (docs/ai-tasks.md §3): single-shot provider calls such as writing a
+"""AI tasks (docs/designs/completed/ai-tasks.md §3): single-shot provider calls such as writing a
 resume overview, with a TaskCall per call for the daily cap. 0009 seeds them.
 """
 from django.conf import settings

@@ -1,4 +1,4 @@
-"""Seed the Funding and Outreach lead flows (docs/hlagents.md §3.6) and enroll
+"""Seed the Funding and Outreach lead flows (docs/designs/completed/hlagents.md §3.6) and enroll
 leads that are already approved: imported partners at Partner, the rest at
 the first step.
 """

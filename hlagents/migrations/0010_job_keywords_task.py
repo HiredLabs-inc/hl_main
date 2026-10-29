@@ -1,4 +1,4 @@
-"""Seed the job_keywords task (docs/ai-tasks.md §3.6, IDEA-007 K) on the
+"""Seed the job_keywords task (docs/designs/completed/ai-tasks.md §3.6, IDEA-007 K) on the
 Gemini provider 0009 seeded, with the model the resume tasks were seeded with.
 """
 from importlib import import_module

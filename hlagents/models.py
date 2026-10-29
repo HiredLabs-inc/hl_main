@@ -1,4 +1,4 @@
-"""AI agents staff can run from /agents/ (docs/hlagents.md §3.2).
+"""AI agents staff can run from /agents/ (docs/designs/completed/hlagents.md §3.2).
 
 Providers and agents are configured in the DB so staff can switch model or
 provider without a deploy. Agent types (how a reply is parsed into leads) are
@@ -116,7 +116,7 @@ class AgentRun(TrackedModel):
     tool_calls = models.PositiveIntegerField(default=0)
     cost = models.DecimalField(max_digits=10, decimal_places=4, default=0)
     # Set by the Stop button while the run works; the loop checks it before each
-    # step and tool call (docs/gcp-agents.md §3.7)
+    # step and tool call (docs/designs/in-progress/gcp-agents.md §3.7)
     stop_requested = models.BooleanField(default=False)
     task = models.ForeignKey(
         "background_tasks.Task", on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
@@ -194,7 +194,7 @@ class Lead(TrackedModel):
 
 
 class AgentLimits(models.Model):
-    """One row (pk=1) of admin-adjustable cost caps (docs/hlagents.md §3.8)."""
+    """One row (pk=1) of admin-adjustable cost caps (docs/designs/completed/hlagents.md §3.8)."""
 
     run_cost_cap = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("1.00"))
     daily_cost_cap = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("10.00"))
@@ -217,7 +217,7 @@ class AgentLimits(models.Model):
 
 class TaskConfig(TrackedModel):
     """The provider, model and instructions for one single-shot task, such as
-    writing a resume overview (docs/ai-tasks.md §3.3)."""
+    writing a resume overview (docs/designs/completed/ai-tasks.md §3.3)."""
 
     key = models.CharField(max_length=50, unique=True, choices=task_choices())
     provider = models.ForeignKey(ProviderConfig, on_delete=models.PROTECT, related_name="tasks")

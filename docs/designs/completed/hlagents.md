@@ -303,7 +303,7 @@ On stage, both agents' leads were poor. Funding leads were home pages with no am
   - **Next:** keep `gemma4:31b` for outreach. For funding, choose between gemma (fast, weaker) and nemotron-3-ultra with about 20 steps (better, slow). Check stage's Ollama plan.
 - **Tests:** `test_tools.py` and `test_compare.py` are new. `test_loop.py`, `test_conversation.py` and `test_seed.py` cover the rest.
 
-## 9. Tasks and the Gemini provider (IDEA-007, `docs/ai-tasks.md`)
+## 9. Tasks and the Gemini provider (IDEA-007, `docs/designs/completed/ai-tasks.md`)
 Besides agents, hlagents runs **tasks**: single provider calls with no tools, used by other apps.
 - **Models:**
   - `TaskConfig`: one row per key in `hlagents/task_types.py`, with provider, model, instructions (the system prompt) and options.
@@ -315,7 +315,7 @@ Besides agents, hlagents runs **tasks**: single provider calls with no tools, us
 - **Settings:** `/agents/settings/` lists the tasks with today's calls and cost. `/agents/settings/tasks/<id>/` edits a task and shows its recent calls (Agent admins).
 - **Tasks so far:** `resume_overview`, `resume_bullets` and `bullet_rewrite`, used by `cold_apply/text_generation.py`, and `job_keywords`, used by `cold_apply/keywords.py` (with the in-house analyzer as its fallback).
 
-## 10. Agents on Gemini and Google search (IDEA-008, `docs/gcp-agents.md`)
+## 10. Agents on Gemini and Google search (IDEA-008, `docs/designs/in-progress/gcp-agents.md`)
 - **Provider:** `GeminiProvider` handles tool calls, so agents can run on Gemini. Thought signatures are kept on each tool call (`thought_signature`, base64) and sent back. Tool replies share a Gemini turn, and text gets its own.
 - **Tools:**
   - `web_search` runs the `web_search` task: a Gemini call with Google Search grounding. It returns the cited sources with real URLs and snippets with links and emails removed, plus Google's search suggestions. The run page shows those, and the model never sees them.

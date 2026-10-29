@@ -27,7 +27,7 @@ env.read_env(StringIO(_client.access_secret_version(name=_name).payload.data.dec
 
 SECRET_KEY = env("DJANGO_SECRET_KEY")
 VA_API_KEY = env("VA_API_KEY")
-# Optional until hlagents is deployed (docs/hlagents.md §3.7)
+# Optional until hlagents is deployed (docs/designs/completed/hlagents.md §3.7)
 TAVILY_API_KEY = env("TAVILY_API_KEY", default="")
 SITE_ID = env.int("SITE_ID", default=1)
 TURNSTILE_SITE_KEY = env("TURNSTILE_SITE_KEY")

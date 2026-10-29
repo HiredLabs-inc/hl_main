@@ -1,5 +1,5 @@
 """Volunteer accounts: invites, the volunteer home, and volunteers left out of
-the participant lists (docs/volunteer-logins.md §3.1-3.4)."""
+the participant lists (docs/designs/in-progress/volunteer-logins.md §3.1-3.4)."""
 from datetime import datetime, timezone as dt_timezone
 from unittest import mock
 

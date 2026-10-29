@@ -1,4 +1,4 @@
-"""Resume text written by an LLM, through the hlagents tasks (docs/ai-tasks.md).
+"""Resume text written by an LLM, through the hlagents tasks (docs/designs/completed/ai-tasks.md).
 
 Each function builds the user message from the participant's data; the task's
 instructions, provider and model are edited in /agents/settings/.

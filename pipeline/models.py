@@ -1,7 +1,7 @@
 """Flows people move through (Intake, Resume & Job Search, Boot Camp, ...) and each
 person's place in them. Kept free of cold_apply imports so other programs can
 reuse it; a person is a User. Lead flows (Funding, Outreach) hold hlagents
-Leads instead: funders and outreach contacts (docs/hlagents.md §3.6). An
+Leads instead: funders and outreach contacts (docs/designs/completed/hlagents.md §3.6). An
 Enrollment or Activity belongs to a person or a lead, never both.
 
 Change enrollments only through pipeline.services, which also writes the
@@ -129,7 +129,7 @@ class Enrollment(TrackedModel):
     class Meta:
         permissions = [
             # Lead flows (Funding, Outreach) on the dashboard, for non-staff such as
-            # volunteers in the Agents group (docs/volunteer-logins.md §3.3)
+            # volunteers in the Agents group (docs/designs/in-progress/volunteer-logins.md §3.3)
             ("work_lead_flows", "Can view and work Funding and Outreach enrollments"),
         ]
         constraints = [

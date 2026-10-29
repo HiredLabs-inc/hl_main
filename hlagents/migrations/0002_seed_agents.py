@@ -1,5 +1,5 @@
 """Seed the Ollama Cloud provider, the funding and outreach agents from the
-prototype (examples/utils), and the cost caps (docs/hlagents.md §3.2, §3.8).
+prototype (examples/utils), and the cost caps (docs/designs/completed/hlagents.md §3.2, §3.8).
 
 Prompts are copied from examples/utils/system_prompts and edited in the agents UI
 from here on.

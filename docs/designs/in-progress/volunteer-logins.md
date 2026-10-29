@@ -5,7 +5,7 @@ Branch `feature/volunteer-logins` (from `develop` at 20bc6a0), worktree `.claude
 > **Status:** V1 built 2026-10-22 (§5, "V1 — built"). V2 isn't started. Jeff answered two rounds of questions (§6), and §3 matches them. No questions are open (§7).
 
 ## 1. Context
-IDEA-005 in `docs/backlog.md`: let volunteers log in with a limited role. It comes from the signup/login redesign ("no volunteer login yet") and from `docs/cold-apply-staff-redesign.md` §5.5 and §7.
+IDEA-005 in `docs/backlog.md`: let volunteers log in with a limited role. It comes from the signup/login redesign ("no volunteer login yet") and from `docs/designs/completed/cold-apply-staff-redesign.md` §5.5 and §7.
 
 **Today the only role is `is_staff`.** Apart from veteran review, nothing finer-grained exists:
 

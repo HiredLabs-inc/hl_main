@@ -1,4 +1,4 @@
-"""Volunteer invites and the volunteer home (docs/volunteer-logins.md §3.3-3.4).
+"""Volunteer invites and the volunteer home (docs/designs/in-progress/volunteer-logins.md §3.3-3.4).
 
 1. invites_view (/staff/volunteers/): staff see the volunteers and pending
    invites, and invite someone by email, choosing the groups they get.
@@ -231,7 +231,7 @@ def _accept_existing(request, invite, account):
 @login_required
 def home_view(request):
     """Cards for the tools the volunteer has, and their own job search if they
-    want one (docs/volunteer-logins.md §3.2-3.3)"""
+    want one (docs/designs/in-progress/volunteer-logins.md §3.2-3.3)"""
     user = request.user
     if not is_volunteer(user):
         return redirect("userprofile:user_home")

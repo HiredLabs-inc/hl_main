@@ -1,4 +1,4 @@
-"""Lead quality (docs/hlagents.md §8, H7): the seeded agents get the read_page
+"""Lead quality (docs/designs/completed/hlagents.md §8, H7): the seeded agents get the read_page
 tool and prompts that use it, and the tool rates follow Tavily's pricing.
 
 As in 0005, a prompt, tool list or rate is only replaced if it is still the

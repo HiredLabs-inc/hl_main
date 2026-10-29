@@ -175,7 +175,7 @@ class BootCampSeat(models.Model):
 
 
 class VolunteerInvite(models.Model):
-    """A staff invite to volunteer (docs/volunteer-logins.md §3.4). The emailed
+    """A staff invite to volunteer (docs/designs/in-progress/volunteer-logins.md §3.4). The emailed
     link sets a password for a new account, or adds the groups to an existing
     one. Revoking deletes the invite, which stops its links working."""
 

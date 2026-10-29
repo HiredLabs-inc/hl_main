@@ -1,4 +1,4 @@
-"""Run time limits, Stop and stuck runs (docs/gcp-agents.md §3.7)."""
+"""Run time limits, Stop and stuck runs (docs/designs/in-progress/gcp-agents.md §3.7)."""
 import json
 import time
 from datetime import timedelta

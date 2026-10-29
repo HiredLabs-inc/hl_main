@@ -129,7 +129,7 @@ VOLUNTEERS_GROUP = "Volunteers"
 
 
 def is_volunteer(user):
-    """In the Volunteers group (docs/volunteer-logins.md §3.1). For routing,
+    """In the Volunteers group (docs/designs/in-progress/volunteer-logins.md §3.1). For routing,
     filters and the badge only: what a volunteer may do comes from permissions.
     Uses prefetched groups when the caller has them."""
     if not user.is_authenticated:
@@ -138,7 +138,7 @@ def is_volunteer(user):
 
 
 def is_participant(user):
-    """Finished onboarding (docs/volunteer-logins.md §3.2)"""
+    """Finished onboarding (docs/designs/in-progress/volunteer-logins.md §3.2)"""
     profile = getattr(user, "profile", None) if user.is_authenticated else None
     return bool(profile and profile.is_onboarded)
 

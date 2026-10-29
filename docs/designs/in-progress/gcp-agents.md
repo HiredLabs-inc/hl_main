@@ -8,7 +8,7 @@ Branches `feature/idea-008-tools` (effort T), then `feature/idea-008-search` (ef
 IDEA-008 in `docs/backlog.md`: run the agents (funding, outreach and future ones) on Google's APIs on Vertex AI instead of Ollama Cloud and Tavily.
 
 **What's there now:**
-- **Provider:** IDEA-007 added a text-only `GeminiProvider` (`hlagents/providers/gemini.py`, `docs/ai-tasks.md` §3.1). Given tools, it raises `ProviderError("Gemini can't use tools yet (IDEA-008).")`, and `AgentConfigForm` (`hlagents/forms.py:89`) won't let an agent use a Gemini provider.
+- **Provider:** IDEA-007 added a text-only `GeminiProvider` (`hlagents/providers/gemini.py`, `docs/designs/completed/ai-tasks.md` §3.1). Given tools, it raises `ProviderError("Gemini can't use tools yet (IDEA-008).")`, and `AgentConfigForm` (`hlagents/forms.py:89`) won't let an agent use a Gemini provider.
 - **Loop:** `hlagents/loop.py` expects tool calls in the canonical Ollama/OpenAI message shape (`providers/base.py`), and runs the tools itself (`_call_tool`).
 - **Tools:** `web_search` (`tools/web_search.py`) calls Tavily search, and `read_page` (`tools/read_page.py`) calls Tavily extract. Both need `TAVILY_API_KEY`.
 - **Lead checks:** each agent checks a candidate's grounded field against the text its tools returned (`conversation.tool_text`, `AgentType.validate`). For funding the field is `application_url`, and for outreach it's `contact_email`. Anything not found is rejected as "not in sources" and sent back once to be fixed. This check is the main protection against made-up leads, so it has to survive the move.
@@ -88,7 +88,7 @@ After stage is checked:
 ### 3.7 Run time limits and Stop (effort T)
 **What's there now:**
 - A run has a time limit, `HLAGENTS_RUN_TIME_LIMIT` (480 s, `hl_main/settings/base.py`). The loop only checks it between steps (`_Turn.converse`), so it can't stop a call that's already running.
-- Gemini calls have no timeout. With one set, the SDK fails calls that would have succeeded (`docs/ai-tasks.md` §8 R).
+- Gemini calls have no timeout. With one set, the SDK fails calls that would have succeeded (`docs/designs/completed/ai-tasks.md` §8 R).
 - So nothing stops one slow call except the worker's 900 s request timeout. When that hits, Cloud Run kills the request, and the run is never saved again. It shows "Running" forever, and `follow_up_problem` refuses follow-ups on it ("still working").
 - Gemini on `global` has taken 74–156 s on single calls, and a run on Gemini makes about twice as many calls (one per step and one per search). Slow calls will become more common.
 - Staff can't stop a run.
@@ -118,7 +118,7 @@ Single-shot tasks (`completion.complete`) could use `call_with_limit` too, but t
    - Point the seeded funding and outreach agents at "Gemini on Vertex" with the chosen model.
    - Set the new `tool_costs`, but only where the row still has the seeded values, as `0007_lead_quality` does.
    - Make it reversible.
-3. **Docs:** a §10 in `docs/hlagents.md`, §9 Status here, IDEA-008 → Done, release notes.
+3. **Docs:** a §10 in `docs/designs/completed/hlagents.md`, §9 Status here, IDEA-008 → Done, release notes.
 4. **Stage checklist:**
    - Grounding with Google Search is enabled for the project, and the service account can use it.
    - The Gemini token rates are entered.
@@ -216,7 +216,7 @@ Branched from `feature/idea-008-tools`, not `develop`, because it needs T's prov
   - sets `tool_costs` to $0.014 per search and $0 per page read. Google bills $14 per 1,000 grounding queries on Gemini 3, after 5,000 free a month, and one search can send more than one query.
   - puts the `web_search` task on `gemini-3.5-flash-lite` (decision 7)
   - adds two steps to the funding prompt (decision 6): make several tool calls per step and spend no more than two or three steps on a funder; and at the step limit, answer with every program whose page it has read, returning `[]` only if it read none
-- **Comparison (2026-10-28, `hl-main-stage`, local dev data, rolled back, one run each, six at once).** Requests: "Find 5 grants for nonprofits that train veterans for tech jobs." and "Find 5 veteran service officers or outreach staff in Ohio with their work emails." The Tavily baseline is H7's comparison in `docs/hlagents.md`: on `gemma4:31b`, outreach found 5 contacts in 17 s, and funding found 6 leads in 43 s, some on listing sites.
+- **Comparison (2026-10-28, `hl-main-stage`, local dev data, rolled back, one run each, six at once).** Requests: "Find 5 grants for nonprofits that train veterans for tech jobs." and "Find 5 veteran service officers or outreach staff in Ohio with their work emails." The Tavily baseline is H7's comparison in `docs/designs/completed/hlagents.md`: on `gemma4:31b`, outreach found 5 contacts in 17 s, and funding found 6 leads in 43 s, some on listing sites.
 
 | Agent | Agent model | Search model | Result | Steps | Tool calls (searches) | Seconds |
 |---|---|---|---|---|---|---|

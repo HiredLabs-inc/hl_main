@@ -1,4 +1,4 @@
-"""Compare models on one agent (docs/hlagents.md §8, H7).
+"""Compare models on one agent (docs/designs/completed/hlagents.md §8, H7).
 
 Each run starts from the same leads: by default it's rolled back afterwards, so
 one model's leads don't count as "already known" for the next. Pass --keep to
@@ -8,7 +8,7 @@ keep the runs and review their leads in /agents/runs/.
         --models gemma4:31b,gpt-oss:120b --request "Find 5 ..." --repeat 2
 
 --provider runs on another provider than the agent's, and --search-model sets
-the web_search task's model for these runs only (docs/gcp-agents.md §4 M):
+the web_search task's model for these runs only (docs/designs/in-progress/gcp-agents.md §4 M):
 
     python manage.py hlagents_compare --agent "Funding opportunities" \\
         --provider "Gemini on Vertex" --models gemini-3.8-flash --search-model gemini-3.5-flash-lite

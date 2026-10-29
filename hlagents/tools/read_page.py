@@ -1,4 +1,4 @@
-"""Reads a page by fetching it directly (docs/gcp-agents.md §3.4)."""
+"""Reads a page by fetching it directly (docs/designs/in-progress/gcp-agents.md §3.4)."""
 import io
 import ipaddress
 import logging

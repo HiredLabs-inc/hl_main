@@ -1,4 +1,4 @@
-"""Chat providers, one adapter per ProviderConfig.Kind (docs/hlagents.md §3.1).
+"""Chat providers, one adapter per ProviderConfig.Kind (docs/designs/completed/hlagents.md §3.1).
 
 Every provider speaks the same message format (ChatProvider), so runs can
 switch provider without touching the loop or stored conversations.

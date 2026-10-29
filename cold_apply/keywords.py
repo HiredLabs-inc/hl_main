@@ -1,5 +1,5 @@
 """Job description keywords, from an LLM through the hlagents job_keywords task,
-with the in-house analyzer as the fallback (docs/ai-tasks.md §3.6).
+with the in-house analyzer as the fallback (docs/designs/completed/ai-tasks.md §3.6).
 
 Keywords are stored as KeywordAnalysis rows that pair the i-th unigram, bigram
 and trigram. LLM lists differ in length (three-word phrases are scarce), so the

@@ -9,6 +9,7 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 - **Status values:** `Open` · `In progress` · `Fixed` · `Won't fix`
 - **Severity:** **High** means a security or data risk, or a crash on a normal path. **Medium** means a crash on an edge path, or something broken that people use. **Low** means cleanup, dead code or tooling.
 - Mark anything you suspect but haven't reproduced as **Suspected**.
+- **Bug-fix writeups** (for fixes too big for an entry, like hotfixes) live in `docs/bug-fixes/planned/`, `in-progress/` or `completed/`, matching the bug's Status. When the Status changes, `git mv` the doc to match and update links to it.
 - Move completed and skipped bugs to the bottom upon fixing or skipping.
   - Maintain numerical order
 
@@ -205,7 +206,7 @@ Bugs found during other work and **not fixed at the time**. This file is shared 
 - **Severity:** High · **Status:** Fixed (`feature/cold-apply-staff-redesign`, 8adb309; merged into develop; deployed with the next release) · **Found:** 2026-10-19, cold_apply staff redesign review
 - **Where:** `userprofile/views.py` `update_veteran_status_view` (`@staff_required`, makes a signed URL for `profile.service_doc`); `userprofile/admin.py` `ProfileAdmin` and `VeteranProfileAdmin` (the default change form shows `service_doc` as a link, and GCS storage signs it for 24 h by default)
 - **Problem:** anyone with `is_staff` can reach the veteran status page and open the DD214. Anyone with view or change permission on Profile in admin can do the same. DD214s should be limited to a small group of veteran-status reviewers.
-- **Fix idea:** add a custom permission (e.g. `userprofile.review_veteran_status`), check it on the view and in the templates, and exclude or guard `service_doc` in both admin classes. Planned in `docs/cold-apply-staff-redesign.md` §5.
+- **Fix idea:** add a custom permission (e.g. `userprofile.review_veteran_status`), check it on the view and in the templates, and exclude or guard `service_doc` in both admin classes. Planned in `docs/designs/completed/cold-apply-staff-redesign.md` §5.
 
 ## BUG-022 — Do Not Contact badge is never shown to staff
 - **Severity:** Medium · **Status:** Fixed (`feature/cold-apply-staff-redesign`, e0b44c1, Step 7: the staff blocks moved from the participant page to the staff workspace, which shows the badge; merged into develop in 88e3475 and deployed to stage; reaches prod with the next release) · **Found:** 2026-10-19, cold_apply staff redesign review
@@ -324,7 +325,7 @@ be editable. Admins might make mistakes, and the current interface is too rigid,
 - **After the prod release:** on the Boot Camp tab, set Status to Completed and fix the graduate: Reopen → pick their cohort under "Past sessions" → move to Graduated → Complete. Find other Boot Camp enrollments completed without a cohort with `Enrollment.objects.filter(flow__slug="boot-camp", status="completed", bootcamp_seat__isnull=True)`. Check where the new Graduation phase sits on the prod board (it's added after the last Boot Camp phase) and reorder if needed.
 
 ## BUG-038 — AI text generation uses a retired Vertex model
-- **Severity:** Medium · **Status:** Fixed (`fix/medium-bugs-2`, e61356f) · **Found:** 2026-10-21, reading code for the hlagents design (`docs/hlagents.md` on `feature/hlagents-01`) · **Suspected:** read from code, not reproduced
+- **Severity:** Medium · **Status:** Fixed (`fix/medium-bugs-2`, e61356f) · **Found:** 2026-10-21, reading code for the hlagents design (`docs/designs/completed/hlagents.md` on `feature/hlagents-01`) · **Suspected:** read from code, not reproduced
 - **Where:** `cold_apply/text_generation.py` `generate_text()` (used by `cold_apply/views.py` and `cold_apply/forms.py`), and `cold_apply/management/commands/vertex.py`
 - **Problem:** `generate_text` loads `TextGenerationModel.from_pretrained("text-bison@001")`. Google has retired the PaLM text models, so bullet rewriting and overview generation probably fail. It also `print`s every prompt and response.
 - **Fix idea:** move to a current model, ideally through the hlagents provider layer once it exists, so the provider can be switched in one place.
@@ -355,7 +356,7 @@ be editable. Admins might make mistakes, and the current interface is too rigid,
 - **Severity:** Low · **Status:** Fixed (`feature/volunteer-logins`, fa7c027; merged into develop in 3f7c025; reaches stage and prod with the next deploys) · **Found:** 2026-10-22, IDEA-005 code survey
 - **Where:** `templates/staff_base.html:34-37`
 - **Problem:** the Tools menu shows "Release notes: …" links to every `is_staff` user. The release views need `releases` app permissions since BUG-002, so staff without them get a 403.
-- **Fix:** the links are under `{% if perms.releases %}`, like World Rates, as part of the permission-based staff nav (`docs/volunteer-logins.md` §3.7). Test: `userprofile/tests/test_volunteers.py` `test_release_notes_follow_the_permission`.
+- **Fix:** the links are under `{% if perms.releases %}`, like World Rates, as part of the permission-based staff nav (`docs/designs/in-progress/volunteer-logins.md` §3.7). Test: `userprofile/tests/test_volunteers.py` `test_release_notes_follow_the_permission`.
 
 ## BUG-043 — NLTK tokenizer/tagger code needs data the image doesn't include
 - **Severity:** Low · **Status:** Fixed (`fix/low-bugs-3`, 9be02a6) · **Found:** 2026-10-23, hotfix-01 (NLTK cold-start hang)
@@ -404,7 +405,7 @@ the AI generated option, or when trying to edit/delete an existing overview, a 5
 - **Fix:** Root cause for BUG-044 to BUG-048: `resume/templates/resume/base_resume.html` stopped loading htmx and Alpine (7c1aac0 commented out the script tags), so the preview's hx-/Alpine controls fell back to plain links or did nothing. The preview now loads them from a new Vite entry, `frontend/src/resume_preview.js` (no CSS); the PDF render doesn't. For this bug, the button is now a plain submit with `name="preview" value="False" formtarget="_blank"` (no JS needed). Tests: `cold_apply/tests/test_views.py` (`ResumePreviewEditViewsTest`, `TailoredResumeViewTestCase`, browser test `test_preview_controls`).
 
 ## BUG-049 — Gemini's thinking cuts off generated resume text
-- **Severity:** Medium · **Status:** Fixed (`feature/idea-007-resume`) · **Found:** 2026-10-23, IDEA-007 end-to-end check (`docs/ai-tasks.md`)
+- **Severity:** Medium · **Status:** Fixed (`feature/idea-007-resume`) · **Found:** 2026-10-23, IDEA-007 end-to-end check (`docs/designs/completed/ai-tasks.md`)
 - **Where:** `cold_apply/text_generation.py` `generate_text()` on develop (BUG-038's Gemini call): `max_output_tokens=1024` with `ThinkingConfig(thinking_budget=0)`
 - **Problem:** `gemini-3.8-flash` often thinks anyway: 650–950 thinking tokens on calls that return 35–130 tokens of text, in about half the calls tried on `hl-main-stage`. Thinking counts against `max_output_tokens`, so some replies stopped at the limit (`finish_reason` MAX_TOKENS). One bullet list came back as `["Diagnosed and repaired … in demanding`, and one rewrite failed. Develop saves such a cut-off reply as the bullet text, because it only checks for empty text. `thinking_level` doesn't help: MINIMAL is refused (400), and LOW still thinks and took about 30 s.
 - **Fix:** the hlagents tasks (IDEA-007) seed `max_output_tokens: 8192`, which leaves room for the thinking, and `GeminiProvider` raises `ProviderError` when a reply's finish reason isn't STOP, so a cut-off reply shows the failure message instead of being saved. Thinking is billed as output, so `GeminiProvider` adds `thoughts_token_count` to the output tokens for the cost estimate.

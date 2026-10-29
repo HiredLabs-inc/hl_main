@@ -18,7 +18,7 @@ class GeminiProvider(ChatProvider):
     """Gemini on Vertex AI, with Application Default Credentials (no API key).
 
     Translates the canonical messages to Gemini contents and back, tool calls
-    included (docs/gcp-agents.md §3.1). The loop runs the tools, so automatic
+    included (docs/designs/in-progress/gcp-agents.md §3.1). The loop runs the tools, so automatic
     function calling is always off."""
 
     def __init__(self, base_url="", api_key="", timeout=None, location=""):

@@ -1,4 +1,4 @@
-"""Move the seeded agents to Gemini on Vertex (docs/gcp-agents.md §4 M,
+"""Move the seeded agents to Gemini on Vertex (docs/designs/in-progress/gcp-agents.md §4 M,
 IDEA-008), price the tools for Google Search grounding, put the web_search
 task on a faster model, and pace the funding prompt for Gemini.
 
@@ -25,7 +25,7 @@ RATES = {"web_search": "0.014", "read_page": "0"}
 SEARCH_MODEL = "gemini-3.5-flash-lite"
 
 # Gemini made one tool call per step, spent most steps on one funder, and at the
-# step limit answered [] although it had read program pages (docs/gcp-agents.md §9 M)
+# step limit answered [] although it had read program pages (docs/designs/in-progress/gcp-agents.md §9 M)
 PACING = """4. Work in parallel: in each step, make several tool calls at once, e.g. several searches, or reads of \
 several programs' pages. You have a limited number of steps, so spend no more than two or three on any one funder, \
 and move on if its page can't be read.

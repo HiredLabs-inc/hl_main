@@ -197,7 +197,7 @@ class ActivityConstraintTest(LeadTestCase):
 
 
 class LeadFlowTest(LeadTestCase):
-    """Approved leads join the flow for their kind (docs/hlagents.md §3.6)"""
+    """Approved leads join the flow for their kind (docs/designs/completed/hlagents.md §3.6)"""
 
     def test_approving_enrolls_at_the_first_step(self):
         lead = self.funding_lead()
@@ -255,7 +255,7 @@ class LeadFlowTest(LeadTestCase):
 
 
 class StageTest(LeadTestCase):
-    """Leads move through their flow from /agents/ (docs/hlagents.md §8 H6)"""
+    """Leads move through their flow from /agents/ (docs/designs/completed/hlagents.md §8 H6)"""
 
     def setUp(self):
         self.lead = self.funding_lead()

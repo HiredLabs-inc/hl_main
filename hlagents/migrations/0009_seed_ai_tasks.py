@@ -1,5 +1,5 @@
 """Seed the Gemini on Vertex provider and one AI task per resume key
-(docs/ai-tasks.md §3.3), on the model resume generation already used
+(docs/designs/completed/ai-tasks.md §3.3), on the model resume generation already used
 (settings.GEMINI_MODEL), so nothing changes on deploy. Rates are 0 until an
 admin enters Gemini's in /agents/settings/.
 """

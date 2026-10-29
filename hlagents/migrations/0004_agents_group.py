@@ -1,5 +1,5 @@
 """The Agents group: run agents, review and edit leads, import partners
-(docs/hlagents.md §3.5). Staff get it now; volunteers can be added once they
+(docs/designs/completed/hlagents.md §3.5). Staff get it now; volunteers can be added once they
 have logins (IDEA-005). Changing agent settings (H3) isn't included.
 """
 from django.contrib.auth.management import create_permissions

@@ -217,7 +217,7 @@ TURNSTILE_SECRET_KEY = env("TURNSTILE_SECRET_KEY", default="1x000000000000000000
 # Where comments from the contact form are emailed (userprofile.views.contact).
 COMMENT_NOTIFICATION_EMAILS = ["info@hiredlabs.org"]
 
-# Web search for hlagents (docs/hlagents.md §3.7). Provider keys are read from the
+# Web search for hlagents (docs/designs/completed/hlagents.md §3.7). Provider keys are read from the
 # env var named by each ProviderConfig.secret_env.
 TAVILY_API_KEY = env("TAVILY_API_KEY", default="")
 # The env vars a ProviderConfig may name as its key. The key is sent to the
@@ -227,14 +227,14 @@ HLAGENTS_PROVIDER_SECRETS = ["OLLAMA_API_KEY"]
 # task, and the worker only starts queued runs, so a retry can't run one twice.
 HLAGENTS_RUN_TIME_LIMIT = 480
 # Seconds one model call in a run may take, or less if the run has less time left
-# (docs/gcp-agents.md §3.7).
+# (docs/designs/in-progress/gcp-agents.md §3.7).
 HLAGENTS_CALL_TIME_LIMIT = 120
 # A run still Running this many seconds after its last save was killed with the
 # worker's request (its Cloud Run timeout, infra/terraform/modules/hl-env/main.tf),
 # and is marked Failed.
 HLAGENTS_STALE_RUN_AFTER = 900
 
-# Gemini on Vertex AI, the hlagents "gemini" provider (docs/ai-tasks.md §3.1).
+# Gemini on Vertex AI, the hlagents "gemini" provider (docs/designs/completed/ai-tasks.md §3.1).
 # GEMINI_MODEL only seeds the resume tasks (hlagents 0008); after that each task's
 # model is chosen in /agents/settings/. GEMINI_LOCATION is the default location
 # for a Gemini provider (models aren't served from us-west1 for our projects).

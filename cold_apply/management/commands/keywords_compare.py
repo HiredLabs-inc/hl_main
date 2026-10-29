@@ -1,5 +1,5 @@
 """Compare the in-house keyword analyzer with the job_keywords task on real jobs
-(docs/ai-tasks.md §4 K). Nothing is saved: the task calls are rolled back too.
+(docs/designs/completed/ai-tasks.md §4 K). Nothing is saved: the task calls are rolled back too.
 
     python manage.py keywords_compare --jobs 10 [--model gemma4:31b] [--job 12 --job 40]
 """

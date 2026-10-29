@@ -1,6 +1,6 @@
 """Who may see and work which flows on the dashboard. Staff work every flow;
 anyone with work_lead_flows (volunteers in the Agents group) works the lead
-flows, Funding and Outreach (docs/volunteer-logins.md §3.3)."""
+flows, Funding and Outreach (docs/designs/in-progress/volunteer-logins.md §3.3)."""
 from functools import wraps
 
 from django.contrib.auth.views import redirect_to_login

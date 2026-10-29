@@ -1,5 +1,5 @@
 """The only code that changes runs and leads. Every change to a lead is recorded
-on its pipeline Activity timeline (docs/hlagents.md §3.10)."""
+on its pipeline Activity timeline (docs/designs/completed/hlagents.md §3.10)."""
 import csv
 import io
 import re
@@ -20,7 +20,7 @@ from hlagents.models import AgentConfig, AgentLimits, AgentRun, Lead, ProviderCo
 from pipeline import services as pipeline
 from pipeline.models import Activity, Enrollment, Flow, Step
 
-# The pipeline flow each kind of lead joins when approved (docs/hlagents.md §3.6)
+# The pipeline flow each kind of lead joins when approved (docs/designs/completed/hlagents.md §3.6)
 FLOW_SLUGS = {Lead.Kind.FUNDING: "funding", Lead.Kind.OUTREACH: "outreach"}
 # Where community partners go in the Outreach flow
 PARTNER_STEP = "Partner"
@@ -171,7 +171,7 @@ def start_run(config: AgentConfig, started_by, request: str = "", provider=None,
 
 def follow_up(run: AgentRun, text: str) -> AgentRun:
     """Add a message to a finished run and queue it again. New candidates are
-    added to the same run (docs/hlagents.md §3.3). Raises ValidationError if
+    added to the same run (docs/designs/completed/hlagents.md §3.3). Raises ValidationError if
     the run can't continue (follow_up_problem)."""
     text = (text or "").strip()
     if not text:
@@ -192,7 +192,7 @@ def follow_up(run: AgentRun, text: str) -> AgentRun:
 
 def stop_run(run: AgentRun) -> AgentRun:
     """Stop a queued run now. A running one is asked to stop, and does before its
-    next step or tool call (docs/gcp-agents.md §3.7)."""
+    next step or tool call (docs/designs/in-progress/gcp-agents.md §3.7)."""
     with transaction.atomic():
         run = AgentRun.objects.select_for_update().get(pk=run.pk)
         if run.status == AgentRun.Status.QUEUED:
@@ -409,7 +409,7 @@ def _bounces(status):
 
 def read_partners_csv(file) -> dict[str, int]:
     """{email: bounces} from a community partners CSV (EMAIL and Status
-    columns, docs/hlagents.md §3.9). Raises ValidationError listing every bad
+    columns, docs/designs/completed/hlagents.md §3.9). Raises ValidationError listing every bad
     row, so nothing is imported from a file with problems."""
     try:
         text = file.read().decode("utf-8-sig")

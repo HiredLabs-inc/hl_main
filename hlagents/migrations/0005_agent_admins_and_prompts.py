@@ -1,5 +1,5 @@
 """The Agent admins group, which can change agents, providers and cost caps
-(docs/hlagents.md §3.5), and better prompts for the seeded agents (§8, H3).
+(docs/designs/completed/hlagents.md §3.5), and better prompts for the seeded agents (§8, H3).
 
 A prompt or default request is only replaced if it is still the one 0002
 seeded, so edits made in the settings page are kept.

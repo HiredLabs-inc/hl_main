@@ -13,7 +13,7 @@ class ChatResult:
     message: dict
     input_tokens: int = 0
     output_tokens: int = 0
-    # From Google Search grounding (docs/gcp-agents.md §3.2): the sources Gemini
+    # From Google Search grounding (docs/designs/in-progress/gcp-agents.md §3.2): the sources Gemini
     # cited, [{"title", "uri", "snippets"}], and Google's search-suggestions HTML
     sources: list = field(default_factory=list)
     suggestions: str = ""
@@ -43,7 +43,7 @@ class ChatProvider:
 
 def call_with_limit(func, seconds, model=""):
     """func() if it returns within `seconds`, else ProviderError
-    (docs/gcp-agents.md §3.7). Gemini's own timeout can't be used (GeminiProvider),
+    (docs/designs/in-progress/gcp-agents.md §3.7). Gemini's own timeout can't be used (GeminiProvider),
     so the call runs in a thread that's abandoned at the limit; its reply is
     thrown away when it arrives. func mustn't use the database: the thread has
     its own connection, which can't see the caller's transaction."""

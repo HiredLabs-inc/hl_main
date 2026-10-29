@@ -1,5 +1,5 @@
 """Web search through the web_search task: a Gemini call with Google Search
-grounding (docs/gcp-agents.md §3.2)."""
+grounding (docs/designs/in-progress/gcp-agents.md §3.2)."""
 import re
 from urllib.parse import urlsplit
 

@@ -1,4 +1,4 @@
-"""Seed the web_search task (docs/gcp-agents.md §3.2, IDEA-008 S): the Gemini
+"""Seed the web_search task (docs/designs/in-progress/gcp-agents.md §3.2, IDEA-008 S): the Gemini
 call with Google Search grounding behind the agents' web_search tool, on the
 Gemini provider 0009 seeded.
 """

@@ -7,7 +7,7 @@ Branch `feature/kanban-board` (from `develop`), worktree `.claude/worktrees/kanb
 > **Status:** design agreed with Jeff on 2026-10-19 (decisions in §6). B1–B4 done 2026-10-20 on `feature/kanban-board`; ready to merge into develop.
 
 ## 1. Context
-IDEA-002 in `docs/backlog.md`, from `docs/cold-apply-staff-redesign.md` §4.4 and §5.2: "a second view of a flow tab on `/staff/`, with a column per phase or step and a card per enrollment. Moving a card calls the same `move_to_step` service as the table's dropdown."
+IDEA-002 in `docs/backlog.md`, from `docs/designs/completed/cold-apply-staff-redesign.md` §4.4 and §5.2: "a second view of a flow tab on `/staff/`, with a column per phase or step and a card per enrollment. Moving a card calls the same `move_to_step` service as the table's dropdown."
 
 It builds on the staff redesign, which isn't finished:
 - **Needs:** Step 2 (`pipeline` models and services, done), Step 5 (dashboard, filters, row partial) and Step 6 (inline step change view, quick-view side panel).
