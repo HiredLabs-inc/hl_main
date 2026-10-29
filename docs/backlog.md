@@ -20,7 +20,7 @@ Design and development ideas that came up during other work and are **not bugs**
 | IDEA-003 | Idea | cold_apply | Staff pages to list, merge and delete companies, titles and locations |
 | IDEA-004 | Idea | cold_apply | Self-service participant portal with its own access level |
 | IDEA-006 | Idea | pipeline | Define the Nurture flow (today it's a placeholder) |
-| IDEA-008 | Idea | hlagents | Move agents to Google AI APIs where possible |
+| IDEA-008 | In progress | hlagents | Move agents to Google AI APIs where possible |
 | IDEA-009 | Idea | cold_apply | Parse an uploaded resume into experience, education, companies, titles and locations |
 
 ---
@@ -46,7 +46,8 @@ Design and development ideas that came up during other work and are **not bugs**
 - **Notes:** prod has 121 participants on Nurture → *Monthly Newsletter*, which is a placeholder; there is no newsletter. The staff redesign migrates them to a generic *Nurture* step in a Nurture flow until this is defined.
 
 ## IDEA-008 — All agents through GCP AI APIs
-- **Status:** Idea · **Area:** hlagents · **Source:** None [**TODO:claude** create a design doc to work from] 
+- **Status:** In progress: T, S and M built on `feature/idea-008-tools`, `-search` and `-move` (2026-10-28); next stage, then remove Tavily · **Area:** hlagents · **Source:** None
+- **Plan:** `docs/gcp-agents.md` (agreed 2026-10-28, §7): effort T (Gemini tool calls), S (Google search grounding and direct page fetch in place of Tavily), M (compare, move the seeded agents, remove Tavily).
 - **What:** run all agents (funding, outreach, and unbuilt, future agents) through GCP AI APIs instead of Tavily and Ollama
 - **Notes:** needs hlagents H1. IDEA-007 added a text-only `GeminiProvider` (`hlagents/providers/gemini.py`, `docs/hlagents.md` §9). This idea would add tool calls to it (translating to and from the canonical message shape) and replace Tavily with Google search grounding.
 

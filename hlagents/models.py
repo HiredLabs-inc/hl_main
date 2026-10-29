@@ -95,6 +95,7 @@ class AgentRun(TrackedModel):
         DONE = "done", "Done"
         FAILED = "failed", "Failed"
         CAPPED = "capped", "Stopped at cost cap"
+        STOPPED = "stopped", "Stopped by staff"
 
     config = models.ForeignKey(AgentConfig, on_delete=models.PROTECT, related_name="runs")
     # What the run actually used; follow-ups keep using it even if the config
@@ -111,6 +112,9 @@ class AgentRun(TrackedModel):
     output_tokens = models.PositiveIntegerField(default=0)
     tool_calls = models.PositiveIntegerField(default=0)
     cost = models.DecimalField(max_digits=10, decimal_places=4, default=0)
+    # Set by the Stop button while the run works; the loop checks it before each
+    # step and tool call (docs/gcp-agents.md §3.7)
+    stop_requested = models.BooleanField(default=False)
     task = models.ForeignKey(
         "background_tasks.Task", on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
     )
@@ -123,6 +127,14 @@ class AgentRun(TrackedModel):
 
     def in_progress(self):
         return self.status in (self.Status.QUEUED, self.Status.RUNNING)
+
+    def save_progress(self):
+        """Save everything but stop_requested, so the loop's saves can't undo a
+        Stop pressed while it works."""
+        self.save(update_fields=[
+            f.name for f in self._meta.concrete_fields
+            if not f.primary_key and f.name not in ("stop_requested", "created_at")
+        ])
 
 
 

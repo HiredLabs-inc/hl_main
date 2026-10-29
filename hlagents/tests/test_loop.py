@@ -9,27 +9,16 @@ from hlagents.loop import run_agent
 from hlagents.models import AgentLimits, AgentRun, Lead
 from hlagents.tests.fakes import FUNDERS, FakeProvider, answer, cite, make_config, make_provider, make_run, tool_call
 
-SEARCH_RESULTS = {
-    "query": "veteran grants",
-    "images": [],
-    "results": [
-        {"title": "Acme grants", "url": "https://acme.example.org/grants", "content": "Workforce grants.", "score": 0.9},
-        {"title": "Bolt giving", "url": "https://www.bolt.example.org/giving/", "content": "Tech education.", "score": 0.8},
-    ],
-}
-TRIMMED_RESULTS = {
-    "results": [
-        {"title": "Acme grants", "url": "https://acme.example.org/grants", "content": "Workforce grants."},
-        {"title": "Bolt giving", "url": "https://www.bolt.example.org/giving/", "content": "Tech education."},
-    ]
-}
+SEARCH_RESULTS = [
+    {"title": "Acme grants", "url": "https://acme.example.org/grants", "content": "Workforce grants."},
+    {"title": "Bolt giving", "url": "https://www.bolt.example.org/giving/", "content": "Tech education."},
+]
+TRIMMED_RESULTS = {"results": SEARCH_RESULTS}
 
 
-@override_settings(TAVILY_API_KEY="tavily-key")
-@mock.patch("hlagents.tools.web_search.TavilyClient")
+@mock.patch("hlagents.tools.web_search.search", return_value=(SEARCH_RESULTS, ""))
 class RunAgentTest(TestCase):
-    def test_tool_call_then_answer_saves_leads(self, tavily):
-        tavily.return_value.search.return_value = SEARCH_RESULTS
+    def test_tool_call_then_answer_saves_leads(self, search):
         run = make_run()
         provider = FakeProvider(tool_call(query="veteran grants"), answer(FUNDERS, fenced=True))
 
@@ -38,8 +27,7 @@ class RunAgentTest(TestCase):
         run.refresh_from_db()
         self.assertEqual(run.status, AgentRun.Status.DONE)
         self.assertEqual(run.result, "Inserted 2.")
-        tavily.assert_called_once_with(api_key="tavily-key")
-        tavily.return_value.search.assert_called_once_with(query="veteran grants", search_depth="advanced", max_results=8)
+        search.assert_called_once_with("veteran grants", 8)
         self.assertEqual(
             [m["role"] for m in run.messages], ["system", "user", "assistant", "tool", "assistant"]
         )
@@ -52,7 +40,7 @@ class RunAgentTest(TestCase):
         self.assertEqual((acme.kind, acme.source, acme.review_status), ("funding", "agent", "new"))
         self.assertEqual((acme.funding_amount, acme.url, acme.source_run), ("50000", "https://acme.example.org/grants", run))
 
-    def test_sends_model_and_tool_schema_with_description_override(self, tavily):
+    def test_sends_model_and_tool_schema_with_description_override(self, search):
         config = make_config(tool_descriptions={"web_search": "Search for grants."})
         provider = FakeProvider(answer([]))
 
@@ -62,45 +50,48 @@ class RunAgentTest(TestCase):
         self.assertEqual(call["model"], "test-model")
         self.assertEqual([t["function"]["name"] for t in call["tools"]], ["web_search"])
         self.assertTrue(call["messages"][0]["content"].startswith("You find things.\n\nToday is "))
-        self.assertEqual(call["tools"][0]["function"]["description"], "Search for grants.")
+        self.assertEqual(call["tools"][0]["function"]["description"], "Search for grants. Snippets leave out links and email addresses: read the page for those.")
         self.assertEqual(call["messages"][1], {"role": "user", "content": "Find 2 things."})
 
-    def test_tools_not_enabled_on_the_config_are_not_offered(self, tavily):
+    def test_tools_not_enabled_on_the_config_are_not_offered(self, search):
         provider = FakeProvider(answer([]))
         run_agent(make_run(make_config(tools=[])), provider)
         self.assertEqual(provider.calls[0]["tools"], [])
 
-    def test_unknown_or_disabled_tool_returns_an_error_to_the_model(self, tavily):
+    def test_unknown_or_disabled_tool_returns_an_error_to_the_model(self, search):
         run = make_run(make_config(tools=[]))
         run_agent(run, FakeProvider(tool_call(name="web_search"), tool_call(name="shell"), answer([])))
 
         errors = [json.loads(m["content"]) for m in run.messages if m["role"] == "tool"]
         self.assertEqual(errors, [{"error": "There is no tool named web_search."}, {"error": "There is no tool named shell."}])
         self.assertEqual(run.status, AgentRun.Status.DONE)
-        tavily.assert_not_called()
+        search.assert_not_called()
 
-    def test_tool_exception_returns_an_error_to_the_model(self, tavily):
-        tavily.return_value.search.side_effect = RuntimeError("rate limited")
+    def test_tool_exception_returns_an_error_to_the_model(self, search):
+        search.side_effect = RuntimeError("rate limited")
         run = make_run()
         run_agent(run, FakeProvider(tool_call(), answer([])))
 
         self.assertEqual(json.loads(run.messages[3]["content"]), {"error": "rate limited"})
         self.assertEqual(run.status, AgentRun.Status.DONE)
 
-    def test_arguments_as_a_json_string(self, tavily):
-        tavily.return_value.search.return_value = SEARCH_RESULTS
+    def test_arguments_as_a_json_string(self, search):
         call = tool_call()
         call.message["tool_calls"][0]["function"]["arguments"] = '{"query": "grants"}'
         run_agent(make_run(), FakeProvider(call, answer([])))
-        tavily.return_value.search.assert_called_once_with(query="grants", search_depth="advanced", max_results=8)
+        search.assert_called_once_with("grants", 8)
 
-    @override_settings(TAVILY_API_KEY="")
-    def test_missing_tavily_key_returns_an_error_to_the_model(self, tavily):
+    def test_search_suggestions_are_kept_beside_the_reply_for_the_run_page(self, search):
+        search.return_value = (SEARCH_RESULTS, "<div>chips</div>")
         run = make_run()
         run_agent(run, FakeProvider(tool_call(), answer([])))
-        self.assertEqual(json.loads(run.messages[3]["content"]), {"error": "TAVILY_API_KEY isn't set."})
 
-    def test_unparseable_answer_is_sent_back_once(self, tavily):
+        reply = run.messages[3]
+        self.assertEqual(reply["suggestions"], "<div>chips</div>")
+        # The model is sent the content only
+        self.assertEqual(json.loads(reply["content"]), TRIMMED_RESULTS)
+
+    def test_unparseable_answer_is_sent_back_once(self, search):
         run = make_run()
         provider = FakeProvider(answer("Sorry, nothing found."), answer([]))
 
@@ -111,7 +102,7 @@ class RunAgentTest(TestCase):
         self.assertIn("isn't valid JSON", run.messages[-2]["content"])
         self.assertEqual(provider.calls[1]["messages"][-1], run.messages[-2])
 
-    def test_unparseable_answer_twice_fails_and_keeps_the_reply(self, tavily):
+    def test_unparseable_answer_twice_fails_and_keeps_the_reply(self, search):
         run = make_run()
         run_agent(run, FakeProvider(answer("Sorry, nothing found."), answer("Still nothing.")))
 
@@ -120,8 +111,7 @@ class RunAgentTest(TestCase):
         self.assertIn("isn't valid JSON", run.error)
         self.assertEqual(run.messages[-1]["content"], "Still nothing.")
 
-    def test_last_step_offers_no_tools_so_the_agent_answers(self, tavily):
-        tavily.return_value.search.return_value = SEARCH_RESULTS
+    def test_last_step_offers_no_tools_so_the_agent_answers(self, search):
         run = make_run(make_config(max_iterations=2))
         provider = FakeProvider(tool_call(), answer(FUNDERS[:1]))
 
@@ -133,8 +123,7 @@ class RunAgentTest(TestCase):
         self.assertEqual(provider.calls[1]["messages"][-1]["note"], "Step limit")
         self.assertEqual(Lead.objects.count(), 1)
 
-    def test_tool_calls_on_the_last_step_are_ignored(self, tavily):
-        tavily.return_value.search.return_value = SEARCH_RESULTS
+    def test_tool_calls_on_the_last_step_are_ignored(self, search):
         run = make_run(make_config(max_iterations=2))
         last = answer(FUNDERS[:1])
         last.message["tool_calls"] = tool_call().message["tool_calls"]
@@ -147,7 +136,7 @@ class RunAgentTest(TestCase):
         self.assertNotIn("tool_calls", run.messages[-1])
         self.assertEqual(Lead.objects.count(), 1)
 
-    def test_stops_at_max_iterations(self, tavily):
+    def test_stops_at_max_iterations(self, search):
         # A config without tools has none to withhold on the last step
         run = make_run(make_config(max_iterations=2, tools=[]))
         provider = FakeProvider(tool_call(), tool_call(), answer([]))
@@ -158,8 +147,7 @@ class RunAgentTest(TestCase):
         self.assertEqual(run.status, AgentRun.Status.FAILED)
         self.assertEqual(run.error, "Stopped after 2 steps without a final answer.")
 
-    def test_rejected_candidates_are_sent_back_once(self, tavily):
-        tavily.return_value.search.return_value = SEARCH_RESULTS
+    def test_rejected_candidates_are_sent_back_once(self, search):
         run = make_run()
         made_up = {**FUNDERS[0], "org_name": "Made Up Fund", "application_url": "https://made.up/grants"}
         home_page = {**FUNDERS[0], "org_name": "Cora Fund", "application_url": "https://cora.example.org/"}
@@ -179,8 +167,7 @@ class RunAgentTest(TestCase):
         self.assertEqual(sorted(Lead.objects.values_list("dedupe_key", flat=True)), ["acme foundation", "bolt giving"])
         self.assertEqual(run.result, "Inserted 2. Skipped: 2 not in sources, 1 home page.")
 
-    def test_no_correction_without_steps_to_spare(self, tavily):
-        tavily.return_value.search.return_value = SEARCH_RESULTS
+    def test_no_correction_without_steps_to_spare(self, search):
         run = make_run(make_config(max_iterations=3))
         made_up = {**FUNDERS[0], "org_name": "Made Up Fund", "application_url": "https://made.up/grants"}
 
@@ -189,7 +176,7 @@ class RunAgentTest(TestCase):
         self.assertEqual(run.status, AgentRun.Status.DONE)
         self.assertEqual(run.result, "Inserted 0. Skipped: 1 not in sources.")
 
-    def test_provider_error_fails_the_run_and_keeps_history(self, tavily):
+    def test_provider_error_fails_the_run_and_keeps_history(self, search):
         run = make_run()
 
         class Broken(FakeProvider):
@@ -206,7 +193,7 @@ class RunAgentTest(TestCase):
         self.assertEqual([m["role"] for m in run.messages], ["system", "user", "assistant", "tool"])
 
     @override_settings(HLAGENTS_PROVIDER_SECRETS=["HLAGENTS_TEST_UNSET_KEY"])
-    def test_missing_provider_key_fails_the_run(self, tavily):
+    def test_missing_provider_key_fails_the_run(self, search):
         provider = make_provider(secret_env="HLAGENTS_TEST_UNSET_KEY")
         run = make_run(make_config(provider=provider))
 
@@ -216,7 +203,7 @@ class RunAgentTest(TestCase):
         self.assertEqual(run.error, f"HLAGENTS_TEST_UNSET_KEY isn't set, so {provider} can't be used.")
 
 
-@mock.patch("hlagents.tools.web_search.TavilyClient")
+@mock.patch("hlagents.tools.web_search.search", return_value=(SEARCH_RESULTS, ""))
 class CostCapTest(TestCase):
     def setUp(self):
         self.limits = AgentLimits.get()
@@ -225,7 +212,7 @@ class CostCapTest(TestCase):
         # $1 per million input tokens, $2 per million output tokens
         self.config = make_config(provider=make_provider(input_cost_per_mtok=1, output_cost_per_mtok=2))
 
-    def test_cost_counts_tokens_and_tool_calls(self, tavily):
+    def test_cost_counts_tokens_and_tool_calls(self, search):
         self.limits.run_cost_cap = Decimal("5.00")
         self.limits.save()
         run = make_run(self.config)
@@ -233,7 +220,7 @@ class CostCapTest(TestCase):
         # $1 input + $1 output + $0.01 search
         self.assertEqual(run.cost, Decimal("2.01"))
 
-    def test_stops_at_the_run_cap(self, tavily):
+    def test_stops_at_the_run_cap(self, search):
         self.limits.run_cost_cap = Decimal("0.02")
         self.limits.save()
         run = make_run(self.config)
@@ -247,7 +234,7 @@ class CostCapTest(TestCase):
         self.assertEqual(run.error, "Stopped at the cost cap.")
         self.assertEqual(run.cost, Decimal("0.02"))
 
-    def test_stops_at_the_daily_cap(self, tavily):
+    def test_stops_at_the_daily_cap(self, search):
         self.limits.daily_cost_cap = Decimal("5.00")
         self.limits.save()
         earlier = make_run(self.config)

@@ -35,7 +35,8 @@ def _tool_summary(content):
 def conversation(messages):
     """[{kind, text, detail}], where kind is system, user, note, thinking, search,
     result or answer. A user entry's detail is "Request" for the first and
-    "Follow-up" after that. Search and result entries also have a label."""
+    "Follow-up" after that. Search and result entries also have a label, and
+    result entries Google's search suggestions, if any."""
     entries = []
     for message in messages:
         role = message.get("role")
@@ -49,7 +50,10 @@ def conversation(messages):
             entries.append({"kind": "user", "text": content, "detail": label})
         elif role == "tool":
             label = "Page" if message.get("tool_name") == "read_page" else "Search results"
-            entries.append({"kind": "result", "text": _tool_summary(content), "detail": content, "label": label})
+            entries.append({
+                "kind": "result", "text": _tool_summary(content), "detail": content, "label": label,
+                "suggestions": message.get("suggestions", ""),
+            })
         elif role == "assistant":
             if message.get("thinking"):
                 entries.append({"kind": "thinking", "text": "Thinking", "detail": message["thinking"]})

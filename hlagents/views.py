@@ -46,6 +46,7 @@ def _require(user, perm):
 
 @agents_required
 def index_view(request):
+    services.fail_stale_runs()
     configs = AgentConfig.objects.filter(active=True).select_related("provider")
     for config in configs:
         config.last_run = config.runs.first()
@@ -78,6 +79,7 @@ def _run_context(request, run):
         "conversation": conversation(run.messages),
         "leads": services.attach_stages(run.leads.all()),
     }
+    context["can_stop"] = run.in_progress() and request.user.has_perm("hlagents.add_agentrun")
     if not run.in_progress() and request.user.has_perm("hlagents.add_agentrun"):
         context["follow_up_problem"] = services.follow_up_problem(run)
         if not context["follow_up_problem"]:
@@ -86,6 +88,7 @@ def _run_context(request, run):
 
 
 def _get_run(pk):
+    services.fail_stale_runs()
     return get_object_or_404(AgentRun.objects.select_related("config", "provider", "started_by"), pk=pk)
 
 
@@ -113,6 +116,14 @@ def follow_up_view(request, pk):
     except ValidationError as e:
         messages.error(request, e.messages[0])
     return redirect("hlagents:run", run.pk)
+
+
+@agents_required
+@require_POST
+def stop_view(request, pk):
+    _require(request.user, "hlagents.add_agentrun")
+    services.stop_run(_get_run(pk))
+    return redirect("hlagents:run", pk)
 
 
 @agents_required

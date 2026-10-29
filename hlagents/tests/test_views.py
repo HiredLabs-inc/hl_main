@@ -119,6 +119,23 @@ class RunPageTest(ViewTestCase):
         self.assertContains(response, "Inserted 1")
         self.assertContains(response, "Acme Foundation")
 
+    def test_each_search_shows_googles_suggestions_sandboxed(self):
+        run = make_run(self.config)
+        for query in ("a", "b"):
+            run.messages += [
+                {"role": "assistant", "content": "", "tool_calls": [{"function": {"name": "web_search", "arguments": {"query": query}}}]},
+                {"role": "tool", "tool_name": "web_search", "content": '{"results": []}', "suggestions": '<a href="https://g.co/x">chip</a>'},
+            ]
+        run.messages.append({"role": "tool", "tool_name": "read_page", "content": '{"url": "https://a.org"}'})
+        run.save()
+
+        response = self.client.get(reverse("hlagents:run", args=[run.pk]))
+
+        self.assertContains(response, 'title="Google search suggestions"', count=2)
+        # Escaped into srcdoc, so its HTML and styles stay inside the frame
+        self.assertContains(response, 'srcdoc="&lt;base target=&quot;_blank&quot;&gt;&lt;a href=&quot;https://g.co/x&quot;&gt;chip&lt;/a&gt;"')
+        self.assertContains(response, 'sandbox="allow-popups allow-popups-to-escape-sandbox"')
+
 
 class LeadViewsTest(ViewTestCase):
     def setUp(self):

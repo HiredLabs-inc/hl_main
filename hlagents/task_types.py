@@ -8,6 +8,8 @@ TASKS = {
     "resume_bullets": "Resume bullet points",
     "bullet_rewrite": "Bullet rewrite for a job",
     "job_keywords": "Job description keywords",
+    # Behind the agents' web_search tool (docs/gcp-agents.md §3.2)
+    "web_search": "Web search for agents",
 }
 
 

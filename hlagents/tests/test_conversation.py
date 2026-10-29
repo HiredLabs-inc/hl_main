@@ -62,6 +62,13 @@ class ConversationTest(SimpleTestCase):
         # A note isn't counted as staff's request
         self.assertEqual(entries[-1]["detail"], "Follow-up")
 
+    def test_search_suggestions_are_on_the_result(self):
+        messages = [
+            {"role": "tool", "tool_name": "web_search", "content": json.dumps({"results": []}), "suggestions": "<div>chips</div>"},
+            {"role": "tool", "tool_name": "read_page", "content": json.dumps({"url": "https://a.org"})},
+        ]
+        self.assertEqual([e["suggestions"] for e in conversation(messages)], ["<div>chips</div>", ""])
+
     def test_tool_text_is_only_tool_output(self):
         messages = [{"role": "user", "content": "a@b.org"}, {"role": "tool", "content": "c@d.org"}, {"role": "tool", "content": "e"}]
         self.assertEqual(tool_text(messages), "c@d.org\ne")

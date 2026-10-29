@@ -84,9 +84,6 @@ class AgentConfigForm(forms.ModelForm):
             allowed = get_agent_type(agent_type).allowed_tools
             if not_allowed := [name for name in cleaned.get("tools", []) if name not in allowed]:
                 self.add_error("tools", f"This type can't use {', '.join(not_allowed)}.")
-        provider = cleaned.get("provider")
-        if provider and provider.kind == ProviderConfig.Kind.GEMINI:
-            self.add_error("provider", "Gemini can't run agents yet, because agents need tools (IDEA-008).")
         return cleaned
 
     def save(self, commit=True):

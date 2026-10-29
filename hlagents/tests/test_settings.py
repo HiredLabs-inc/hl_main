@@ -87,7 +87,7 @@ class AgentSettingsTest(SettingsTestCase):
         run_agent(new_run, provider)
 
         self.assertEqual(provider.calls[0]["model"], "bigger-model")
-        self.assertEqual(provider.calls[0]["tools"][0]["function"]["description"], "Search for grants.")
+        self.assertEqual(provider.calls[0]["tools"][0]["function"]["description"], "Search for grants. Snippets leave out links and email addresses: read the page for those.")
         old_run.refresh_from_db()
         self.assertEqual(old_run.model, "test-model")
 
@@ -217,14 +217,14 @@ class TaskSettingsTest(SettingsTestCase):
 
 
 class GeminiAgentTest(SettingsTestCase):
-    def test_agents_cant_use_gemini_yet(self):
+    def test_agents_can_use_gemini(self):
         gemini = ProviderConfig.objects.get(kind="gemini")
         response = self.client.post(
             reverse("hlagents:agent_settings", args=[self.config.pk]), self.agent_data(provider=gemini.pk)
         )
-        self.assertContains(response, "Gemini can&#x27;t run agents yet")
+        self.assertRedirects(response, reverse("hlagents:settings"))
         self.config.refresh_from_db()
-        self.assertEqual(self.config.provider, self.provider)
+        self.assertEqual(self.config.provider, gemini)
 
 
 class LimitsTest(SettingsTestCase):
@@ -237,7 +237,7 @@ class LimitsTest(SettingsTestCase):
         self.assertEqual((limits.run_cost_cap, limits.tool_costs["web_search"]), (Decimal("0.01"), "0.02"))
 
         run = services.create_run(self.config, self.admin)
-        with mock.patch("hlagents.tools.web_search.TavilyClient"):
+        with mock.patch("hlagents.tools.web_search.search", return_value=([], "")):
             run_agent(run, FakeProvider(tool_call(), answer([])))
         self.assertEqual(run.status, AgentRun.Status.CAPPED)
         self.assertEqual(run.tool_calls, 1)
