@@ -22,8 +22,9 @@ Design and development ideas that came up during other work and are **not bugs**
 | IDEA-005 | In progress | accounts   | Volunteer logins                                                                     |
 | IDEA-006 | Planned     | pipeline   | Define the Nurture flow (today it's a placeholder)                                   |
 | IDEA-008 | In progress | hlagents   | Move agents to Google AI APIs where possible                                         |
-| IDEA-009 | Idea        | cold_apply | Parse an uploaded resume into experience, education, companies, titles and locations |
+| IDEA-009 | Planned     | cold_apply | Parse an uploaded resume into experience, education, companies, titles and locations |
 | IDEA-010 | Planned     | whole_site | Add dark-mode option                                                                 |
+| IDEA-011 | Planned     | accounts   | Signup: pick services (resume & job search, boot camp) and self-identify as veteran or formerly incarcerated |
 
 ---
 
@@ -64,7 +65,8 @@ Design and development ideas that came up during other work and are **not bugs**
 - **Notes:** needs hlagents H1. IDEA-007 added a text-only `GeminiProvider` (`hlagents/providers/gemini.py`, `docs/designs/completed/hlagents.md` §9). This idea would add tool calls to it (translating to and from the canonical message shape) and replace Tavily with Google search grounding.
 
 ## IDEA-009 — Resume parser
-- **Status:** Idea · **Area:** cold_apply · **Source:** BUG-030 discussion (2026-10-23)
+- **Status:** Planned · **Area:** cold_apply · **Source:** BUG-030 discussion (2026-10-23)
+- **Plan:** `docs/designs/planned/resume-parser.md` (drafted 2026-10-29, not agreed): stages P1 (extraction and task), P2 (draft and start page), P3 (review and save), P4 (check on stage and merge).
 - **What:** a participant or staff member uploads a resume (PDF or DOCX), and an LLM extracts experiences, education, bullets, companies, titles and locations. The person reviews the extracted values before they're saved. Each value is matched case-insensitively to an existing row (the matching BUG-030 added), and only unmatched values create new rows. Less typing, fewer duplicates.
 - **Notes:** an earlier parser lived in a separate `resume_parser` app. It isn't in this repo's history, but `ML_MODELS_PATH`, `ENTITIES_PATH` and `RESUME_OUT_PATH` in `hl_main/settings/base.py` still point at it. This would use Gemini on Vertex like `cold_apply/text_generation.py` (or hlagents, see IDEA-007). Related to IDEA-003 (merging duplicates).
 
@@ -73,6 +75,12 @@ Design and development ideas that came up during other work and are **not bugs**
 - **Plan:** `docs/designs/planned/dark-mode.md` (drafted 2026-10-29): stages D1 (tokens and switcher), D2 (staff), D3 (public, account, onboarding), D4 (legacy cold_apply and shared pieces), D5 (check and merge).
 - **What:** users and site visitors can select dark or light mode, and the site defaults to the system setting.
 - **Notes:** It's only white background now.
+
+## IDEA-011 — Signup services and self-identified status
+- **Status:** Planned · **Area:** accounts · **Source:** Jeff's request (2026-11-19); opening services to formerly incarcerated people
+- **Plan:** `docs/designs/planned/signup-services-and-status.md` (drafted 2026-11-19, not agreed): stages S1 (data and routing), S2 (signup form), S3 (Intake routing and verification), S4 (triage and person page), S5 (check and merge).
+- **What:** at signup, applicants pick a service (Resume & job search, Coding boot camp, or Both) and a status (Veteran, Formerly incarcerated, or Both). Veterans keep the DD214 upload and veteran review unchanged. Formerly incarcerated applicants have no upload and get a manual verification button with no document to review. Triage starts with the chosen services ticked.
+- **Notes:** signup never sets `is_veteran` today, so every signup goes through veteran review. `Profile.bootcamp` is replaced by a services choice. Needs a new `review_formerly_incarcerated_status` permission and a `Step.applies_to` field in pipeline. Sensitive data: a boolean only, shown on the person page, never in the people table.
 
 ## Completed
 | ID | Status | Area | Summary |
